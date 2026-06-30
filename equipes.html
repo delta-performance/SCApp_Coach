@@ -541,6 +541,7 @@
   }
   </style>
 
+  <link rel="manifest" href="../manifest.json">
 </head>
 <body>
   <!-- iPad TopBar -->
@@ -551,6 +552,7 @@
     </a>
     <div class="ipad-topbar-sep"></div>
     <div class="ipad-topbar-title">Équipes — Entraînement</div>
+    <button class="btn-ghost" onclick="logout()" style="margin-left:auto;min-height:36px;font-size:12px;">Déconnexion</button>
   </div>
   <!-- Bottom Nav -->
   <nav class="ipad-bottom-nav">
@@ -594,23 +596,14 @@
     <div class="nav-section">Musculation</div>
     <div class="nav-item" onclick="location.href='seances.html'"><div class="nav-dot"></div> Séances</div>
     <div class="nav-item" onclick="location.href='fiches-seances.html'"><div class="nav-dot"></div> Fiches Séances</div>
-    <div class="nav-item" onclick="location.href='exercices.html'"><div class="nav-dot"></div> Exercices</div>
     <div class="nav-item" onclick="location.href='suivi-poids.html'"><div class="nav-dot"></div> Suivi Poids</div>
     <div class="nav-section">Suivi</div>
-    <div class="nav-item" onclick="location.href='wellness.html'"><div class="nav-dot"></div> Wellness</div>
-    <div class="nav-item" onclick="location.href='performances.html'"><div class="nav-dot"></div> Performances</div>
-    <div class="nav-item" onclick="location.href='medical.html'"><div class="nav-dot"></div> Médical</div>
-    <div class="nav-item" onclick="location.href='absences.html'"><div class="nav-dot"></div> Absences</div>
     <div class="nav-section">Planning</div>
     <div class="nav-item" onclick="location.href='planning.html'"><div class="nav-dot"></div> Planning club</div>
-    <div class="nav-item" onclick="location.href='planning-blesses.html'"><div class="nav-dot"></div> Blessés</div>
     <div class="nav-section">Équipes</div>
     <div class="nav-item active"><div class="nav-dot"></div> Composition équipes</div>
     <div class="nav-section">GPS</div>
-    <div class="nav-item" onclick="location.href='gps.html'"><div class="nav-dot"></div> Données GPS</div>
-    <div class="nav-item" onclick="location.href='gps-match.html'"><div class="nav-dot"></div> Rapport de match</div>
     <div class="nav-item" onclick="location.href='gps-planif.html'"><div class="nav-dot"></div> Planif. charge</div>
-    <div class="nav-item" onclick="location.href='profil-force-vitesse.html'"><div class="nav-dot"></div> Profil F-V</div>
     <div class="sidebar-bottom">
       <div class="user-info" id="user-email"></div>
       <button class="logout-btn" onclick="handleLogout()">Se déconnecter</button>
@@ -733,7 +726,7 @@
 
   <script type="module">
     import { initializeApp } from './firebase-bundle.js'
-    import { getAuth, onAuthStateChanged, signOut } from './firebase-bundle.js'
+    import { getAuth, onAuthStateChanged, signOut, setPersistence, browserLocalPersistence } from './firebase-bundle.js'
     import { getFirestore, collection, doc, setDoc, getDoc, getDocs } from './firebase-bundle.js'
 
     const firebaseConfig = {
@@ -747,6 +740,16 @@
     const fbApp = initializeApp(firebaseConfig)
     const auth = getAuth(fbApp)
     const db = getFirestore(fbApp)
+
+    // Auth persistant pour fonctionner hors connexion
+    try { setPersistence(auth, browserLocalPersistence).catch(() => {}) } catch(e) {}
+
+    // Redirection si non authentifié
+    onAuthStateChanged(auth, user => {
+      if (!user) {
+        window.location.href = 'login.html'
+      }
+    })
 
     // ==================== ÉTAT ====================
     let joueurs = []
@@ -2911,7 +2914,10 @@ window.setPickerSort = function(mode) {
       return null
     }
 
-
+    window.logout = async function() {
+      try { await signOut(auth) } catch(e) {}
+      window.location.href = 'login.html'
+    }
   </script>
 </body>
 </html>
