@@ -1,0 +1,2176 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>SCA Albi — Séances</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #0f0f0f; color: #fff; display: flex; height: 100vh; overflow: hidden; }
+
+    /* SIDEBAR */
+    .sidebar { width: 220px; min-width: 220px; background: #1a1a1a; border-right: 1px solid #2a2a2a; display: flex; flex-direction: column; padding: 20px 0; overflow-y: auto; }
+    .sidebar-logo { display: flex; align-items: center; gap: 10px; padding: 0 20px 24px; border-bottom: 1px solid #2a2a2a; }
+    .sidebar-logo img { width: 36px; }
+    .sidebar-logo span { font-size: 15px; font-weight: 700; color: #FECC00; }
+    .nav-section { padding: 16px 12px 8px; font-size: 10px; font-weight: 600; color: #444; letter-spacing: .08em; text-transform: uppercase; }
+    .nav-item { display: flex; align-items: center; gap: 10px; padding: 9px 20px; font-size: 13px; color: #888; cursor: pointer; border-left: 2px solid transparent; transition: all .15s; }
+    .nav-item:hover { color: #fff; background: #222; }
+    .nav-item.active { color: #FECC00; border-left-color: #FECC00; background: #222; }
+    .nav-dot { width: 7px; height: 7px; border-radius: 50%; background: currentColor; opacity: 0.6; }
+    .sidebar-bottom { margin-top: auto; padding: 16px 20px; border-top: 1px solid #2a2a2a; }
+    .user-info { font-size: 12px; color: #555; margin-bottom: 8px; }
+    .logout-btn { font-size: 12px; color: #555; cursor: pointer; background: none; border: none; }
+    .logout-btn:hover { color: #E24B4A; }
+
+    /* MAIN */
+    .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+    .topbar { height: 56px; border-bottom: 1px solid #2a2a2a; display: flex; align-items: center; padding: 0 24px; gap: 8px; flex-shrink: 0; flex-wrap: wrap; background: #0f0f0f; }
+    .topbar-title { font-size: 15px; font-weight: 600; flex: 1; }
+    .content { flex: 1; overflow-y: auto; padding: 20px 24px; }
+
+    /* BOUTONS */
+    .btn-primary { padding: 7px 14px; border-radius: 8px; border: none; background: #FECC00; color: #0f0f0f; font-size: 12px; font-weight: 600; cursor: pointer; white-space: nowrap; }
+    .btn-primary:hover { opacity: .88; }
+    .btn-ghost { padding: 6px 12px; border-radius: 8px; border: 1px solid #2a2a2a; background: none; color: #888; font-size: 12px; cursor: pointer; white-space: nowrap; }
+    .btn-ghost:hover { color: #fff; border-color: #444; }
+    .icon-btn { padding: 4px 8px; border-radius: 5px; border: 1px solid #2a2a2a; background: none; color: #555; font-size: 11px; cursor: pointer; }
+    .icon-btn:hover { color: #fff; border-color: #555; }
+
+    /* MODE TOGGLE */
+    .mode-toggle { display: flex; gap: 3px; background: #1a1a1a; border: 1px solid #2a2a2a; border-radius: 8px; padding: 3px; }
+    .mode-btn { padding: 4px 10px; border-radius: 5px; border: none; font-size: 11px; font-weight: 500; cursor: pointer; background: none; color: #666; transition: all .15s; white-space: nowrap; }
+    .mode-btn.active { background: #FECC00; color: #0f0f0f; font-weight: 600; }
+
+    /* LISTE */
+    .seance-card { background: #1a1a1a; border: 1px solid #2a2a2a; border-radius: 10px; padding: 11px 16px; margin-bottom: 6px; cursor: pointer; display: flex; align-items: center; gap: 12px; transition: border-color .15s; }
+    .seance-card:hover { border-color: #FECC00; }
+    .seance-date { font-size: 11px; color: #FECC00; font-weight: 600; min-width: 130px; }
+    .seance-meta { font-size: 11px; color: #555; flex: 1; }
+    .seance-actions { display: flex; gap: 4px; margin-left: auto; }
+    .badge-blesse { font-size: 9px; padding: 1px 6px; border-radius: 8px; background: #E24B4A22; color: #E24B4A; border: 1px solid #E24B4A44; margin-left: 5px; }
+    .empty-state { color: #444; font-size: 13px; text-align: center; padding: 40px; }
+
+    /* ÉDITEUR */
+    .editor { display: none; }
+    .editor.open { display: flex; flex-direction: column; height: 100%; overflow: hidden; }
+    .editor-topbar { display: flex; align-items: center; gap: 6px; padding: 10px 20px; border-bottom: 1px solid #2a2a2a; flex-shrink: 0; flex-wrap: wrap; background: #111; }
+    .editor-topbar input[type="date"], .editor-topbar select { padding: 5px 9px; border-radius: 6px; border: 1px solid #2a2a2a; background: #1a1a1a; color: #fff; font-size: 12px; outline: none; color-scheme: dark; }
+    .editor-topbar select:focus, .editor-topbar input:focus { border-color: #FECC00; }
+    .editor-split { flex: 1; display: flex; overflow: hidden; }
+    .editor-main { flex: 1; overflow-y: auto; padding: 14px 18px; }
+    .editor-sidebar { width: 260px; min-width: 260px; border-left: 1px solid #2a2a2a; overflow-y: auto; background: #0d0d0d; }
+    .sidebar-attrib-header { padding: 10px 12px; border-bottom: 1px solid #2a2a2a; font-size: 10px; font-weight: 700; color: #FECC00; text-transform: uppercase; letter-spacing: .06em; background: #111; position: sticky; top: 0; z-index: 1; }
+
+    /* ===================== BLOCS ===================== */
+    .bloc-card { background: #141414; border: 1px solid #1e1e1e; border-radius: 10px; margin-bottom: 10px; overflow: hidden; }
+    .bloc-hdr { display: flex; align-items: center; gap: 6px; padding: 7px 10px; background: #1c1c1c; border-bottom: 1px solid #1e1e1e; }
+    .bloc-nom { background: none; border: none; color: #FECC00; font-size: 13px; font-weight: 700; outline: none; flex: 1; min-width: 0; }
+    .bloc-body { padding: 10px; }
+    .btn-add-bloc { width: 100%; padding: 9px; border-radius: 8px; border: 1px dashed #222; background: none; color: #333; font-size: 12px; cursor: pointer; margin-top: 8px; transition: all .15s; }
+    .btn-add-bloc:hover { border-color: #FECC00; color: #FECC00; }
+
+    /* ===================== GROUPES EN ONGLETS ===================== */
+    .groupes-tabs { display: flex; gap: 3px; margin-bottom: 8px; flex-wrap: wrap; }
+    .g-tab { padding: 3px 10px; border-radius: 5px; border: 1px solid #2a2a2a; background: none; color: #444; font-size: 10px; font-weight: 600; cursor: pointer; white-space: nowrap; transition: all .12s; }
+    .g-tab.active { background: #222; color: #ccc; border-color: #444; }
+    .g-tab.auto-tab.active { color: #1D9E75; border-color: #1D9E7544; }
+    .g-tab.add-tab { color: #333; border-style: dashed; }
+    .g-tab.add-tab:hover { color: #FECC00; border-color: #FECC0044; }
+    .g-panel { display: none; }
+    .g-panel.active { display: block; }
+    .g-panel-hdr { display: flex; align-items: center; gap: 6px; margin-bottom: 8px; padding: 5px 8px; background: #111; border-radius: 6px; }
+    .g-nom-inp { background: none; border: none; color: #FECC00; font-size: 11px; font-weight: 700; outline: none; flex: 1; }
+    .g-auto-badge { font-size: 8px; padding: 1px 5px; border-radius: 3px; background: #1D9E7522; color: #1D9E75; border: 1px solid #1D9E7544; white-space: nowrap; }
+    .g-jcount { font-size: 9px; color: #444; }
+
+    /* COMMENTAIRE BLOC/GROUPE */
+    .comment-inp { width: 100%; padding: 3px 7px; border-radius: 4px; border: 1px solid #1a1a1a; background: #0a0a0a; color: #555; font-size: 10px; outline: none; resize: none; font-family: inherit; }
+    .comment-inp:focus { border-color: #FECC00; color: #ccc; }
+
+    /* ===================== EXERCICES — LIGNES COMPACTES ===================== */
+    .exos-wrap { width: 100%; }
+    .exo-row { display: grid; grid-template-columns: 24px 70px 1fr 42px 42px 62px 34px 34px 28px 28px 24px; gap: 3px; align-items: center; padding: 4px 0; border-bottom: 1px solid #0f0f0f; }
+    .exo-row:last-child { border-bottom: none; }
+    .exo-row.superset { border-left: 2px solid #FECC0066; padding-left: 4px; background: #FECC0005; }
+    .exo-row.var-open { background: #FECC0003; }
+    .exo-hdr-row { display: grid; grid-template-columns: 24px 70px 1fr 42px 42px 62px 34px 34px 28px 28px 24px; gap: 3px; padding: 2px 0 4px; border-bottom: 1px solid #1a1a1a; margin-bottom: 2px; }
+    .exo-hdr-row span { font-size: 7px; color: #2a2a2a; text-align: center; text-transform: uppercase; letter-spacing: .05em; }
+    .exo-hdr-row span:nth-child(3) { text-align: left; }
+
+    /* Inputs dans les lignes */
+    .xi { width: 100%; padding: 3px 4px; border-radius: 3px; border: 1px solid #111; background: #0f0f0f; color: #ccc; font-size: 10px; text-align: center; outline: none; font-family: inherit; }
+    .xi:focus { border-color: #FECC00; }
+    .xi-num { color: #FECC00; font-weight: 700; font-size: 10px; }
+    .xi-exo { text-align: left; font-size: 10px; color: #fff; }
+    .xi-zone { font-size: 9px; color: #666; }
+
+    /* Boutons micro */
+    .xbtn { padding: 2px 5px; border-radius: 3px; border: 1px solid #111; background: none; color: #333; font-size: 10px; cursor: pointer; width: 100%; }
+    .xbtn:hover { color: #ccc; border-color: #333; }
+    .xbtn.on { background: #FECC0011; color: #FECC00; border-color: #FECC0033; }
+    .xbtn.red:hover { color: #E24B4A; border-color: #E24B4A44; }
+
+    /* SELECT intensité inline */
+    .xi-unit { width: 100%; padding: 2px 2px; border-radius: 3px; border: 1px solid #111; background: #0f0f0f; color: #666; font-size: 8px; outline: none; }
+
+    /* SÉRIES VARIABLES — ligne étendue sous l'exo */
+    .exo-var-row { padding: 4px 0 6px 26px; }
+    .var-grid { display: flex; gap: 5px; flex-wrap: wrap; }
+    .var-cell { display: flex; flex-direction: column; align-items: center; gap: 1px; }
+    .var-cell label { font-size: 6px; color: #333; }
+    .var-inp { width: 34px; padding: 2px 2px; border-radius: 3px; border: 1px solid #111; background: #0f0f0f; color: #FECC00; font-size: 9px; text-align: center; outline: none; }
+    .var-inp.reps { color: #888; }
+    .var-inp:focus { border-color: #FECC00; }
+
+    /* COMMENTAIRE LIGNE EXO */
+    .exo-comment-row { padding: 2px 0 4px 26px; }
+    .exo-comment-row textarea { width: 100%; padding: 2px 6px; border-radius: 3px; border: 1px solid #111; background: #0a0a0a; color: #444; font-size: 9px; outline: none; resize: none; font-family: inherit; }
+    .exo-comment-row textarea:focus { border-color: #FECC00; color: #bbb; }
+
+    /* ADD EXO btn */
+    .btn-add-exo { display: flex; align-items: center; gap: 5px; padding: 4px 8px; margin-top: 5px; border-radius: 5px; border: 1px dashed #1a1a1a; background: none; color: #333; font-size: 10px; cursor: pointer; transition: all .15s; }
+    .btn-add-exo:hover { border-color: #FECC0044; color: #FECC00; }
+
+    /* ===================== SIDEBAR ATTRIBUTION ===================== */
+    .attrib-bloc-sec { border-bottom: 1px solid #1a1a1a; }
+    .attrib-bloc-title { display: flex; align-items: center; justify-content: space-between; padding: 7px 12px; cursor: pointer; font-size: 10px; font-weight: 700; color: #FECC00; }
+    .attrib-bloc-title:hover { background: #111; }
+    .attrib-bloc-title span.chevron { font-size: 8px; color: #333; transition: transform .15s; }
+    .attrib-bloc-title.collapsed span.chevron { transform: rotate(-90deg); }
+    .attrib-bloc-content { padding: 6px 10px 8px; }
+    .attrib-bloc-content.hidden { display: none; }
+    .attrib-groupe-card { background: #111; border: 1px solid #1e1e1e; border-radius: 6px; padding: 7px 9px; margin-bottom: 5px; }
+    .attrib-g-name { font-size: 10px; font-weight: 700; color: #ccc; margin-bottom: 4px; display: flex; align-items: center; gap: 5px; }
+    .joueur-tags { display: flex; flex-wrap: wrap; gap: 2px; margin-bottom: 4px; }
+    .j-tag { display: inline-flex; align-items: center; gap: 2px; background: #1a1a1a; border: 1px solid #2a2a2a; border-radius: 4px; padding: 1px 5px; font-size: 9px; color: #aaa; }
+    .j-tag.blesse { border-color: #E24B4A33; color: #F09595; }
+    .j-tag button { background: none; border: none; color: #333; cursor: pointer; font-size: 8px; padding: 0 1px; }
+    .j-tag button:hover { color: #E24B4A; }
+    /* Multi-select joueurs */
+    .multi-sel-wrap { position: relative; }
+    .multi-sel-btn { width: 100%; padding: 4px 7px; border-radius: 5px; border: 1px solid #2a2a2a; background: #0a0a0a; color: #555; font-size: 10px; cursor: pointer; text-align: left; display: flex; justify-content: space-between; align-items: center; }
+    .multi-sel-btn:hover { border-color: #FECC00; }
+    .multi-sel-dropdown { display: none; position: absolute; bottom: 100%; left: 0; right: 0; background: #1a1a1a; border: 1px solid #2a2a2a; border-radius: 6px; max-height: 180px; overflow-y: auto; z-index: 50; margin-bottom: 2px; }
+    .multi-sel-dropdown.open { display: block; }
+    .multi-sel-item { display: flex; align-items: center; gap: 6px; padding: 5px 9px; cursor: pointer; font-size: 10px; }
+    .multi-sel-item:hover { background: #222; }
+    .multi-sel-item input { accent-color: #FECC00; }
+    .multi-sel-confirm { width: 100%; padding: 5px; border-top: 1px solid #2a2a2a; background: none; color: #FECC00; font-size: 10px; cursor: pointer; border-bottom-left-radius: 6px; border-bottom-right-radius: 6px; }
+    .multi-sel-confirm:hover { background: #FECC0011; }
+
+    /* ===================== MODAL OVERLAY ===================== */
+    .modal-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,.8); align-items: center; justify-content: center; z-index: 200; }
+    .modal-overlay.open { display: flex; }
+
+    /* MODAL GROUPE */
+    .modal-box { background: #1a1a1a; border: 1px solid #2a2a2a; border-radius: 12px; padding: 20px; width: 420px; max-height: 85vh; overflow-y: auto; }
+    .modal-title { font-size: 13px; font-weight: 700; margin-bottom: 14px; }
+    .mg-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; margin-bottom: 12px; }
+    .mg-btn { padding: 10px; border-radius: 7px; border: 1px solid #2a2a2a; background: #111; cursor: pointer; text-align: left; transition: border-color .12s; }
+    .mg-btn:hover { border-color: #FECC00; }
+    .mg-btn-title { font-size: 11px; font-weight: 700; margin-bottom: 2px; }
+    .mg-btn-sub { font-size: 9px; color: #555; }
+    .postes-check-wrap { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 9px; }
+    .poste-check-lbl { display: flex; align-items: center; gap: 4px; padding: 3px 8px; border-radius: 5px; border: 1px solid #2a2a2a; background: #111; cursor: pointer; font-size: 10px; }
+    .poste-check-lbl input { accent-color: #FECC00; }
+
+    /* MODAL DUPLICATION PARAMS */
+    .dup-exo-item { display: flex; align-items: center; gap: 8px; padding: 7px 10px; border-radius: 6px; border: 1px solid #2a2a2a; background: #111; margin-bottom: 4px; cursor: pointer; font-size: 11px; transition: border-color .12s; }
+    .dup-exo-item:hover { border-color: #FECC00; color: #FECC00; }
+    .dup-new-btn { width: 100%; padding: 8px; border-radius: 6px; border: 1px dashed #FECC0033; background: none; color: #FECC00; font-size: 11px; cursor: pointer; margin-top: 8px; }
+    .dup-new-btn:hover { background: #FECC0011; }
+
+    /* ===================== VISUALISATION ===================== */
+    .vue-toolbar { display: flex; gap: 7px; margin-bottom: 14px; align-items: center; flex-wrap: wrap; }
+    .vue-btn { padding: 5px 12px; border-radius: 7px; border: 1px solid #2a2a2a; background: none; color: #666; font-size: 11px; cursor: pointer; }
+    .vue-btn.active { background: #FECC00; color: #0f0f0f; font-weight: 600; border-color: #FECC00; }
+    .vue-tv-btn { padding: 5px 12px; border-radius: 7px; border: 1px solid #FECC00; background: none; color: #FECC00; font-size: 11px; cursor: pointer; }
+    .vue-blocs { display: flex; flex-direction: column; gap: 12px; }
+    .vue-bloc-card { background: #1a1a1a; border: 1px solid #2a2a2a; border-radius: 10px; overflow: hidden; }
+    .vue-bloc-hdr { padding: 8px 14px; background: #222; border-bottom: 1px solid #2a2a2a; font-size: 12px; font-weight: 700; color: #FECC00; }
+    .vue-groupes { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); }
+    .vue-groupe-col { border-right: 1px solid #111; }
+    .vue-groupe-col:last-child { border-right: none; }
+    .vue-g-hdr { padding: 6px 12px; background: #1c1c1c; border-bottom: 1px solid #111; font-size: 9px; font-weight: 700; color: #555; text-transform: uppercase; letter-spacing: .06em; }
+    .vue-exos { padding: 5px 12px; border-bottom: 1px solid #111; }
+    .vue-exo-nom { font-size: 10px; color: #bbb; padding: 2px 0; }
+    .vue-exo-params { font-size: 9px; color: #333; }
+    .vue-joueurs { padding: 5px 10px; }
+    .vue-j-row { display: flex; align-items: center; gap: 6px; padding: 3px 0; border-bottom: 1px solid #0d0d0d; cursor: pointer; transition: background .1s; }
+    .vue-j-row:hover { background: #1c1c1c; border-radius: 3px; padding-left: 4px; }
+    .vue-j-nom { font-size: 10px; flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .charges-scroll { display: flex; gap: 4px; overflow-x: auto; max-width: 140px; padding-bottom: 1px; }
+    .charges-scroll::-webkit-scrollbar { height: 2px; }
+    .charges-scroll::-webkit-scrollbar-thumb { background: #2a2a2a; }
+    .chg-badge { flex-shrink: 0; text-align: center; }
+    .chg-val { font-size: 9px; color: #FECC00; font-weight: 600; white-space: nowrap; }
+    .chg-nom { font-size: 6px; color: #2a2a2a; white-space: nowrap; max-width: 44px; overflow: hidden; text-overflow: ellipsis; }
+    .badge-ok { font-size: 8px; padding: 1px 5px; border-radius: 8px; font-weight: 600; white-space: nowrap; }
+    .badge-ok.done { background: #1D9E7522; color: #1D9E75; border: 1px solid #1D9E7544; }
+    .badge-ok.partial { background: #EF9F2722; color: #EF9F27; border: 1px solid #EF9F2744; }
+    .badge-ok.empty { background: #111; color: #333; border: 1px solid #1a1a1a; }
+
+    /* VUE INDIV */
+    .indiv-card { background: #1a1a1a; border: 1px solid #2a2a2a; border-radius: 10px; padding: 16px; max-width: 560px; }
+    .indiv-bloc { margin-bottom: 12px; }
+    
+    /* PREVIEW CHARGE */
+    .charge-preview-pill {
+      font-size: 9px;
+      color: #666;
+      background: #222;
+      padding: 1px 4px;
+      border-radius: 3px;
+      margin-top: 2px;
+      white-space: nowrap;
+      text-align: center;
+    }
+    .charge-preview-inline {
+      color: #555;
+      font-size: 11px;
+      margin-left: 6px;
+      background: #1a1a1a;
+      padding: 1px 5px;
+      border-radius: 3px;
+    }
+    .indiv-bloc-title { font-size: 9px; font-weight: 700; color: #FECC00; text-transform: uppercase; margin-bottom: 6px; letter-spacing: .06em; }
+    .indiv-exo { background: #111; border-radius: 6px; padding: 8px 10px; margin-bottom: 4px; }
+    .indiv-exo-nom { font-size: 11px; font-weight: 600; margin-bottom: 2px; }
+    .indiv-params { font-size: 9px; color: #444; margin-bottom: 5px; }
+    .serie-boxes { display: flex; gap: 4px; flex-wrap: wrap; }
+    .s-box { background: #1a1a1a; border: 1px solid #2a2a2a; border-radius: 5px; padding: 4px 6px; text-align: center; min-width: 48px; }
+    .s-lbl { font-size: 7px; color: #333; margin-bottom: 1px; }
+    .s-inp { width: 100%; background: none; border: none; color: #FECC00; font-size: 11px; font-weight: 600; text-align: center; outline: none; }
+    .s-pre { font-size: 7px; color: #2a2a2a; margin-top: 1px; }
+
+    /* MODE BLESSÉS */
+    .blesse-exo-row { display: grid; grid-template-columns: 24px 70px 1fr 42px 42px 62px 34px 34px 24px; gap: 3px; align-items: center; padding: 4px 0; border-bottom: 1px solid #0f0f0f; }
+    .xi-libre { text-align: left; font-size: 10px; color: #F09595; border-color: #E24B4A22; }
+
+    /* ===================== PLANIFICATION CASCADE ===================== */
+    .planif-cycle-block { background:#1a1a1a; border:1px solid #2a2a2a; border-radius:12px; overflow:hidden; margin-bottom:14px; }
+    .planif-cycle-hdr { display:flex; align-items:center; gap:10px; padding:13px 18px; background:#222; cursor:pointer; transition:background .12s; user-select:none; }
+    .planif-cycle-hdr:hover { background:#262626; }
+    .planif-cycle-num { font-size:10px; font-weight:700; color:#FECC00; background:#FECC0022; border:1px solid #FECC0044; border-radius:6px; padding:2px 8px; white-space:nowrap; }
+    .planif-cycle-nom { font-size:14px; font-weight:700; flex:1; }
+    .planif-cycle-meta { font-size:11px; color:#555; white-space:nowrap; }
+    .planif-cycle-actions { display:flex; gap:4px; }
+    .planif-chevron { font-size:11px; color:#555; transition:transform .2s; flex-shrink:0; }
+    .planif-sem-block { border-top:1px solid #1a1a1a; }
+    .planif-sem-hdr { display:flex; align-items:center; gap:10px; padding:9px 18px 9px 32px; background:#1c1c1c; cursor:pointer; transition:background .12s; }
+    .planif-sem-hdr:hover { background:#1f1f1f; }
+    .planif-sem-num { font-size:10px; font-weight:700; color:#888; min-width:70px; }
+    .planif-sem-dates { font-size:12px; color:#ccc; flex:1; }
+    .planif-sem-meta { font-size:11px; color:#555; white-space:nowrap; }
+    .planif-sem-body { background:#111; padding:6px 18px 6px 48px; }
+    .planif-seance-row { display:flex; align-items:center; gap:10px; padding:8px 10px; border-radius:8px; cursor:pointer; transition:background .12s; }
+    .planif-seance-row:hover { background:#1a1a1a; }
+    .planif-seance-pill { font-size:10px; color:#FECC00; background:#FECC0011; border:1px solid #FECC0033; border-radius:4px; padding:2px 7px; white-space:nowrap; }
+    .planif-seance-theme { font-size:12px; color:#ccc; flex:1; }
+    .planif-badge { font-size:9px; padding:1px 6px; border-radius:4px; }
+    .planif-row-actions { display:flex; gap:4px; opacity:0; transition:opacity .12s; }
+    .planif-seance-row:hover .planif-row-actions { opacity:1; }
+    .planif-seance-drag { cursor:grab; color:#333; font-size:14px; flex-shrink:0; padding:0 4px; transition:color .1s; }
+    .planif-seance-row:hover .planif-seance-drag { color:#555; }
+    .planif-seance-row.dragging { opacity:0.35; background:#1a1a1a; }
+    .planif-sem-body.drop-target { background:#FECC0008; outline:2px dashed #FECC0055; outline-offset:-4px; }
+    .planif-cycle-body .planif-sem-body.drop-target { outline-color:#FECC00aa; }
+
+    /* MODAL DÉPLACER SÉANCE */
+    .drop-day-grid { display:grid; grid-template-columns:repeat(7,1fr); gap:6px; margin:14px 0; }
+    .drop-day-btn { border-radius:8px; border:1px solid #2a2a2a; background:#111; padding:8px 4px; text-align:center; cursor:pointer; transition:all .12s; position:relative; }
+    .drop-day-btn:hover { border-color:#FECC00; background:#FECC0011; }
+    .drop-day-btn.has-seance { border-color:#FECC0055; background:#FECC0011; }
+    .drop-day-btn.selected { border-color:#FECC00; background:#FECC0033; box-shadow:0 0 0 1px #FECC00; }
+    .drop-day-label { font-size:9px; font-weight:700; color:#666; text-transform:uppercase; margin-bottom:3px; }
+    .drop-day-num { font-size:14px; font-weight:700; color:#ccc; }
+    .drop-day-dot { display:flex; flex-direction:column; gap:2px; margin-top:4px; align-items:center; }
+    .drop-day-seance-chip { font-size:8px; color:#FECC00; background:#FECC0022; border-radius:3px; padding:1px 4px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%; }
+
+    /* ===================== CALENDRIER NOUVELLE SÉANCE ===================== */
+    .ns-calendrier-container { display:flex; flex-direction:column; gap:16px; }
+    .ns-cal-header { display:flex; align-items:center; gap:12px; padding-bottom:12px; border-bottom:1px solid #2a2a2a; flex-shrink:0; }
+    .ns-cal-cycle-info { font-size:12px; color:#888; }
+    .ns-cal-cycle-info strong { color:#FECC00; }
+    .ns-cal-semaines { display:flex; flex-direction:column; gap:12px; max-height:55vh; min-height:300px; overflow-y:auto; padding-right:8px; }
+    .ns-cal-semaines::-webkit-scrollbar { width:6px; }
+    .ns-cal-semaines::-webkit-scrollbar-track { background:#1a1a1a; border-radius:3px; }
+    .ns-cal-semaines::-webkit-scrollbar-thumb { background:#333; border-radius:3px; }
+    .ns-cal-semaines::-webkit-scrollbar-thumb:hover { background:#444; }
+    .ns-cal-semaine { border:1px solid #2a2a2a; border-radius:10px; overflow:hidden; flex-shrink:0; }
+    .ns-cal-semaine-hdr { background:#1a1a1a; padding:10px 14px; font-size:12px; font-weight:700; color:#FECC00; border-bottom:1px solid #2a2a2a; display:flex; justify-content:space-between; align-items:center; }
+    .ns-cal-semaine-dates { font-size:11px; color:#555; font-weight:400; }
+    .ns-cal-jours { display:grid; grid-template-columns:repeat(7,1fr); gap:6px; padding:10px; }
+    .ns-cal-jour { border-radius:8px; border:1px solid #2a2a2a; background:#111; padding:10px 6px; text-align:center; cursor:pointer; transition:all .12s; position:relative; min-height:70px; }
+    .ns-cal-jour:hover { border-color:#FECC00; background:#FECC0011; }
+    .ns-cal-jour.selected { border-color:#FECC00; background:#FECC0033; box-shadow:0 0 0 2px #FECC00; }
+    .ns-cal-jour.passe { opacity:0.4; }
+    .ns-cal-jour-nom { font-size:10px; font-weight:700; color:#666; text-transform:uppercase; margin-bottom:6px; }
+    .ns-cal-jour-num { font-size:18px; font-weight:700; color:#ccc; }
+    .ns-cal-jour-seances { display:flex; flex-direction:column; gap:3px; margin-top:6px; }
+    .ns-cal-jour-chip { font-size:9px; color:#FECC00; background:#FECC0022; border-radius:3px; padding:2px 4px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .ns-cal-jour-today .ns-cal-jour-num { color:#FECC00; }
+    .ns-cal-actions { display:flex; gap:8px; justify-content:flex-end; margin-top:12px; padding-top:12px; border-top:1px solid #2a2a2a; flex-shrink:0; }
+
+    .jour-btn { padding:12px 8px; border-radius:8px; border:1px solid #2a2a2a; background:#111; color:#ccc; font-size:12px; font-weight:600; cursor:pointer; transition:all .12s; }
+    .jour-btn:hover { border-color:#FECC00; background:#FECC0011; color:#FECC00; }
+    .jour-btn.selected { border-color:#FECC00; background:#FECC0033; color:#FECC00; box-shadow:0 0 0 1px #FECC00; }
+
+    /* ===================== GROUPES PAR DÉFAUT ===================== */
+    .gdp-topbar { display:flex; align-items:center; gap:8px; padding:10px 16px; border-bottom:1px solid #2a2a2a; background:#111; flex-shrink:0; flex-wrap:wrap; }
+    .gdp-layout { display:flex; flex:1; overflow:hidden; }
+    .gdp-cats { width:240px; min-width:240px; border-right:1px solid #2a2a2a; overflow-y:auto; background:#0d0d0d; }
+    .gdp-main { flex:1; overflow-y:auto; padding:14px 18px; }
+    .gdp-cat-item { display:flex; align-items:center; gap:8px; padding:9px 14px; cursor:pointer; border-left:2px solid transparent; font-size:12px; color:#666; transition:all .12s; }
+    .gdp-cat-item:hover { background:#111; color:#ccc; }
+    .gdp-cat-item.active { color:#FECC00; border-left-color:#FECC00; background:#1a1a1a; }
+    .gdp-cat-item.fv-cat { font-size:11px; }
+    .gdp-cat-item.fv-cat.active { color:#a855f7; border-left-color:#a855f7; }
+    .gdp-cat-count { font-size:9px; color:#444; margin-left:auto; }
+    .gdp-cat-section { font-size:9px; color:#333; text-transform:uppercase; letter-spacing:.08em; font-weight:700; padding:12px 14px 4px; }
+    .gdp-grande-cat { background:#141414; border:1px solid #1e1e1e; border-radius:10px; margin-bottom:12px; overflow:hidden; }
+    .gdp-gc-hdr { display:flex; align-items:center; gap:8px; padding:10px 14px; background:#1c1c1c; border-bottom:1px solid #1e1e1e; }
+    .gdp-gc-nom { background:none; border:none; color:#FECC00; font-size:13px; font-weight:700; outline:none; flex:1; min-width:0; }
+    .gdp-gc-body { padding:10px; }
+    .gdp-sous-cat { background:#111; border:1px solid #1a1a1a; border-radius:7px; margin-bottom:7px; overflow:hidden; }
+    .gdp-sc-hdr { display:flex; align-items:center; gap:6px; padding:7px 10px; background:#161616; border-bottom:1px solid #1a1a1a; }
+    .gdp-sc-nom { background:none; border:none; color:#ccc; font-size:11px; font-weight:600; outline:none; flex:1; min-width:0; }
+    .gdp-sc-body { padding:8px 10px; }
+    .gdp-joueur-tag { display:inline-flex; align-items:center; gap:3px; background:#1a1a1a; border:1px solid #2a2a2a; border-radius:4px; padding:2px 7px; font-size:9px; color:#aaa; margin:2px; cursor:grab; }
+    .gdp-joueur-tag button { background:none; border:none; color:#333; cursor:pointer; font-size:8px; padding:0 1px; }
+    .gdp-joueur-tag button:hover { color:#E24B4A; }
+    .gdp-joueur-tag.dragging { opacity:0.4; }
+    .gdp-drop-zone { min-height:28px; border:1px dashed #1e1e1e; border-radius:4px; padding:4px; margin-top:6px; display:flex; flex-wrap:wrap; gap:3px; transition:border-color .12s; }
+    .gdp-drop-zone.dragover { border-color:#FECC00; background:#FECC0005; }
+    .gdp-fv-badge { font-size:8px; padding:1px 5px; border-radius:3px; font-weight:600; }
+    .gdp-add-sc { width:100%; padding:5px; border-radius:5px; border:1px dashed #1a1a1a; background:none; color:#333; font-size:10px; cursor:pointer; margin-top:4px; transition:all .12s; }
+    .gdp-add-sc:hover { border-color:#FECC0044; color:#FECC00; }
+    .gdp-btn-import { padding:4px 10px; border-radius:5px; border:1px solid #FECC0033; background:#FECC0011; color:#FECC00; font-size:10px; cursor:pointer; white-space:nowrap; transition:all .12s; }
+    .gdp-btn-import:hover { background:#FECC0022; border-color:#FECC00; }
+    .gdp-modal { background:#1a1a1a; border:1px solid #2a2a2a; border-radius:12px; padding:20px; width:460px; max-height:88vh; overflow-y:auto; }
+    .gdp-fv-section { background:#111; border:1px solid #a855f722; border-radius:8px; padding:8px 12px; margin-bottom:10px; }
+    .gdp-fv-title { font-size:9px; color:#a855f7; font-weight:700; text-transform:uppercase; letter-spacing:.06em; margin-bottom:6px; }
+
+    /* MODE BONUS */
+    .bonus-exo-row { display: grid; grid-template-columns: 24px 70px 1fr 42px 42px 62px 34px 34px 24px; gap: 3px; align-items: center; padding: 4px 0; border-bottom: 1px solid #0f0f0f; background: #1D9E7508; }
+    .bonus-bloc-card { background: #141414; border: 1px solid #1D9E7533; border-radius: 10px; margin-bottom: 10px; overflow: hidden; }
+    .bonus-bloc-hdr { display: flex; align-items: center; gap: 6px; padding: 7px 10px; background: #1D9E7511; border-bottom: 1px solid #1D9E7522; }
+  </style>
+
+  <style>
+  /* ===== iPad-first NAV override ===== */
+  * { -webkit-tap-highlight-color: transparent; }
+  :root {
+    --yellow: #FECC00; --red: #E24B4A; --green: #1D9E75;
+    --bg: #0a0a0a; --bg2: #141414; --bg3: #1c1c1c;
+    --border: #1e1e1e; --border2: #2a2a2a;
+    --text: #fff; --text2: #888; --text3: #555;
+    --safe-bottom: env(safe-area-inset-bottom, 0px);
+    --topbar-h: 60px; --bottom-h: 68px;
+  }
+  /* Kill sidebar */
+  .sidebar { display: none !important; }
+  /* Body layout */
+  body { flex-direction: column !important; overflow: hidden !important; background: var(--bg) !important; }
+  /* Main takes full width */
+  .main { flex: 1 !important; display: flex !important; flex-direction: column !important; overflow: hidden !important;
+          padding-bottom: calc(var(--bottom-h) + var(--safe-bottom)) !important; }
+  /* Existing topbar: keep but restyle */
+  .main > .topbar, #topbar-liste, #topbar-editor {
+    border-bottom: 1px solid var(--border2) !important;
+    display: flex !important; align-items: center !important;
+    padding: 8px 16px !important; gap: 10px !important;
+    flex-shrink: 0 !important; flex-wrap: wrap !important;
+    background: var(--bg) !important; height: auto !important; min-height: 52px !important;
+  }
+  .topbar-title { display: none !important; }
+  /* iPad Topbar */
+  .ipad-topbar {
+    height: var(--topbar-h); background: var(--bg2); border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; padding: 0 16px; gap: 12px; flex-shrink: 0;
+    padding-top: env(safe-area-inset-top, 0);
+  }
+  .ipad-topbar-home { display: flex; align-items: center; gap: 8px; text-decoration: none; }
+  .ipad-topbar-logo {
+    width: 34px; height: 34px; border-radius: 9px; background: var(--yellow);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px; font-weight: 900; color: #000; flex-shrink: 0;
+  }
+  .ipad-topbar-sitename { font-size: 13px; font-weight: 700; color: var(--yellow); }
+  .ipad-topbar-sep { width: 1px; height: 22px; background: var(--border2); margin: 0 4px; }
+  .ipad-topbar-title { font-size: 18px; font-weight: 700; color: var(--text); flex: 1; }
+  /* Bottom Nav */
+  .ipad-bottom-nav {
+    position: fixed; bottom: 0; left: 0; right: 0;
+    height: calc(var(--bottom-h) + var(--safe-bottom));
+    padding-bottom: var(--safe-bottom);
+    background: var(--bg2); border-top: 1px solid var(--border);
+    display: flex; align-items: stretch; z-index: 9999;
+  }
+  .ipad-nav-item {
+    flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 3px; cursor: pointer; text-decoration: none; color: var(--text3);
+    font-size: 10px; font-weight: 600; letter-spacing: 0.02em; transition: color 0.12s;
+    padding: 0 2px; border: none; background: none;
+  }
+  .ipad-nav-item:active { background: #ffffff08; }
+  .ipad-nav-item.active { color: var(--yellow); }
+  .ipad-nav-icon { font-size: 22px; line-height: 1; }
+  /* Bigger buttons */
+  .btn-primary { padding: 11px 18px !important; border-radius: 10px !important; font-size: 14px !important; font-weight: 700 !important; min-height: 44px !important; cursor: pointer !important; }
+  .btn-ghost   { padding: 11px 14px !important; border-radius: 10px !important; font-size: 14px !important; min-height: 44px !important; cursor: pointer !important; }
+  .btn-danger  { padding: 11px 14px !important; border-radius: 10px !important; font-size: 14px !important; min-height: 44px !important; cursor: pointer !important; }
+  .btn-nav     { padding: 10px 14px !important; min-height: 44px !important; border-radius: 9px !important; font-size: 16px !important; }
+  /* Mode toggle */
+  .mode-toggle { border-radius: 10px !important; padding: 4px !important; }
+  .mode-btn    { padding: 9px 14px !important; border-radius: 7px !important; font-size: 13px !important; min-height: 38px !important; }
+  /* Prevent iOS input zoom */
+  input, select, textarea { font-size: 16px !important; }
+  /* Content scroll */
+  .content { flex: 1 !important; overflow-y: auto !important; -webkit-overflow-scrolling: touch !important; padding: 16px 18px !important; }
+  /* Touch targets */
+  .seance-card, .cycle-header, .semaine-header { min-height: 54px !important; }
+  /* Modal */
+  .modal { width: min(580px, 94vw) !important; max-width: 94vw !important; }
+  .modal-box { width: min(500px, 94vw) !important; }
+  </style>
+
+</head>
+<body>
+  <!-- iPad TopBar -->
+  <div class="ipad-topbar">
+    <a class="ipad-topbar-home" href="index.html">
+      <div class="ipad-topbar-logo">SC</div>
+      <span class="ipad-topbar-sitename">SCA Albi</span>
+    </a>
+    <div class="ipad-topbar-sep"></div>
+    <div class="ipad-topbar-title">Séances</div>
+  </div>
+  <!-- Bottom Nav -->
+  <nav class="ipad-bottom-nav">
+    <a class="ipad-nav-item" href="planning.html">
+      <span class="ipad-nav-icon">📅</span>
+      <span>Planning</span>
+    </a>
+    <a class="ipad-nav-item" href="fiches-seances.html">
+      <span class="ipad-nav-icon">🏉</span>
+      <span>Séances</span>
+    </a>
+    <a class="ipad-nav-item" href="equipes.html?mode=entrainement">
+      <span class="ipad-nav-icon">👥</span>
+      <span>Équipes</span>
+    </a>
+    <a class="ipad-nav-item" href="gps-planif.html">
+      <span class="ipad-nav-icon">📡</span>
+      <span>Charge GPS</span>
+    </a>
+    <a class="ipad-nav-item active" href="seances.html">
+      <span class="ipad-nav-icon">🏋️</span>
+      <span>Musculation</span>
+    </a>
+    <a class="ipad-nav-item" href="suivi-poids.html">
+      <span class="ipad-nav-icon">⚖️</span>
+      <span>Suivi Poids</span>
+    </a>
+    <a class="ipad-nav-item" href="tv.html">
+      <span class="ipad-nav-icon">📺</span>
+      <span>Vue TV</span>
+    </a>
+  </nav>
+
+  <div class="sidebar">
+    <div class="sidebar-logo">
+      <img src="https://www.sca-albi.fr/wp-content/uploads/2023/10/cropped-SCA-bis.png">
+      <span>SCA Albi</span>
+    </div>
+    <div class="nav-section">Effectif</div>
+    <div class="nav-item" onclick="location.href='index.html'"><div class="nav-dot"></div> Roster</div>
+    <div class="nav-section">Musculation</div>
+    <div class="nav-item active" onclick="location.href='seances.html'"><div class="nav-dot"></div> Séances</div>
+    <div class="nav-item" onclick="location.href='fiches-seances.html'"><div class="nav-dot"></div> Fiches Séances</div>
+    <div class="nav-item" onclick="location.href='exercices.html'"><div class="nav-dot"></div> Exercices</div>
+    <div class="nav-item" onclick="location.href='suivi-poids.html'"><div class="nav-dot"></div> Suivi Poids</div>
+    <div class="nav-section">Suivi</div>
+    <div class="nav-item" onclick="location.href='wellness.html'"><div class="nav-dot"></div> Wellness</div>
+    <div class="nav-item" onclick="location.href='performances.html'"><div class="nav-dot"></div> Performances</div>
+    <div class="nav-item" onclick="location.href='medical.html'"><div class="nav-dot"></div> Médical</div>
+    <div class="nav-item" onclick="location.href='absences.html'"><div class="nav-dot"></div> Absences</div>
+    <div class="nav-section">Planning</div>
+    <div class="nav-item" onclick="location.href='planning.html'"><div class="nav-dot"></div> Planning club</div>
+    <div class="nav-item" onclick="location.href='planning-blesses.html'"><div class="nav-dot"></div> Blessés</div>
+    <div class="nav-section">Équipes</div>
+    <div class="nav-item" onclick="location.href='equipes.html'"><div class="nav-dot"></div> Composition équipes</div>
+    <div class="nav-section">GPS</div>
+    <div class="nav-item" onclick="location.href='gps.html'"><div class="nav-dot"></div> Données GPS</div>
+    <div class="nav-item" onclick="location.href='gps-match.html'"><div class="nav-dot"></div> Rapport de match</div>
+    <div class="nav-item" onclick="location.href='gps-planif.html'"><div class="nav-dot"></div> Planification charge</div>
+    <div class="nav-item" onclick="location.href='profil-force-vitesse.html'"><div class="nav-dot"></div> Profil F-V</div>
+    <div class="sidebar-bottom">
+      <div class="user-info" id="user-email"></div>
+      <button class="logout-btn" onclick="handleLogout()">Se déconnecter</button>
+    </div>
+  </div>
+
+  <div class="main">
+    <!-- TOPBAR LISTE -->
+    <div class="topbar" id="topbar-liste">
+      <div class="topbar-title">Planification muscu</div>
+      <div class="mode-toggle" style="margin-right:auto;">
+        <button class="mode-btn active" id="btn-view-planif" onclick="setVueListe('planif')">📊 Planification</button>
+        <button class="mode-btn" id="btn-view-liste" onclick="setVueListe('liste')">📋 Liste</button>
+      </div>
+      <button class="btn-ghost" onclick="location.href='exercices.html'">Gérer les exercices</button>
+      <button class="btn-ghost" onclick="ouvrirGroupesParDefaut()">📂 Groupes par défaut</button>
+      <button class="btn-ghost" onclick="ouvrirModalCycle()">+ Nouveau cycle</button>
+      <button class="btn-primary" onclick="nouvelleSeance()">+ Nouvelle séance</button>
+      <button class="btn-primary" style="background:#1D9E75;border-color:#1D9E75;" onclick="nouvelleSeanceBonus()">+ Séance bonus</button>
+    </div>
+
+    <!-- TOPBAR ÉDITEUR -->
+    <div class="topbar" id="topbar-editor" style="display:none; height:auto; min-height:52px;">
+      <button class="btn-ghost" onclick="retourListe()">← Retour</button>
+      <input type="date" id="edit-date" />
+      <select id="edit-theme" style="flex:1;max-width:200px;">
+        <optgroup label="Générales">
+          <option>Préparation développement</option><option>Préparation reprise</option>
+          <option>Force maximale</option><option>Puissance</option>
+          <option>Endurance de force</option><option>Pré-compétition</option><option>Post-compétition</option>
+        </optgroup>
+        <optgroup label="Blessés">
+          <option>Réathlétisation — Phase 1</option><option>Réathlétisation — Phase 2</option>
+          <option>Programme blessé individuel</option>
+        </optgroup>
+      </select>
+      <select id="edit-cycle" style="max-width:160px;"><option value="">— Aucun cycle —</option></select>
+      <label style="display:flex;align-items:center;gap:4px;font-size:11px;color:#666;cursor:pointer;white-space:nowrap;">
+        <input type="checkbox" id="edit-blesse" style="accent-color:#E24B4A;" onchange="onBlesseToggle(this.checked)" /> Blessés
+      </label>
+      <div class="mode-toggle">
+        <button class="mode-btn active" id="btn-edit" onclick="setMode('edit')">Édition</button>
+        <button class="mode-btn" id="btn-view" onclick="setMode('view')">Visualisation</button>
+        <button class="mode-btn" id="btn-bonus" onclick="setMode('bonus')" style="color:#1D9E75;">⚡ Bonus</button>
+        <button class="mode-btn" id="btn-blesse" onclick="setMode('blesse')" style="color:#E24B4A;">🩹 Blessés</button>
+      </div>
+      <button class="btn-ghost" style="border-color:#FECC0033;color:#FECC00;" onclick="ouvrirPopupGDP()">📂 Groupes défaut</button>
+      <button class="btn-ghost" onclick="dupliquer()">📋 Dupliquer</button>
+      <button class="btn-primary" onclick="sauvegarder()">💾 Enregistrer</button>
+    </div>
+
+    <!-- LISTE -->
+    <div id="section-liste" class="content">
+      <!-- VUE LISTE SIMPLE -->
+      <div id="liste-seances" style="display:none;"><div class="empty-state">Chargement...</div></div>
+      <!-- PLANIFICATION CASCADE (par défaut) -->
+      <div id="planification-cascade"></div>
+    </div>
+
+    <!-- GROUPES PAR DÉFAUT -->
+    <div id="section-gdp" style="display:none; flex:1; flex-direction:column; overflow:hidden;">
+      <div class="gdp-topbar">
+        <button class="btn-ghost" onclick="fermerGroupesParDefaut()">← Retour</button>
+        <span style="font-size:14px;font-weight:700;flex:1;">📂 Groupes par défaut</span>
+        <button class="btn-primary" onclick="ajouterGrandeCat()">+ Grande catégorie</button>
+        <button class="btn-primary" style="background:#888;" onclick="sauverGroupesParDefaut()">💾 Enregistrer</button>
+      </div>
+      <div class="gdp-layout">
+        <!-- Sidebar catégories -->
+        <div class="gdp-cats" id="gdp-cats-sidebar">
+          <div class="gdp-cat-section">Mes catégories</div>
+          <div id="gdp-cats-list"></div>
+          <div class="gdp-cat-section" style="margin-top:8px;">Groupes F-V</div>
+          <div id="gdp-fv-list"></div>
+        </div>
+        <!-- Contenu principal -->
+        <div class="gdp-main">
+          <!-- Vue: mes catégories -->
+          <div id="gdp-panel-cats">
+            <div id="gdp-grandes-cats"></div>
+            <div style="color:#333;font-size:11px;text-align:center;padding:30px;display:none;" id="gdp-empty-cats">
+              Aucune catégorie. Cliquez "+ Grande catégorie" pour commencer.
+            </div>
+          </div>
+          <!-- Vue: groupes F-V -->
+          <div id="gdp-panel-fv" style="display:none;">
+            <div style="background:#a855f711;border:1px solid #a855f733;border-radius:10px;padding:14px;margin-bottom:14px;">
+              <div style="font-size:12px;color:#a855f7;font-weight:700;margin-bottom:4px;">⚡ Groupes Force-Vitesse</div>
+              <div style="font-size:11px;color:#666;line-height:1.6;">Groupes calculés automatiquement depuis le module Profil F-V. Utilisez-les lors de l'édition d'une séance pour ajouter automatiquement les joueurs.</div>
+            </div>
+            <div id="gdp-fv-detail-content"></div>
+          </div>
+        </div>
+        <!-- Ruban joueurs à droite -->
+        <div id="gdp-player-rail" style="width:210px;min-width:210px;border-left:1px solid #2a2a2a;background:#0d0d0d;display:flex;flex-direction:column;overflow:hidden;">
+          <div style="padding:10px 12px;border-bottom:1px solid #2a2a2a;background:#111;flex-shrink:0;">
+            <div style="font-size:9px;font-weight:700;color:#FECC00;text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px;">Effectif</div>
+            <input id="gdp-rail-search" type="text" placeholder="Rechercher..." style="width:100%;padding:4px 8px;border-radius:5px;border:1px solid #2a2a2a;background:#1a1a1a;color:#fff;font-size:10px;outline:none;" oninput="renderGDPRail()"/>
+          </div>
+          <div id="gdp-rail-list" style="flex:1;overflow-y:auto;padding:6px;"></div>
+          <div style="padding:8px;border-top:1px solid #2a2a2a;flex-shrink:0;background:#111;">
+            <div id="gdp-rail-selected-count" style="font-size:9px;color:#555;margin-bottom:5px;">0 joueur sélectionné</div>
+            <div id="gdp-rail-drop-hint" style="font-size:9px;color:#FECC00;display:none;margin-bottom:4px;">Glisse sur une sous-catégorie ↑</div>
+            <select id="gdp-rail-target-gc" style="width:100%;padding:4px;border-radius:5px;border:1px solid #2a2a2a;background:#1a1a1a;color:#aaa;font-size:9px;outline:none;margin-bottom:4px;display:none;"></select>
+            <select id="gdp-rail-target-sc" style="width:100%;padding:4px;border-radius:5px;border:1px solid #2a2a2a;background:#1a1a1a;color:#aaa;font-size:9px;outline:none;margin-bottom:5px;display:none;"></select>
+            <button id="gdp-rail-add-btn" onclick="gdpRailAjouter()" style="width:100%;padding:5px;border-radius:5px;border:none;background:#FECC00;color:#0f0f0f;font-size:10px;font-weight:700;cursor:pointer;display:none;">+ Ajouter la sélection</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ÉDITEUR -->
+    <div class="editor" id="section-editor">
+      <!-- MODE ÉDITION -->
+      <div id="mode-edit" class="editor-split">
+        <div class="editor-main">
+          <div id="blocs-container"></div>
+          <button class="btn-add-bloc" onclick="ajouterBloc()">+ Ajouter un bloc</button>
+        </div>
+        <div class="editor-sidebar">
+          <div class="sidebar-attrib-header">Attribution joueurs</div>
+          <div id="attrib-sidebar" style="padding:8px;"></div>
+        </div>
+      </div>
+      <!-- MODE VISUALISATION -->
+      <div id="mode-view" style="display:none;" class="editor-main">
+        <div class="vue-toolbar">
+          <button class="vue-btn active" id="btn-vue-col" onclick="setVue('collective')">Vue collective</button>
+          <button class="vue-btn" id="btn-vue-ind" onclick="setVue('individuelle')">Vue individuelle</button>
+          <button class="vue-tv-btn" onclick="if(!window.seanceId){alert('Veuillez d\'abord ouvrir une séance.');return;}localStorage.setItem('tv_seance_id',window.seanceId);window.open('tv.html','_blank')">Mode TV ↗</button>
+        </div>
+        <div id="vue-collective-content" class="vue-blocs"></div>
+        <div id="vue-indiv-content" style="display:none;">
+          <select id="vue-joueur-sel" onchange="renderVueIndiv()" style="padding:6px 10px;border-radius:7px;border:1px solid #2a2a2a;background:#1a1a1a;color:#fff;font-size:12px;outline:none;margin-bottom:12px;max-width:240px;">
+            <option value="">Choisir un joueur...</option>
+          </select>
+          <div id="vue-indiv-card"></div>
+        </div>
+      </div>
+      <!-- MODE BONUS -->
+      <div id="mode-bonus" style="display:none;" class="editor-split">
+        <div class="editor-main">
+          <div id="bonus-container"></div>
+          <button class="btn-add-bloc" onclick="ajouterBlocBonus()" style="border-color:#1D9E7533;color:#1D9E75;">⚡ Ajouter un bloc bonus</button>
+        </div>
+        <div class="editor-sidebar">
+          <div class="sidebar-attrib-header" style="color:#1D9E75;">Joueurs sélectionnés</div>
+          <div id="attrib-sidebar-bonus" style="padding:8px;"></div>
+        </div>
+      </div>
+      <!-- MODE BLESSÉS -->
+      <div id="mode-blesse" style="display:none;" class="editor-split">
+        <div class="editor-main">
+          <div id="blesse-container"></div>
+          <button class="btn-add-bloc" onclick="ajouterBlocBlesse()" style="border-color:#E24B4A33;color:#E24B4A;">🩹 Ajouter un bloc blessé</button>
+        </div>
+        <div class="editor-sidebar">
+          <div class="sidebar-attrib-header" style="color:#E24B4A;">Joueurs blessés</div>
+          <div id="attrib-sidebar-blesse" style="padding:8px;"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL GROUPE -->
+  <div class="modal-overlay" id="modal-groupe">
+    <div class="modal-box">
+      <div class="modal-title">Quel type de groupe ?</div>
+      <div class="mg-grid" id="mg-grid-types"></div>
+      <div style="border-top:1px solid #2a2a2a;padding-top:10px;margin-top:4px;">
+        <div style="font-size:9px;color:#555;margin-bottom:6px;text-transform:uppercase;letter-spacing:.06em;">Par postes spécifiques</div>
+        <div class="postes-check-wrap" id="postes-checkboxes"></div>
+        <button onclick="creerGroupePostes()" style="padding:5px 12px;border-radius:6px;border:none;background:#FECC00;color:#0f0f0f;font-size:11px;font-weight:600;cursor:pointer;margin-top:6px;">Créer avec ces postes</button>
+      </div>
+      <div style="margin-top:10px;">
+        <button onclick="fermerModalGroupe()" style="padding:4px 10px;border-radius:6px;border:1px solid #2a2a2a;background:none;color:#666;font-size:10px;cursor:pointer;">Annuler</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL DUPLIQUER PARAMS EXO -->
+  <div class="modal-overlay" id="modal-dup-params">
+    <div class="modal-box" style="width:380px;">
+      <div class="modal-title">📋 Dupliquer les paramètres vers...</div>
+      <div style="font-size:10px;color:#555;margin-bottom:10px;">Choisir un exercice existant ou créer un nouveau</div>
+      <div id="dup-params-list"></div>
+      <button class="dup-new-btn" onclick="dupParamsVersNouvel()">+ Nouvel exercice (mêmes paramètres)</button>
+      <div style="margin-top:10px;">
+        <button onclick="fermerModalDupParams()" style="padding:4px 10px;border-radius:6px;border:1px solid #2a2a2a;background:none;color:#666;font-size:10px;cursor:pointer;">Annuler</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL CYCLE -->
+  <div class="modal-overlay" id="modal-cycle">
+    <div class="modal-box" style="width:460px;">
+      <div class="modal-title" id="modal-cycle-title">Nouveau cycle</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">
+        <div>
+          <label style="font-size:11px;color:#555;display:block;margin-bottom:4px;">Numéro</label>
+          <input type="number" id="cy-num" value="1" min="1" style="width:100%;padding:6px 10px;border-radius:7px;border:1px solid #2a2a2a;background:#0f0f0f;color:#fff;font-size:13px;outline:none;" />
+        </div>
+        <div>
+          <label style="font-size:11px;color:#555;display:block;margin-bottom:4px;">Nom</label>
+          <input type="text" id="cy-nom" placeholder="Ex: Prépa physique..." style="width:100%;padding:6px 10px;border-radius:7px;border:1px solid #2a2a2a;background:#0f0f0f;color:#fff;font-size:13px;outline:none;" />
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">
+        <div>
+          <label style="font-size:11px;color:#555;display:block;margin-bottom:4px;">Date début</label>
+          <input type="date" id="cy-debut" style="width:100%;padding:6px 10px;border-radius:7px;border:1px solid #2a2a2a;background:#0f0f0f;color:#fff;font-size:13px;outline:none;color-scheme:dark;" />
+        </div>
+        <div>
+          <label style="font-size:11px;color:#555;display:block;margin-bottom:4px;">Nb semaines</label>
+          <input type="number" id="cy-semaines" value="4" min="1" max="52" style="width:100%;padding:6px 10px;border-radius:7px;border:1px solid #2a2a2a;background:#0f0f0f;color:#fff;font-size:13px;outline:none;" />
+        </div>
+      </div>
+      <div style="margin-bottom:10px;">
+        <label style="font-size:11px;color:#555;display:block;margin-bottom:4px;">Description (optionnel)</label>
+        <textarea id="cy-desc" rows="2" placeholder="Objectifs, notes..." style="width:100%;padding:6px 10px;border-radius:7px;border:1px solid #2a2a2a;background:#0f0f0f;color:#fff;font-size:12px;outline:none;resize:none;font-family:inherit;"></textarea>
+      </div>
+      <div style="display:flex;gap:8px;justify-content:flex-end;">
+        <button onclick="fermerModalCycle()" style="padding:6px 12px;border-radius:7px;border:1px solid #2a2a2a;background:none;color:#666;font-size:12px;cursor:pointer;">Annuler</button>
+        <button id="btn-del-cycle" style="display:none;padding:6px 12px;border-radius:7px;border:1px solid #E24B4A33;background:none;color:#E24B4A;font-size:12px;cursor:pointer;" onclick="supprimerCycle()">Supprimer</button>
+        <button onclick="sauvegarderCycle()" style="padding:6px 14px;border-radius:7px;border:none;background:#FECC00;color:#0f0f0f;font-size:12px;font-weight:700;cursor:pointer;">Enregistrer</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL NOUVELLE SÉANCE AVEC CALENDRIER -->
+  <div class="modal-overlay" id="modal-nouvelle-seance">
+    <div class="modal-box" style="width:680px;max-width:95vw;">
+      <div class="modal-title">📅 Nouvelle séance</div>
+      <div class="ns-calendrier-container" id="ns-cal-container">
+        <div class="ns-cal-header">
+          <div class="ns-cal-cycle-info">Sélectionnez un jour dans le calendrier</div>
+        </div>
+        <div class="ns-cal-semaines" id="ns-cal-semaines"></div>
+        <div class="ns-cal-actions">
+          <button onclick="fermerModalNouvelleSeance()" style="padding:8px 16px;border-radius:7px;border:1px solid #2a2a2a;background:none;color:#666;font-size:12px;cursor:pointer;">Annuler</button>
+          <button onclick="confirmerNouvelleSeance()" style="padding:8px 18px;border-radius:7px;border:none;background:#FECC00;color:#0f0f0f;font-size:12px;font-weight:700;cursor:pointer;">Créer la séance</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL DÉPLACER SÉANCE -->
+  <div class="modal-overlay" id="modal-drop-day">
+    <div class="modal-box" style="width:520px;">
+      <div class="modal-title">📅 Déplacer vers quel jour ?</div>
+      <div id="drop-day-content"></div>
+      <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:14px;">
+        <button onclick="fermerModalDropDay()" style="padding:6px 12px;border-radius:7px;border:1px solid #2a2a2a;background:none;color:#666;font-size:12px;cursor:pointer;">Annuler</button>
+        <button onclick="confirmerDropDay()" style="padding:6px 14px;border-radius:7px;border:none;background:#FECC00;color:#0f0f0f;font-size:12px;font-weight:700;cursor:pointer;">Déplacer</button>
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from './firebase-bundle.js'
+    import { getAuth, onAuthStateChanged, signOut } from './firebase-bundle.js'
+    import { getFirestore, collection, doc, setDoc, getDoc, getDocs, onSnapshot, deleteDoc, serverTimestamp } from './firebase-bundle.js'
+
+    const firebaseConfig = { apiKey:"AIzaSyCvMs-5LX9Ivk3OkzUR3iz9Kk1E5b9_7Vk",authDomain:"delta-rugby-app.firebaseapp.com",projectId:"delta-rugby-app",storageBucket:"delta-rugby-app.firebasestorage.app",messagingSenderId:"61187079762",appId:"1:61187079762:web:56cd1eaa8beb9e1a2ee98b" }
+    const fbApp = initializeApp(firebaseConfig)
+    const auth = getAuth(fbApp)
+    const db = getFirestore(fbApp)
+
+    const POSTES_AVANTS = ['Pilier','Talonneur','2e Ligne','3e Ligne']
+    const POSTES_3_4 = ['Demi de mêlée',"Demi d'ouverture",'Centre','Ailier','Arrière']
+    const POSTES_TOUS = [...POSTES_AVANTS,...POSTES_3_4]
+    const EXERCICES_ROIS = ['DC','BOX SQUAT','SDT','TIRAGE SOUS BANC']
+
+    let joueurs=[], ratios={}, seances=[], exercicesCustom=[], cycles=[]
+    let seanceEnCours=null, chargesReelles={}, currentMode='edit', currentVue='collective'
+    window.seanceId=null
+    let pendingBlocId=null, pendingDupBlocId=null, pendingDupGroupeId=null, pendingDupExoId=null
+    let ZONES=[]
+
+    // ==================== CALCUL CHARGE (INLINE) ====================
+    function calculerCharge(exoNom, intensityVal, nbReps, maxTestes, ratiosData, unit) {
+      const val = parseFloat(intensityVal); if (!val) return null
+      let pct = 0
+      if (unit==='%') pct=val
+      else if (unit==='Vitesse (m/s)') { pct=Math.round(100-((val-0.2)/(1.3-0.2))*70); pct=Math.max(10,Math.min(100,pct)) }
+      else pct=val*10
+      const nom=(exoNom||'').toUpperCase().trim()
+      let oneRM=maxTestes?.[exoNom]||maxTestes?.[nom]
+      if (!oneRM) {
+        for (const roi of EXERCICES_ROIS) {
+          const r=ratiosData?.[`${exoNom}_vs_${roi}`]||ratiosData?.[`${nom}_vs_${roi}`]
+          const mx=maxTestes?.[roi]||maxTestes?.[roi.toUpperCase()]
+          if (r&&mx){oneRM=Math.round(mx*r);break}
+        }
+      }
+      return oneRM ? Math.round(oneRM*pct/100) : null
+    }
+    function labelCharge(exoNom,iv,reps,mx,rat,unit){const kg=calculerCharge(exoNom,iv,reps,mx,rat,unit);return kg?`${kg} kg`:'---'}
+    
+    // Fonction pour calculer la charge preview en kg quand l'intensité est en %
+    function chargePreviewPct(exercice, pct, maxTestes, ratiosData) {
+      if (!pct || pct <= 0) return null;
+      
+      // Chercher 1RM direct
+      const nom = (exercice || '').toUpperCase().trim();
+      let oneRM = maxTestes?.[exercice] || maxTestes?.[nom];
+      
+      // Si pas de 1RM direct, chercher via ratios (mvt roi)
+      if (!oneRM && ratiosData) {
+        for (const roi of EXERCICES_ROIS) {
+          const r = ratiosData?.[`${exercice}_vs_${roi}`] || ratiosData?.[`${nom}_vs_${roi}`];
+          const mx = maxTestes?.[roi] || maxTestes?.[roi.toUpperCase()];
+          if (r && mx) {
+            oneRM = Math.round(mx * r);
+            break;
+          }
+        }
+      }
+      
+      if (!oneRM || oneRM <= 0) return null;
+      
+      // Calcul : pct% du 1RM, arrondi au 2.5kg
+      const charge = (pct / 100) * oneRM;
+      return Math.round(charge / 2.5) * 2.5;
+    }
+
+    // ==================== INIT ====================
+    onAuthStateChanged(auth, async user => {
+      if (!user){window.location.href='login.html';return}
+      document.getElementById('user-email').textContent=user.email
+      const [jSnap,mxSnap,ratSnap,exoSnap,cycSnap]=await Promise.all([
+        getDocs(collection(db,'joueurs')),getDocs(collection(db,'maxTestes')),
+        getDoc(doc(db,'config','ratios')),getDoc(doc(db,'config','exercices')),
+        getDocs(collection(db,'cycles'))
+      ])
+      joueurs=jSnap.docs.map(d=>{const mx=mxSnap.docs.find(x=>x.id===d.id);return{id:d.id,...d.data(),maxTestes:mx?mx.data():{}}})
+      ratios=ratSnap.exists()?ratSnap.data():{}
+      exercicesCustom=exoSnap.exists()?(exoSnap.data().liste||[]):[]
+      cycles=cycSnap.docs.map(d=>({id:d.id,...d.data()}))
+      ZONES=[...new Set(exercicesCustom.map(e=>e.zone).filter(Boolean))].sort()
+
+      // Postes checkboxes
+      const wrap=document.getElementById('postes-checkboxes')
+      POSTES_TOUS.forEach(p=>{
+        const l=document.createElement('label');l.className='poste-check-lbl'
+        l.innerHTML=`<input type="checkbox" value="${p}" style="accent-color:#FECC00;"/> ${p}`;wrap.appendChild(l)
+      })
+
+      onSnapshot(collection(db,'seances'),snap=>{
+        seances=snap.docs.map(d=>({...d.data(),id:d.id}))
+        seances.sort((a,b)=>(b.date||'').localeCompare(a.date||''))
+        renderPlanification()
+        renderListe() // Prépare aussi les données pour la vue liste
+      })
+
+      const editId=localStorage.getItem('edit_seance_id')
+      if(editId){localStorage.removeItem('edit_seance_id');const s=await getDoc(doc(db,'seances',editId));if(s.exists()){window.seanceId=editId;seanceEnCours={id:editId,...s.data()};ouvrirEditeur()}}
+    })
+
+    // ==================== LISTE ====================
+    window.renderListe=function(){
+      const c=document.getElementById('liste-seances')
+      if(!seances.length){c.innerHTML='<div class="empty-state">Aucune séance.</div>';return}
+      c.innerHTML=seances.map(s=>`
+        <div class="seance-card" onclick="ouvrirSeance('${s.id}')">
+          <div class="seance-date">${s.date?new Date(s.date+'T00:00:00').toLocaleDateString('fr-FR',{weekday:'short',day:'numeric',month:'short',year:'numeric'}):'-'}</div>
+          <div class="seance-meta">${s.theme||'Sans thème'}${s.estBlessé?'<span class="badge-blesse">Blessés</span>':''}</div>
+          <div class="seance-actions">
+            <button class="icon-btn" onclick="event.stopPropagation();dupliquerSeance('${s.id}')">📋</button>
+            <button class="icon-btn" style="color:#E24B4A;" onclick="event.stopPropagation();supprimerSeance('${s.id}')">✕</button>
+          </div>
+        </div>`).join('')
+    }
+
+    window.ouvrirSeance=async function(id){
+      const s=seances.find(x=>x.id===id);if(!s)return
+      window.seanceId=id;seanceEnCours={...s}
+      // charger charges
+      chargesReelles={}
+      const snap=await getDocs(collection(db,'chargesReelles'))
+      snap.docs.forEach(d=>{if(d.id.startsWith(id+'_'))Object.assign(chargesReelles,d.data())})
+      ouvrirEditeur()
+    }
+
+    window.nouvelleSeance=function(){
+      window.seanceId=null
+      seanceEnCours={date:new Date().toISOString().split('T')[0],theme:'Force maximale',estBlessé:false,cycleId:null,blocs:[],blocsBlesses:[]}
+      chargesReelles={}
+      ouvrirEditeur()
+    }
+
+    function ouvrirEditeur(){
+      document.getElementById('section-liste').style.display='none'
+      document.getElementById('section-editor').classList.add('open')
+      document.getElementById('topbar-liste').style.display='none'
+      document.getElementById('topbar-editor').style.display='flex'
+      document.getElementById('edit-date').value=seanceEnCours.date||''
+      const thSel=document.getElementById('edit-theme')
+      for(let i=0;i<thSel.options.length;i++) if(thSel.options[i].text===seanceEnCours.theme){thSel.selectedIndex=i;break}
+      document.getElementById('edit-blesse').checked=!!seanceEnCours.estBlessé
+      const cycSel=document.getElementById('edit-cycle')
+      cycSel.innerHTML='<option value="">— Aucun cycle —</option>'
+      cycles.forEach(c=>{const o=new Option(`Cycle n°${c.numero} — ${c.nom}`,c.id);if(c.id===seanceEnCours.cycleId)o.selected=true;cycSel.appendChild(o)})
+      if(!seanceEnCours.blocs)seanceEnCours.blocs=[]
+      if(!seanceEnCours.blocsBlesses)seanceEnCours.blocsBlesses=[]
+      setMode('edit')
+    }
+
+    window.retourListe=function(){
+      document.getElementById('section-liste').style.display='block'
+      document.getElementById('section-editor').classList.remove('open')
+      document.getElementById('topbar-liste').style.display='flex'
+      document.getElementById('topbar-editor').style.display='none'
+      seanceEnCours=null;window.seanceId=null
+    }
+
+    // ==================== VUE LISTE / PLANIF ====================
+    window.setVueListe=function(vue){
+      document.getElementById('btn-view-planif').classList.toggle('active',vue==='planif')
+      document.getElementById('btn-view-liste').classList.toggle('active',vue==='liste')
+      document.getElementById('planification-cascade').style.display=vue==='planif'?'block':'none'
+      document.getElementById('liste-seances').style.display=vue==='liste'?'block':'none'
+      if(vue==='planif')renderPlanification()
+      if(vue==='liste')renderListe()
+    }
+
+    // ==================== MODE ====================
+    window.setMode=function(mode){
+      currentMode=mode
+      document.getElementById('mode-edit').style.display=mode==='edit'?'flex':'none'
+      document.getElementById('mode-view').style.display=mode==='view'?'block':'none'
+      document.getElementById('mode-blesse').style.display=mode==='blesse'?'flex':'none'
+      document.getElementById('btn-edit').classList.toggle('active',mode==='edit')
+      document.getElementById('btn-view').classList.toggle('active',mode==='view')
+      document.getElementById('btn-blesse').classList.toggle('active',mode==='blesse')
+      if(mode==='edit'){renderBlocs();renderAttribSidebar()}
+      if(mode==='view'){renderVueCollective();remplirSelJoueur()}
+      if(mode==='blesse'){renderBlesseEditor();renderAttribSidebarBlesse()}
+    }
+    window.onBlesseToggle=function(checked){if(checked)setMode('blesse')}
+
+    // ==================== BLOCS ====================
+    function renderBlocs(){
+      const c=document.getElementById('blocs-container');if(!seanceEnCours)return;c.innerHTML=''
+      seanceEnCours.blocs?.forEach(b=>c.appendChild(makeBlocCard(b)))
+    }
+    window.ajouterBloc=function(){
+      if(!seanceEnCours)return
+      if(!seanceEnCours.blocs)seanceEnCours.blocs=[]
+      seanceEnCours.blocs.push({id:'bloc_'+Date.now(),nom:'Bloc '+(seanceEnCours.blocs.length+1),groupes:[],comment:''})
+      renderBlocs();renderAttribSidebar()
+    }
+    window.dupliquerBloc=function(id){
+      let src = null
+      let parentSeance = null
+      
+      if (seanceEnCours && seanceEnCours.blocs) {
+        src = seanceEnCours.blocs.find(b=>b.id===id)
+        if (src) parentSeance = seanceEnCours
+      }
+      
+      if (!src) {
+        for (const s of seances) {
+          if (s.blocs) {
+            src = s.blocs.find(b=>b.id===id)
+            if (src) {
+              parentSeance = s
+              break
+            }
+          }
+        }
+      }
+      
+      if (!src || !parentSeance) return
+      
+      // Crée un modal dynamique et élégant
+      const modal = document.createElement('div')
+      modal.className = 'custom-dup-modal'
+      modal.style.cssText = 'position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.85); z-index:99999; display:flex; align-items:center; justify-content:center; padding:20px; font-family:-apple-system, BlinkMacSystemFont, sans-serif;'
+      
+      const box = document.createElement('div')
+      box.style.cssText = 'background:#161616; border:1px solid #2a2a2a; border-radius:14px; width:500px; max-height:85vh; display:flex; flex-direction:column; overflow:hidden; box-shadow:0 10px 30px rgba(0,0,0,0.5);'
+      
+      // Header
+      const hdr = document.createElement('div')
+      hdr.style.cssText = 'display:flex; align-items:center; justify-content:space-between; padding:16px 20px; border-bottom:1px solid #2a2a2a;'
+      hdr.innerHTML = `
+        <span style="font-size:13px; font-weight:700; color:#fff;">📋 Dupliquer le bloc : "${src.nom}"</span>
+        <button id="close-dup-modal" style="background:none; border:none; color:#555; font-size:18px; cursor:pointer; line-height:1;">✕</button>
+      `
+      box.appendChild(hdr)
+      
+      // Body
+      const body = document.createElement('div')
+      body.style.cssText = 'padding:20px; display:flex; flex-direction:column; gap:16px; overflow-y:auto; flex:1; min-height:0;'
+      
+      // Section 1: Séance actuelle
+      const sec1 = document.createElement('div')
+      sec1.innerHTML = `<div style="font-size:10px; color:#555; text-transform:uppercase; font-weight:700; margin-bottom:8px;">Option 1 : Séance actuelle</div>`
+      const btnActuelle = document.createElement('button')
+      btnActuelle.style.cssText = 'width:100%; text-align:left; background:#1c1c1c; border:1px solid #2a2a2a; border-radius:10px; padding:12px 16px; color:#fff; cursor:pointer; font-size:12px; display:flex; align-items:center; justify-content:space-between; transition:all 0.12s;'
+      btnActuelle.innerHTML = `
+        <div style="flex:1; min-width:0; text-align:left;">
+          <div style="font-weight:700; color:#FECC00;">Dupliquer dans cette séance</div>
+          <div style="font-size:11px; color:#888; margin-top:3px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">Copie conforme de ce bloc dans la même séance</div>
+        </div>
+        <span style="font-size:14px; margin-left:12px; color:#FECC00;">➔</span>
+      `
+      btnActuelle.onmouseenter = () => { btnActuelle.style.borderColor = '#FECC00'; btnActuelle.style.background = '#FECC0005' }
+      btnActuelle.onmouseleave = () => { btnActuelle.style.borderColor = '#2a2a2a'; btnActuelle.style.background = '#1c1c1c' }
+      
+      btnActuelle.onclick = () => {
+        executerDuplication(parentSeance)
+        modal.remove()
+      }
+      sec1.appendChild(btnActuelle)
+      body.appendChild(sec1)
+      
+      // Section 2: Autre séance
+      const sec2 = document.createElement('div')
+      sec2.style.cssText = 'display:flex; flex-direction:column; flex:1; min-height:0;'
+      sec2.innerHTML = `
+        <div style="font-size:10px; color:#555; text-transform:uppercase; font-weight:700; margin-bottom:8px;">Option 2 : Vers une autre séance</div>
+        <input type="text" id="dup-search-seance" placeholder="Rechercher une séance par thème ou date..." style="width:100%; box-sizing:border-box; background:#0f0f0f; border:1px solid #2a2a2a; border-radius:8px; padding:10px 12px; color:#fff; font-size:12px; margin-bottom:10px; outline:none;" />
+      `
+      
+      const listContainer = document.createElement('div')
+      listContainer.style.cssText = 'flex:1; overflow-y:auto; background:#0f0f0f; border:1px solid #2a2a2a; border-radius:10px; display:flex; flex-direction:column; max-height:220px;'
+      
+      function formatFrDate(dateStr) {
+        if(!dateStr) return '—'
+        const parts = dateStr.split('-')
+        if (parts.length !== 3) return dateStr
+        return `${parts[2]}/${parts[1]}/${parts[0]}`
+      }
+
+      function populateSessions(filterText = '') {
+        listContainer.innerHTML = ''
+        const q = filterText.toLowerCase()
+        
+        // Trier toutes les séances par date décroissante
+        const sorted = seances.slice().sort((a,b) => (b.date||'').localeCompare(a.date||''))
+        
+        let count = 0
+        for (const s of sorted) {
+          const sDateFormatted = formatFrDate(s.date)
+          const matchTheme = (s.theme||'').toLowerCase().includes(q)
+          const matchDate = sDateFormatted.includes(q) || (s.date||'').includes(q)
+          
+          if (q && !matchTheme && !matchDate) continue
+          
+          count++
+          const item = document.createElement('div')
+          item.style.cssText = 'padding:10px 14px; border-bottom:1px solid #1a1a1a; cursor:pointer; font-size:11px; display:flex; flex-direction:column; gap:2px; transition:background 0.1s;'
+          
+          let cycleLabel = ''
+          if (s.cycleId) {
+            const cy = cycles.find(c => c.id === s.cycleId)
+            if (cy) cycleLabel = `Cycle ${cy.numero || ''} · `
+          }
+          
+          item.innerHTML = `
+            <div style="display:flex; justify-content:space-between; align-items:center; gap:10px;">
+              <span style="font-weight:700; color:#fff; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${s.theme || 'Sans thème'}</span>
+              <span style="color:#FECC00; font-size:10px; background:#FECC0011; padding:2px 6px; border-radius:4px; white-space:nowrap;">${sDateFormatted}</span>
+            </div>
+            <div style="font-size:10px; color:#555;">${cycleLabel}${s.type === 'blesse' ? '🩹 Séance blessé' : '💪 Séance collective'}</div>
+          `
+          
+          item.onmouseenter = () => { item.style.background = '#1a1a1a' }
+          item.onmouseleave = () => { item.style.background = 'transparent' }
+          
+          item.onclick = () => {
+            if (confirm(`Dupliquer ce bloc vers la séance du ${sDateFormatted} ("${s.theme || 'Sans thème'}") ?`)) {
+              executerDuplication(s)
+              modal.remove()
+            }
+          }
+          
+          listContainer.appendChild(item)
+        }
+        
+        if (count === 0) {
+          listContainer.innerHTML = '<div style="padding:20px; text-align:center; color:#555; font-size:11px;">Aucune séance trouvée.</div>'
+        }
+      }
+      
+      sec2.appendChild(listContainer)
+      body.appendChild(sec2)
+      box.appendChild(body)
+      modal.appendChild(box)
+      document.body.appendChild(modal)
+      
+      // Events
+      document.getElementById('close-dup-modal').onclick = () => modal.remove()
+      const searchInput = document.getElementById('dup-search-seance')
+      searchInput.oninput = (e) => populateSessions(e.target.value)
+      
+      populateSessions()
+      
+      function executerDuplication(targetSeance) {
+        const cp = JSON.parse(JSON.stringify(src))
+        cp.id = 'bloc_' + Date.now()
+        
+        if (targetSeance.id === parentSeance.id) {
+          cp.nom += ' (Copie)'
+        } else {
+          cp.nom += ` (Copie de la séance du ${formatFrDate(parentSeance.date)})`
+        }
+        
+        cp.groupes?.forEach(g => {
+          g.id = 'grp_' + Math.random().toString(36).substr(2,9)
+          g.exercices?.forEach(e => e.id = 'exo_' + Math.random().toString(36).substr(2,9))
+        })
+        
+        if (!targetSeance.blocs) targetSeance.blocs = []
+        targetSeance.blocs.push(cp)
+        
+        if (targetSeance.id) {
+          setDoc(doc(db, 'seances', targetSeance.id), targetSeance, { merge: true })
+            .then(() => {
+              saveCache('seances', seances)
+              renderBlocs()
+              renderAttribSidebar()
+              alert('Bloc dupliqué avec succès !')
+            })
+            .catch(err => console.error('Erreur sauvegarde duplication bloc:', err))
+        } else {
+          renderBlocs()
+          renderAttribSidebar()
+        }
+      }
+    }
+    window.supprimerBloc=function(id){seanceEnCours.blocs=seanceEnCours.blocs.filter(b=>b.id!==id);renderBlocs();renderAttribSidebar()}
+    window.renommerBloc=function(id,nom){const b=seanceEnCours.blocs.find(x=>x.id===id);if(b)b.nom=nom}
+    window.majBlocComment=function(id,v){const b=seanceEnCours.blocs.find(x=>x.id===id);if(b)b.comment=v}
+
+    function makeBlocCard(bloc){
+      const card=document.createElement('div');card.className='bloc-card'
+      // Header
+      const hdr=document.createElement('div');hdr.className='bloc-hdr'
+      hdr.innerHTML=`
+        <input class="bloc-nom" value="${bloc.nom}" onchange="renommerBloc('${bloc.id}',this.value)" />
+        <textarea class="comment-inp" rows="1" style="width:180px;height:22px;" placeholder="Note sur ce bloc..." onchange="majBlocComment('${bloc.id}',this.value)">${bloc.comment||''}</textarea>
+        <button class="icon-btn" style="font-size:10px;" onclick="dupliquerBloc('${bloc.id}')">⧉</button>
+        <button class="icon-btn" style="font-size:10px;" onclick="ouvrirModalGroupe('${bloc.id}')">+ Groupe</button>
+        <button class="icon-btn" style="color:#E24B4A;" onclick="supprimerBloc('${bloc.id}')">✕</button>
+      `
+      card.appendChild(hdr)
+      const body=document.createElement('div');body.className='bloc-body'
+      // Onglets groupes (max 2 visibles)
+      const tabs=document.createElement('div');tabs.className='groupes-tabs'
+      const panels=document.createElement('div')
+      const activeGrpId=bloc._activeGroupe||(bloc.groupes?.[0]?.id)
+      bloc.groupes?.forEach((g,i)=>{
+        const tab=document.createElement('button');tab.className='g-tab'+(g.autoType&&g.autoType!=='custom'?' auto-tab':'')+(g.id===activeGrpId?' active':'')
+        tab.textContent=g.nom+(g.joueurs?.length?` (${g.joueurs.length})`:' (0)')
+        tab.onclick=()=>{bloc._activeGroupe=g.id;renderBlocs()}
+        tabs.appendChild(tab)
+        const panel=document.createElement('div');panel.className='g-panel'+(g.id===activeGrpId?' active':'')
+        panel.appendChild(makeGroupePanel(g,bloc.id))
+        panels.appendChild(panel)
+      })
+      // Bouton + groupe dans les onglets
+      const addTab=document.createElement('button');addTab.className='g-tab add-tab';addTab.textContent='+'
+      addTab.onclick=()=>ouvrirModalGroupe(bloc.id);tabs.appendChild(addTab)
+      body.appendChild(tabs);body.appendChild(panels)
+      card.appendChild(body);return card
+    }
+
+    function makeGroupePanel(groupe,blocId){
+      const panel=document.createElement('div')
+      const isAuto=groupe.autoType&&groupe.autoType!=='custom'
+      // Header groupe
+      const hdr=document.createElement('div');hdr.className='g-panel-hdr'
+      hdr.innerHTML=`
+        <input class="g-nom-inp" value="${groupe.nom}" onchange="renommerGroupe('${blocId}','${groupe.id}',this.value)"/>
+        ${isAuto?'<span class="g-auto-badge">Auto</span>':''}
+        <textarea class="comment-inp" rows="1" style="width:150px;height:20px;" placeholder="Note groupe..." onchange="majGroupeComment('${blocId}','${groupe.id}',this.value)">${groupe.comment||''}</textarea>
+        <button class="icon-btn" style="color:#E24B4A;font-size:10px;" onclick="supprimerGroupe('${blocId}','${groupe.id}')">✕ Groupe</button>
+      `
+      panel.appendChild(hdr)
+      // Exercices
+      const exoWrap=document.createElement('div');exoWrap.className='exos-wrap'
+      // En-tête colonnes
+      const hdrRow=document.createElement('div');hdrRow.className='exo-hdr-row'
+      hdrRow.innerHTML='<span>#</span><span>Zone</span><span>Exercice</span><span>Sets</span><span>Reps</span><span>Intens.</span><span>Récup</span><span>Tempo</span><span>SS</span><span>⚡</span><span></span>'
+      exoWrap.appendChild(hdrRow)
+      groupe.exercices?.forEach(exo=>{
+        exoWrap.appendChild(makeExoRow(exo,blocId,groupe.id))
+        if(exo.variableSeries&&exo.seriesData?.length) exoWrap.appendChild(makeVarRow(exo,blocId,groupe.id))
+        if(exo.comment) exoWrap.appendChild(makeCommentRow(exo,blocId,groupe.id))
+      })
+      panel.appendChild(exoWrap)
+      const addBtn=document.createElement('button');addBtn.className='btn-add-exo';addBtn.innerHTML='<span style="font-size:14px;">+</span> Exo'
+      addBtn.onclick=()=>ajouterExo(blocId,groupe.id);panel.appendChild(addBtn)
+      return panel
+    }
+
+    function makeExoRow(exo,bId,gId){
+      const row=document.createElement('div')
+      row.className='exo-row'+(exo.isSuperset?' superset':'')+(exo.variableSeries?' var-open':'')
+      const zOpts=ZONES.map(z=>`<option value="${z}" ${z===exo.zone?'selected':''}>${z}</option>`).join('')
+      const unitOpts=['RPE','%','Vitesse (m/s)'].map(u=>`<option value="${u}" ${u===(exo.intensityUnit||'RPE')?'selected':''}>${u==='Vitesse (m/s)'?'m/s':u}</option>`).join('')
+      // Suggestions filtrées
+      const suggs=exercicesCustom.filter(e=>!exo.zone||e.zone===exo.zone).sort((a,b)=>a.nom.localeCompare(b.nom))
+      const dlId=`dl-${exo.id}`
+      row.innerHTML=`
+        <input class="xi xi-num" value="${exo.numExo}" onchange="majExo('${bId}','${gId}','${exo.id}','numExo',this.value)"/>
+        <select class="xi xi-zone" onchange="majExo('${bId}','${gId}','${exo.id}','zone',this.value)"><option value="">Zone</option>${zOpts}</select>
+        <div style="position:relative;display:flex;gap:2px;align-items:center;">
+          <input class="xi xi-exo" list="${dlId}" placeholder="Exercice..." value="${exo.exercice||''}" onchange="majExo('${bId}','${gId}','${exo.id}','exercice',this.value)" style="flex:1;"/>
+          <datalist id="${dlId}">${suggs.map(e=>`<option value="${e.nom}">`).join('')}</datalist>
+        </div>
+        <input class="xi" type="number" value="${exo.nbSets}" min="1" onchange="majExo('${bId}','${gId}','${exo.id}','nbSets',this.value)"/>
+        <input class="xi" type="number" value="${exo.nbReps}" min="1" onchange="majExo('${bId}','${gId}','${exo.id}','nbReps',this.value)"/>
+        <div style="display:flex;flex-direction:column;gap:1px;">
+          <select class="xi-unit" onchange="majExo('${bId}','${gId}','${exo.id}','intensityUnit',this.value)">${unitOpts}</select>
+          <input class="xi" type="number" step="0.5" value="${exo.rpe}" onchange="majExo('${bId}','${gId}','${exo.id}','rpe',this.value)"/>
+        </div>
+        <input class="xi" value="${exo.recup||''}" placeholder="1'30" onchange="majExo('${bId}','${gId}','${exo.id}','recup',this.value)"/>
+        <input class="xi" value="${exo.tempo||''}" placeholder="3-1-1" onchange="majExo('${bId}','${gId}','${exo.id}','tempo',this.value)"/>
+        <button class="xbtn${exo.isSuperset?' on':''}" onclick="toggleSup('${bId}','${gId}','${exo.id}',this)">SS</button>
+        <button class="xbtn${exo.variableSeries?' on':''}" title="Séries variables" onclick="toggleVar('${bId}','${gId}','${exo.id}')">⚡</button>
+        <div style="display:flex;flex-direction:column;gap:1px;">
+          <button class="xbtn" title="Dupliquer paramètres" onclick="ouvrirModalDupParams('${bId}','${gId}','${exo.id}')">📋</button>
+          <button class="xbtn red" onclick="supprimerExo('${bId}','${gId}','${exo.id}')">✕</button>
+        </div>
+      `
+      return row
+    }
+
+    function makeVarRow(exo,bId,gId){
+      const row=document.createElement('div');row.className='exo-var-row'
+      const unit=exo.intensityUnit||'RPE';const intLabel=unit==='Vitesse (m/s)'?'m/s':unit
+      const cells=(exo.seriesData||[]).map((s,i)=>`
+        <div class="var-cell">
+          <label>S${i+1}</label>
+          <input class="var-inp" type="number" step="0.5" value="${s.intensity}" placeholder="${intLabel}" onchange="majSerieData('${bId}','${gId}','${exo.id}',${i},'intensity',this.value)"/>
+          <input class="var-inp reps" type="number" value="${s.reps}" placeholder="reps" onchange="majSerieData('${bId}','${gId}','${exo.id}',${i},'reps',this.value)"/>
+        </div>`).join('')
+      row.innerHTML=`<div class="var-grid" style="padding:2px 0;">${cells}<div style="font-size:8px;color:#333;display:flex;align-items:flex-end;padding-bottom:3px;">${intLabel}<br>reps</div></div>`
+      return row
+    }
+
+    function makeCommentRow(exo,bId,gId){
+      const row=document.createElement('div');row.className='exo-comment-row'
+      row.innerHTML=`<textarea placeholder="Note..." onchange="majExoComment('${bId}','${gId}','${exo.id}',this.value)">${exo.comment||''}</textarea>`
+      return row
+    }
+
+    // ==================== GROUPES ====================
+    window.ouvrirModalGroupe=function(blocId){
+      pendingBlocId=blocId
+      const grid=document.getElementById('mg-grid-types');grid.innerHTML=''
+      const types=[
+        {type:'custom',color:'#FECC00',title:'Personnalisé',sub:'Nom libre, attribution manuelle'},
+        {type:'base',color:'#1D9E75',title:'BASE',sub:'Tous les joueurs disponibles'},
+        {type:'avants',color:'#378ADD',title:'AVANTS',sub:'Piliers, Talonneurs, 2e/3e Lignes'},
+        {type:'34',color:'#AFA9EC',title:'3/4 ARRIÈRES',sub:'Demis, Centres, Ailiers, Arrière'},
+      ]
+      types.forEach(t=>{
+        const btn=document.createElement('button');btn.className='mg-btn';btn.style.borderColor=t.color+'44'
+        btn.innerHTML=`<div class="mg-btn-title" style="color:${t.color};">${t.title}</div><div class="mg-btn-sub">${t.sub}</div>`
+        btn.onclick=()=>{creerGroupe(t.type);fermerModalGroupe()};grid.appendChild(btn)
+      })
+      document.querySelectorAll('#postes-checkboxes input').forEach(cb=>cb.checked=false)
+      document.getElementById('modal-groupe').classList.add('open')
+    }
+    window.fermerModalGroupe=function(){document.getElementById('modal-groupe').classList.remove('open');pendingBlocId=null}
+    window.creerGroupe=function(type){
+      const b=seanceEnCours.blocs.find(x=>x.id===pendingBlocId);if(!b)return
+      let nom,autoType,autoPostes=[]
+      if(type==='base'){nom='BASE';autoType='base'}
+      else if(type==='avants'){nom='AVANTS';autoType='poste';autoPostes=POSTES_AVANTS}
+      else if(type==='34'){nom='3/4';autoType='poste';autoPostes=POSTES_3_4}
+      else{nom='GROUPE '+((b.groupes?.length||0)+1);autoType='custom'}
+      const grp={id:'grp_'+Date.now(),nom,autoType,autoPostes,exercices:[],joueurs:[],comment:''}
+      if(!b.groupes)b.groupes=[]
+      b.groupes.push(grp);autoAttrib(b,grp);b._activeGroupe=grp.id
+      renderBlocs();renderAttribSidebar()
+    }
+    window.creerGroupePostes=function(){
+      const checked=[...document.querySelectorAll('#postes-checkboxes input:checked')].map(cb=>cb.value)
+      if(!checked.length){alert('Sélectionne au moins un poste.');return}
+      const b=seanceEnCours.blocs.find(x=>x.id===pendingBlocId);if(!b)return
+      const grp={id:'grp_'+Date.now(),nom:checked.join('+'),autoType:'poste',autoPostes:checked,exercices:[],joueurs:[],comment:''}
+      if(!b.groupes)b.groupes=[]
+      b.groupes.push(grp);autoAttrib(b,grp);b._activeGroupe=grp.id
+      fermerModalGroupe();renderBlocs();renderAttribSidebar()
+    }
+    function autoAttrib(bloc,groupe){
+      if(!groupe.autoType||groupe.autoType==='custom')return
+      let cands=joueurs.filter(j=>j.statut!=='absent'&&j.statut!=='blesse')
+      if(groupe.autoType==='poste'&&groupe.autoPostes?.length) cands=cands.filter(j=>groupe.autoPostes.includes(j.poste))
+      const deja=new Set(bloc.groupes.filter(g=>g.id!==groupe.id).flatMap(g=>g.joueurs||[]))
+      groupe.joueurs=cands.filter(j=>!deja.has(j.id)).map(j=>j.id)
+    }
+    window.supprimerGroupe=function(bId,gId){
+      const b=seanceEnCours.blocs.find(x=>x.id===bId);if(!b)return
+      b.groupes=b.groupes.filter(g=>g.id!==gId)
+      if(b._activeGroupe===gId)b._activeGroupe=b.groupes[0]?.id
+      renderBlocs();renderAttribSidebar()
+    }
+    window.renommerGroupe=function(bId,gId,nom){
+      const b=seanceEnCours.blocs.find(x=>x.id===bId);const g=b?.groupes?.find(x=>x.id===gId);if(g){g.nom=nom;renderAttribSidebar()}
+    }
+    window.majGroupeComment=function(bId,gId,v){
+      const b=seanceEnCours.blocs.find(x=>x.id===bId);const g=b?.groupes?.find(x=>x.id===gId);if(g)g.comment=v
+    }
+
+    // ==================== EXERCICES ====================
+    window.ajouterExo=function(bId,gId){
+      const b=seanceEnCours.blocs.find(x=>x.id===bId);const g=b?.groupes?.find(x=>x.id===gId);if(!g)return
+      if(!g.exercices)g.exercices=[]
+      g.exercices.push({id:'exo_'+Date.now()+Math.random().toString(36).substr(2,4),numExo:g.exercices.length+1,zone:'',exercice:'',nbSets:3,nbReps:10,rpe:7,recup:"1'30",tempo:'',isSuperset:false,intensityUnit:'RPE',comment:'',variableSeries:false,seriesData:[]})
+      renderBlocs()
+    }
+    window.majExo=function(bId,gId,eId,champ,val){
+      const b=seanceEnCours.blocs.find(x=>x.id===bId);const g=b?.groupes?.find(x=>x.id===gId);const e=g?.exercices?.find(x=>x.id===eId);if(!e)return
+      if(['nbSets','nbReps','rpe'].includes(champ)){e[champ]=parseFloat(val)||0;if(champ==='nbSets'&&e.variableSeries)e.seriesData=Array.from({length:e.nbSets},(_,i)=>e.seriesData[i]||{reps:e.nbReps,intensity:e.rpe})}
+      else e[champ]=val
+      if(champ==='zone')e.exercice=''
+      renderBlocs()
+    }
+    window.supprimerExo=function(bId,gId,eId){
+      const b=seanceEnCours.blocs.find(x=>x.id===bId);const g=b?.groupes?.find(x=>x.id===gId);if(g){g.exercices=g.exercices.filter(e=>e.id!==eId);renderBlocs()}
+    }
+    window.toggleSup=function(bId,gId,eId,btn){
+      const b=seanceEnCours.blocs.find(x=>x.id===bId);const g=b?.groupes?.find(x=>x.id===gId);const e=g?.exercices?.find(x=>x.id===eId);if(!e)return
+      e.isSuperset=!e.isSuperset;renderBlocs()
+    }
+    window.toggleVar=function(bId,gId,eId){
+      const b=seanceEnCours.blocs.find(x=>x.id===bId);const g=b?.groupes?.find(x=>x.id===gId);const e=g?.exercices?.find(x=>x.id===eId);if(!e)return
+      e.variableSeries=!e.variableSeries
+      if(e.variableSeries&&(!e.seriesData||e.seriesData.length!==e.nbSets)) e.seriesData=Array.from({length:e.nbSets},()=>({reps:e.nbReps,intensity:e.rpe}))
+      renderBlocs()
+    }
+    window.majSerieData=function(bId,gId,eId,idx,champ,val){
+      const b=seanceEnCours.blocs.find(x=>x.id===bId);const g=b?.groupes?.find(x=>x.id===gId);const e=g?.exercices?.find(x=>x.id===eId);if(e?.seriesData)e.seriesData[idx][champ]=parseFloat(val)||0
+    }
+    window.majExoComment=function(bId,gId,eId,v){
+      const b=seanceEnCours.blocs.find(x=>x.id===bId);const g=b?.groupes?.find(x=>x.id===gId);const e=g?.exercices?.find(x=>x.id===eId);if(e)e.comment=v
+    }
+
+    // ==================== MODAL DUPLICATION PARAMS ====================
+    window.ouvrirModalDupParams=function(bId,gId,eId){
+      pendingDupBlocId=bId;pendingDupGroupeId=gId;pendingDupExoId=eId
+      const list=document.getElementById('dup-params-list');list.innerHTML=''
+      // Lister tous les exercices de tous les groupes de cette séance
+      seanceEnCours.blocs?.forEach(bloc=>{
+        bloc.groupes?.forEach(groupe=>{
+          groupe.exercices?.forEach(exo=>{
+            if(exo.id===eId)return // pas soi-même
+            const item=document.createElement('div');item.className='dup-exo-item'
+            item.innerHTML=`<span style="color:#555;font-size:9px;">${bloc.nom} / ${groupe.nom}</span> <span>${exo.exercice||'[sans nom]'} — ${exo.nbSets}×${exo.nbReps}</span>`
+            item.onclick=()=>{dupParamsVersExo(bloc.id,groupe.id,exo.id);fermerModalDupParams()}
+            list.appendChild(item)
+          })
+        })
+      })
+      if(!list.children.length)list.innerHTML='<div style="color:#333;font-size:11px;text-align:center;padding:16px;">Aucun autre exercice dans la séance.</div>'
+      document.getElementById('modal-dup-params').classList.add('open')
+    }
+    window.fermerModalDupParams=function(){document.getElementById('modal-dup-params').classList.remove('open')}
+
+    function getExoParams(bId,gId,eId){
+      const b=seanceEnCours.blocs.find(x=>x.id===bId);const g=b?.groupes?.find(x=>x.id===gId);return g?.exercices?.find(x=>x.id===eId)
+    }
+    function applyParams(src,target){
+      // Copie uniquement les params, pas le nom/exercice/zone
+      const fields=['nbSets','nbReps','rpe','recup','tempo','intensityUnit','variableSeries','seriesData','isSuperset']
+      fields.forEach(f=>{if(src[f]!==undefined)target[f]=JSON.parse(JSON.stringify(src[f]??null))})
+    }
+    function dupParamsVersExo(targetBId,targetGId,targetEId){
+      const src=getExoParams(pendingDupBlocId,pendingDupGroupeId,pendingDupExoId)
+      const target=getExoParams(targetBId,targetGId,targetEId)
+      if(src&&target){applyParams(src,target);renderBlocs()}
+    }
+    window.dupParamsVersNouvel=function(){
+      const src=getExoParams(pendingDupBlocId,pendingDupGroupeId,pendingDupExoId)
+      if(!src)return
+      const b=seanceEnCours.blocs.find(x=>x.id===pendingDupBlocId);const g=b?.groupes?.find(x=>x.id===pendingDupGroupeId);if(!g)return
+      const cp={...JSON.parse(JSON.stringify(src)),id:'exo_'+Date.now()+Math.random().toString(36).substr(2,4),exercice:'',numExo:g.exercices.length+1}
+      g.exercices.push(cp)
+      fermerModalDupParams();renderBlocs()
+    }
+
+    // ==================== SIDEBAR ATTRIBUTION ====================
+    function renderAttribSidebar(){
+      const c=document.getElementById('attrib-sidebar');if(!c||!seanceEnCours)return;c.innerHTML=''
+      const hasGroups=seanceEnCours.blocs?.some(b=>b.groupes?.length>0)
+      if(!hasGroups){c.innerHTML='<div style="color:#333;font-size:10px;text-align:center;padding:20px;">Ajoute des groupes pour attribuer des joueurs.</div>';return}
+      seanceEnCours.blocs?.forEach(bloc=>{
+        if(!bloc.groupes?.length)return
+        const sec=document.createElement('div');sec.className='attrib-bloc-sec'
+        const title=document.createElement('div');title.className='attrib-bloc-title'
+        title.innerHTML=`<span>${bloc.nom}</span><span class="chevron">▼</span>`
+        title.onclick=()=>{title.classList.toggle('collapsed');content.classList.toggle('hidden')}
+        sec.appendChild(title)
+        const content=document.createElement('div');content.className='attrib-bloc-content'
+        // Joueurs déjà utilisés dans ce bloc
+        const usedInBloc=new Set(bloc.groupes.flatMap(g=>g.joueurs||[]))
+        bloc.groupes.forEach(groupe=>{
+          const gc=document.createElement('div');gc.className='attrib-groupe-card'
+          const gname=document.createElement('div');gname.className='attrib-g-name'
+          gname.innerHTML=`${groupe.nom} <span style="color:#444;font-size:9px;">(${groupe.joueurs?.length||0})</span>`
+          gc.appendChild(gname)
+          // Tags joueurs
+          const tags=document.createElement('div');tags.className='joueur-tags'
+          groupe.joueurs?.forEach(jid=>{
+            const j=joueurs.find(x=>x.id===jid);if(!j)return
+            const tag=document.createElement('span');tag.className='j-tag'+(j.statut==='blesse'?' blesse':'')
+            tag.innerHTML=`${j.nom} ${j.prenom?j.prenom[0]+'.':''}`
+            const btn=document.createElement('button');btn.textContent='✕'
+            btn.onclick=()=>{groupe.joueurs=groupe.joueurs.filter(id=>id!==jid);renderBlocs();renderAttribSidebar()}
+            tag.appendChild(btn);tags.appendChild(tag)
+          })
+          gc.appendChild(tags)
+          // Multi-select joueurs disponibles
+          const msWrap=document.createElement('div');msWrap.className='multi-sel-wrap'
+          const msBtn=document.createElement('button');msBtn.className='multi-sel-btn'
+          msBtn.innerHTML='<span>+ Ajouter joueurs</span><span>▼</span>'
+          const dropdown=document.createElement('div');dropdown.className='multi-sel-dropdown'
+          // Filtrer joueurs non déjà dans ce groupe
+          const available=joueurs.filter(j=>!groupe.joueurs?.includes(j.id)).sort((a,b)=>a.nom.localeCompare(b.nom))
+          available.forEach(j=>{
+            const item=document.createElement('div');item.className='multi-sel-item'
+            const cb=document.createElement('input');cb.type='checkbox';cb.value=j.id;cb.style.accentColor='#FECC00'
+            const lbl=document.createElement('span');lbl.textContent=`${j.nom} ${j.prenom||''} ${j.statut==='blesse'?'🔴':j.statut==='absent'?'⚫':''}`
+            item.appendChild(cb);item.appendChild(lbl)
+            item.onclick=e=>{if(e.target!==cb)cb.checked=!cb.checked}
+            dropdown.appendChild(item)
+          })
+          const confirm=document.createElement('button');confirm.className='multi-sel-confirm';confirm.textContent='✓ Confirmer'
+          confirm.onclick=()=>{
+            const selected=[...dropdown.querySelectorAll('input:checked')].map(cb=>cb.value)
+            if(!groupe.joueurs)groupe.joueurs=[]
+            selected.forEach(id=>{if(!groupe.joueurs.includes(id))groupe.joueurs.push(id)})
+            dropdown.classList.remove('open');renderBlocs();renderAttribSidebar()
+          }
+          dropdown.appendChild(confirm)
+          msBtn.onclick=e=>{e.stopPropagation();dropdown.classList.toggle('open')}
+          document.addEventListener('click',()=>dropdown.classList.remove('open'),{once:false})
+          msWrap.appendChild(msBtn);msWrap.appendChild(dropdown)
+          gc.appendChild(msWrap);content.appendChild(gc)
+        })
+        sec.appendChild(content);c.appendChild(sec)
+      })
+    }
+
+    // ==================== SAUVEGARDE ====================
+    window.sauvegarder=async function(){
+      if(!seanceEnCours)return
+      seanceEnCours.date=document.getElementById('edit-date').value
+      seanceEnCours.theme=document.getElementById('edit-theme').value
+      seanceEnCours.estBlessé=document.getElementById('edit-blesse').checked
+      seanceEnCours.cycleId=document.getElementById('edit-cycle').value||null
+      const ref=window.seanceId?doc(db,'seances',window.seanceId):doc(collection(db,'seances'))
+      window.seanceId=ref.id
+      // Nettoyer _activeGroupe avant sauvegarde
+      const dataToSave=JSON.parse(JSON.stringify(seanceEnCours))
+      dataToSave.blocs?.forEach(b=>delete b._activeGroupe)
+      delete dataToSave.id
+      await setDoc(ref,{...dataToSave,updatedAt:serverTimestamp()})
+      renderListe();alert('Séance enregistrée !')
+    }
+
+    window.dupliquer=async function(){
+      const d=prompt('Date pour la copie (YYYY-MM-DD) :',new Date().toISOString().split('T')[0])
+      if(!d)return
+      if(!window.seanceId){alert('Enregistre d\'abord la séance.');return}
+      const snap=await getDoc(doc(db,'seances',window.seanceId));if(!snap.exists())return
+      const {updatedAt,id:_oid,...data}=snap.data()
+      // Ne copier QUE la structure, pas les charges
+      const newRef=doc(collection(db,'seances'))
+      await setDoc(newRef,{...JSON.parse(JSON.stringify(data)),date:d,updatedAt:serverTimestamp()})
+      alert('Séance dupliquée vers '+d+' !')
+    }
+
+    window.dupliquerSeance=async function(id){
+      const d=prompt('Date pour la copie (YYYY-MM-DD) :',new Date().toISOString().split('T')[0])
+      if(!d)return
+      const snap=await getDoc(doc(db,'seances',id));if(!snap.exists())return
+      const {updatedAt,id:_oid,...data}=snap.data()
+      await setDoc(doc(collection(db,'seances')),{...JSON.parse(JSON.stringify(data)),date:d,updatedAt:serverTimestamp()})
+      alert('Dupliquée !')
+    }
+
+    window.supprimerSeance=async function(id){
+      if(!confirm('Supprimer cette séance ?'))return
+      await deleteDoc(doc(db,'seances',id))
+    }
+
+    // ==================== VISUALISATION ====================
+    function completionBadge(jid,sId,blocs){
+      let total=0,filled=0
+      blocs?.forEach(b=>b.groupes?.forEach(g=>{if(!g.joueurs?.includes(jid))return;g.exercices?.forEach(e=>{for(let s=1;s<=e.nbSets;s++){total++;if(chargesReelles[`${sId}_${b.id}_${g.id}_${e.id}_${jid}_s${s}`])filled++}})}))
+      if(!total)return''
+      if(filled>=total)return'<span class="badge-ok done">✓</span>'
+      if(filled>0)return`<span class="badge-ok partial">◑${filled}/${total}</span>`
+      return'<span class="badge-ok empty">○</span>'
+    }
+
+    window.renderVueCollective=function(){
+      const c=document.getElementById('vue-collective-content');c.innerHTML=''
+      seanceEnCours?.blocs?.forEach(bloc=>{
+        const card=document.createElement('div');card.className='vue-bloc-card'
+        card.innerHTML=`<div class="vue-bloc-hdr">${bloc.nom}</div>`
+        const gw=document.createElement('div');gw.className='vue-groupes'
+        bloc.groupes?.forEach(groupe=>{
+          const col=document.createElement('div');col.className='vue-groupe-col'
+          col.innerHTML=`<div class="vue-g-hdr">${groupe.nom} · ${groupe.joueurs?.length||0}j</div>`
+          const ed=document.createElement('div');ed.className='vue-exos'
+          groupe.exercices?.forEach(e=>{
+            const u=e.intensityUnit||'RPE'
+            // Calculer preview si % et 1RM connu
+            let previewHtml = '';
+            if ((u === '%' || u === 'PCT') && e.rpe > 0) {
+              const pct = parseFloat(e.rpe);
+              const chargeKg = chargePreviewPct(e.exercice, pct, groupe.joueurs?.[0] ? joueurs.find(x=>x.id===groupe.joueurs[0])?.maxTestes : {}, ratios);
+              if (chargeKg !== null) {
+                previewHtml = `<div style="font-size:8px;color:#444;margin-top:1px;">${chargeKg} kg</div>`;
+              }
+            }
+            ed.innerHTML+=`<div class="vue-exo-nom">${e.isSuperset?'↳ ':''}${e.numExo}. ${e.exercice||'—'}</div><div class="vue-exo-params">${e.nbSets}×${e.nbReps} · ${u} ${e.rpe}${e.recup?' · '+e.recup:''}</div>${previewHtml}`
+          })
+          col.appendChild(ed)
+          const jd=document.createElement('div');jd.className='vue-joueurs'
+          groupe.joueurs?.forEach(jid=>{
+            const j=joueurs.find(x=>x.id===jid);if(!j)return
+            const chargesHtml=(groupe.exercices||[]).map(e=>{
+              const ch=labelCharge(e.exercice,e.rpe,e.nbReps,j.maxTestes||{},ratios,e.intensityUnit)
+              // Ajouter preview si % et 1RM connu pour ce joueur
+              let previewBadge = '';
+              const u=e.intensityUnit||'RPE';
+              if ((u === '%' || u === 'PCT') && e.rpe > 0) {
+                const pct = parseFloat(e.rpe);
+                const chargeKg = chargePreviewPct(e.exercice, pct, j.maxTestes || {}, ratios);
+                if (chargeKg !== null) {
+                  previewBadge = `<div style="font-size:7px;color:#444;background:#1a1a1a;padding:1px 3px;border-radius:2px;margin-top:1px;">${chargeKg}kg</div>`;
+                }
+              }
+              return`<div class="chg-badge"><div class="chg-val">${ch}</div>${previewBadge}<div class="chg-nom">${e.exercice||'—'}</div></div>`
+            }).join('')
+            const row=document.createElement('div');row.className='vue-j-row'
+            row.onclick=()=>{setVue('individuelle');document.getElementById('vue-joueur-sel').value=jid;renderVueIndiv()}
+            row.innerHTML=`<div class="vue-j-nom">${j.nom} ${j.prenom?.[0]||''}. ${completionBadge(jid,window.seanceId,seanceEnCours?.blocs)}</div><div class="charges-scroll">${chargesHtml}</div>`
+            jd.appendChild(row)
+          })
+          col.appendChild(jd);gw.appendChild(col)
+        })
+        card.appendChild(gw);c.appendChild(card)
+      })
+    }
+
+    function remplirSelJoueur(){
+      const sel=document.getElementById('vue-joueur-sel');sel.innerHTML='<option value="">Choisir un joueur...</option>'
+      const ids=[...new Set(seanceEnCours?.blocs?.flatMap(b=>b.groupes?.flatMap(g=>g.joueurs||[])||[])||[])]
+      ids.forEach(jid=>{const j=joueurs.find(x=>x.id===jid);if(j)sel.appendChild(new Option(j.nom+' '+(j.prenom||''),jid))})
+    }
+
+    window.setVue=function(vue){
+      currentVue=vue
+      document.getElementById('vue-collective-content').style.display=vue==='collective'?'block':'none'
+      document.getElementById('vue-indiv-content').style.display=vue==='individuelle'?'block':'none'
+      document.getElementById('btn-vue-col').classList.toggle('active',vue==='collective')
+      document.getElementById('btn-vue-ind').classList.toggle('active',vue==='individuelle')
+      if(vue==='collective')renderVueCollective()
+    }
+
+    window.renderVueIndiv=function(){
+      const jid=document.getElementById('vue-joueur-sel').value;const c=document.getElementById('vue-indiv-card');c.innerHTML=''
+      if(!jid||!seanceEnCours)return
+      const j=joueurs.find(x=>x.id===jid);if(!j)return
+      const card=document.createElement('div');card.className='indiv-card'
+      card.innerHTML=`<div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;"><div style="width:36px;height:36px;border-radius:50%;background:#FECC0022;border:2px solid #FECC0044;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#FECC00;">${j.prenom?.[0]||''}${j.nom?.[0]||''}</div><div><div style="font-size:14px;font-weight:700;">${j.prenom||''} ${j.nom}</div><div style="font-size:10px;color:#555;">${j.poste||''}</div></div><div style="margin-left:auto;">${completionBadge(jid,window.seanceId,seanceEnCours?.blocs)}</div></div>`
+      seanceEnCours.blocs?.forEach(bloc=>{
+        const gJ=bloc.groupes?.find(g=>g.joueurs?.includes(jid));if(!gJ)return
+        const bd=document.createElement('div');bd.className='indiv-bloc'
+        bd.innerHTML=`<div class="indiv-bloc-title">${bloc.nom} — ${gJ.nom}</div>`
+        gJ.exercices?.forEach(exo=>{
+          const charge=labelCharge(exo.exercice,exo.rpe,exo.nbReps,j.maxTestes||{},ratios,exo.intensityUnit)
+          const ed=document.createElement('div');ed.className='indiv-exo'
+          const u=exo.intensityUnit||'RPE'
+          // Calculer preview charge si % et 1RM connu
+          let chargePreviewHtml = '';
+          if ((u === '%' || u === 'PCT') && exo.rpe > 0) {
+            const pct = parseFloat(exo.rpe);
+            const chargeKg = chargePreviewPct(exo.exercice, pct, j.maxTestes || {}, ratios);
+            if (chargeKg !== null) {
+              chargePreviewHtml = `<span class="charge-preview-inline">${chargeKg} kg</span>`;
+            }
+          }
+          ed.innerHTML=`<div class="indiv-exo-nom">${exo.isSuperset?'↳ ':''}${exo.numExo}. ${exo.exercice||'—'}${chargePreviewHtml}</div><div class="indiv-params">${exo.nbSets}×${exo.nbReps} · ${u} ${exo.rpe}${exo.recup?' · '+exo.recup:''}${exo.tempo?' · '+exo.tempo:''}</div>`
+          const boxes=document.createElement('div');boxes.className='serie-boxes'
+          for(let s=1;s<=exo.nbSets;s++){
+            const clef=`${window.seanceId}_${bloc.id}_${gJ.id}_${exo.id}_${jid}_s${s}`
+            const box=document.createElement('div');box.className='s-box'
+            box.innerHTML=`<div class="s-lbl">S${s}</div><input class="s-inp" type="number" placeholder="${charge}" value="${chargesReelles[clef]||''}" onchange="sauverSerie('${clef}','${window.seanceId}','${jid}',this.value,'${exo.exercice}',${exo.nbReps})"/><div class="s-pre">${charge}</div>`
+            boxes.appendChild(box)
+          }
+          ed.appendChild(boxes);bd.appendChild(ed)
+        })
+        card.appendChild(bd)
+      })
+      c.appendChild(card)
+    }
+
+    window.sauverSerie=async function(clef,sId,jid,val,exoNom,nbReps){
+      chargesReelles[clef]=val;if(!sId)return
+      await setDoc(doc(db,'chargesReelles',`${sId}_${jid}`),{[clef]:val,updatedAt:serverTimestamp()},{merge:true})
+      const charge=parseFloat(val),reps=parseFloat(nbReps)
+      if(charge>0&&reps>0&&exoNom){
+        const oneRM=Math.round(charge*(1+reps/30))
+        const today=new Date().toISOString().split('T')[0]
+        await setDoc(doc(db,'maxTestes',jid),{[exoNom]:oneRM,[`${exoNom}_date`]:today,updatedAt:serverTimestamp()},{merge:true})
+        const j=joueurs.find(x=>x.id===jid);if(j){if(!j.maxTestes)j.maxTestes={};j.maxTestes[exoNom]=oneRM}
+      }
+    }
+
+    // ==================== MODE BLESSÉS ====================
+    function renderBlesseEditor(){
+      const c=document.getElementById('blesse-container');if(!c||!seanceEnCours)return;c.innerHTML=''
+      if(!seanceEnCours.blocsBlesses)seanceEnCours.blocsBlesses=[]
+      if(!seanceEnCours.blocsBlesses.length)c.innerHTML='<div style="color:#E24B4A33;font-size:11px;padding:20px;text-align:center;">Aucun bloc blessé.</div>'
+      seanceEnCours.blocsBlesses.forEach(b=>c.appendChild(makeBlocBlesseCard(b)))
+    }
+
+    function renderAttribSidebarBlesse(){
+      const c=document.getElementById('attrib-sidebar-blesse');if(!c)return;c.innerHTML=''
+      const bList=joueurs.filter(j=>j.statut==='blesse').sort((a,b)=>a.nom.localeCompare(b.nom))
+      if(!bList.length){c.innerHTML='<div style="color:#333;font-size:10px;text-align:center;padding:20px;">Aucun joueur blessé.</div>';return}
+      // Liste des blessés
+      const listDiv=document.createElement('div');listDiv.style.cssText='padding:6px;border-bottom:1px solid #1a1a1a;margin-bottom:6px;'
+      bList.forEach(j=>{const d=document.createElement('div');d.style.cssText='font-size:10px;padding:2px 4px;color:#F09595;';d.textContent=`🔴 ${j.nom} ${j.prenom||''}`;listDiv.appendChild(d)})
+      c.appendChild(listDiv)
+      // Attribution par bloc blessé
+      seanceEnCours.blocsBlesses?.forEach(bloc=>{
+        if(!bloc.groupes?.length)return
+        const bw=document.createElement('div');bw.style.cssText='padding:6px;'
+        bw.innerHTML=`<div style="font-size:9px;color:#E24B4A;font-weight:700;text-transform:uppercase;margin-bottom:4px;">${bloc.nom}</div>`
+        bloc.groupes.forEach(groupe=>{
+          const gc=document.createElement('div');gc.style.cssText='background:#1a1a1a;border:1px solid #E24B4A22;border-radius:6px;padding:7px;margin-bottom:4px;'
+          gc.innerHTML=`<div style="font-size:10px;color:#F09595;font-weight:700;margin-bottom:4px;">${groupe.nom}</div>`
+          const tags=document.createElement('div');tags.className='joueur-tags'
+          groupe.joueurs?.forEach(jid=>{const j=joueurs.find(x=>x.id===jid);if(!j)return;const t=document.createElement('span');t.className='j-tag blesse';t.innerHTML=`${j.nom} ${j.prenom?j.prenom[0]+'.':''}`;const btn=document.createElement('button');btn.textContent='✕';btn.onclick=()=>{groupe.joueurs=groupe.joueurs.filter(id=>id!==jid);renderAttribSidebarBlesse()};t.appendChild(btn);tags.appendChild(t)})
+          gc.appendChild(tags)
+          const sel=document.createElement('select');sel.style.cssText='width:100%;padding:3px 6px;border-radius:5px;border:1px solid #E24B4A33;background:#0a0a0a;color:#F09595;font-size:10px;outline:none;'
+          sel.innerHTML='<option value="">+ Ajouter un blessé</option>'
+          bList.filter(j=>!groupe.joueurs?.includes(j.id)).forEach(j=>sel.appendChild(new Option(`${j.nom} ${j.prenom||''}`,j.id)))
+          sel.onchange=()=>{if(!sel.value)return;if(!groupe.joueurs)groupe.joueurs=[];groupe.joueurs.push(sel.value);sel.value='';renderAttribSidebarBlesse()}
+          gc.appendChild(sel);bw.appendChild(gc)
+        })
+        c.appendChild(bw)
+      })
+    }
+
+    window.ajouterBlocBlesse=function(){
+      if(!seanceEnCours.blocsBlesses)seanceEnCours.blocsBlesses=[]
+      seanceEnCours.blocsBlesses.push({id:'bb_'+Date.now(),nom:'Bloc Blessé '+(seanceEnCours.blocsBlesses.length+1),groupes:[],_activeGroupe:null})
+      renderBlesseEditor();renderAttribSidebarBlesse()
+    }
+
+    function makeBlocBlesseCard(bloc){
+      const card=document.createElement('div');card.className='bloc-card';card.style.borderColor='#E24B4A33'
+      const hdr=document.createElement('div');hdr.className='bloc-hdr';hdr.style.background='#1a0000'
+      hdr.innerHTML=`<span style="color:#E24B4A;font-size:10px;margin-right:4px;">🩹</span><input class="bloc-nom" style="color:#E24B4A;" value="${bloc.nom}" onchange="renommerBlocBlesse('${bloc.id}',this.value)"/><button class="icon-btn" style="font-size:10px;" onclick="ajouterGroupeBlesse('${bloc.id}')">+ Groupe</button><button class="icon-btn" style="color:#E24B4A;" onclick="supprimerBlocBlesse('${bloc.id}')">✕</button>`
+      card.appendChild(hdr)
+      const body=document.createElement('div');body.className='bloc-body'
+      const tabs=document.createElement('div');tabs.className='groupes-tabs'
+      const panels=document.createElement('div')
+      const activeGId=bloc._activeGroupe||(bloc.groupes?.[0]?.id)
+      bloc.groupes?.forEach(g=>{
+        const tab=document.createElement('button');tab.className='g-tab'+(g.id===activeGId?' active':'')
+        tab.textContent=g.nom;tab.style.borderColor='#E24B4A33';if(g.id===activeGId)tab.style.color='#F09595'
+        tab.onclick=()=>{bloc._activeGroupe=g.id;renderBlesseEditor()};tabs.appendChild(tab)
+        const panel=document.createElement('div');panel.className='g-panel'+(g.id===activeGId?' active':'')
+        panel.appendChild(makeGroupeBlessePanel(g,bloc.id));panels.appendChild(panel)
+      })
+      const addTab=document.createElement('button');addTab.className='g-tab add-tab';addTab.textContent='+';addTab.style.borderColor='#E24B4A22';addTab.onclick=()=>ajouterGroupeBlesse(bloc.id);tabs.appendChild(addTab)
+      body.appendChild(tabs);body.appendChild(panels);card.appendChild(body);return card
+    }
+
+    function makeGroupeBlessePanel(groupe,blocId){
+      const panel=document.createElement('div')
+      const hdr=document.createElement('div');hdr.className='g-panel-hdr';hdr.style.borderColor='#E24B4A22'
+      hdr.innerHTML=`<input class="g-nom-inp" style="color:#F09595;" value="${groupe.nom}" onchange="renommerGroupeBlesse('${blocId}','${groupe.id}',this.value)"/><button class="icon-btn" style="color:#E24B4A;font-size:10px;" onclick="supprimerGroupeBlesse('${blocId}','${groupe.id}')">✕</button>`
+      panel.appendChild(hdr)
+      const exoWrap=document.createElement('div')
+      // En-tête
+      const hdrRow=document.createElement('div');hdrRow.className='exo-hdr-row'
+      hdrRow.innerHTML='<span>#</span><span>Zone</span><span>Exercice (libre ou liste)</span><span>Sets</span><span>Reps</span><span>Intens.</span><span>Récup</span><span>Tempo</span><span></span>'
+      exoWrap.appendChild(hdrRow)
+      groupe.exercices?.forEach(e=>exoWrap.appendChild(makeBlesseExoRow(e,blocId,groupe.id)))
+      panel.appendChild(exoWrap)
+      const addBtn=document.createElement('button');addBtn.className='btn-add-exo';addBtn.style.borderColor='#E24B4A22';addBtn.style.color='#E24B4A';addBtn.innerHTML='🩹 + Exo blessé';addBtn.onclick=()=>ajouterExoBlesse(blocId,groupe.id);panel.appendChild(addBtn)
+      return panel
+    }
+
+    function makeBlesseExoRow(exo,bId,gId){
+      const row=document.createElement('div');row.style.cssText='display:grid;grid-template-columns:24px 70px 1fr 42px 42px 62px 34px 34px 24px;gap:3px;align-items:center;padding:4px 0;border-bottom:1px solid #0f0f0f;'
+      const zOpts=ZONES.map(z=>`<option value="${z}" ${z===exo.zone?'selected':''}>${z}</option>`).join('')
+      const suggs=exercicesCustom.filter(e=>!exo.zone||e.zone===exo.zone).sort((a,b)=>a.nom.localeCompare(b.nom))
+      const dlId=`bdl-${exo.id}`
+      row.innerHTML=`
+        <input class="xi xi-num" value="${exo.numExo}" onchange="majExoBlesse('${bId}','${gId}','${exo.id}','numExo',this.value)"/>
+        <select class="xi xi-zone" onchange="majExoBlesse('${bId}','${gId}','${exo.id}','zone',this.value)"><option value="">Zone</option>${zOpts}</select>
+        <div style="display:flex;gap:2px;"><input class="xi xi-exo" style="color:#F09595;border-color:#E24B4A22;flex:1;" list="${dlId}" placeholder="Exercice (libre)..." value="${exo.exercice||''}" onchange="majExoBlesse('${bId}','${gId}','${exo.id}','exercice',this.value)"/><datalist id="${dlId}">${suggs.map(e=>`<option value="${e.nom}">`).join('')}</datalist></div>
+        <input class="xi" type="number" value="${exo.nbSets||3}" onchange="majExoBlesse('${bId}','${gId}','${exo.id}','nbSets',this.value)"/>
+        <input class="xi" type="number" value="${exo.nbReps||10}" onchange="majExoBlesse('${bId}','${gId}','${exo.id}','nbReps',this.value)"/>
+        <input class="xi" value="${exo.rpe||''}" placeholder="Charge/RPE" onchange="majExoBlesse('${bId}','${gId}','${exo.id}','rpe',this.value)"/>
+        <input class="xi" value="${exo.recup||''}" placeholder="1'30" onchange="majExoBlesse('${bId}','${gId}','${exo.id}','recup',this.value)"/>
+        <input class="xi" value="${exo.tempo||''}" placeholder="3-1-1" onchange="majExoBlesse('${bId}','${gId}','${exo.id}','tempo',this.value)"/>
+        <button class="xbtn red" onclick="supprimerExoBlesse('${bId}','${gId}','${exo.id}')">✕</button>
+      `
+      return row
+    }
+
+    window.renommerBlocBlesse=(id,nom)=>{const b=seanceEnCours.blocsBlesses?.find(x=>x.id===id);if(b)b.nom=nom}
+    window.supprimerBlocBlesse=(id)=>{seanceEnCours.blocsBlesses=seanceEnCours.blocsBlesses.filter(b=>b.id!==id);renderBlesseEditor();renderAttribSidebarBlesse()}
+    window.ajouterGroupeBlesse=(bId)=>{
+      const b=seanceEnCours.blocsBlesses?.find(x=>x.id===bId);if(!b)return
+      if(!b.groupes)b.groupes=[]
+      const g={id:'bg_'+Date.now(),nom:'Groupe '+( b.groupes.length+1),exercices:[],joueurs:[]}
+      b.groupes.push(g);b._activeGroupe=g.id;renderBlesseEditor();renderAttribSidebarBlesse()
+    }
+    window.supprimerGroupeBlesse=(bId,gId)=>{
+      const b=seanceEnCours.blocsBlesses?.find(x=>x.id===bId);if(!b)return
+      b.groupes=b.groupes.filter(g=>g.id!==gId);if(b._activeGroupe===gId)b._activeGroupe=b.groupes[0]?.id
+      renderBlesseEditor();renderAttribSidebarBlesse()
+    }
+    window.renommerGroupeBlesse=(bId,gId,nom)=>{const b=seanceEnCours.blocsBlesses?.find(x=>x.id===bId);const g=b?.groupes?.find(x=>x.id===gId);if(g)g.nom=nom}
+    window.ajouterExoBlesse=(bId,gId)=>{
+      const b=seanceEnCours.blocsBlesses?.find(x=>x.id===bId);const g=b?.groupes?.find(x=>x.id===gId);if(!g)return
+      if(!g.exercices)g.exercices=[]
+      g.exercices.push({id:'be_'+Date.now(),numExo:g.exercices.length+1,zone:'',exercice:'',nbSets:3,nbReps:10,rpe:'',recup:'',tempo:'',comment:''})
+      renderBlesseEditor()
+    }
+    window.supprimerExoBlesse=(bId,gId,eId)=>{
+      const b=seanceEnCours.blocsBlesses?.find(x=>x.id===bId);const g=b?.groupes?.find(x=>x.id===gId);if(g){g.exercices=g.exercices.filter(e=>e.id!==eId);renderBlesseEditor()}
+    }
+    window.majExoBlesse=(bId,gId,eId,champ,val)=>{
+      const b=seanceEnCours.blocsBlesses?.find(x=>x.id===bId);const g=b?.groupes?.find(x=>x.id===gId);const e=g?.exercices?.find(x=>x.id===eId);if(e){e[champ]=['nbSets','nbReps'].includes(champ)?(parseFloat(val)||0):val;if(champ==='zone')e.exercice=''}
+    }
+
+    // ==================== MODE BONUS ====================
+    let joueursBonusSelectionnes=[]
+
+    window.nouvelleSeanceBonus=function(){
+      window.seanceId=null
+      seanceEnCours={date:new Date().toISOString().split('T')[0],theme:'Bonus',estBlessé:false,cycleId:null,blocs:[],blocsBonus:[],estBonus:true}
+      joueursBonusSelectionnes=[]
+      chargesReelles={}
+      ouvrirEditeur()
+      setMode('bonus')
+    }
+
+    function renderBonusEditor(){
+      const c=document.getElementById('bonus-container');if(!c||!seanceEnCours)return;c.innerHTML=''
+      if(!seanceEnCours.blocsBonus)seanceEnCours.blocsBonus=[]
+      if(!seanceEnCours.blocsBonus.length)c.innerHTML='<div style="color:#1D9E7533;font-size:11px;padding:20px;text-align:center;">Aucun bloc bonus.</div>'
+      seanceEnCours.blocsBonus.forEach(b=>c.appendChild(makeBlocBonusCard(b)))
+      renderAttribSidebarBonus()
+    }
+
+    function renderAttribSidebarBonus(){
+      const c=document.getElementById('attrib-sidebar-bonus');if(!c)return;c.innerHTML=''
+      // Sélecteur de joueurs
+      const selDiv=document.createElement('div');selDiv.style.cssText='padding:8px;'
+      const sel=document.createElement('select');sel.style.cssText='width:100%;padding:4px 6px;border-radius:5px;border:1px solid #2a2a2a;background:#1a1a1a;color:#fff;font-size:10px;outline:none;'
+      sel.innerHTML='<option value="">+ Ajouter un joueur</option>'
+      joueurs.filter(j=>j.statut!=='absent'&&!joueursBonusSelectionnes.includes(j.id)).forEach(j=>sel.appendChild(new Option(`${j.nom} ${j.prenom||''}`,j.id)))
+      sel.onchange=()=>{if(sel.value){joueursBonusSelectionnes.push(sel.value);sel.value='';renderBonusEditor()}}
+      selDiv.appendChild(sel)
+      c.appendChild(selDiv)
+      // Tags des joueurs sélectionnés
+      if(joueursBonusSelectionnes.length){
+        const tagsDiv=document.createElement('div');tagsDiv.style.cssText='padding:0 8px;display:flex;flex-wrap:wrap;gap:3px;'
+        joueursBonusSelectionnes.forEach(jid=>{
+          const j=joueurs.find(x=>x.id===jid);if(!j)return
+          const t=document.createElement('span');t.className='j-tag';t.style.borderColor='#1D9E7533';t.style.color='#1D9E75'
+          t.innerHTML=`${j.nom} ${j.prenom?j.prenom[0]+'.':''}<button onclick="joueursBonusSelectionnes=joueursBonusSelectionnes.filter(id=>id!=='${jid}');renderBonusEditor()">✕</button>`
+          tagsDiv.appendChild(t)
+        })
+        c.appendChild(tagsDiv)
+      }
+    }
+
+    function makeBlocBonusCard(bloc){
+      const card=document.createElement('div');card.className='bonus-bloc-card'
+      const hdr=document.createElement('div');hdr.className='bonus-bloc-hdr'
+      hdr.innerHTML=`<span style="color:#1D9E75;font-size:10px;margin-right:4px;">⚡</span><input class="bloc-nom" style="color:#1D9E75;" value="${bloc.nom}" onchange="renommerBlocBonus('${bloc.id}',this.value)"/><button class="icon-btn" style="font-size:10px;" onclick="ajouterGroupeBonus('${bloc.id}')">+ Groupe</button><button class="icon-btn" style="color:#E24B4A;" onclick="supprimerBlocBonus('${bloc.id}')">✕</button>`
+      card.appendChild(hdr)
+      const body=document.createElement('div');body.className='bloc-body'
+      const tabs=document.createElement('div');tabs.className='groupes-tabs'
+      const panels=document.createElement('div')
+      const activeGId=bloc._activeGroupe||(bloc.groupes?.[0]?.id)
+      bloc.groupes?.forEach(g=>{
+        const tab=document.createElement('button');tab.className='g-tab'+(g.id===activeGId?' active':'')
+        tab.textContent=g.nom;tab.style.borderColor='#1D9E7533';if(g.id===activeGId)tab.style.color='#1D9E75'
+        tab.onclick=()=>{bloc._activeGroupe=g.id;renderBonusEditor()};tabs.appendChild(tab)
+        const panel=document.createElement('div');panel.className='g-panel'+(g.id===activeGId?' active':'')
+        panel.appendChild(makeGroupeBonusPanel(g,bloc.id));panels.appendChild(panel)
+      })
+      const addTab=document.createElement('button');addTab.className='g-tab add-tab';addTab.textContent='+';addTab.style.borderColor='#1D9E7522';addTab.onclick=()=>ajouterGroupeBonus(bloc.id);tabs.appendChild(addTab)
+      body.appendChild(tabs);body.appendChild(panels);card.appendChild(body);return card
+    }
+
+    function makeGroupeBonusPanel(groupe,blocId){
+      const panel=document.createElement('div')
+      const hdr=document.createElement('div');hdr.className='g-panel-hdr';hdr.style.borderColor='#1D9E7533'
+      hdr.innerHTML=`<input class="g-nom-inp" style="color:#1D9E75;" value="${groupe.nom}" onchange="renommerGroupeBonus('${blocId}','${groupe.id}',this.value)"/><button class="icon-btn" style="color:#E24B4A;font-size:10px;" onclick="supprimerGroupeBonus('${blocId}','${groupe.id}')">✕</button>`
+      panel.appendChild(hdr)
+      const exoWrap=document.createElement('div')
+      const hdrRow=document.createElement('div');hdrRow.className='exo-hdr-row'
+      hdrRow.innerHTML='<span>#</span><span>Zone</span><span>Exercice</span><span>Sets</span><span>Reps</span><span>Intens.</span><span>Récup</span><span>Tempo</span><span></span>'
+      exoWrap.appendChild(hdrRow)
+      groupe.exercices?.forEach(e=>exoWrap.appendChild(makeBonusExoRow(e,blocId,groupe.id)))
+      panel.appendChild(exoWrap)
+      const addBtn=document.createElement('button');addBtn.className='btn-add-exo';addBtn.style.borderColor='#1D9E7522';addBtn.style.color='#1D9E75';addBtn.innerHTML='⚡ + Exo bonus';addBtn.onclick=()=>ajouterExoBonus(blocId,groupe.id);panel.appendChild(addBtn)
+      return panel
+    }
+
+    function makeBonusExoRow(exo,bId,gId){
+      const row=document.createElement('div');row.className='bonus-exo-row'
+      const zOpts=ZONES.map(z=>`<option value="${z}" ${z===exo.zone?'selected':''}>${z}</option>`).join('')
+      const suggs=exercicesCustom.filter(e=>!exo.zone||e.zone===exo.zone).sort((a,b)=>a.nom.localeCompare(b.nom))
+      const dlId=`bdl-${exo.id}`
+      row.innerHTML=`
+        <input class="xi xi-num" value="${exo.numExo}" onchange="majExoBonus('${bId}','${gId}','${exo.id}','numExo',this.value)"/>
+        <select class="xi xi-zone" onchange="majExoBonus('${bId}','${gId}','${exo.id}','zone',this.value)"><option value="">Zone</option>${zOpts}</select>
+        <div style="display:flex;gap:2px;"><input class="xi xi-exo" style="color:#1D9E75;border-color:#1D9E7522;flex:1;" list="${dlId}" placeholder="Exercice..." value="${exo.exercice||''}" onchange="majExoBonus('${bId}','${gId}','${exo.id}','exercice',this.value)"/><datalist id="${dlId}">${suggs.map(e=>`<option value="${e.nom}">`).join('')}</datalist></div>
+        <input class="xi" type="number" value="${exo.nbSets||3}" onchange="majExoBonus('${bId}','${gId}','${exo.id}','nbSets',this.value)"/>
+        <input class="xi" type="number" value="${exo.nbReps||10}" onchange="majExoBonus('${bId}','${gId}','${exo.id}','nbReps',this.value)"/>
+        <input class="xi" value="${exo.rpe||''}" placeholder="RPE" onchange="majExoBonus('${bId}','${gId}','${exo.id}','rpe',this.value)"/>
+        <input class="xi" value="${exo.recup||''}" placeholder="1'30" onchange="majExoBonus('${bId}','${gId}','${exo.id}','recup',this.value)"/>
+        <input class="xi" value="${exo.tempo||''}" placeholder="3-1-1" onchange="majExoBonus('${bId}','${gId}','${exo.id}','tempo',this.value)"/>
+        <button class="xbtn red" onclick="supprimerExoBonus('${bId}','${gId}','${exo.id}')">✕</button>
+      `
+      return row
+    }
+
+    window.ajouterBlocBonus=function(){if(!seanceEnCours)return;if(!seanceEnCours.blocsBonus)seanceEnCours.blocsBonus=[];seanceEnCours.blocsBonus.push({id:'bb_'+Date.now(),nom:'Bloc Bonus '+(seanceEnCours.blocsBonus.length+1),groupes:[]});renderBonusEditor()}
+    window.renommerBlocBonus=(id,nom)=>{const b=seanceEnCours.blocsBonus?.find(x=>x.id===id);if(b)b.nom=nom}
+    window.supprimerBlocBonus=(id)=>{seanceEnCours.blocsBonus=seanceEnCours.blocsBonus.filter(b=>b.id!==id);renderBonusEditor()}
+    window.ajouterGroupeBonus=(bId)=>{const b=seanceEnCours.blocsBonus?.find(x=>x.id===bId);if(!b)return;if(!b.groupes)b.groupes=[];const g={id:'bg_'+Date.now(),nom:'Groupe '+(b.groupes.length+1),exercices:[],joueurs:[]};b.groupes.push(g);b._activeGroupe=g.id;renderBonusEditor()}
+    window.supprimerGroupeBonus=(bId,gId)=>{const b=seanceEnCours.blocsBonus?.find(x=>x.id===bId);if(!b)return;b.groupes=b.groupes.filter(g=>g.id!==gId);if(b._activeGroupe===gId)b._activeGroupe=b.groupes[0]?.id;renderBonusEditor()}
+    window.renommerGroupeBonus=(bId,gId,nom)=>{const b=seanceEnCours.blocsBonus?.find(x=>x.id===bId);const g=b?.groupes?.find(x=>x.id===gId);if(g)g.nom=nom}
+    window.ajouterExoBonus=(bId,gId)=>{const b=seanceEnCours.blocsBonus?.find(x=>x.id===bId);const g=b?.groupes?.find(x=>x.id===gId);if(!g)return;if(!g.exercices)g.exercices=[];g.exercices.push({id:'be_'+Date.now(),numExo:g.exercices.length+1,zone:'',exercice:'',nbSets:3,nbReps:10,rpe:'',recup:'',tempo:'',comment:''});renderBonusEditor()}
+    window.supprimerExoBonus=(bId,gId,eId)=>{const b=seanceEnCours.blocsBonus?.find(x=>x.id===bId);const g=b?.groupes?.find(x=>x.id===gId);if(g){g.exercices=g.exercices.filter(e=>e.id!==eId);renderBonusEditor()}}
+    window.majExoBonus=(bId,gId,eId,champ,val)=>{const b=seanceEnCours.blocsBonus?.find(x=>x.id===bId);const g=b?.groupes?.find(x=>x.id===gId);const e=g?.exercices?.find(x=>x.id===eId);if(e){e[champ]=['nbSets','nbReps'].includes(champ)?(parseFloat(val)||0):val;if(champ==='zone')e.exercice=''}}
+
+    // ==================== CYCLES ====================
+    let editingCycleId=null
+
+    window.ouvrirModalCycle=function(cycle=null){
+      editingCycleId=cycle?.id||null
+      document.getElementById('modal-cycle-title').textContent=cycle?'Modifier le cycle':'Nouveau cycle'
+      document.getElementById('btn-del-cycle').style.display=cycle?'block':'none'
+      document.getElementById('cy-num').value=cycle?.numero||(cycles.length+1)
+      document.getElementById('cy-nom').value=cycle?.nom||''
+      document.getElementById('cy-debut').value=cycle?.dateDebut||new Date().toISOString().split('T')[0]
+      document.getElementById('cy-semaines').value=cycle?.nbSemaines||4
+      document.getElementById('cy-desc').value=cycle?.description||''
+      document.getElementById('modal-cycle').classList.add('open')
+    }
+
+    window.fermerModalCycle=function(){document.getElementById('modal-cycle').classList.remove('open');editingCycleId=null}
+
+    window.sauvegarderCycle=async function(){
+      const nom=document.getElementById('cy-nom').value.trim()
+      if(!nom){alert('Nom de cycle obligatoire.');return}
+      const id=editingCycleId||`cycle_${Date.now()}`
+      const data={numero:parseInt(document.getElementById('cy-num').value)||(cycles.length+1),nom,dateDebut:document.getElementById('cy-debut').value||new Date().toISOString().split('T')[0],nbSemaines:parseInt(document.getElementById('cy-semaines').value)||4,description:document.getElementById('cy-desc').value.trim()}
+      await setDoc(doc(db,'cycles',id),{...data,updatedAt:serverTimestamp()})
+      fermerModalCycle()
+    }
+
+    window.supprimerCycle=async function(){
+      if(!editingCycleId||!confirm('Supprimer ce cycle ? Les séances associées ne seront pas supprimées.'))return
+      await deleteDoc(doc(db,'cycles',editingCycleId))
+      fermerModalCycle()
+    }
+
+    // ==================== PLANIFICATION CASCADE ====================
+    let expandedCycles=new Set(),expandedSemaines=new Set()
+
+    window.renderPlanification=function(){
+      const pc=document.getElementById('planification-cascade');if(!pc)return
+      pc.innerHTML=''
+      // Regrouper les séances par cycle et semaine
+      const seancesByCycle={}
+      const seancesSansCycle=[]
+      seances.forEach(s=>{
+        if(s.cycleId){if(!seancesByCycle[s.cycleId])seancesByCycle[s.cycleId]=[];seancesByCycle[s.cycleId].push(s)}
+        else{seancesSansCycle.push(s)}
+      })
+      // Trier cycles par numéro
+      const sortedCycles=cycles.slice().sort((a,b)=>(a.numero||0)-(b.numero||0))
+      sortedCycles.forEach(cycle=>{
+        const cycleSeances=seancesByCycle[cycle.id]||[]
+        const block=document.createElement('div');block.className='planif-cycle-block'
+        const isExpanded=expandedCycles.has(cycle.id)
+        const hdr=document.createElement('div');hdr.className='planif-cycle-hdr'
+        hdr.innerHTML=`<span class="planif-cycle-num">Cycle ${cycle.numero}</span><span class="planif-cycle-nom">${cycle.nom||'Sans nom'}</span><span class="planif-cycle-meta">${cycle.nbSemaines||0} sem. · ${cycleSeances.length} séance(s)</span><span class="planif-chevron" style="transform:${isExpanded?'rotate(90deg)':'rotate(0deg)'}">▶</span>`
+        hdr.onclick=()=>{if(isExpanded)expandedCycles.delete(cycle.id);else expandedCycles.add(cycle.id);renderPlanification()}
+        block.appendChild(hdr)
+        if(isExpanded){
+          const body=document.createElement('div');body.className='planif-cycle-body'
+          // Semaines
+          const debut=new Date(cycle.dateDebut+'T00:00:00')
+          for(let s=1;s<=(cycle.nbSemaines||4);s++){
+            const semDebut=new Date(debut);semDebut.setDate(semDebut.getDate()+(s-1)*7)
+            const semFin=new Date(semDebut);semFin.setDate(semFin.getDate()+6)
+            const semId=`${cycle.id}_sem${s}`
+            const isSemExpanded=expandedSemaines.has(semId)
+            const semSeances=cycleSeances.filter(cs=>{
+              if(!cs.date)return false
+              const d=new Date(cs.date+'T00:00:00')
+              return d>=semDebut&&d<=semFin
+            }).sort((a,b)=>(a.date||'').localeCompare(b.date||''))
+            const semBlock=document.createElement('div');semBlock.className='planif-sem-block'
+            const semHdr=document.createElement('div');semHdr.className='planif-sem-hdr'
+            semHdr.innerHTML=`<span class="planif-sem-num">Semaine ${s}</span><span class="planif-sem-dates">${semDebut.toLocaleDateString('fr-FR',{day:'numeric',month:'short'})} - ${semFin.toLocaleDateString('fr-FR',{day:'numeric',month:'short'})}</span><span class="planif-sem-meta">${semSeances.length} séance(s)</span><span class="planif-chevron" style="transform:${isSemExpanded?'rotate(90deg)':'rotate(0deg)'}">▶</span>`
+            semHdr.onclick=()=>{if(isSemExpanded)expandedSemaines.delete(semId);else expandedSemaines.add(semId);renderPlanification()}
+            semBlock.appendChild(semHdr)
+            if(isSemExpanded){
+              const semBody=document.createElement('div');semBody.className='planif-sem-body'
+              if(semSeances.length){
+                semSeances.forEach(seance=>{
+                  const row=document.createElement('div');row.className='planif-seance-row'
+                  row.innerHTML=`<span class="planif-seance-pill">${seance.date?new Date(seance.date+'T00:00:00').toLocaleDateString('fr-FR',{weekday:'short',day:'numeric'}):'?'}</span><span class="planif-seance-theme">${seance.theme||'Sans thème'}</span>${seance.estBlessé?'<span class="badge-blesse">Blessés</span>':''}<div class="planif-row-actions"><button class="icon-btn" onclick="event.stopPropagation();ouvrirSeance('${seance.id}')">✏️</button><button class="icon-btn" onclick="event.stopPropagation();dupliquerSeance('${seance.id}')">📋</button><button class="icon-btn" style="color:#E24B4A;" onclick="event.stopPropagation();supprimerSeance('${seance.id}')">🗑</button></div>`
+                  row.onclick=()=>ouvrirSeance(seance.id)
+                  semBody.appendChild(row)
+                })
+              }else{semBody.innerHTML='<div style="color:#333;font-size:11px;padding:10px 0;">Aucune séance cette semaine.</div>'}
+              block.appendChild(semBody)
+            }
+            block.appendChild(semBlock)
+          }
+          body.appendChild(block)
+        }
+        pc.appendChild(block)
+      })
+      // Séances sans cycle
+      if(seancesSansCycle.length){
+        const block=document.createElement('div');block.className='planif-cycle-block'
+        const hdr=document.createElement('div');hdr.className='planif-cycle-hdr'
+        hdr.innerHTML=`<span class="planif-cycle-nom">Séances sans cycle</span><span class="planif-cycle-meta">${seancesSansCycle.length} séance(s)</span>`
+        block.appendChild(hdr)
+        const body=document.createElement('div');body.className='planif-sem-body'
+        seancesSansCycle.sort((a,b)=>(b.date||'').localeCompare(a.date||'')).forEach(s=>{
+          const row=document.createElement('div');row.className='planif-seance-row'
+          row.innerHTML=`<span class="planif-seance-pill">${s.date?new Date(s.date+'T00:00:00').toLocaleDateString('fr-FR',{weekday:'short',day:'numeric'}):'?'}</span><span class="planif-seance-theme">${s.theme||'Sans thème'}</span>${s.estBlessé?'<span class="badge-blesse">Blessés</span>':''}<div class="planif-row-actions"><button class="icon-btn" onclick="event.stopPropagation();ouvrirSeance('${s.id}')">✏️</button><button class="icon-btn" onclick="event.stopPropagation();dupliquerSeance('${s.id}')">📋</button><button class="icon-btn" style="color:#E24B4A;" onclick="event.stopPropagation();supprimerSeance('${s.id}')">🗑</button></div>`
+          row.onclick=()=>ouvrirSeance(s.id)
+          body.appendChild(row)
+        })
+        block.appendChild(body);pc.appendChild(block)
+      }
+    }
+
+    // ==================== GROUPES PAR DÉFAUT ====================
+    let groupesParDefaut=[],selectedGDCat=null,selectedGDFV=null
+
+    window.ouvrirGroupesParDefaut=function(){
+      document.getElementById('section-liste').style.display='none'
+      document.getElementById('section-gdp').style.display='flex'
+      document.getElementById('topbar-liste').style.display='none'
+      renderGDP()
+    }
+
+    window.fermerGroupesParDefaut=function(){
+      document.getElementById('section-liste').style.display='block'
+      document.getElementById('section-gdp').style.display='none'
+      document.getElementById('topbar-liste').style.display='flex'
+    }
+
+    function renderGDP(){
+      // Sidebar catégories
+      const catsList=document.getElementById('gdp-cats-list');catsList.innerHTML=''
+      if(!groupesParDefaut.length){catsList.innerHTML='<div style="color:#333;font-size:10px;padding:12px;">Aucune catégorie.</div>'}
+      else{groupesParDefaut.forEach((gc,i)=>{
+        const item=document.createElement('div');item.className='gdp-cat-item'+(selectedGDCat===i?' active':'');item.textContent=gc.nom
+        const count=document.createElement('span');count.className='gdp-cat-count';count.textContent=(gc.sousCats?.reduce((s,sc)=>s+(sc.joueurs?.length||0),0)||0)+'j';item.appendChild(count)
+        item.onclick=()=>{selectedGDCat=i;selectedGDFV=null;renderGDP()};catsList.appendChild(item)
+      })}
+      // FV cats
+      const fvList=document.getElementById('gdp-fv-list');fvList.innerHTML=''
+      // Vue principale
+      document.getElementById('gdp-panel-cats').style.display=selectedGDFV===null?'block':'none'
+      document.getElementById('gdp-panel-fv').style.display=selectedGDFV!==null?'block':'none'
+      if(selectedGDFV===null&&selectedGDCat!==null){
+        const gc=groupesParDefaut[selectedGDCat];const container=document.getElementById('gdp-grandes-cats');container.innerHTML=''
+        if(gc){
+          const card=document.createElement('div');card.className='gdp-grande-cat'
+          const hdr=document.createElement('div');hdr.className='gdp-gc-hdr'
+          hdr.innerHTML=`<input class="gdp-gc-nom" value="${gc.nom}" onchange="renommerGDCat(${selectedGDCat},this.value)"/><button class="icon-btn" style="color:#E24B4A;" onclick="supprimerGDCat(${selectedGDCat})">🗑</button>`
+          card.appendChild(hdr)
+          const body=document.createElement('div');body.className='gdp-gc-body'
+          gc.sousCats?.forEach((sc,si)=>{
+            const scCard=document.createElement('div');scCard.className='gdp-sous-cat'
+            const scHdr=document.createElement('div');scHdr.className='gdp-sc-hdr'
+            scHdr.innerHTML=`<input class="gdp-sc-nom" value="${sc.nom}" onchange="renommerGDSousCat(${selectedGDCat},${si},this.value)"/><button class="icon-btn" style="color:#E24B4A;font-size:10px;" onclick="supprimerGDSousCat(${selectedGDCat},${si})">✕</button>`
+            scCard.appendChild(scHdr)
+            const scBody=document.createElement('div');scBody.className='gdp-sc-body'
+            const dropZone=document.createElement('div');dropZone.className='gdp-drop-zone'
+            sc.joueurs?.forEach(jid=>{
+              const j=joueurs.find(x=>x.id===jid);if(!j)return
+              const tag=document.createElement('span');tag.className='gdp-joueur-tag'
+              tag.innerHTML=`${j.nom} ${j.prenom?j.prenom[0]+'.':''}<button onclick="retirerJoueurGC('${selectedGDCat}','${si}','${jid}')">✕</button>`
+              dropZone.appendChild(tag)
+            })
+            scBody.appendChild(dropZone)
+            const addBtn=document.createElement('button');addBtn.className='gdp-add-sc';addBtn.textContent='+ Joueur';addBtn.onclick=()=>{const gc=groupesParDefaut[selectedGDCat];if(gc&&gc.sousCats[si]){const jid=prompt('ID du joueur à ajouter :');if(jid)ajouterJoueurGC(selectedGDCat,si,jid)}}
+            scBody.appendChild(addBtn);scCard.appendChild(scBody);body.appendChild(scCard)
+          })
+          const addSC=document.createElement('button');addSC.className='gdp-add-sc';addSC.textContent='+ Sous-catégorie';addSC.onclick=()=>ajouterSousCat(selectedGDCat);body.appendChild(addSC)
+          card.appendChild(body);container.appendChild(card)
+        }
+      }
+      renderGDPRail()
+    }
+
+    function renderGDPRail(){
+      const c=document.getElementById('gdp-rail-list');c.innerHTML=''
+      const search=(document.getElementById('gdp-rail-search')?.value||'').toLowerCase()
+      joueurs.filter(j=>j.statut!=='absent'&&(search===''||`${j.nom} ${j.prenom||''} ${j.poste||''}`.toLowerCase().includes(search))).sort((a,b)=>a.nom.localeCompare(b.nom)).forEach(j=>{
+        const d=document.createElement('div');d.style.cssText='padding:4px 6px;font-size:10px;color:#666;cursor:pointer;border-radius:3px;'
+        d.innerHTML=`${j.nom} ${j.prenom?j.prenom[0]+'.':''} <span style="color:#333;">${j.poste||''}</span>`
+        d.onclick=()=>{if(selectedGDCat!==null)ajouterJoueurGC(selectedGDCat,0,j.id)}
+        c.appendChild(d)
+      })
+    }
+
+    window.ajouterGrandeCat=function(){
+      const nom=prompt('Nom de la grande catégorie :');if(!nom)return
+      groupesParDefaut.push({id:'gc_'+Date.now(),nom,sousCats:[{id:'sc_'+Date.now(),nom:'Groupe 1',joueurs:[]}]})
+      selectedGDCat=groupesParDefaut.length-1;renderGDP()
+    }
+    window.renommerGDCat=(i,nom)=>{if(groupesParDefaut[i])groupesParDefaut[i].nom=nom}
+    window.supprimerGDCat=(i)=>{if(!confirm('Supprimer cette catégorie ?'))return;groupesParDefaut.splice(i,1);selectedGDCat=null;renderGDP()}
+    window.ajouterSousCat=(gi)=>{const nom=prompt('Nom de la sous-catégorie :');if(!nom||!groupesParDefaut[gi])return;groupesParDefaut[gi].sousCats.push({id:'sc_'+Date.now(),nom,joueurs:[]});renderGDP()}
+    window.renommerGDSousCat=(gi,si,nom)=>{if(groupesParDefaut[gi]?.sousCats[si])groupesParDefaut[gi].sousCats[si].nom=nom}
+    window.supprimerGDSousCat=(gi,si)=>{if(!confirm('Supprimer cette sous-catégorie ?'))return;groupesParDefaut[gi].sousCats.splice(si,1);renderGDP()}
+    window.ajouterJoueurGC=(gi,si,jid)=>{const sc=groupesParDefaut[gi]?.sousCats[si];if(!sc)return;if(!sc.joueurs)sc.joueurs=[];if(!sc.joueurs.includes(jid))sc.joueurs.push(jid);renderGDP()}
+    window.retirerJoueurGC=(gi,si,jid)=>{const sc=groupesParDefaut[gi]?.sousCats[si];if(sc)sc.joueurs=sc.joueurs.filter(id=>id!==jid);renderGDP()}
+
+    window.sauverGroupesParDefaut=async function(){
+      await setDoc(doc(db,'config','groupesParDefaut'),{groupes:groupesParDefaut,updatedAt:serverTimestamp()})
+      alert('Groupes par défaut sauvegardés !')
+    }
+
+    window.ouvrirPopupGDP=function(){
+      // Mini popup pour importer depuis GDP dans la séance courante
+      alert('Fonction import GDP - à compléter selon besoins')
+    }
+
+    // ==================== CALENDRIER NOUVELLE SÉANCE ====================
+    let selectedCalDate=null
+
+    window.nouvelleSeance=function(){
+      selectedCalDate=null
+      document.getElementById('ns-cal-semaines').innerHTML='<div style="color:#555;padding:40px;text-align:center;">Chargement...</div>'
+      document.getElementById('modal-nouvelle-seance').classList.add('open')
+      renderCalendrierNouvelleSeance()
+    }
+
+    function renderCalendrierNouvelleSeance(){
+      const c=document.getElementById('ns-cal-semaines');c.innerHTML=''
+      const today=new Date();today.setHours(0,0,0,0)
+      // Afficher 4 semaines à partir d'aujourd'hui
+      for(let w=0;w<4;w++){
+        const semDebut=new Date(today);semDebut.setDate(semDebut.getDate()+w*7)
+        const semFin=new Date(semDebut);semFin.setDate(semFin.getDate()+6)
+        const semBlock=document.createElement('div');semBlock.className='ns-cal-semaine'
+        const hdr=document.createElement('div');hdr.className='ns-cal-semaine-hdr'
+        hdr.innerHTML=`<span>Semaine ${w+1}</span><span class="ns-cal-semaine-dates">${semDebut.toLocaleDateString('fr-FR',{day:'numeric',month:'short'})} - ${semFin.toLocaleDateString('fr-FR',{day:'numeric',month:'short'})}</span>`
+        semBlock.appendChild(hdr)
+        const joursDiv=document.createElement('div');joursDiv.className='ns-cal-jours'
+        for(let d=0;d<7;d++){
+          const jour=new Date(semDebut);jour.setDate(jour.getDate()+d)
+          const isPasse=jour<today
+          const isToday=jour.getTime()===today.getTime()
+          const isSelected=selectedCalDate===jour.toISOString().split('T')[0]
+          const jBtn=document.createElement('div');jBtn.className='ns-cal-jour'+(isPasse?' passe':'')+(isToday?' today':'')+(isSelected?' selected':'')
+          jBtn.innerHTML=`<div class="ns-cal-jour-nom">${['Dim','Lun','Mar','Mer','Jeu','Ven','Sam'][jour.getDay()]}</div><div class="ns-cal-jour-num">${jour.getDate()}</div>`
+          jBtn.onclick=()=>{selectedCalDate=jour.toISOString().split('T')[0];renderCalendrierNouvelleSeance()}
+          joursDiv.appendChild(jBtn)
+        }
+        semBlock.appendChild(joursDiv);c.appendChild(semBlock)
+      }
+      // Activer/désactiver bouton confirmer
+      document.getElementById('ns-confirm-btn')&&(document.getElementById('ns-confirm-btn').disabled=!selectedCalDate,document.getElementById('ns-confirm-btn').style.opacity=selectedCalDate?'1':'0.4')
+    }
+
+    window.fermerModalNouvelleSeance=function(){document.getElementById('modal-nouvelle-seance').classList.remove('open')}
+
+    window.confirmerNouvelleSeance=function(){
+      if(!selectedCalDate){alert('Sélectionnez une date.');return}
+      window.seanceId=null
+      seanceEnCours={date:selectedCalDate,theme:'Force maximale',estBlessé:false,cycleId:null,blocs:[],blocsBlesses:[]}
+      chargesReelles={}
+      fermerModalNouvelleSeance()
+      ouvrirEditeur()
+    }
+
+    // ==================== DÉPLACER SÉANCE ====================
+    let seanceADeplacer=null,jourCibleDeplacement=null
+
+    window.ouvrirModalDropDay=function(seanceId){
+      seanceADeplacer=seanceId
+      const s=seances.find(x=>x.id===seanceId);if(!s)return
+      const c=document.getElementById('drop-day-content');c.innerHTML=''
+      // Trouver le cycle associé
+      const cycle=s.cycleId?cycles.find(c=>c.id===s.cycleId):null
+      if(!cycle){c.innerHTML='<div style="color:#555;padding:20px;">Impossible de déplacer : pas de cycle associé.</div>';document.getElementById('modal-drop-day').classList.add('open');return}
+      // Calendrier du cycle
+      const debut=new Date(cycle.dateDebut+'T00:00:00')
+      const grid=document.createElement('div');grid.className='drop-day-grid'
+      for(let sem=1;sem<=(cycle.nbSemaines||4);sem++){
+        for(let j=0;j<7;j++){
+          const jour=new Date(debut);jour.setDate(jour.getDate()+(sem-1)*7+j)
+          const btn=document.createElement('div');btn.className='drop-day-btn'
+          btn.innerHTML=`<div class="drop-day-label">S${sem}</div><div class="drop-day-num">${jour.getDate()}</div>`
+          btn.onclick=()=>{jourCibleDeplacement=jour.toISOString().split('T')[0];document.querySelectorAll('.drop-day-btn').forEach(b=>b.classList.remove('selected'));btn.classList.add('selected')}
+          grid.appendChild(btn)
+        }
+      }
+      c.appendChild(grid);document.getElementById('modal-drop-day').classList.add('open')
+    }
+
+    window.fermerModalDropDay=function(){document.getElementById('modal-drop-day').classList.remove('open');seanceADeplacer=null;jourCibleDeplacement=null}
+
+    window.confirmerDropDay=async function(){
+      if(!seanceADeplacer||!jourCibleDeplacement)return
+      const ref=doc(db,'seances',seanceADeplacer)
+      await setDoc(ref,{date:jourCibleDeplacement,updatedAt:serverTimestamp()},{merge:true})
+      fermerModalDropDay()
+    }
+
+    // Mettre à jour setMode pour gérer 'bonus'
+    const originalSetMode=window.setMode
+    window.setMode=function(mode){
+      currentMode=mode
+      document.getElementById('mode-edit').style.display=mode==='edit'?'flex':'none'
+      document.getElementById('mode-view').style.display=mode==='view'?'block':'none'
+      document.getElementById('mode-bonus').style.display=mode==='bonus'?'flex':'none'
+      document.getElementById('mode-blesse').style.display=mode==='blesse'?'flex':'none'
+      document.getElementById('btn-edit').classList.toggle('active',mode==='edit')
+      document.getElementById('btn-view').classList.toggle('active',mode==='view')
+      document.getElementById('btn-bonus').classList.toggle('active',mode==='bonus')
+      document.getElementById('btn-blesse').classList.toggle('active',mode==='blesse')
+      if(mode==='edit'){renderBlocs();renderAttribSidebar()}
+      if(mode==='view'){renderVueCollective();remplirSelJoueur()}
+      if(mode==='bonus'){renderBonusEditor()}
+      if(mode==='blesse'){renderBlesseEditor();renderAttribSidebarBlesse()}
+    }
+
+    // Charger groupes par défaut au démarrage
+    async function chargerGroupesParDefaut(){
+      try{const snap=await getDoc(doc(db,'config','groupesParDefaut'));if(snap.exists()){groupesParDefaut=snap.data().groupes||[]}}catch(e){console.error(e)}
+    }
+    chargerGroupesParDefaut()
+
+    window.handleLogout=async function(){await signOut(auth);window.location.href='login.html'}
+  </script>
+</body>
+</html>

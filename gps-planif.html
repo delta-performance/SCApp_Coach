@@ -1,0 +1,2547 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>SCA Albi — Planification Charge GPS</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #0f0f0f; color: #fff; display: flex; height: 100vh; overflow: hidden; }
+    .sidebar { width: 220px; min-width: 220px; background: #1a1a1a; border-right: 1px solid #2a2a2a; display: flex; flex-direction: column; padding: 20px 0; overflow-y: auto; }
+    .sidebar-logo { display: flex; align-items: center; gap: 10px; padding: 0 20px 24px; border-bottom: 1px solid #2a2a2a; }
+    .sidebar-logo img { width: 36px; }
+    .sidebar-logo span { font-size: 15px; font-weight: 700; color: #FECC00; }
+    .nav-section { padding: 16px 12px 8px; font-size: 10px; font-weight: 600; color: #444; letter-spacing: .08em; text-transform: uppercase; }
+    .nav-item { display: flex; align-items: center; gap: 10px; padding: 9px 20px; font-size: 13px; color: #888; cursor: pointer; border-left: 2px solid transparent; transition: all .15s; }
+    .nav-item:hover { color: #fff; background: #222; }
+    .nav-item.active { color: #FECC00; border-left-color: #FECC00; background: #222; }
+    .nav-dot { width: 7px; height: 7px; border-radius: 50%; background: currentColor; opacity: 0.6; }
+    .sidebar-bottom { margin-top: auto; padding: 16px 20px; border-top: 1px solid #2a2a2a; }
+    .user-info { font-size: 12px; color: #555; margin-bottom: 8px; }
+    .logout-btn { font-size: 12px; color: #555; cursor: pointer; background: none; border: none; }
+    .logout-btn:hover { color: #E24B4A; }
+    .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+    .topbar { height: 56px; border-bottom: 1px solid #2a2a2a; display: flex; align-items: center; padding: 0 20px; gap: 10px; flex-shrink: 0; flex-wrap: wrap; }
+    .topbar-title { font-size: 15px; font-weight: 600; flex: 1; }
+    .btn-primary { padding: 7px 14px; border-radius: 8px; border: none; background: #FECC00; color: #0f0f0f; font-size: 13px; font-weight: 600; cursor: pointer; white-space: nowrap; }
+    .btn-primary:hover { opacity: .88; }
+    .btn-ghost { padding: 7px 12px; border-radius: 8px; border: 1px solid #2a2a2a; background: none; color: #888; font-size: 13px; cursor: pointer; white-space: nowrap; }
+    .btn-ghost:hover { color: #fff; border-color: #444; }
+    .tabs { display: flex; gap: 4px; background: #1a1a1a; border: 1px solid #2a2a2a; border-radius: 8px; padding: 3px; }
+    .tab-btn { padding: 5px 14px; border-radius: 6px; border: none; font-size: 12px; font-weight: 500; cursor: pointer; background: none; color: #666; }
+    .tab-btn.active { background: #FECC00; color: #0f0f0f; }
+    .content { flex: 1; overflow-y: auto; padding: 20px 24px; }
+
+    .source-bar { background: #1a1a1a; border: 1px solid #2a2a2a; border-radius: 10px; padding: 12px 16px; margin-bottom: 16px; display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+    .source-nom { font-size: 12px; font-family: monospace; }
+    .source-nom.loaded { color: #1D9E75; }
+    .source-nom.vide { color: #444; }
+
+    .params-card { background: #1a1a1a; border: 1px solid #2a2a2a; border-radius: 12px; padding: 16px 18px; margin-bottom: 16px; }
+    .params-title { font-size: 11px; font-weight: 700; color: #FECC00; text-transform: uppercase; letter-spacing: .06em; margin-bottom: 12px; }
+    .params-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(155px, 1fr)); gap: 10px; margin-bottom: 12px; }
+    .pf { display: flex; flex-direction: column; gap: 3px; }
+    .pf label { font-size: 10px; color: #555; }
+    .pf input, .pf select { padding: 6px 9px; border-radius: 7px; border: 1px solid #2a2a2a; background: #0f0f0f; color: #fff; font-size: 12px; outline: none; }
+    .pf input:focus, .pf select:focus { border-color: #FECC00; }
+
+    .jours-row { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 8px; }
+    .jour-toggle { padding: 4px 11px; border-radius: 18px; border: 1px solid #2a2a2a; background: #0f0f0f; color: #555; font-size: 11px; cursor: pointer; transition: all .12s; }
+    .jour-toggle.active { background: #FECC00; border-color: #FECC00; color: #0f0f0f; font-weight: 600; }
+    .jours-pct-row { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 8px; }
+    .jour-pct-box { display: flex; flex-direction: column; gap: 2px; align-items: center; }
+    .jour-pct-box label { font-size: 10px; color: #888; }
+    .jour-pct-inp { width: 54px; padding: 3px 7px; border-radius: 6px; border: 1px solid #2a2a2a; background: #0f0f0f; color: #FECC00; font-size: 12px; font-weight: 700; text-align: center; outline: none; }
+
+    .postes-card { background: #111; border: 1px solid #2a2a2a; border-radius: 8px; padding: 10px 12px; margin-top: 10px; }
+    .postes-card-title { font-size: 10px; color: #555; text-transform: uppercase; letter-spacing: .06em; margin-bottom: 7px; }
+    .postes-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(360px, 1fr)); gap: 8px; }
+    .pdr { display: flex; align-items: center; gap: 8px; flex-wrap: nowrap; }
+    .pdr-nom { font-size: 11px; color: #888; min-width: 130px; flex-shrink: 0; }
+    .pdr-inp { width: 60px; padding: 4px 6px; border-radius: 4px; border: 1px solid #2a2a2a; background: #0f0f0f; color: #fff; font-size: 11px; text-align: center; outline: none; flex-shrink: 0; }
+    .pdr-unit { font-size: 9px; color: #666; flex-shrink: 0; }
+
+    .planifs-nav { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 14px; }
+    .planif-nav-btn { padding: 4px 10px; border-radius: 6px; border: 1px solid #2a2a2a; background: none; color: #555; font-size: 11px; cursor: pointer; }
+    .planif-nav-btn:hover { color: #fff; border-color: #444; }
+    .planif-nav-btn.active { background: #FECC00; color: #0f0f0f; border-color: #FECC00; font-weight: 600; }
+
+    .acwr-legend { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 12px; font-size: 11px; color: #555; align-items: center; }
+    .acwr-badge { display: inline-block; padding: 2px 7px; border-radius: 10px; font-size: 10px; font-weight: 700; }
+    .acwr-low     { background: #4A90E222; color: #4A90E2; border: 1px solid #4A90E244; }
+    .acwr-ok      { background: #1D9E7522; color: #1D9E75; border: 1px solid #1D9E7544; }
+    .acwr-warn    { background: #EF9F2722; color: #EF9F27; border: 1px solid #EF9F2744; }
+    .acwr-danger  { background: #E24B4A22; color: #E24B4A; border: 1px solid #E24B4A44; }
+    .acwr-grey    { background: #88878022; color: #888;    border: 1px solid #88878044; }
+
+    .planif-wrap { overflow-x: auto; }
+    .planif-table { width: 100%; border-collapse: collapse; font-size: 11px; min-width: 900px; }
+    .planif-table th { padding: 7px 8px; text-align: left; font-size: 9px; color: #555; font-weight: 600; text-transform: uppercase; letter-spacing: .05em; border-bottom: 1px solid #2a2a2a; white-space: nowrap; }
+    .planif-table td { padding: 6px 8px; border-bottom: 1px solid #111; vertical-align: middle; }
+    .planif-table tr:hover td { background: #111; }
+    .pval { font-weight: 700; color: #FECC00; }
+    .psub { font-size: 9px; color: #555; margin-top: 1px; }
+    .mod-badge { font-size: 9px; padding: 1px 5px; border-radius: 3px; }
+    .mod-up   { background: #E24B4A22; color: #E24B4A; }
+    .mod-down { background: #1D9E7522; color: #1D9E75; }
+    .mod-ok   { background: #FECC0022; color: #FECC00; }
+    .charge-edit-wrap { display: flex; flex-direction: column; gap: 4px; align-items: center; }
+    .charge-input { width: 70px; padding: 3px 6px; border-radius: 4px; border: 1px solid #FECC00; background: #0f0f0f; color: #FECC00; font-size: 11px; font-weight: 700; text-align: center; outline: none; }
+    .charge-slider { width: 100px; height: 4px; -webkit-appearance: none; -moz-appearance: none; appearance: none; background: #2a2a2a; border-radius: 2px; outline: none; }
+    .charge-slider::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 12px; height: 12px; border-radius: 50%; background: #FECC00; cursor: pointer; }
+    .charge-slider::-moz-range-thumb { width: 12px; height: 12px; border-radius: 50%; background: #FECC00; cursor: pointer; border: none; }
+    .jours-pills { display: flex; gap: 3px; flex-wrap: wrap; }
+    .jour-pill { background: #1a1a1a; border: 1px solid #2a2a2a; border-radius: 4px; padding: 2px 5px; font-size: 9px; text-align: center; min-width: 42px; }
+    .jour-pill-nom { font-size: 8px; color: #555; }
+    .jour-pill-val { font-weight: 700; color: #FECC00; }
+    .jour-pill-obj { font-size: 8px; color: #555; border-top: 1px solid #2a2a2a; margin-top: 1px; padding-top: 1px; }
+    .no-gps { font-size: 9px; color: #E24B4A; }
+
+    .visu-toolbar { display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; align-items: center; }
+    .visu-jour-btn { padding: 4px 10px; border-radius: 6px; border: 1px solid #2a2a2a; background: none; color: #555; font-size: 11px; cursor: pointer; }
+    .visu-jour-btn.active { background: #FECC00; color: #0f0f0f; font-weight: 600; border-color: #FECC00; }
+    .visu-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+    .visu-table th { padding: 7px 9px; text-align: left; font-size: 10px; color: #555; font-weight: 600; text-transform: uppercase; border-bottom: 1px solid #2a2a2a; }
+    .visu-table td { padding: 7px 9px; border-bottom: 1px solid #111; }
+    .visu-table tr:hover td { background: #111; }
+    .prog-bar { height: 4px; border-radius: 2px; background: #2a2a2a; margin-top: 2px; }
+    .prog-fill { height: 4px; border-radius: 2px; }
+    .loader-overlay{position:fixed;top:44px;left:0;right:0;bottom:64px;background:#0f0f0f;z-index:99999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:15px}
+    .loader-spinner{width:50px;height:50px;border:3px solid #333;border-top:3px solid #FECC00;border-radius:50%;animation:spin 1s linear infinite}
+    .loader-text{color:#888;font-size:14px}
+    .loader-percent{color:#FECC00;font-size:24px;font-weight:700}
+    @keyframes spin{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}
+  </style>
+
+  <style>
+  /* ===== iPad-first NAV override ===== */
+  * { -webkit-tap-highlight-color: transparent; }
+  :root {
+    --yellow: #FECC00; --red: #E24B4A; --green: #1D9E75;
+    --bg: #0a0a0a; --bg2: #141414; --bg3: #1c1c1c;
+    --border: #1e1e1e; --border2: #2a2a2a;
+    --text: #fff; --text2: #888; --text3: #555;
+    --safe-bottom: env(safe-area-inset-bottom, 0px);
+    --topbar-h: 60px; --bottom-h: 68px;
+  }
+  /* Kill sidebar */
+  .sidebar { display: none !important; }
+  /* Body layout */
+  body { flex-direction: column !important; overflow: hidden !important; background: var(--bg) !important; }
+  /* Main takes full width */
+  .main { flex: 1 !important; display: flex !important; flex-direction: column !important; overflow: hidden !important;
+          padding-bottom: calc(var(--bottom-h) + var(--safe-bottom)) !important; }
+  /* Existing topbar: keep but restyle */
+  .main > .topbar, #topbar-liste, #topbar-editor {
+    border-bottom: 1px solid var(--border2) !important;
+    display: flex !important; align-items: center !important;
+    padding: 8px 16px !important; gap: 10px !important;
+    flex-shrink: 0 !important; flex-wrap: wrap !important;
+    background: var(--bg) !important; height: auto !important; min-height: 52px !important;
+  }
+  .topbar-title { display: none !important; }
+  /* iPad Topbar */
+  .ipad-topbar {
+    height: var(--topbar-h); background: var(--bg2); border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; padding: 0 16px; gap: 12px; flex-shrink: 0;
+    padding-top: env(safe-area-inset-top, 0);
+  }
+  .ipad-topbar-home { display: flex; align-items: center; gap: 8px; text-decoration: none; }
+  .ipad-topbar-logo {
+    width: 34px; height: 34px; border-radius: 9px; background: var(--yellow);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px; font-weight: 900; color: #000; flex-shrink: 0;
+  }
+  .ipad-topbar-sitename { font-size: 13px; font-weight: 700; color: var(--yellow); }
+  .ipad-topbar-sep { width: 1px; height: 22px; background: var(--border2); margin: 0 4px; }
+  .ipad-topbar-title { font-size: 18px; font-weight: 700; color: var(--text); flex: 1; }
+  /* Bottom Nav */
+  .ipad-bottom-nav {
+    position: fixed; bottom: 0; left: 0; right: 0;
+    height: calc(var(--bottom-h) + var(--safe-bottom));
+    padding-bottom: var(--safe-bottom);
+    background: var(--bg2); border-top: 1px solid var(--border);
+    display: flex; align-items: stretch; z-index: 9999;
+  }
+  .ipad-nav-item {
+    flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 3px; cursor: pointer; text-decoration: none; color: var(--text3);
+    font-size: 10px; font-weight: 600; letter-spacing: 0.02em; transition: color 0.12s;
+    padding: 0 2px; border: none; background: none;
+  }
+  .ipad-nav-item:active { background: #ffffff08; }
+  .ipad-nav-item.active { color: var(--yellow); }
+  .ipad-nav-icon { font-size: 22px; line-height: 1; }
+  /* Bigger buttons */
+  .btn-primary { padding: 11px 18px !important; border-radius: 10px !important; font-size: 14px !important; font-weight: 700 !important; min-height: 44px !important; cursor: pointer !important; }
+  .btn-ghost   { padding: 11px 14px !important; border-radius: 10px !important; font-size: 14px !important; min-height: 44px !important; cursor: pointer !important; }
+  .btn-danger  { padding: 11px 14px !important; border-radius: 10px !important; font-size: 14px !important; min-height: 44px !important; cursor: pointer !important; }
+  .btn-nav     { padding: 10px 14px !important; min-height: 44px !important; border-radius: 9px !important; font-size: 16px !important; }
+  /* Mode toggle */
+  .mode-toggle { border-radius: 10px !important; padding: 4px !important; }
+  .mode-btn    { padding: 9px 14px !important; border-radius: 7px !important; font-size: 13px !important; min-height: 38px !important; }
+  /* Prevent iOS input zoom */
+  input, select, textarea { font-size: 16px !important; }
+  /* Content scroll */
+  .content { flex: 1 !important; overflow-y: auto !important; -webkit-overflow-scrolling: touch !important; padding: 16px 18px !important; }
+  /* Touch targets */
+  .seance-card, .cycle-header, .semaine-header { min-height: 54px !important; }
+  /* Modal */
+  .modal { width: min(580px, 94vw) !important; max-width: 94vw !important; }
+  .modal-box { width: min(500px, 94vw) !important; }
+  </style>
+
+</head>
+<body>
+  <!-- iPad TopBar -->
+  <div class="ipad-topbar">
+    <a class="ipad-topbar-home" href="index.html">
+      <div class="ipad-topbar-logo">SC</div>
+      <span class="ipad-topbar-sitename">SCA Albi</span>
+    </a>
+    <div class="ipad-topbar-sep"></div>
+    <div class="ipad-topbar-title">Charge GPS</div>
+  </div>
+  <!-- Bottom Nav -->
+  <nav class="ipad-bottom-nav">
+    <a class="ipad-nav-item" href="planning.html">
+      <span class="ipad-nav-icon">📅</span>
+      <span>Planning</span>
+    </a>
+    <a class="ipad-nav-item" href="fiches-seances.html">
+      <span class="ipad-nav-icon">🏉</span>
+      <span>Séances</span>
+    </a>
+    <a class="ipad-nav-item" href="equipes.html?mode=entrainement">
+      <span class="ipad-nav-icon">👥</span>
+      <span>Équipes</span>
+    </a>
+    <a class="ipad-nav-item active" href="gps-planif.html">
+      <span class="ipad-nav-icon">📡</span>
+      <span>Charge GPS</span>
+    </a>
+    <a class="ipad-nav-item" href="seances.html">
+      <span class="ipad-nav-icon">🏋️</span>
+      <span>Musculation</span>
+    </a>
+    <a class="ipad-nav-item" href="suivi-poids.html">
+      <span class="ipad-nav-icon">⚖️</span>
+      <span>Suivi Poids</span>
+    </a>
+    <a class="ipad-nav-item" href="tv.html">
+      <span class="ipad-nav-icon">📺</span>
+      <span>Vue TV</span>
+    </a>
+  </nav>
+
+  <div class="loader-overlay" id="page-loader">
+    <div class="loader-spinner"></div>
+    <div class="loader-text" id="loader-text">Chargement...</div>
+    <div class="loader-percent" id="loader-percent">0%</div>
+  </div>
+  <div class="sidebar">
+    <div class="sidebar-logo">
+      <img src="https://www.sca-albi.fr/wp-content/uploads/2023/10/cropped-SCA-bis.png">
+      <span>SCA Albi</span>
+    </div>
+    <div class="nav-section">Effectif</div>
+    <div class="nav-item" onclick="location.href='index.html'"><div class="nav-dot"></div> Roster</div>
+    <div class="nav-section">Musculation</div>
+    <div class="nav-item" onclick="location.href='seances.html'"><div class="nav-dot"></div> Séances</div>
+    <div class="nav-item" onclick="location.href='fiches-seances.html'"><div class="nav-dot"></div> Fiches Séances</div>
+    <div class="nav-item" onclick="location.href='exercices.html'"><div class="nav-dot"></div> Exercices</div>
+    <div class="nav-item" onclick="location.href='suivi-poids.html'"><div class="nav-dot"></div> Suivi Poids</div>
+    <div class="nav-section">Suivi</div>
+    <div class="nav-item" onclick="location.href='wellness.html'"><div class="nav-dot"></div> Wellness</div>
+    <div class="nav-item" onclick="location.href='performances.html'"><div class="nav-dot"></div> Performances</div>
+    <div class="nav-item" onclick="location.href='medical.html'"><div class="nav-dot"></div> Médical</div>
+    <div class="nav-item" onclick="location.href='absences.html'"><div class="nav-dot"></div> Absences</div>
+    <div class="nav-section">Planning</div>
+    <div class="nav-item" onclick="location.href='planning.html'"><div class="nav-dot"></div> Planning club</div>
+    <div class="nav-item" onclick="location.href='planning-blesses.html'"><div class="nav-dot"></div> Blessés</div>
+    <div class="nav-section">Équipes</div>
+    <div class="nav-item" onclick="location.href='equipes.html'"><div class="nav-dot"></div> Composition équipes</div>
+    <div class="nav-section">GPS</div>
+    <div class="nav-item" onclick="location.href='gps.html'"><div class="nav-dot"></div> Données GPS</div>
+    <div class="nav-item" onclick="location.href='gps-match.html'"><div class="nav-dot"></div> Rapport de match</div>
+    <div class="nav-item active"><div class="nav-dot"></div> Planification charge</div>
+    <div class="nav-item" onclick="location.href='profil-force-vitesse.html'"><div class="nav-dot"></div> Profil F-V</div>
+    <div class="sidebar-bottom">
+      <div class="user-info" id="user-email"></div>
+      <button class="logout-btn" onclick="handleLogout()">Se déconnecter</button>
+    </div>
+  </div>
+
+  <div class="main">
+    <div class="topbar">
+      <div class="topbar-title">Planification charge GPS</div>
+      <div class="tabs">
+        <button class="tab-btn active" id="tab-planif-btn" onclick="setTab('planif')">Planification</button>
+        <button class="tab-btn" id="tab-visu-btn" onclick="setTab('visu')">Visualisation</button>
+        <button class="tab-btn" id="tab-entrainement-btn" onclick="setTab('entrainement')">Entraînement</button>
+      </div>
+    </div>
+    <div class="content">
+
+      <div class="source-bar">
+        <div style="flex:1;">
+          <div style="font-size:10px;color:#555;margin-bottom:2px;text-transform:uppercase;letter-spacing:.06em;">Fichier GPS (partagé avec Données GPS)</div>
+          <div class="source-nom vide" id="source-nom">Aucun fichier chargé</div>
+          <div style="font-size:10px;color:#555;margin-top:2px;" id="source-info"></div>
+        </div>
+        <input type="file" id="file-input-planif" accept=".csv,.txt" style="display:none;" />
+        <button class="btn-ghost" onclick="choisirFichierCSV()">Charger CSV</button>
+      </div>
+
+      <!-- ===== PLANIFICATION ===== -->
+      <div id="tab-planif">
+        <div id="planifs-nav-section" style="margin-bottom:14px;display:none;">
+          <div style="font-size:10px;color:#555;margin-bottom:6px;text-transform:uppercase;letter-spacing:.06em;">Planifications sauvegardées</div>
+          <div class="planifs-nav" id="planifs-nav"></div>
+        </div>
+
+        <div class="params-card">
+          <div class="params-title">Paramètres</div>
+          <div class="params-grid">
+            <div class="pf"><label>Semaine cible (lundi)</label><input type="date" id="param-semaine" /></div>
+            <div class="pf"><label>% charge vs S-1 réelle</label><input type="number" id="param-pct" value="100" min="50" max="200" step="5" /></div>
+            <div class="pf"><label>Référence</label><select id="param-ref"><option value="s1">S-1 réelle</option><option value="s2">S-2 réelle</option><option value="moy">Moy S-1+S-2</option></select></div>
+            <div class="pf"><label>Métrique ACWR</label><select id="param-col"><option value="Distance Haute Intensité">Distance HI</option><option value="accels">Accels (B2+B3)</option></select></div>
+          </div>
+
+          <div style="margin-bottom:8px;">
+            <div style="font-size:10px;color:#555;margin-bottom:5px;">Jours d'entraînement</div>
+            <div class="jours-row" id="jours-toggle">
+              <div class="jour-toggle active" data-jour="Lundi" onclick="toggleJour(this)">Lundi</div>
+              <div class="jour-toggle active" data-jour="Mardi" onclick="toggleJour(this)">Mardi</div>
+              <div class="jour-toggle" data-jour="Mercredi" onclick="toggleJour(this)">Mercredi</div>
+              <div class="jour-toggle active" data-jour="Jeudi" onclick="toggleJour(this)">Jeudi</div>
+              <div class="jour-toggle" data-jour="Vendredi" onclick="toggleJour(this)">Vendredi</div>
+              <div class="jour-toggle" data-jour="Samedi" onclick="toggleJour(this)">Samedi</div>
+              <div class="jour-toggle" data-jour="Dimanche" onclick="toggleJour(this)">Dimanche</div>
+            </div>
+          </div>
+
+          <div style="margin-bottom:10px;">
+            <div style="font-size:10px;color:#555;margin-bottom:5px;">% par jour (total = 100%)</div>
+            <div class="jours-pct-row" id="jours-pct-row"></div>
+            <div id="total-pct-info" style="font-size:10px;color:#555;"></div>
+          </div>
+
+          <!-- ===== HORS GROUPE (HG) ===== -->
+          <div style="margin:15px 0;padding:12px;background:#111;border:1px solid #2a2a2a;border-radius:8px;">
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+              <div class="jour-toggle" id="hg-toggle" onclick="toggleHG(this)">HG (Hors groupe)</div>
+              <div style="font-size:10px;color:#555;">Charge supplémentaire basée sur les valeurs de référence par poste</div>
+            </div>
+            <div id="hg-config" style="display:none;">
+              <div style="display:flex;gap:10px;align-items:center;margin-bottom:10px;flex-wrap:wrap;">
+                <div class="pf" style="flex:0 0 auto;">
+                  <label>% des valeurs de référence</label>
+                  <input type="number" id="hg-pct" value="30" min="0" max="100" step="5" style="width:70px;" />
+                </div>
+                <div class="pf" style="flex:0 0 auto;">
+                  <label>Jour d'attribution HG</label>
+                  <select id="hg-jour" style="width:110px;">
+                    <option value="">Toute la semaine</option>
+                    <option value="Lundi">Lundi</option>
+                    <option value="Mardi">Mardi</option>
+                    <option value="Mercredi">Mercredi</option>
+                    <option value="Jeudi">Jeudi</option>
+                    <option value="Vendredi">Vendredi</option>
+                    <option value="Samedi">Samedi</option>
+                    <option value="Dimanche">Dimanche</option>
+                  </select>
+                </div>
+                <button class="btn-ghost" onclick="ouvrirSelectorHG()" style="font-size:11px;">Sélectionner joueurs HG</button>
+                <div id="hg-joueurs-count" style="font-size:10px;color:#555;">0 joueur(s) sélectionné(s)</div>
+              </div>
+              <div id="hg-joueurs-list" style="font-size:10px;color:#666;max-height:60px;overflow-y:auto;"></div>
+            </div>
+          </div>
+
+          <!-- Modal sélection joueurs HG -->
+          <div id="hg-modal" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:#000000aa;z-index:1000;align-items:center;justify-content:center;">
+            <div style="background:#1a1a1a;border:1px solid #2a2a2a;border-radius:12px;padding:20px;max-width:400px;max-height:80vh;overflow-y:auto;width:90%;">
+              <div style="font-size:14px;font-weight:600;margin-bottom:15px;color:#FECC00;">Sélectionner les joueurs Hors Groupe</div>
+              <div id="hg-joueurs-checkboxes" style="margin-bottom:15px;"></div>
+              <div style="display:flex;gap:8px;justify-content:flex-end;">
+                <button class="btn-ghost" onclick="fermerSelectorHG()">Annuler</button>
+                <button class="btn-primary" onclick="validerSelectionHG()">Valider</button>
+              </div>
+            </div>
+          </div>
+
+          <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+            <button class="btn-primary" onclick="calculerPlanif()">Calculer</button>
+            <button class="btn-ghost" onclick="sauvegarderPlanif()">Sauvegarder</button>
+            <button class="btn-ghost" onclick="exporterCSV()">Exporter CSV</button>
+            <div id="planif-status" style="font-size:11px;color:#555;"></div>
+          </div>
+
+          <div class="postes-card">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:7px;">
+              <div class="postes-card-title">Valeurs de référence par poste (si aucune donnée GPS sur S-1 et S-2)</div>
+              <button class="btn-primary" onclick="sauverDefaults()">Enregistrer</button>
+            </div>
+            <div class="postes-grid" id="postes-grid"></div>
+          </div>
+        </div>
+
+        <div class="acwr-legend">
+          <span>ACWR :</span>
+          <span class="acwr-badge acwr-low">&lt;0.8 Faible</span>
+          <span class="acwr-badge acwr-ok">0.8–1.4 Optimal</span>
+          <span class="acwr-badge acwr-warn">1.4–1.8 Vigilance</span>
+          <span class="acwr-badge acwr-danger">&gt;1.8 Risque</span>
+          <span class="acwr-badge acwr-grey">— Pas de données</span>
+        </div>
+
+        <div class="planif-wrap">
+          <table class="planif-table">
+            <thead><tr>
+              <th>Joueur</th><th>Poste</th><th>S-2</th><th>S-1</th>
+              <th>Base</th><th>Réal. S-1</th><th>Cible</th><th>Mod.</th><th>ACWR</th><th>Valider</th><th>Jours</th><th>HG</th>
+            </tr></thead>
+            <tbody id="planif-tbody">
+              <tr><td colspan="11" style="text-align:center;color:#444;padding:40px;">Charge un CSV et calcule la planification.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ===== VISUALISATION ===== -->
+      <div id="tab-visu" style="display:none;">
+        <div class="visu-toolbar">
+          <div id="visu-jours-btns" style="display:flex;gap:5px;flex-wrap:wrap;"></div>
+          <button class="btn-ghost" onclick="exporterCSVVisu()">Exporter CSV</button>
+        </div>
+        <div id="visu-content"><div style="color:#444;text-align:center;padding:40px;">Calcule d'abord la planification.</div></div>
+      </div>
+
+      <!-- ===== ENTRAÎNEMENT ===== -->
+      <div id="tab-entrainement" style="display:none;">
+
+        <!-- Sélection jour + joueurs -->
+        <div class="params-card" style="margin-bottom:14px;">
+          <div class="params-title">Session d'entraînement</div>
+          <div style="display:flex;gap:16px;flex-wrap:wrap;align-items:flex-end;margin-bottom:14px;">
+            <div class="pf">
+              <label>Jour</label>
+              <select id="entr-jour-select" onchange="entrOnJourChange()" style="width:130px;">
+                <option value="">-- Choisir --</option>
+                <option value="Lundi">Lundi</option><option value="Mardi">Mardi</option>
+                <option value="Mercredi">Mercredi</option><option value="Jeudi">Jeudi</option>
+                <option value="Vendredi">Vendredi</option><option value="Samedi">Samedi</option>
+                <option value="Dimanche">Dimanche</option>
+              </select>
+            </div>
+            <div class="pf">
+              <label>Sélection joueurs</label>
+              <button class="btn-ghost" onclick="entrOuvrirSelecteurJoueurs()" style="font-size:11px;" id="entr-select-joueurs-btn">Tous les joueurs</button>
+            </div>
+            <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+              <div style="font-size:10px;color:#555;">% déjà réalisé équipe :</div>
+              <input type="number" id="entr-pct-equipe" value="" min="0" max="200" step="5" style="width:60px;padding:4px 6px;border-radius:6px;border:1px solid #2a2a2a;background:#0f0f0f;color:#FECC00;font-size:13px;font-weight:700;text-align:center;outline:none;" placeholder="%" oninput="entrAppliquerPctEquipe(this.value)" title="Appliquer ce % à tous les joueurs" />
+              <span style="font-size:10px;color:#555;">m HI déjà réalisés (modifiable individuel ↓)</span>
+            </div>
+          </div>
+            <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:4px;">
+              <div style="font-size:10px;color:#555;">Filtre :</div>
+              <div id="entr-filtre-poste-wrap" style="display:flex;gap:4px;flex-wrap:wrap;"></div>
+            </div>
+          <!-- Tableau joueurs + distances réalisées -->
+          <div id="entr-joueurs-table-wrap" style="overflow-x:auto;margin-top:10px;"></div>
+        </div>
+
+        <!-- Séances physiques -->
+        <div class="params-card" style="margin-bottom:14px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:12px;">
+            <div class="params-title" style="margin-bottom:0;">Séances physiques</div>
+            <div style="display:flex;gap:6px;flex-wrap:wrap;">
+              <button class="btn-ghost" onclick="entrOuvrirBibliotheque()" style="font-size:12px;">📚 Bibliothèque</button>
+              <button class="btn-primary" onclick="entrAjouterSeance()" style="font-size:12px;">+ Nouvelle séance</button>
+            </div>
+          </div>
+          <div id="entr-seances-list" style="display:flex;gap:12px;flex-wrap:wrap;"></div>
+          <div id="entr-seances-empty" style="color:#444;font-size:12px;padding:20px 0;">Aucune séance. Cliquez sur "+ Ajouter une séance" pour commencer.</div>
+        </div>
+
+        <!-- Tableau de répartition des reps -->
+        <div class="params-card" id="entr-reps-card" style="display:none;">
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:6px;">
+            <div class="params-title" style="margin:0;">Répartition des répétitions par joueur</div>
+            <button onclick="entrRecalculForce()" style="padding:5px 12px;border-radius:6px;border:1px solid #EF9F27;background:none;color:#EF9F27;font-size:10px;font-weight:700;cursor:pointer;white-space:nowrap;">↺ Recalculer</button>
+          </div>
+          <div style="font-size:10px;color:#555;margin-bottom:10px;">Les reps sont calculées automatiquement selon la distance HI restante. Séquentiel : ex1 ≤8 reps → stop, sinon plafond 10 + ex2, etc.</div>
+          <div id="entr-reps-table-wrap" style="overflow-x:auto;"></div>
+        </div>
+
+      </div>
+
+      <!-- Modal sélecteur joueurs entraînement -->
+      <div id="entr-modal-joueurs" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:#0008;z-index:9999;align-items:center;justify-content:center;">
+        <div style="background:#1a1a1a;border:1px solid #2a2a2a;border-radius:12px;padding:20px;min-width:340px;max-width:500px;max-height:80vh;display:flex;flex-direction:column;gap:12px;">
+          <div style="font-size:14px;font-weight:700;color:#FECC00;">Sélectionner les joueurs</div>
+          <div style="display:flex;gap:8px;margin-bottom:4px;">
+            <button class="btn-ghost" style="font-size:11px;" onclick="entrSelectTous()">Tous</button>
+            <button class="btn-ghost" style="font-size:11px;" onclick="entrDeselectTous()">Aucun</button>
+          </div>
+          <div id="entr-joueurs-checkboxes" style="overflow-y:auto;max-height:380px;display:flex;flex-direction:column;gap:4px;"></div>
+          <div style="display:flex;gap:8px;justify-content:flex-end;">
+            <button class="btn-ghost" onclick="document.getElementById('entr-modal-joueurs').style.display='none'">Annuler</button>
+            <button class="btn-primary" onclick="entrValiderJoueurs()">Valider</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Modal bibliothèque de séances génériques -->
+      <div id="entr-modal-bibliotheque" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:#0008;z-index:9999;align-items:center;justify-content:center;">
+        <div style="background:#1a1a1a;border:1px solid #2a2a2a;border-radius:12px;padding:20px;min-width:360px;max-width:560px;max-height:80vh;display:flex;flex-direction:column;gap:12px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;">
+            <div style="font-size:14px;font-weight:700;color:#FECC00;">📚 Bibliothèque de séances</div>
+            <button class="btn-ghost" onclick="document.getElementById('entr-modal-bibliotheque').style.display='none'" style="font-size:11px;">✕</button>
+          </div>
+          <div style="font-size:10px;color:#555;">Sélectionnez les séances à ajouter pour ce jour.</div>
+          <div id="entr-biblio-liste" style="overflow-y:auto;max-height:380px;display:flex;flex-direction:column;gap:6px;"></div>
+          <div style="display:flex;gap:8px;justify-content:flex-end;">
+            <button class="btn-ghost" onclick="document.getElementById('entr-modal-bibliotheque').style.display='none'">Fermer</button>
+          </div>
+        </div>
+      </div>
+      <div id="entr-modal-seance" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:#0008;z-index:9999;align-items:center;justify-content:center;">
+        <div style="background:#1a1a1a;border:1px solid #2a2a2a;border-radius:12px;padding:20px;width:90%;max-width:900px;max-height:90vh;display:flex;flex-direction:column;gap:12px;overflow:hidden;">
+          <div style="display:flex;align-items:center;justify-content:space-between;">
+            <div style="font-size:14px;font-weight:700;color:#FECC00;" id="entr-modal-seance-title">Nouvelle séance</div>
+            <button class="btn-ghost" onclick="document.getElementById('entr-modal-seance').style.display='none'" style="font-size:11px;">✕ Fermer</button>
+          </div>
+          <div style="display:flex;gap:12px;flex-wrap:wrap;flex:0 0 auto;">
+            <div class="pf">
+              <label>Nom de l'exercice</label>
+              <input type="text" id="entr-seance-nom" placeholder="Ex: Sprint 3-1-3..." style="width:260px;padding:6px 9px;border-radius:7px;border:1px solid #2a2a2a;background:#0f0f0f;color:#fff;font-size:12px;outline:none;" />
+            </div>
+            <div class="pf">
+              <label>Appliqué à</label>
+              <select id="entr-seance-lignes" style="padding:6px 9px;border-radius:7px;border:1px solid #2a2a2a;background:#0f0f0f;color:#fff;font-size:12px;outline:none;">
+                <option value="tous">Tous les joueurs</option>
+                <option value="avants">Avants uniquement</option>
+                <option value="3/4">3/4 uniquement</option>
+              </select>
+            </div>
+          </div>
+          <!-- Terrain avec plots et flèches -->
+          <div style="flex:1;overflow:hidden;display:flex;flex-direction:column;gap:8px;min-height:0;">
+            <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+              <button class="btn-ghost" id="entr-tool-plot" onclick="entrSetTool('plot')" style="font-size:11px;">📍 Poser un plot</button>
+              <button class="btn-ghost" id="entr-tool-fleche" onclick="entrSetTool('fleche')" style="font-size:11px;">➡️ Tracer une flèche</button>
+              <button class="btn-ghost" onclick="entrAnnulerDernierElement()" style="font-size:11px;">↩ Annuler dernier</button>
+              <button class="btn-ghost" onclick="entrEffacerTerrain()" style="font-size:11px;">🗑 Tout effacer</button>
+              <button class="btn-ghost" onclick="entrResetZoom()" style="font-size:11px;" title="Terrain entier visible">🔍 Reset zoom</button>
+              <div style="margin-left:auto;font-size:11px;color:#FECC00;font-weight:700;" id="entr-hi-par-rep-display">0 m HI / rép</div>
+            </div>
+            <div style="position:relative;overflow:hidden;border:1px solid #2a2a2a;border-radius:8px;background:#0a0a0a;flex-shrink:0;" id="entr-terrain-wrap">
+              <canvas id="entr-terrain-canvas" width="880" height="560" style="display:block;cursor:crosshair;width:100%;"></canvas>
+            </div>
+            <div style="font-size:10px;color:#555;" id="entr-terrain-hint">Cliquez pour poser des plots. Molette ou pinch (trackpad) pour zoomer. Clic molette pour déplacer.</div>
+          </div>
+          <div style="display:flex;gap:8px;justify-content:flex-end;flex-shrink:0;">
+            <button class="btn-ghost" onclick="document.getElementById('entr-modal-seance').style.display='none'">Annuler</button>
+            <button class="btn-primary" onclick="entrValiderSeance()">Valider la séance</button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from './firebase-bundle.js'
+    import { getAuth, onAuthStateChanged, signOut } from './firebase-bundle.js'
+    import { getFirestore, collection, doc, setDoc, getDocs, getDoc } from './firebase-bundle.js'
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyCvMs-5LX9Ivk3OkzUR3iz9Kk1E5b9_7Vk",
+      authDomain: "delta-rugby-app.firebaseapp.com",
+      projectId: "delta-rugby-app",
+      storageBucket: "delta-rugby-app.firebasestorage.app",
+      messagingSenderId: "61187079762",
+      appId: "1:61187079762:web:56cd1eaa8beb9e1a2ee98b"
+    }
+    const fbApp = initializeApp(firebaseConfig)
+    const auth  = getAuth(fbApp)
+    const db    = getFirestore(fbApp)
+
+    // Colonnes Catapult
+    const COL = {
+      joueur:'Player Name', date:'Activity Name', seance:'Period Name', period:'Period Name',
+      vmaxPct:'Max Vel (% Max)', vmax:'Maximum Velocity',
+      accB2:'Acceleration B2 Efforts (Gen 2)', accB3:'Acceleration B3 Efforts (Gen 2)',
+      distHI:'Distance Haute Intensité', distTot:'Total Distance',
+      load:'Total Player Load', loadMin:'Player Load Per Minute'
+    }
+
+    // FILTRE : Period contient "session" ou "complet" ET Activity ne contient pas "match"/"rehab"
+    function estValide(r) {
+      const period   = String(r[COL.period]  || '').toLowerCase()
+      const activity = String(r[COL.seance]  || '').toLowerCase()
+      return (period.includes('session') || period.includes('complet'))
+          && !activity.includes('match') && !activity.includes('rehab') && !activity.includes('réhab')
+    }
+
+    // Charger les valeurs depuis localStorage ou utiliser les valeurs par défaut
+    window.DEFAULTS = {
+  'Pilier Gauche':       { load: 520, distHI: 140, accB23: 18 },
+  'Pilier Droit':        { load: 510, distHI: 145, accB23: 19 },
+  'Talonneur':           { load: 480, distHI: 160, accB23: 22 },
+  '2e Ligne':            { load: 520, distHI: 180, accB23: 24 },
+  'N8':                  { load: 560, distHI: 230, accB23: 29 },
+  '3e Ligne aile':       { load: 550, distHI: 220, accB23: 28 },
+  "Demi de mêlée":      { load: 480, distHI: 250, accB23: 22 },
+  "Demi d'ouverture":   { load: 470, distHI: 280, accB23: 20 },
+  'Centre':              { load: 490, distHI: 320, accB23: 18 },
+  'Ailier':              { load: 480, distHI: 380, accB23: 16 },
+  'Arrière':             { load: 470, distHI: 350, accB23: 16 },
+}
+    // Charger d'abord depuis localStorage (synchrone pour éviter le flash)
+    function chargerDefaultsLocal() {
+      try {
+        const savedDefaults = localStorage.getItem('poste_defaults')
+        if (savedDefaults) {
+          Object.assign(window.DEFAULTS, JSON.parse(savedDefaults))
+        }
+      } catch(e) {}
+    }
+
+    // Puis mettre à jour depuis Firebase (asynchrone)
+    async function chargerDefaults() {
+      try {
+        const docRef = doc(db, 'config', 'poste_defaults')
+        const docSnap = await getDoc(docRef)
+        if (docSnap.exists()) {
+          const data = docSnap.data()
+          if (data.defaults) {
+            Object.assign(window.DEFAULTS, data.defaults)
+            // Mettre à jour localStorage aussi
+            localStorage.setItem('poste_defaults', JSON.stringify(window.DEFAULTS))
+            // Re-render si les valeurs ont changé
+            renderPosteGrid()
+          }
+        }
+      } catch(e) {}
+    }
+
+    let gpsValides = []
+    let gpsToutesLignes = []  // Toutes les lignes CSV sans filtre (pour HG)
+    let joueurs = []
+    let planifResultats = []
+    let joursActifs = ['Lundi','Mardi','Jeudi']
+    let pctParJour  = { Lundi:33, Mardi:34, Jeudi:33 }
+    let currentTab  = 'planif'
+    let jourVisuActif = null
+    const matchCache = {}
+    let currentFilePath = null  // chemin du fichier CSV actuel
+    // HG (Hors Groupe)
+    let hgActif = false
+    let hgPct = 30
+    let hgJour = '' // Jour d'attribution HG (vide = toute la semaine)
+    let hgJoueursIds = [] // IDs des joueurs sélectionnés pour HG
+
+    function hideLoader(){const l=document.getElementById('page-loader');if(l)l.style.display='none'}
+    function updateProgress(pct,text){const pp=document.getElementById('loader-percent');const pt=document.getElementById('loader-text');if(pp)pp.textContent=pct+'%';if(pt&&text)pt.textContent=text}
+
+    onAuthStateChanged(auth, async user => {
+      if (!user) { window.location.href='login.html'; return }
+      document.getElementById('user-email').textContent = user.email
+      updateProgress(25,'Chargement du roster...')
+      const jSnap = await getDocs(collection(db,'joueurs'))
+      joueurs = jSnap.docs.map(d => ({ id:d.id, ...d.data() }))
+      document.getElementById('param-semaine').value = getLundiStr(new Date())
+      document.getElementById('param-ref').value = 'moy'
+      updateProgress(40,'Chargement des paramètres...')
+      chargerDefaultsLocal()
+      renderPosteGrid()
+      chargerDefaults()
+      renderJoursPct()
+      updateProgress(60,'Chargement du fichier GPS...')
+      await chargerGPSFichier()
+      updateProgress(80,'Chargement des planifications...')
+      const planifChargee = await chargerPlanifsSauvegardees()
+      if (!planifChargee) {
+        updateProgress(95,'Calcul de la planification...')
+        await calculerPlanif()
+      } else {
+        updateProgress(95,'Planification chargée')
+      }
+      // Forcer 'moy' par défaut après chargement
+      document.getElementById('param-ref').value = 'moy'
+      updateProgress(100,'Terminé !')
+      setTimeout(hideLoader,300)
+    })
+
+    // ==================== CHARGEMENT FICHIER (IPC) ====================
+    window.choisirFichierCSV = async function() {
+      // console.log('[DEBUG] choisirFichierCSV appelé')
+      // console.log('[DEBUG] window.electronAPI:', window.electronAPI)
+      if (!window.electronAPI) {
+        // console.log('[DEBUG] Pas d electronAPI, fallback input file')
+        document.getElementById('file-input-planif').click()
+        return
+      }
+      // console.log('[DEBUG] Appel openCsvDialog...')
+      const filePath = await window.electronAPI.openCsvDialog()
+      // console.log('[DEBUG] Resultat openCsvDialog:', filePath)
+      if (!filePath) { /*console.log('[DEBUG] Pas de fichier choisi');*/ return }
+      await chargerFichierParChemin(filePath)
+    }
+
+    async function chargerFichierParChemin(filePath) {
+      try {
+        updateProgress(65,'Lecture du fichier GPS...')
+        const result = await window.electronAPI.readFile(filePath)
+        if (!result.success) {
+          // console.error('Erreur lecture:', result.error)
+          return
+        }
+        await window.electronAPI.saveGpsPath(filePath,'planif')
+        currentFilePath = filePath
+        updateProgress(70,'Analyse du CSV...')
+        traiterCSVData(result.content, result.name)
+      } catch(err) {
+        // console.error('Erreur:', err)
+      }
+    }
+
+    function traiterCSVData(text, nom) {
+      // console.log('[DEBUG] traiterCSVData - taille text:', text.length)
+      const all = parseCSV(text)
+      // console.log('[DEBUG] Lignes parsées:', all.length)
+      // console.log('[DEBUG] Premier joueur:', all[0]?.[COL.joueur])
+      // console.log('[DEBUG] Exemple row:', all[0])
+      gpsToutesLignes = all  // Garder toutes les lignes pour HG
+      gpsValides = all.filter(estValide)
+      // console.log('[DEBUG] Après filtre estValide:', gpsValides.length)
+      // console.log('[DEBUG] Exemple valide:', gpsValides[0])
+      Object.keys(matchCache).forEach(k => delete matchCache[k])
+      document.getElementById('source-nom').textContent = nom
+      document.getElementById('source-nom').className = 'source-nom loaded'
+      document.getElementById('source-info').textContent =
+        `${all.length} lignes · ${gpsValides.length} séances valides`
+    }
+
+    async function chargerGPSFichier() {
+      if (!window.electronAPI) {
+        // Fallback: essayer localStorage si pas dans Electron
+        const cache = localStorage.getItem('gps_planif_csv_cache')
+        const nom = localStorage.getItem('gps_planif_csv_nom')
+        if (cache && nom) traiterCSVData(cache, nom)
+        return
+      }
+      const savedPath = await window.electronAPI.getGpsPath('planif')
+      if (savedPath) {
+        await chargerFichierParChemin(savedPath)
+      }
+    }
+
+    // Fallback pour navigateur (sans Electron)
+    document.getElementById('file-input-planif').addEventListener('change', async function(e) {
+      const file = e.target.files[0]
+      if (!file) return
+      updateProgress(65,'Lecture du fichier GPS...')
+      const text = await file.text()
+      try { localStorage.setItem('gps_planif_csv_cache', text); localStorage.setItem('gps_planif_csv_nom', file.name) } catch(err) {}
+      currentFilePath = null
+      updateProgress(70,'Analyse du CSV...')
+      traiterCSVData(text, file.name)
+      this.value = ''
+    })
+
+    function parseCSV(text) {
+      const clean = text.replace(/^\uFEFF/,'').replace(/\r\n/g,'\n').replace(/\r/g,'\n')
+      const lines = clean.split('\n')
+      let hi = 0
+      for (let i=0;i<Math.min(10,lines.length);i++) { if (lines[i].includes('Player Name')) { hi=i; break } }
+      const sep = lines[hi].includes(';') ? ';' : lines[hi].includes('\t') ? '\t' : ','
+      const hdrs = splitL(lines[hi],sep).map(h=>h.trim().replace(/^"|"$/g,''))
+      const rows = []
+      for (let i=hi+1;i<lines.length;i++) {
+        const line=lines[i].trim(); if (!line) continue
+        const vals = splitL(line,sep)
+        if (vals.length<3) continue
+        const row={}
+        hdrs.forEach((h,idx)=>{ const v=(vals[idx]||'').trim().replace(/^"|"$/g,''); const n=parseFloat(v.replace(',','.')); row[h]=(!isNaN(n)&&v!=='')?n:v })
+        if (!row['Player Name']) continue
+        rows.push(row)
+      }
+      return rows
+    }
+    function splitL(line,sep) { const r=[]; let c='',q=false; for(const ch of line){ if(ch==='"')q=!q; else if(ch===sep&&!q){r.push(c);c=''}else c+=ch }; r.push(c); return r }
+
+    function parseDate(val) {
+      const s=String(val||'').trim()
+      let m=s.match(/^(\d{1,2})[\/-](\d{1,2})[\/-](\d{4})$/)
+      if(m) return new Date(+m[3],+m[2]-1,+m[1])
+      m=s.match(/^(\d{4})[\/-](\d{1,2})[\/-](\d{1,2})$/)
+      if(m) return new Date(+m[1],+m[2]-1,+m[3])
+      m=s.match(/^(\d{4})(\d{2})(\d{2})$/)
+      if(m) return new Date(+m[1],+m[2]-1,+m[3])
+      const d=new Date(s); return isNaN(d.getTime())?null:d
+    }
+
+    function norm(s) { return String(s||'').toLowerCase().trim().normalize('NFD').replace(/[\u0300-\u036f]/g,'') }
+
+    function trouverNomGPS(j) {
+      if (matchCache[j.id]!==undefined) return matchCache[j.id]
+      if (!gpsValides.length) { matchCache[j.id]=null; return null }
+      const noms = [...new Set(gpsValides.map(r=>String(r[COL.joueur]||'').trim()).filter(Boolean))]
+      const nJ=norm(j.nom), pJ=norm(j.prenom)
+      const found = noms.find(n => {
+        const nl=norm(n)
+        return nl===pJ+' '+nJ || nl===nJ+' '+pJ || (nJ.length>=4 && nl.includes(nJ)) || (pJ.length>=4 && nl.includes(pJ) && nJ.length>=3 && nl.includes(nJ.slice(0,3)))
+      })
+      matchCache[j.id]=found||null; return matchCache[j.id]
+    }
+
+    function getLundi(d) { const x=new Date(d); x.setHours(0,0,0,0); const day=x.getDay(); x.setDate(x.getDate()-(day===0?6:day-1)); return x }
+    function getLundiStr(d) { const lundi = getLundi(d); const yyyy = lundi.getFullYear(); const mm = String(lundi.getMonth()+1).padStart(2,'0'); const dd = String(lundi.getDate()).padStart(2,'0'); return `${yyyy}-${mm}-${dd}` }
+
+    function getNum(r,col) { const v=parseFloat(String(r[col]||'').replace(',','.')); return isNaN(v)?0:v }
+
+    function chargeSemaine(nomGPS, lundiDate, colName) {
+      const fin=new Date(lundiDate); fin.setDate(lundiDate.getDate()+6); fin.setHours(23,59,59,999)
+      // console.log('[DEBUG] chargeSemaine - joueur:', nomGPS, 'lundi:', lundiDate.toISOString(), 'fin:', fin.toISOString())
+      const rows=gpsValides.filter(r=>{
+        if (String(r[COL.joueur]||'').trim()!==nomGPS) return false
+        const d=parseDate(r[COL.date])
+        const inRange = d&&d>=lundiDate&&d<=fin
+        // if (d && !inRange) console.log('[DEBUG] Date hors range:', r[COL.date], '->', d.toISOString())
+        return inRange
+      })
+      // console.log('[DEBUG] Rows trouvées:', rows.length, 'pour', nomGPS)
+      // if (rows.length > 0) console.log('[DEBUG] Exemple row:', rows[0])
+      return {
+        total: rows.reduce((s,r)=>s+getNum(r,colName),0),
+        distHI: rows.reduce((s,r)=>s+getNum(r,COL.distHI),0),
+        distTot: rows.reduce((s,r)=>s+getNum(r,COL.distTot),0),
+        load: rows.reduce((s,r)=>s+getNum(r,COL.load),0),
+        vmaxPct: rows.length ? rows.reduce((s,r)=>s+getNum(r,COL.vmaxPct),0)/rows.length : null,
+        vmaxMax: rows.length ? Math.max(...rows.map(r=>getNum(r,COL.vmaxPct))) : null,
+        accB2: rows.reduce((s,r)=>s+getNum(r,COL.accB2),0),
+        accB3: rows.reduce((s,r)=>s+getNum(r,COL.accB3),0),
+        nbSean: new Set(rows.map(r=>r[COL.date])).size, rows
+      }
+    }
+
+    function chargeChronique28j(nomGPS, lundiDate, colName) {
+      const fin=new Date(lundiDate); fin.setDate(fin.getDate()-1)
+      const debut=new Date(lundiDate); debut.setDate(debut.getDate()-28)
+      const rows=gpsValides.filter(r=>{ if(String(r[COL.joueur]||'').trim()!==nomGPS) return false; const d=parseDate(r[COL.date]); return d&&d>=debut&&d<=fin })
+      if (!rows.length) return 0
+      return rows.reduce((s,r)=>s+getNum(r,colName),0)/4
+    }
+
+    window.toggleJour = function(el) {
+      el.classList.toggle('active')
+      const nouveauxJoursActifs=[...document.querySelectorAll('.jour-toggle.active')].map(e=>e.dataset.jour)
+      // Préserver les pourcentages existants des jours qui restent actifs
+      const nouveauPctParJour = {}
+      let totalExistant = 0
+      nouveauxJoursActifs.forEach(j => {
+        if (pctParJour[j] !== undefined) {
+          nouveauPctParJour[j] = pctParJour[j]
+          totalExistant += pctParJour[j]
+        }
+      })
+      // Pour les nouveaux jours (qui n'avaient pas de valeur), distribuer équitablement le reste
+      const joursSansValeur = nouveauxJoursActifs.filter(j => pctParJour[j] === undefined)
+      if (joursSansValeur.length > 0) {
+        const reste = 100 - totalExistant
+        const pctParNouveauJour = Math.floor(reste / joursSansValeur.length)
+        joursSansValeur.forEach((j, i) => {
+          nouveauPctParJour[j] = (i === joursSansValeur.length - 1)
+            ? reste - pctParNouveauJour * (joursSansValeur.length - 1)
+            : pctParNouveauJour
+        })
+      }
+      joursActifs = nouveauxJoursActifs
+      pctParJour = nouveauPctParJour
+      renderJoursPct()
+    }
+    function renderJoursPct() {
+      const c=document.getElementById('jours-pct-row'); c.innerHTML=''
+      joursActifs.forEach(jour=>{
+        const box=document.createElement('div'); box.className='jour-pct-box'
+        box.innerHTML=`<label>${jour}</label><input class="jour-pct-inp" type="number" value="${pctParJour[jour]||0}" min="0" max="100" onchange="updatePctParJour('${jour}', this.value)" />`
+        c.appendChild(box)
+      }); majTotalPct()
+    }
+    window.updatePctParJour=function(jour,val){
+      pctParJour[jour]=+val
+      majTotalPct()
+    }
+    function majTotalPct(){
+      const total=joursActifs.reduce((s,j)=>s+(pctParJour[j]||0),0)
+      const el=document.getElementById('total-pct-info')
+      el.textContent=`Total : ${total}%`; el.style.color=total===100?'#1D9E75':'#E24B4A'
+    }
+    window.majTotalPct=majTotalPct
+
+    // ===== HG (Hors Groupe) =====
+    window.toggleHG = function(el) {
+      el.classList.toggle('active')
+      hgActif = el.classList.contains('active')
+      document.getElementById('hg-config').style.display = hgActif ? 'block' : 'none'
+      // Mettre à jour le compteur
+      majCompteurHG()
+    }
+
+    // Mettre à jour hgJour quand le sélecteur change
+    document.getElementById('hg-jour').addEventListener('change', function(e) {
+      hgJour = e.target.value
+    })
+
+    // Gérer le changement de semaine
+    document.getElementById('param-semaine').addEventListener('change', async function(e) {
+      const nouvelleSemaine = e.target.value
+      if (!nouvelleSemaine) return
+      
+      // Vérifier s'il existe une planif sauvegardée pour cette semaine
+      try {
+        const snap = await getDocs(collection(db, 'planificationsGPS'))
+        const planifs = snap.docs.map(d => ({ id: d.id, ...d.data() }))
+        const planifExistante = planifs.find(p => p.semaine === nouvelleSemaine)
+        
+        // Si aucune planif sauvegardée pour cette semaine, réinitialiser les variables HG
+        if (!planifExistante) {
+          hgActif = false
+          hgJoueursIds = []
+          hgJour = ''
+          
+          // Mettre à jour l'UI HG
+          const hgToggle = document.getElementById('hg-toggle')
+          hgToggle.classList.remove('active')
+          document.getElementById('hg-config').style.display = 'none'
+          document.getElementById('hg-jour').value = ''
+          majCompteurHG()
+        }
+      } catch (error) {
+        console.warn('Erreur lors de la vérification des planifications:', error)
+      }
+    })
+
+    function majCompteurHG() {
+      const count = hgJoueursIds.length
+      document.getElementById('hg-joueurs-count').textContent = `${count} joueur(s) sélectionné(s)`
+      // Afficher la liste des joueurs sélectionnés
+      const listDiv = document.getElementById('hg-joueurs-list')
+      if (count > 0) {
+        const noms = joueurs.filter(j => hgJoueursIds.includes(j.id)).map(j => `${j.nom} ${j.prenom[0]}.`).join(', ')
+        listDiv.textContent = noms
+      } else {
+        listDiv.textContent = 'Aucun joueur sélectionné'
+      }
+    }
+
+    window.ouvrirSelectorHG = function() {
+      const modal = document.getElementById('hg-modal')
+      const container = document.getElementById('hg-joueurs-checkboxes')
+      container.innerHTML = ''
+
+      // Trier les joueurs par nom
+      const joueursTries = joueurs.filter(j => j.statut !== 'absent').sort((a, b) => a.nom.localeCompare(b.nom))
+
+      joueursTries.forEach(j => {
+        const isChecked = hgJoueursIds.includes(j.id)
+        const div = document.createElement('div')
+        div.style.cssText = 'display:flex;align-items:center;gap:8px;margin-bottom:8px;padding:6px;background:#0f0f0f;border-radius:4px;'
+        div.innerHTML = `
+          <input type="checkbox" id="hg-cb-${j.id}" value="${j.id}" ${isChecked ? 'checked' : ''} style="cursor:pointer;">
+          <label for="hg-cb-${j.id}" style="flex:1;cursor:pointer;font-size:12px;color:#ccc;">${j.nom} ${j.prenom} <span style="color:#666;font-size:10px;">(${j.poste || '—'})</span></label>
+        `
+        container.appendChild(div)
+      })
+
+      modal.style.display = 'flex'
+    }
+
+    window.fermerSelectorHG = function() {
+      document.getElementById('hg-modal').style.display = 'none'
+    }
+
+    window.validerSelectionHG = function() {
+      const checkboxes = document.querySelectorAll('#hg-joueurs-checkboxes input[type="checkbox"]')
+      hgJoueursIds = [...checkboxes].filter(cb => cb.checked).map(cb => cb.value)
+      majCompteurHG()
+      fermerSelectorHG()
+    }
+
+    // Calculer l'objectif HG pour un joueur (basé sur les valeurs de référence par poste)
+    function calculerObjectifHG(joueur) {
+      if (!hgActif || !hgJoueursIds.includes(joueur.id)) return null
+      const pct = parseFloat(document.getElementById('hg-pct').value) || hgPct
+      const defaults = DEFAULTS[joueur.poste] || DEFAULTS['Talonneur']
+      return Math.round((defaults?.distHI || 0) * (pct / 100))
+    }
+
+    // Récupérer la charge HG réalisée pour un joueur
+    // Si hgJour est défini, filtre sur ce jour spécifique, sinon sur toute la semaine
+    // Cherche dans TOUTES les lignes CSV (pas seulement gpsValides) pour ne pas être limité par le filtre Period Name
+    // Cherche dans Activity Name (segment index 2) pour "hg" ou "miseenplace", et Period Name pour "hg"
+    function chargeHGReelle(nomGPS, lundiDate, colName) {
+      const fin = new Date(lundiDate)
+      fin.setDate(lundiDate.getDate() + 6) // Dimanche
+      fin.setHours(23, 59, 59, 999)
+
+      // Si un jour spécifique est sélectionné, calculer la date exacte
+      let jourDebut = new Date(lundiDate)
+      let jourFin = new Date(fin)
+      if (hgJour) {
+        const offset = JOURS_OFFSET[hgJour]
+        jourDebut = new Date(lundiDate)
+        jourDebut.setDate(lundiDate.getDate() + offset)
+        jourDebut.setHours(0, 0, 0, 0)
+        jourFin = new Date(jourDebut)
+        jourFin.setHours(23, 59, 59, 999)
+      }
+
+      // Utiliser gpsToutesLignes pour chercher dans toutes les données, pas seulement les sessions valides
+      const rows = (gpsToutesLignes || gpsValides).filter(r => {
+        if (String(r[COL.joueur] || '').trim() !== nomGPS) return false
+        const d = parseDate(r[COL.date])
+        if (!d) return false
+        // Si jour spécifique, filtrer sur ce jour, sinon sur toute la semaine
+        if (hgJour) {
+          if (d < jourDebut || d > jourFin) return false
+        } else {
+          if (d < jourDebut || d > jourFin) return false
+        }
+        // Vérifier Activity Name (ex: 20260409_Entrainement_hg ou _MiseEnPlace)
+        const activityName = String(r[COL.seance] || '')
+        const parts = activityName.split('_')
+        const segmentTheme = parts.length >= 3 ? parts[2].toLowerCase() : ''
+        const isHGTheme = segmentTheme === 'hg' || segmentTheme.includes('hg') || segmentTheme === 'miseenplace'
+        // Vérifier Period Name aussi
+        const periodName = String(r[COL.period] || '').toLowerCase()
+        return isHGTheme || periodName.includes('hg')
+      })
+
+      return {
+        total: rows.reduce((s, r) => s + getNum(r, colName), 0),
+        rows: rows,
+        jour: hgJour || null
+      }
+    }
+
+    function renderPosteGrid() {
+  const c = document.getElementById('postes-grid')
+  c.innerHTML = ''
+  Object.entries(window.DEFAULTS).forEach(([poste, vals]) => {
+    const row = document.createElement('div')
+    row.className = 'pdr'
+    row.innerHTML = `
+      <span class="pdr-nom">${poste}</span>
+      <input class="pdr-inp" type="number" value="${vals.distHI}"
+        onchange="window.DEFAULTS['${poste}'].distHI=+this.value" title="Distance HI (m)" />
+      <span class="pdr-unit">m HI</span>
+      <input class="pdr-inp" type="number" value="${vals.accB23}"
+        onchange="window.DEFAULTS['${poste}'].accB23=+this.value" title="Accél. B2+B3" style="margin-left:8px;" />
+      <span class="pdr-unit">acc B2+B3</span>
+    `
+    c.appendChild(row)
+  })
+}
+    // Sauvegarder les valeurs par poste dans Firebase (global)
+    window.sauverDefaults = async function() {
+      try {
+        await setDoc(doc(db, 'config', 'poste_defaults'), {
+          defaults: window.DEFAULTS,
+          updatedAt: new Date().toISOString()
+        })
+        // Backup localStorage
+        localStorage.setItem('poste_defaults', JSON.stringify(window.DEFAULTS))
+        alert('Valeurs de référence enregistrées !')
+      } catch(e) {
+        // Fallback localStorage uniquement
+        localStorage.setItem('poste_defaults', JSON.stringify(window.DEFAULTS))
+        alert('Valeurs sauvegardées localement')
+      }
+    }
+
+    window.setTab=function(tab){
+      currentTab=tab
+      document.getElementById('tab-planif').style.display=tab==='planif'?'block':'none'
+      document.getElementById('tab-visu').style.display=tab==='visu'?'block':'none'
+      document.getElementById('tab-entrainement').style.display=tab==='entrainement'?'block':'none'
+      document.getElementById('tab-planif-btn').classList.toggle('active',tab==='planif')
+      document.getElementById('tab-visu-btn').classList.toggle('active',tab==='visu')
+      document.getElementById('tab-entrainement-btn').classList.toggle('active',tab==='entrainement')
+      if(tab==='visu') renderVisuJours()
+      if(tab==='entrainement') entrInit()
+    }
+
+    const JOURS_OFFSET={'Lundi':0,'Mardi':1,'Mercredi':2,'Jeudi':3,'Vendredi':4,'Samedi':5,'Dimanche':6}
+    const JOURS_ALL=['Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi','Dimanche']
+
+    window.calculerPlanif=async function(){
+      Object.keys(matchCache).forEach(k=>delete matchCache[k])
+      const lundiStr=document.getElementById('param-semaine').value; if(!lundiStr){alert('Sélectionne une semaine.');return}
+      const lundiCible=new Date(lundiStr+'T00:00:00')
+      const pctSem=parseFloat(document.getElementById('param-pct').value)/100
+      const colACWR=document.getElementById('param-col').value
+      const refMode=document.getElementById('param-ref').value
+      const lundiS1=new Date(lundiCible); lundiS1.setDate(lundiCible.getDate()-7)
+      const lundiS2=new Date(lundiCible); lundiS2.setDate(lundiCible.getDate()-14)
+      const tbody=document.getElementById('planif-tbody'); tbody.innerHTML=''; planifResultats=[]
+      let nbOk=0
+      const aujourd_hui=new Date(); aujourd_hui.setHours(23,59,59,999)
+
+      // Charger les planifications historiques de S-1 et S-2
+      const semS1 = getLundiStr(lundiS1)
+      const semS2 = getLundiStr(lundiS2)
+      const planifS1 = await chargerPlanificationParSemaine(semS1)
+      const planifS2 = await chargerPlanificationParSemaine(semS2)
+
+      joueurs.filter(j=>j.statut!=='absent').forEach(j=>{
+        const nomGPS=trouverNomGPS(j)
+        const vide={total:0,distHI:0,distTot:0,load:0,vmaxPct:null,accB2:0,accB3:0,nbSean:0,rows:[]}
+        const s1=nomGPS?chargeSemaine(nomGPS,lundiS1,colACWR):{...vide}
+        const s2=nomGPS?chargeSemaine(nomGPS,lundiS2,colACWR):{...vide}
+        if(s1.total>0||s2.total>0) nbOk++
+
+        // Extraire les cibles historiques de S-1 et S-2
+        const cibleS1 = planifS1?.resultats?.find(r => r.joueurId === j.id)?.distHI || null
+        const cibleS2 = planifS2?.resultats?.find(r => r.joueurId === j.id)?.distHI || null
+
+        // Calculer les écarts de réalisation (réel/cible)
+        const ecartS1 = cibleS1 && cibleS1 > 0 ? s1.distHI / cibleS1 : null
+        const ecartS2 = cibleS2 && cibleS2 > 0 ? s2.distHI / cibleS2 : null
+
+        // Référence
+        let chargeRef=0,sourceRef=''
+        const hasS1=s1.total>0,hasS2=s2.total>0
+        const defPoste = DEFAULTS[j.poste] || DEFAULTS['Talonneur'] || { load: 480, distHI: 200, accB23: 20 }
+        if(!hasS1&&!hasS2) {
+          // Pas de données GPS: utiliser valeurs par défaut du poste
+          chargeRef = defPoste.load
+          sourceRef = 'Défaut ' + (j.poste || 'Talonneur')
+        }
+        else if(refMode==='moy'&&hasS1&&hasS2){chargeRef=(s1.total+s2.total)/2;sourceRef='Moy S-1+S-2'}
+        else if(refMode==='s2'&&hasS2){chargeRef=s2.total;sourceRef='S-2 réelle'}
+        else{chargeRef=hasS1?s1.total:s2.total;sourceRef=hasS1?'S-1 réelle':'S-2 réelle'}
+
+        // Compensation des écarts de réalisation
+        let baseCalc = chargeRef
+        let compensationInfo = ''
+        if (ecartS1 !== null && ecartS2 !== null) {
+          // Les deux écarts disponibles : compenser selon la moyenne des écarts
+          const ecartMoyen = (ecartS1 + ecartS2) / 2
+          // Si le joueur a sur-réalisé (ecart > 1), réduire la base
+          // Si le joueur a sous-réalisé (ecart < 1), augmenter la base
+          baseCalc = chargeRef / ecartMoyen
+          compensationInfo = ` (comp. écarts: ${Math.round((ecartMoyen-1)*100)}%)`
+        } else if (ecartS1 !== null) {
+          // Seul S-1 disponible
+          baseCalc = chargeRef / ecartS1
+          compensationInfo = ` (comp. S-1: ${Math.round((ecartS1-1)*100)}%)`
+        } else if (ecartS2 !== null) {
+          // Seul S-2 disponible
+          baseCalc = chargeRef / ecartS2
+          compensationInfo = ` (comp. S-2: ${Math.round((ecartS2-1)*100)}%)`
+        }
+        sourceRef += compensationInfo
+
+        const chargeCible=baseCalc*pctSem
+        const modulPct=chargeRef>0?Math.round((chargeCible/chargeRef-1)*100):0
+        const realisationPct=chargeRef>0&&hasS1?s1.total/chargeRef:null
+        const chronique=nomGPS?chargeChronique28j(nomGPS,lundiCible,colACWR):0
+        const acwr=chronique>0?parseFloat((chargeCible/chronique).toFixed(2)):null
+
+        const facteur=baseCalc>0?chargeCible/baseCalc:pctSem
+        // Calculer distHI : si S-1 disponible, sinon ratio S-2 ou défaut
+        let distHIExport
+        if(s1.distHI>0){distHIExport=s1.distHI*facteur}
+        else if(s2.distHI>0){distHIExport=s2.distHI*facteur} // Utiliser S-2 si S-1 manque
+        else{distHIExport=(DEFAULTS[j.poste]?.distHI||0)*facteur}
+        const accB23Export=(s1.accB2+s1.accB3)>0?(s1.accB2+s1.accB3)*facteur:(s2.accB2+s2.accB3)>0?(s2.accB2+s2.accB3)*facteur:0
+        const vmaxPctExport=s1.vmaxPct
+
+        // Charges réelles de la semaine cible (si déjà passée ou en cours)
+        const sReelle=nomGPS?chargeSemaine(nomGPS,lundiCible,colACWR):{...vide}
+        const chargeReelleParJour={}, distHIReelleParJour={}
+        sReelle.rows.forEach(r=>{
+          const d=parseDate(r[COL.date]); if(!d) return
+          const offset=d.getDay()===0?6:d.getDay()-1
+          const nomJ=JOURS_ALL[offset]
+          if(!joursActifs.includes(nomJ)) return
+          chargeReelleParJour[nomJ]=(chargeReelleParJour[nomJ]||0)+getNum(r,colACWR)
+          distHIReelleParJour[nomJ]=(distHIReelleParJour[nomJ]||0)+getNum(r,COL.distHI)
+        })
+
+        // Distribution par jour — simple et directe : chaque jour = chargeCible * pct/100
+        const chargeParJour={}, distHIParJour={}
+        joursActifs.forEach(jour=>{
+          const pctJour = pctParJour[jour] || 0
+          const dateJour = new Date(lundiCible); dateJour.setDate(lundiCible.getDate()+(JOURS_OFFSET[jour]||0)); dateJour.setHours(23,59,59,999)
+          if(dateJour <= aujourd_hui && chargeReelleParJour[jour] !== undefined){
+            chargeParJour[jour] = chargeReelleParJour[jour]
+          } else {
+            chargeParJour[jour] = chargeCible * (pctJour / 100)
+          }
+          distHIParJour[jour] = distHIExport * (pctJour / 100)
+        })
+
+        const semaineAData = sReelle.rows.length > 0
+        const rIndex = planifResultats.length
+        const pctParJourCalc = {...pctParJour}
+
+        // Calculer données HG pour ce joueur
+        const objectifHG = calculerObjectifHG(j)
+        const hgReelle = nomGPS ? chargeHGReelle(nomGPS, lundiCible, colACWR) : { total: 0, rows: [] }
+        const pctAtteinteHG = (objectifHG && objectifHG > 0) ? Math.round((hgReelle.total / objectifHG) * 100) : null
+
+        planifResultats.push({joueur:j,nomGPS,s1,s2,chargeRef,sourceRef,chargeCible,chargeCibleAjustee:null,modulPct,acwr,realisationPct,chargeParJour,distHIParJour,chargeReelleParJour,distHIReelleParJour,vmaxPct:semaineAData?sReelle.vmaxMax:null,accB23:accB23Export,distHI:distHIExport,chronique,chroniqueCharge:chronique,ajusteValide:false,pctParJour:pctParJourCalc,objectifHG,hgReelle:hgReelle.total,pctAtteinteHG})
+
+        const acwrCl=acwr===null?'acwr-grey':acwr<0.8?'acwr-low':acwr>=0.8&&acwr<1.4?'acwr-ok':acwr>=1.4&&acwr<=1.8?'acwr-warn':'acwr-danger'
+        const modCl=modulPct>5?'mod-up':modulPct<-5?'mod-down':'mod-ok'
+        const reelStr=realisationPct!==null?`<div style="font-weight:700;color:${realisationPct>=0.95?'#1D9E75':'#EF9F27'};">${Math.round(realisationPct*100)}%</div>`:'<div style="color:#333;">—</div>'
+        const joursHTML=joursActifs.map(jour=>{
+          const estReel=distHIReelleParJour[jour]!==undefined
+          const valObjectifInitial=Math.round(distHIExport*(pctParJour[jour]||0)/100)
+          const valReel=Math.round(distHIReelleParJour[jour]||0)
+          if(estReel){
+            // Calculer l'objectif adapté pour ce jour (si c'est le jour suivant un jour réalisé)
+            const valAdaptatif = calculObjectifAdaptatif({chargeReelleParJour:distHIReelleParJour,pctParJour}, jour, distHIExport)
+            const estAdapte = valAdaptatif !== valObjectifInitial
+            // Calculer % d'atteinte par rapport à l'objectif adapté si adapté, sinon initial
+            const objectifCible = estAdapte ? valAdaptatif : valObjectifInitial
+            const pctAtteinte=objectifCible>0?Math.round((valReel/objectifCible)*100):0
+            let couleur='#E24B4A' // rouge < 85%
+            if(pctAtteinte>=95) couleur='#1D9E75' // vert
+            else if(pctAtteinte>=85) couleur='#EF9F27' // orange
+            const objDisplay = estAdapte ? `${valAdaptatif} ↻` : `${valObjectifInitial}`
+            return `<div class="jour-pill"><div class="jour-pill-nom">${jour.slice(0,3)} ✓</div><div class="jour-pill-val" style="color:${couleur}">${valReel}</div><div class="jour-pill-obj">${objDisplay}</div></div>`
+          } else {
+            // Afficher l'objectif (adapté si c'est le jour suivant un jour réalisé)
+            const valAdaptatif = calculObjectifAdaptatif({chargeReelleParJour:distHIReelleParJour,pctParJour}, jour, distHIExport)
+            const valPlanifie = Math.round(distHIParJour[jour]||0)
+            const estAdapte = valAdaptatif !== valPlanifie
+            // Vérifier si c'est le jour suivant immédiat après un jour réalisé
+            const idxJour = joursActifs.indexOf(jour)
+            const jPrec = idxJour > 0 ? joursActifs[idxJour - 1] : null
+            const estJourSuivantReel = jPrec && distHIReelleParJour[jPrec] !== undefined
+            return `<div class="jour-pill"><div class="jour-pill-nom">${jour.slice(0,3)}${estAdapte && estJourSuivantReel?' ↻':''}</div><div class="jour-pill-val" style="color:${estAdapte && estJourSuivantReel?'#FECC00':'#FECC00'};${estAdapte && estJourSuivantReel?'text-decoration:underline;':''}">${valAdaptatif}</div>${estAdapte && estJourSuivantReel?`<div class="jour-pill-obj" style="font-size:8px;color:#555;">init:${valPlanifie}</div>`:''}</div>`
+          }
+        }).join('')
+
+        // Ajouter pill HG si joueur sélectionné pour HG
+        const aHG = hgActif && hgJoueursIds.includes(j.id)
+        let hgPill = ''
+        if(aHG){
+          const objHG = objectifHG || 0
+          const realHG = hgReelle.total || 0
+          const jourLabel = hgJour ? hgJour.slice(0,3) : ''
+          const nomHG = jourLabel ? `HG-${jourLabel}` : 'HG'
+          if(realHG > 0){
+            const pctHG = objHG > 0 ? Math.round((realHG/objHG)*100) : 0
+            let couleurHG = '#E24B4A'
+            if(pctHG >= 95) couleurHG = '#1D9E75'
+            else if(pctHG >= 85) couleurHG = '#EF9F27'
+            hgPill = `<div class="jour-pill" style="border-color:#FECC00;"><div class="jour-pill-nom">${nomHG} ✓</div><div class="jour-pill-val" style="color:${couleurHG};">${Math.round(realHG)}</div><div class="jour-pill-obj">obj:${objHG}</div></div>`
+          } else {
+            hgPill = `<div class="jour-pill" style="border-color:#FECC00;"><div class="jour-pill-nom">${nomHG}</div><div class="jour-pill-val" style="color:#FECC00;">${objHG}</div><div class="jour-pill-obj" style="font-size:8px;color:#555;">à faire</div></div>`
+          }
+        }
+
+        const tr=document.createElement('tr')
+        tr.innerHTML=`
+          <td><div style="font-weight:600;">${j.nom} ${j.prenom[0]}.</div>${!nomGPS?`<div class="no-gps">⚠ Non trouvé GPS</div>`:`<div style="font-size:9px;color:#555;">${nomGPS}</div>`}</td>
+          <td style="color:#555;font-size:10px;">${j.poste||'—'}</td>
+          <td><div class="pval" style="color:${s2.total>0?'#888':'#333'}">${s2.total>0?Math.round(s2.total):'—'}</div><div class="psub">${s2.nbSean>0?s2.nbSean+'s':'—'}</div></td>
+          <td><div class="pval" style="color:${s1.total>0?'#ccc':'#333'}">${s1.total>0?Math.round(s1.total):'—'}</div><div class="psub">${s1.nbSean>0?s1.nbSean+'s':'—'}</div></td>
+          <td><div class="psub">${sourceRef}</div></td>
+          <td>${reelStr}</td>
+          <td>
+            <div class="charge-edit-wrap">
+              <input type="number" class="charge-input" value="${Math.round(distHIExport)}" min="0" max="2000"
+                onchange="ajusterCharge(${rIndex}, this.value)" id="charge-inp-${rIndex}"/>
+              <input type="range" class="charge-slider" value="100" min="50" max="150"
+                oninput="ajusterChargePct(${rIndex}, this.value)" id="charge-slider-${rIndex}"/>
+            </div>
+          </td>
+          <td><span class="mod-badge ${modCl}" id="mod-badge-${rIndex}">${modulPct>=0?'+':''}${modulPct}%</span></td>
+          <td><span class="acwr-badge ${acwrCl}" id="acwr-badge-${rIndex}">${acwr!==null?acwr:'—'}</span></td>
+          <td><button class="btn-ghost" style="font-size:9px;padding:2px 8px;display:none;" onclick="validerAjustement(${rIndex})" id="btn-valider-${rIndex}">Valider</button></td>
+          <td><div class="jours-pills" id="jours-pills-${rIndex}">${joursHTML}</div></td>
+          <td>${hgPill || '<span style="color:#555;">—</span>'}</td>
+        `
+        tbody.appendChild(tr)
+      })
+
+      document.getElementById('planif-status').textContent=`${joueurs.filter(j=>j.statut!=='absent').length} joueurs · ${nbOk} avec données GPS`
+
+      try {
+        localStorage.setItem('planif_resultats',JSON.stringify(planifResultats.map(r=>({
+          joueurId:r.joueur.id,distHI:r.distHI,distHIParJour:r.distHIParJour,
+          vitesseMaxPct:r.vmaxPct,accB2B3:r.accB23,chargeCible:r.chargeCible,chargeParJour:r.chargeParJour
+        }))))
+      } catch(e) {}
+    }
+
+    window.sauvegarderPlanif=async function(){
+      if(!planifResultats.length){alert('Calcule d\'abord.');return}
+      const sem=document.getElementById('param-semaine').value
+      // Calculer les objectifs adaptatifs pour chaque joueur
+      const resultatsAvecAdaptatif = planifResultats.map(r=>{
+        // Calculer les objectifs adaptatifs par jour
+        const distHIParJourAdaptatif = {}
+        joursActifs.forEach(jour => {
+          const valAdaptatif = calculObjectifAdaptatif(r, jour, r.distHI)
+          distHIParJourAdaptatif[jour] = valAdaptatif
+        })
+        
+        return {
+          joueurId:r.joueur.id,nomGPS:r.nomGPS,
+          chargeCible:r.chargeCible,
+          chargeCibleAjustee:r.chargeCibleAjustee,
+          chargeParJour:r.chargeParJour,
+          distHIParJour:r.distHIParJour,distHI:r.distHI,
+          distHIParJourAdaptatif:distHIParJourAdaptatif, // Ajout des objectifs adaptatifs
+          distHIReelleParJour:r.distHIReelleParJour,chargeReelleParJour:r.chargeReelleParJour,
+          vmaxPct:r.vmaxPct,accB23:r.accB23,acwr:r.acwr,
+          chroniqueCharge:r.chroniqueCharge,
+          pctParJour:{...pctParJour},
+          objectifHG:r.objectifHG,hgReelle:r.hgReelle,pctAtteinteHG:r.pctAtteinteHG
+        }
+      })
+
+      await setDoc(doc(db,'planificationsGPS','planif_'+sem),{
+        semaine:sem,pctSemaine:+document.getElementById('param-pct').value,
+        refMode:document.getElementById('param-ref').value,
+        joursActifs:[...joursActifs],pctParJour:{...pctParJour},colACWR:document.getElementById('param-col').value,
+        // Configuration HG
+        hgActif:hgActif,hgPct:parseFloat(document.getElementById('hg-pct').value)||hgPct,hgJour:document.getElementById('hg-jour').value,hgJoueursIds:[...hgJoueursIds],
+        resultats:resultatsAvecAdaptatif,
+        savedAt:new Date().toISOString()
+      })
+      alert(`Planification du ${sem} sauvegardée !`)
+      chargerPlanifsSauvegardees()
+    }
+
+    async function chargerPlanificationParSemaine(semaineStr) {
+      try {
+        const docRef = doc(db, 'planificationsGPS', 'planif_' + semaineStr)
+        const docSnap = await getDoc(docRef)
+        if (docSnap.exists()) {
+          return docSnap.data()
+        }
+        return null
+      } catch(e) {
+        return null
+      }
+    }
+
+    async function chargerPlanifsSauvegardees(){
+      const snap=await getDocs(collection(db,'planificationsGPS'))
+      const planifs=snap.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>(b.semaine||'').localeCompare(a.semaine||''))
+      const nav=document.getElementById('planifs-nav'); nav.innerHTML=''
+
+      // Afficher/masquer la section des planifications sauvegardées
+      const section=document.getElementById('planifs-nav-section')
+      if(section) section.style.display=planifs.length>0?'block':'none'
+
+      // Auto-charger la planif de la semaine en cours si elle existe
+      const semaineEnCours=getLundiStr(new Date())
+      const planifCourante=planifs.find(p=>p.semaine===semaineEnCours)
+      let planifChargee = false
+      if(planifCourante) {
+        chargerPlanif(planifCourante, null)
+        planifChargee = true
+      }
+
+      planifs.forEach(p=>{
+        const btn=document.createElement('button'); btn.className='planif-nav-btn'+(p.semaine===semaineEnCours?' active':''); btn.textContent=`Sem. ${p.semaine}`
+        btn.onclick=()=>{ chargerPlanif(p, btn) }
+        nav.appendChild(btn)
+      })
+
+      return planifChargee
+    }
+
+    function chargerPlanif(p, btn) {
+      document.getElementById('param-semaine').value=p.semaine
+      document.getElementById('param-pct').value=p.pctSemaine
+      // Ne pas restaurer refMode pour garder 'moy' par défaut
+      document.getElementById('param-col').value=p.colACWR||'Distance Haute Intensité'
+      joursActifs=p.joursActifs||['Lundi','Mardi','Jeudi']
+      pctParJour=p.pctParJour||{}
+      // Charger configuration HG
+      hgActif=p.hgActif||false
+      hgPct=p.hgPct||30
+      hgJour=p.hgJour||''
+      hgJoueursIds=p.hgJoueursIds||[]
+      document.getElementById('hg-pct').value=hgPct
+      document.getElementById('hg-jour').value=hgJour
+      const hgToggle=document.getElementById('hg-toggle')
+      if(hgActif){hgToggle.classList.add('active');document.getElementById('hg-config').style.display='block'}
+      else{hgToggle.classList.remove('active');document.getElementById('hg-config').style.display='none'}
+      majCompteurHG()
+      // Si pctParJour vide, reconstruire équitablement
+      if(!Object.keys(pctParJour).length){
+        const pctEg=joursActifs.length>0?Math.floor(100/joursActifs.length):0
+        joursActifs.forEach((j,i)=>{pctParJour[j]=i===joursActifs.length-1?100-pctEg*(joursActifs.length-1):pctEg})
+      }
+      document.querySelectorAll('.jour-toggle').forEach(el=>el.classList.toggle('active',joursActifs.includes(el.dataset.jour)))
+      renderJoursPct()
+      planifResultats=(p.resultats||[]).map(r=>{
+        const j=joueurs.find(x=>x.id===r.joueurId); if(!j) return null
+        const rPct=r.pctParJour||pctParJour
+        // Utiliser les valeurs sauvegardées si elles existent, sinon recalculer
+        const distHITotal=r.distHI||0
+        const distHIParJourSauvegarde=r.distHIParJour||{}
+        // Vérifier si on a des valeurs sauvegardées pour tous les jours actifs
+        const aDesValeursSauvegardees=joursActifs.every(jour=>distHIParJourSauvegarde[jour]!==undefined)
+        const distHIParJourCalc=aDesValeursSauvegardees?{...distHIParJourSauvegarde}:{}
+        if(!aDesValeursSauvegardees){
+          joursActifs.forEach(jour=>{
+            const pct=rPct[jour]||0
+            distHIParJourCalc[jour]=distHITotal*(pct/100)
+          })
+        }
+        // Utiliser chargeCibleAjustee si elle existe (valeur validée manuellement)
+        const chargeEffective = r.chargeCibleAjustee || r.chargeCible
+        const facteur = r.chargeCible > 0 ? chargeEffective / r.chargeCible : 1
+        // Recalculer distHIParJour avec la charge effective
+        const distHIParJourEffectif = {}
+        joursActifs.forEach(jour => {
+          distHIParJourEffectif[jour] = distHIParJourCalc[jour] * facteur
+        })
+        // Si on a une charge ajustée, utiliser directement le distHI sauvegardé (déjà ajusté)
+        // Sinon appliquer le facteur au distHI de base
+        const distHIEffectif = r.chargeCibleAjustee ? r.distHI : r.distHI * facteur
+        // Recalculer ACWR avec la charge effective (cible ajustée)
+        const acwrCalcule = r.chroniqueCharge > 0 ? parseFloat((chargeEffective / r.chroniqueCharge).toFixed(2)) : r.acwr
+
+        return{
+          joueur:j,nomGPS:r.nomGPS,
+          chargeCible:r.chargeCible,
+          chargeCibleAjustee:r.chargeCibleAjustee||null,
+          chargeParJour:r.chargeParJour||{},
+          distHIParJour:distHIParJourEffectif,
+          distHI:distHIEffectif,vmaxPct:r.vmaxPct,accB23:r.accB23,acwr:acwrCalcule,
+          distHIReelleParJour:r.distHIReelleParJour||{},chargeReelleParJour:r.chargeReelleParJour||{},
+          s1:{total:0,nbSean:0},s2:{total:0,nbSean:0},
+          chargeRef:r.chargeCible,sourceRef:'Sauvegardé',modulPct:0,
+          chroniqueCharge:r.chroniqueCharge||0,
+          realisationPct:null,
+          ajusteValide:r.chargeCibleAjustee?true:false,
+          pctParJour:rPct,
+          objectifHG:r.objectifHG||null,hgReelle:r.hgReelle||0,pctAtteinteHG:r.pctAtteinteHG||null
+        }
+      }).filter(Boolean)
+      try{localStorage.setItem('planif_resultats',JSON.stringify(planifResultats.map(r=>({joueurId:r.joueur.id,distHI:r.distHI,distHIParJour:r.distHIParJour,chargeParJour:r.chargeParJour,chargeCible:r.chargeCible}))))}catch(e){}
+      if(btn){document.querySelectorAll('.planif-nav-btn').forEach(b=>b.classList.remove('active')); btn.classList.add('active')}
+
+      // Rendre la table avec les données chargées
+      renderPlanifTable()
+    }
+
+    // Rendre la table de planification avec les données existantes (sans recalcul)
+    function renderPlanifTable() {
+      const tbody = document.getElementById('planif-tbody')
+      tbody.innerHTML = ''
+      const colACWR = document.getElementById('param-col').value
+
+      planifResultats.forEach((r, rIndex) => {
+        const j = r.joueur
+        const chargeEffective = r.chargeCibleAjustee || r.chargeCible
+        const distHIEffective = r.distHI
+        const modulPct = r.chargeRef > 0 ? Math.round((chargeEffective / r.chargeRef - 1) * 100) : 0
+        const acwr = r.chroniqueCharge > 0 ? parseFloat((chargeEffective / r.chroniqueCharge).toFixed(2)) : r.acwr
+
+        const acwrCl = acwr === null ? 'acwr-grey' : acwr < 0.8 ? 'acwr-low' : acwr >= 0.8 && acwr < 1.4 ? 'acwr-ok' : acwr >= 1.4 && acwr <= 1.8 ? 'acwr-warn' : 'acwr-danger'
+        const modCl = modulPct > 5 ? 'mod-up' : modulPct < -5 ? 'mod-down' : 'mod-ok'
+
+        const joursHTML = joursActifs.map(jour => {
+          const estReel = r.distHIReelleParJour && r.distHIReelleParJour[jour] !== undefined
+          const valObjectifInitial = Math.round(distHIEffective * ((r.pctParJour[jour] || 0) / 100))
+          if (estReel) {
+            const valReel = Math.round(r.distHIReelleParJour[jour])
+            const valAdaptatif = calculObjectifAdaptatif(r, jour, distHIEffective)
+            const estAdapte = valAdaptatif !== valObjectifInitial
+            const objectifCible = estAdapte ? valAdaptatif : valObjectifInitial
+            const pctAtteinte = objectifCible > 0 ? Math.round((valReel / objectifCible) * 100) : 0
+            let couleur = '#E24B4A'
+            if (pctAtteinte >= 95) couleur = '#1D9E75'
+            else if (pctAtteinte >= 85) couleur = '#EF9F27'
+            const objDisplay = estAdapte ? `${valAdaptatif} ↻` : `${valObjectifInitial}`
+            return `<div class="jour-pill"><div class="jour-pill-nom">${jour.slice(0, 3)} ✓</div><div class="jour-pill-val" style="color:${couleur}">${valReel}</div><div class="jour-pill-obj">${objDisplay}</div></div>`
+          }
+          const valAdaptatif = calculObjectifAdaptatif(r, jour, distHIEffective)
+          const estAdapte = valAdaptatif !== valObjectifInitial
+          const idxJ = joursActifs.indexOf(jour)
+          const jPrec = idxJ > 0 ? joursActifs[idxJ - 1] : null
+          const estJourSuivantReel = jPrec && r.distHIReelleParJour && r.distHIReelleParJour[jPrec] !== undefined
+          return `<div class="jour-pill"><div class="jour-pill-nom">${jour.slice(0, 3)}${estAdapte && estJourSuivantReel ? ' ↻' : ''}</div><div class="jour-pill-val" style="color:#FECC00;${estAdapte && estJourSuivantReel ? 'text-decoration:underline;' : ''}">${valAdaptatif}</div>${estAdapte && estJourSuivantReel ? `<div class="jour-pill-obj" style="font-size:8px;color:#555;">init:${valObjectifInitial}</div>` : ''}</div>`
+        }).join('')
+
+        const tr = document.createElement('tr')
+        tr.innerHTML = `
+          <td><div style="font-weight:600;">${j.nom} ${j.prenom[0]}.</div>${!r.nomGPS ? `<div class="no-gps">⚠ Non trouvé GPS</div>` : `<div style="font-size:9px;color:#555;">${r.nomGPS}</div>`}</td>
+          <td style="color:#555;font-size:10px;">${j.poste || '—'}</td>
+          <td><div class="pval" style="color:#888">—</div><div class="psub">—</div></td>
+          <td><div class="pval" style="color:#ccc">—</div><div class="psub">—</div></td>
+          <td><div class="psub">Sauvegardé</div></td>
+          <td><div style="color:#333;">—</div></td>
+          <td>
+            <div class="charge-edit-wrap">
+              <input type="number" class="charge-input" value="${Math.round(distHIEffective)}" min="0" max="2000"
+                onchange="ajusterCharge(${rIndex}, this.value)" id="charge-inp-${rIndex}"/>
+              <input type="range" class="charge-slider" value="${r.chargeCible > 0 ? Math.round((distHIEffective / r.chargeCible) * 100) : 100}" min="50" max="150"
+                oninput="ajusterChargePct(${rIndex}, this.value)" id="charge-slider-${rIndex}"/>
+            </div>
+          </td>
+          <td><span class="mod-badge ${modCl}" id="mod-badge-${rIndex}">${modulPct >= 0 ? '+' : ''}${modulPct}%</span></td>
+          <td><span class="acwr-badge ${acwrCl}" id="acwr-badge-${rIndex}">${acwr !== null ? acwr : '—'}</span></td>
+          <td><button class="btn-ghost" style="font-size:9px;padding:2px 8px;${r.ajusteValide ? 'display:block;background:#1D9E75;color:#0f0f0f;' : 'display:none;'}" onclick="validerAjustement(${rIndex})" id="btn-valider-${rIndex}">${r.ajusteValide ? '✓ Validé' : 'Valider'}</button></td>
+          <td><div class="jours-pills" id="jours-pills-${rIndex}">${joursHTML}</div></td>
+          <td><span style="color:#555;">—</span></td>
+        `
+        tbody.appendChild(tr)
+      })
+
+      document.getElementById('planif-status').textContent = `${planifResultats.length} joueurs chargés`
+    }
+
+    // Ajuster la charge d'un joueur en live
+    window.ajusterCharge = function(index, nouvelleCharge) {
+      const r = planifResultats[index]
+      if (!r) return
+      const charge = parseFloat(nouvelleCharge) || 0
+      r.chargeCibleAjustee = charge
+      // Recalculer modul%
+      const modulPct = r.chargeRef > 0 ? Math.round((charge / r.chargeRef - 1) * 100) : 0
+      // Recalculer ACWR avec la chronique stockée (en utilisant la nouvelle charge)
+      const acwr = r.chroniqueCharge > 0 ? parseFloat((charge / r.chroniqueCharge).toFixed(2)) : null
+      // Mettre à jour chargeParJour pour l'affichage des jours
+      const rPct = r.pctParJour || pctParJour
+      joursActifs.forEach(jour => {
+        const pct = rPct[jour] || 0
+        r.chargeParJour[jour] = charge * (pct / 100)
+      })
+      // NOTE: On ne modifie PAS r.distHI ici - ça sera fait dans validerAjustement
+      // pour éviter de doubler l'application du facteur
+      // Mettre à jour les badges
+      const modCl = modulPct > 5 ? 'mod-up' : modulPct < -5 ? 'mod-down' : 'mod-ok'
+      const acwrCl = acwr === null ? 'acwr-grey' : acwr < 0.8 ? 'acwr-low' : acwr >= 0.8 && acwr < 1.4 ? 'acwr-ok' : acwr >= 1.4 && acwr <= 1.8 ? 'acwr-warn' : 'acwr-danger'
+      const modBadge = document.getElementById(`mod-badge-${index}`)
+      const acwrBadge = document.getElementById(`acwr-badge-${index}`)
+      if (modBadge) { modBadge.className = `mod-badge ${modCl}`; modBadge.textContent = `${modulPct >= 0 ? '+' : ''}${modulPct}%` }
+      if (acwrBadge) { acwrBadge.className = `acwr-badge ${acwrCl}`; acwrBadge.textContent = acwr !== null ? acwr : '—' }
+      // Mettre à jour l'affichage des jours avec calcul adaptatif
+      const joursDiv = document.getElementById(`jours-pills-${index}`)
+      if (joursDiv) {
+        joursDiv.innerHTML = joursActifs.map(jour => {
+          const estReel = r.chargeReelleParJour && r.chargeReelleParJour[jour] !== undefined
+          const valObjectifInitial = Math.round(charge * ((rPct[jour]||0) / 100))
+          if(estReel){
+            const valReel = Math.round(r.chargeReelleParJour[jour])
+            const valAdaptatif = calculObjectifAdaptatif(r, jour, charge)
+            const estAdapte = valAdaptatif !== valObjectifInitial
+            const objectifCible = estAdapte ? valAdaptatif : valObjectifInitial
+            const pctAtteinte = objectifCible > 0 ? Math.round((valReel / objectifCible) * 100) : 0
+            let couleur = '#E24B4A'
+            if(pctAtteinte >= 95) couleur = '#1D9E75'
+            else if(pctAtteinte >= 85) couleur = '#EF9F27'
+            const objDisplay = estAdapte ? `${valAdaptatif} ↻` : `${valObjectifInitial}`
+            return `<div class="jour-pill"><div class="jour-pill-nom">${jour.slice(0,3)} ✓</div><div class="jour-pill-val" style="color:${couleur}">${valReel}</div><div class="jour-pill-obj">${objDisplay}</div></div>`
+          }
+          // Afficher l'objectif (adapté si c'est le jour suivant un jour réalisé)
+          const valAdaptatif = calculObjectifAdaptatif(r, jour, charge)
+          const estAdapte = valAdaptatif !== valObjectifInitial
+          const idxJ = joursActifs.indexOf(jour)
+          const jPrec = idxJ > 0 ? joursActifs[idxJ - 1] : null
+          const estJourSuivantReel = jPrec && r.chargeReelleParJour && r.chargeReelleParJour[jPrec] !== undefined
+          return `<div class="jour-pill"><div class="jour-pill-nom">${jour.slice(0,3)}${estAdapte && estJourSuivantReel?' ↻':''}</div><div class="jour-pill-val" style="color:${estAdapte && estJourSuivantReel?'#FECC00':'#FECC00'};${estAdapte && estJourSuivantReel?'text-decoration:underline;':''}">${valAdaptatif}</div>${estAdapte && estJourSuivantReel?`<div class="jour-pill-obj" style="font-size:8px;color:#555;">init:${valObjectifInitial}</div>`:''}</div>`
+        }).join('')
+      }
+      // Afficher le bouton Valider s'il y a une modification
+      const btnValider = document.getElementById(`btn-valider-${index}`)
+      if (btnValider && Math.round(charge) !== Math.round(r.chargeCible)) {
+        btnValider.style.display = 'inline-block'
+      }
+    }
+
+    // Ajuster par pourcentage (slider 50% à 150%)
+    window.ajusterChargePct = function(index, pourcentage) {
+      const r = planifResultats[index]
+      if (!r) return
+      const pct = parseFloat(pourcentage) || 100
+      const nouvelleCharge = Math.round(r.chargeRef * (pct / 100))
+      document.getElementById(`charge-inp-${index}`).value = nouvelleCharge
+      ajusterCharge(index, nouvelleCharge)
+    }
+
+    // Calculer l'objectif adaptatif - ne s'applique qu'au jour suivant immédiatement après un jour réalisé
+    function calculObjectifAdaptatif(r, jour, chargeTotale) {
+      const rPct = r.pctParJour || pctParJour
+      const pctJour = rPct[jour] || 0
+      const objectifInitial = Math.round(chargeTotale * (pctJour / 100))
+      
+      // Trouver l'index du jour actuel
+      const idxJour = joursActifs.indexOf(jour)
+      if(idxJour <= 0) return objectifInitial // Pas d'adaptation pour le premier jour
+      
+      // Vérifier si le jour précédent a une valeur réelle
+      const jPrec = joursActifs[idxJour - 1]
+      const aReellePrec = r.chargeReelleParJour && r.chargeReelleParJour[jPrec] !== undefined
+      
+      if(!aReellePrec) return objectifInitial // Pas d'adaptation si pas de réalisation la veille
+      
+      // Le jour actuel est le jour suivant un jour réalisé
+      // Calculer le total réalisé jusqu'à présent (tous les jours précédents)
+      let totalReel = 0
+      let totalObjectif = 0
+      
+      for(let i = 0; i < idxJour; i++) {
+        const jPrecedent = joursActifs[i]
+        const reel = r.chargeReelleParJour && r.chargeReelleParJour[jPrecedent] !== undefined ? r.chargeReelleParJour[jPrecedent] : 0
+        const objectif = Math.round(chargeTotale * ((rPct[jPrecedent] || 0) / 100))
+        totalReel += reel
+        totalObjectif += objectif
+      }
+      
+      // Calculer l'écart cumulé (positif = en surplus, négatif = en déficit)
+      const ecartCumule = totalReel - totalObjectif
+      
+      // Calculer le reste d'objectif pour toute la semaine
+      const resteObjectifSemaine = chargeTotale - totalReel
+      
+      // Adapter l'objectif du jour actuel : prendre le minimum entre l'objectif initial compensé et le reste disponible
+      const objectifAdaptatif = Math.min(objectifInitial - ecartCumule, resteObjectifSemaine)
+      
+      return Math.max(0, Math.round(objectifAdaptatif))
+    }
+
+    // Valider l'ajustement et sauvegarder sur Firebase
+    window.validerAjustement = async function(index) {
+      const r = planifResultats[index]
+      if (!r) return
+      const nouvelleCharge = parseFloat(document.getElementById(`charge-inp-${index}`).value) || r.chargeCible
+      r.chargeCibleAjustee = nouvelleCharge
+      r.ajusteValide = true
+      const rPct = r.pctParJour || pctParJour
+      const facteur = r.chargeCible > 0 ? nouvelleCharge / r.chargeCible : 1
+      joursActifs.forEach(jour => {
+        const pct = rPct[jour] || 0
+        r.chargeParJour[jour] = nouvelleCharge * (pct / 100)
+        // Utiliser chargeCible comme base pour éviter le double facteur
+        if (r.distHIParJour && r.distHIParJour[jour] !== undefined) {
+          r.distHIParJour[jour] = Math.round(r.chargeCible * (pct / 100) * facteur)
+        }
+      })
+      // Utiliser chargeCible comme base pour éviter le double facteur
+      r.distHI = Math.round(r.chargeCible * facteur)
+
+      // Sauvegarder automatiquement sur Firebase
+      await sauvegarderPlanif()
+
+      const btn = document.getElementById(`btn-valider-${index}`)
+      if (btn) {
+        btn.textContent = '✓ Validé'
+        btn.style.background = '#1D9E75'
+        btn.style.color = '#0f0f0f'
+        btn.style.borderColor = '#1D9E75'
+      }
+    }
+
+    function renderVisuJours(){
+      const c=document.getElementById('visu-jours-btns'); c.innerHTML=''
+      if(!planifResultats.length) return
+      joursActifs.forEach((jour,i)=>{
+        const btn=document.createElement('button'); btn.className='visu-jour-btn'+(i===0?' active':'')
+        btn.textContent=jour; btn.onclick=()=>{ document.querySelectorAll('.visu-jour-btn').forEach(b=>b.classList.remove('active')); btn.classList.add('active'); jourVisuActif=jour; renderVisuJour(jour) }
+        c.appendChild(btn)
+      })
+      // Ajouter bouton HG si activé et des joueurs sont sélectionnés
+      if(hgActif && hgJoueursIds.length > 0){
+        const btnHG=document.createElement('button'); btnHG.className='visu-jour-btn hg-jour-btn'
+        btnHG.textContent='HG'; btnHG.style.background='#FECC20'; btnHG.style.color='#0f0f0f'; btnHG.style.borderColor='#FECC20'
+        btnHG.onclick=()=>{ document.querySelectorAll('.visu-jour-btn').forEach(b=>b.classList.remove('active')); btnHG.classList.add('active'); jourVisuActif='HG'; renderVisuJour('HG') }
+        c.appendChild(btnHG)
+      }
+      jourVisuActif=joursActifs[0]; if(jourVisuActif) renderVisuJour(jourVisuActif)
+    }
+
+    function renderVisuJour(jour){
+      const c=document.getElementById('visu-content'); c.innerHTML=''
+      const estJourHG = (jour === 'HG')
+
+      // Pour HG, utiliser les données HG des joueurs sélectionnés
+      const data = estJourHG
+        ? planifResultats.filter(r => hgJoueursIds.includes(r.joueur.id) && r.objectifHG !== null && r.objectifHG > 0)
+        : planifResultats.filter(r=>r.distHIParJour?.[jour]>0)
+
+      if(!data.length){c.innerHTML='<div style="color:#444;text-align:center;padding:20px;">Aucune donnée pour ce jour.</div>';return}
+      const maxV=Math.max(...data.map(r=>r.vmaxPct||0),1)
+      const maxA=Math.max(...data.map(r=>r.accB23||0),1)
+      const maxH=Math.max(...data.map(r=>estJourHG?(r.objectifHG||0):(r.distHIParJour?.[jour]||0)),1)
+      const table=document.createElement('table'); table.className='visu-table'
+      // Pour HG, on affiche HG Objectif, HG Réalisé, HG % comme colonnes normales
+      const theadHTML = estJourHG
+        ? `<thead><tr><th>Joueur</th><th>Poste</th><th>Vmax %Max</th><th>Accél B2+B3</th><th>HG Objectif</th><th>HG Réalisé</th><th>HG % Atteinte</th><th>Distance HI totale</th><th>ACWR ajusté</th></tr></thead>`
+        : `<thead><tr><th>Joueur</th><th>Poste</th><th>Vmax %Max</th><th>Accél B2+B3</th><th>Objectif (m)</th><th>Réalisé (m)</th><th>% Atteinte</th><th>Distance HI totale</th><th>ACWR ajusté</th></tr></thead>`
+      table.innerHTML=theadHTML
+      const tbody=document.createElement('tbody')
+      let totalPctAtteinte = 0, nbJoueurs = 0
+      data.forEach(r=>{
+        const facteurDist = r.ajusteValide && r.chargeCibleAjustee !== null && r.chargeCible > 0 ? r.chargeCibleAjustee / r.chargeCible : 1
+        const distHITotale = Math.round(r.distHI * facteurDist)
+        const semaineAData=r.vmaxPct!==null
+        const acwrAjuste = r.chroniqueCharge > 0 ? parseFloat((r.chargeCible * facteurDist / r.chroniqueCharge).toFixed(2)) : null
+        const acwrCl=acwrAjuste===null?'acwr-grey':acwrAjuste<0.8?'acwr-low':acwrAjuste>=0.8&&acwrAjuste<1.4?'acwr-ok':acwrAjuste>=1.4&&acwrAjuste<=1.8?'acwr-warn':'acwr-danger'
+        const tr=document.createElement('tr')
+
+        if(estJourHG){
+          // Mode HG : afficher les données HG comme un jour
+          const objectifHG = r.objectifHG || 0
+          const hgReelle = r.hgReelle || 0
+          const aHGReelle = hgReelle > 0
+          const pctAtteinteHG = objectifHG > 0 ? Math.round((hgReelle / objectifHG) * 100) : 0
+          if(aHGReelle){totalPctAtteinte += pctAtteinteHG; nbJoueurs++}
+          // Couleur HG selon % atteinte
+          let couleurHG = '#FECC00'
+          if(aHGReelle){
+            couleurHG = '#E24B4A'
+            if(pctAtteinteHG >= 95) couleurHG = '#1D9E75'
+            else if(pctAtteinteHG >= 85) couleurHG = '#EF9F27'
+          }
+          const objHGDisplay = `<div style="font-weight:700;color:#888;">${objectifHG}</div>`
+          const realHGDisplay = aHGReelle
+            ? `<div style="font-weight:700;color:${couleurHG};">${Math.round(hgReelle)} ✓</div>`
+            : `<div style="color:#555;">—</div>`
+          const pctHGDisplay = aHGReelle
+            ? `<div style="font-weight:700;color:${couleurHG};">${pctAtteinteHG}%</div>`
+            : `<div style="color:#555;">—</div>`
+
+          tr.innerHTML=`
+            <td style="font-weight:600;">${r.joueur.nom} ${r.joueur.prenom[0]}.</td>
+            <td style="color:#555;font-size:10px;">${r.joueur.poste||'—'}</td>
+            <td><div style="font-weight:700;color:#1D9E75;">${semaineAData?r.vmaxPct.toFixed(1)+'%':'—'}</div><div class="prog-bar"><div class="prog-fill" style="width:${semaineAData?Math.round(r.vmaxPct/maxV*100):0}%;background:#1D9E75;"></div></div></td>
+            <td><div style="font-weight:700;color:#EF9F27;">${r.accB23!=null?Math.round(r.accB23):'—'}</div><div class="prog-bar"><div class="prog-fill" style="width:${r.accB23?Math.round(r.accB23/maxA*100):0}%;background:#EF9F27;"></div></div></td>
+            <td>${objHGDisplay}</td>
+            <td>${realHGDisplay}</td>
+            <td>${pctHGDisplay}</td>
+            <td><div style="font-weight:700;color:${r.ajusteValide?'#FECC00':'#888'};">${distHITotale}${r.ajusteValide?' ✓':''}</div></td>
+            <td><span class="acwr-badge ${acwrCl}">${acwrAjuste!=null?acwrAjuste:'—'}</span></td>
+          `
+        } else {
+          // Mode jour normal
+          const rPct = r.pctParJour || pctParJour
+          const pctJour = rPct[jour] || 0
+          const objectifInitial = Math.round(distHITotale * (pctJour / 100))
+          // Calculer objectif adapté
+          const objectifAdapte = calculObjectifAdaptatif(r, jour, distHITotale)
+          const estAdapte = objectifAdapte !== objectifInitial
+          // Vérifier si on a une valeur réelle pour ce jour
+          const estReel = r.distHIReelleParJour && r.distHIReelleParJour[jour] !== undefined
+          const hiReel = estReel ? Math.round(r.distHIReelleParJour[jour]) : 0
+          // Calculer % d'atteinte par rapport à l'objectif adapté si disponible
+          const objectifCible = estAdapte ? objectifAdapte : objectifInitial
+          const pctAtteinte = estReel && objectifCible > 0 ? Math.round((hiReel / objectifCible) * 100) : 0
+          if(estReel){totalPctAtteinte += pctAtteinte; nbJoueurs++}
+          // Couleur selon le % (vert ≥95%, orange 85-95%, rouge <85%)
+          let couleurAtteinte = '#FECC00' // jaune par défaut (planifié)
+          if(estReel){
+            couleurAtteinte = '#E24B4A' // rouge < 85%
+            if(pctAtteinte >= 95) couleurAtteinte = '#1D9E75' // vert
+            else if(pctAtteinte >= 85) couleurAtteinte = '#EF9F27' // orange
+          }
+          // Colonne objectif fusionnée : adapté si disponible, sinon initial
+          const objectifDisplay = estAdapte
+            ? `<div style="font-weight:700;color:#FECC00;text-decoration:underline;">${objectifAdapte} ↻</div><div style="font-size:8px;color:#555;">init:${objectifInitial}</div>`
+            : `<div style="font-weight:600;color:#888;">${objectifInitial}</div>`
+          // Afficher réalisé (vide si pas de données réelles)
+          const realDisplay = estReel
+            ? `<div style="font-weight:700;color:${couleurAtteinte};">${hiReel} ✓</div>`
+            : `<div style="color:#555;">—</div>`
+          const pctDisplay = estReel ? `<div style="font-weight:700;color:${couleurAtteinte};">${pctAtteinte}%</div>` : `<div style="color:#555;">—</div>`
+
+          tr.innerHTML=`
+            <td style="font-weight:600;">${r.joueur.nom} ${r.joueur.prenom[0]}.</td>
+            <td style="color:#555;font-size:10px;">${r.joueur.poste||'—'}</td>
+            <td><div style="font-weight:700;color:#1D9E75;">${semaineAData?r.vmaxPct.toFixed(1)+'%':'—'}</div><div class="prog-bar"><div class="prog-fill" style="width:${semaineAData?Math.round(r.vmaxPct/maxV*100):0}%;background:#1D9E75;"></div></div></td>
+            <td><div style="font-weight:700;color:#EF9F27;">${r.accB23!=null?Math.round(r.accB23):'—'}</div><div class="prog-bar"><div class="prog-fill" style="width:${r.accB23?Math.round(r.accB23/maxA*100):0}%;background:#EF9F27;"></div></div></td>
+            <td>${objectifDisplay}</td>
+            <td>${realDisplay}</td>
+            <td>${pctDisplay}</td>
+            <td><div style="font-weight:700;color:${r.ajusteValide?'#FECC00':'#888'};">${distHITotale}${r.ajusteValide?' ✓':''}</div></td>
+            <td><span class="acwr-badge ${acwrCl}">${acwrAjuste!=null?acwrAjuste:'—'}</span></td>
+          `
+        }
+        tbody.appendChild(tr)
+      })
+      table.appendChild(tbody); c.appendChild(table)
+      // Résumé global
+      const pctMoyenEquipe = nbJoueurs > 0 ? Math.round(totalPctAtteinte / nbJoueurs) : 0
+      let couleurEquipe = '#E24B4A'
+      if(pctMoyenEquipe >= 95) couleurEquipe = '#1D9E75'
+      else if(pctMoyenEquipe >= 85) couleurEquipe = '#EF9F27'
+      const resumeDiv = document.createElement('div')
+      resumeDiv.style.cssText = 'margin-top:20px;padding:15px;background:#1a1a1a;border:1px solid #2a2a2a;border-radius:8px;display:flex;gap:30px;align-items:center;flex-wrap:wrap;'
+      resumeDiv.innerHTML = `
+        <div style="font-size:13px;font-weight:600;">Résumé équipe - ${jour}</div>
+        <div style="font-size:16px;font-weight:700;color:${couleurEquipe};">${pctMoyenEquipe}% d'atteinte moyenne</div>
+        <div style="font-size:11px;color:#555;">${nbJoueurs} joueurs analysés</div>
+      `
+      c.appendChild(resumeDiv)
+    }
+
+    window.exporterCSV=function(){
+      if(!planifResultats.length){alert('Calcule d\'abord.');return}
+      const h=['Athlete ID','Athlete Name','Position','Vélocité maximale (% Max)','Accélération Bandes 2-3 Efforts','Distance de course à grande vitesse']
+      const rows=[h.join(';')]
+      planifResultats.forEach(r=>rows.push([r.joueur.athleteId||'',r.joueur.nom+', '+r.joueur.prenom,r.joueur.poste||'',r.vmaxPct!=null?r.vmaxPct.toFixed(1):'',r.accB23!=null?Math.round(r.accB23):'',r.distHI!=null?Math.round(r.distHI):''].join(';')))
+      dl(rows.join('\n'),`planif_${document.getElementById('param-semaine').value}.csv`)
+    }
+
+    window.exporterCSVVisu=function(){
+      if(!planifResultats.length||!jourVisuActif) return
+      const jour=jourVisuActif
+      const h=['Athlete ID','Athlete Name','Position','Vélocité maximale (% Max)','Accélération Bandes 2-3 Efforts','Distance de course à grande vitesse']
+      const rows=[h.join(';')]
+      planifResultats.forEach(r=>{ if(!r.chargeParJour?.[jour]) return; rows.push([r.joueur.athleteId||'',r.joueur.nom+', '+r.joueur.prenom,r.joueur.poste||'',r.vmaxPct!=null?r.vmaxPct.toFixed(1):'',r.accB23!=null?Math.round(r.accB23):'',r.distHIParJour?.[jour]!=null?Math.round(r.distHIParJour[jour]):''].join(';')) })
+      dl(rows.join('\n'),`visu_charge_${jour}.csv`)
+    }
+
+    function dl(contenu,nom){const blob=new Blob(['\uFEFF'+contenu],{type:'text/csv;charset=utf-8;'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=nom;a.click();URL.revokeObjectURL(url)}
+
+    // ==================== ONGLET ENTRAÎNEMENT ====================
+    let entrJourActif = ''
+    let entrJoueursSelectionnes = []
+    let entrFiltrePoste = ['tous']
+    let entrSeances = []
+    let entrModalSeanceIdx = -1
+
+    // Terrain canvas
+    let entrPlots = []
+    let entrFleches = []
+    let entrTool = 'plot'
+    let entrFlecheStart = null
+    const TERRAIN_W = 820, TERRAIN_H = 440
+    const TERRAIN_REAL_W = 68, TERRAIN_REAL_H = 44
+
+    // Groupes de postes rugby
+    const POSTES_AVANTS = ['Pilier gauche','Talonneur','Pilier droit','2ème ligne','2e Ligne','2e Ligne','3ème ligne aile','3e ligne aile','3e Ligne aile','3ème ligne centre','3e ligne centre','3e Ligne','Numéro 8','N8','Flanker']
+    const POSTES_34 = ['Demi de mêlée','Demi d\'ouverture','Centre','Ailier','Arrière']
+
+    // Persistence localStorage
+    function lsGet(key) { try { return JSON.parse(localStorage.getItem(key)) } catch(e) { return null } }
+    function lsSet(key, val) { try { localStorage.setItem(key, JSON.stringify(val)) } catch(e) {} }
+
+    function entrGetBibliotheque() { return lsGet('entr_seances_generiques') || [] }
+    function entrSetBibliotheque(seances) { lsSet('entr_seances_generiques', seances) }
+    function entrGetSeancesActives(jour) { return lsGet(`entr_seances_actives_${jour}`) || null }
+    function entrSetSeancesActives(jour, ids) { lsSet(`entr_seances_actives_${jour}`, ids) }
+    function entrGetRepsJour(jour) { return lsGet(`entr_reps_${jour}`) || {} }
+    function entrSetRepsJour(jour, reps) { lsSet(`entr_reps_${jour}`, reps) }
+    function entrGetRealiseJour(jour) { return lsGet(`entr_realise_${jour}`) || {} }
+    function entrSetRealiseJour(jour, realise) { lsSet(`entr_realise_${jour}`, realise) }
+    function entrGetSelJoueurs() { return lsGet('entr_joueurs_sel') || null }
+    function entrSetSelJoueurs(ids) { lsSet('entr_joueurs_sel', ids) }
+
+    function entrGetObjectif(joueurId) {
+      const r = planifResultats.find(r => r.joueur.id === joueurId)
+      if (!r || !entrJourActif) return 0
+      return Math.round(r.distHIParJour?.[entrJourActif] || 0)
+    }
+    function entrGetObjectifAccels(joueurId) {
+      const r = planifResultats.find(r => r.joueur.id === joueurId)
+      if (!r || !entrJourActif) return 0
+      const pctJour = (pctParJour && pctParJour[entrJourActif]) ? pctParJour[entrJourActif] / 100 : 1/7
+      return Math.round((r.accB23 || 0) * pctJour)
+    }
+
+    function entrJoueursFiltres() {
+      return entrJoueursSelectionnes.filter(id => {
+        if (entrFiltrePoste.includes('tous')) return true
+        const j = joueurs.find(j => j.id === id)
+        if (!j) return false
+        const poste = (j.poste||'').toLowerCase()
+        return entrFiltrePoste.some(filtre => {
+          if (filtre === 'avants') return POSTES_AVANTS.some(p => poste.includes(p.toLowerCase()))
+          if (filtre === '3/4') return POSTES_34.some(p => poste.includes(p.toLowerCase()))
+          return poste === filtre.toLowerCase()
+        })
+      })
+    }
+
+    function entrInit() {
+      if (!entrJoueursSelectionnes.length) {
+        const saved = entrGetSelJoueurs()
+        entrJoueursSelectionnes = saved || joueurs.filter(j => j.statut !== 'absent').map(j => j.id)
+      }
+      entrMajBoutonJoueurs()
+      entrRenderFiltrePoste()
+
+      const jourSelect = document.getElementById('entr-jour-select')
+      let lastJour = ''
+      try { lastJour = localStorage.getItem('entr_last_jour') || '' } catch(e) {}
+      if (lastJour && jourSelect && !jourSelect.value) jourSelect.value = lastJour
+      const jourCourant = jourSelect?.value || ''
+      if (jourCourant) {
+        entrJourActif = jourCourant
+        entrChargerJour(jourCourant)
+      } else {
+        entrRenderJoueursTable()
+      }
+    }
+
+    function entrChargerJour(jour) {
+      const biblio = entrGetBibliotheque()
+      const activesIds = entrGetSeancesActives(jour)
+      const repsJour = entrGetRepsJour(jour)
+
+      if (activesIds) {
+        entrSeances = activesIds
+          .map(id => biblio.find(s => String(s.id) === String(id)))
+          .filter(Boolean)
+          .map(s => ({ ...s, repsParJoueur: repsJour[String(s.id)] || {} }))
+      } else {
+        entrSeances = biblio.map(s => ({ ...s, repsParJoueur: repsJour[String(s.id)] || {} }))
+      }
+
+      entrRenderJoueursTable()
+      entrRenderSeances()
+      entrRecalcReps()
+    }
+
+    function entrSauvegarderJour() {
+      if (!entrJourActif) return
+      entrSetSeancesActives(entrJourActif, entrSeances.map(s => String(s.id)))
+      const reps = {}
+      entrSeances.forEach(s => { reps[String(s.id)] = s.repsParJoueur || {} })
+      entrSetRepsJour(entrJourActif, reps)
+    }
+
+    window.entrOnJourChange = function() {
+      entrJourActif = document.getElementById('entr-jour-select').value
+      if (!entrJourActif) return
+      try { localStorage.setItem('entr_last_jour', entrJourActif) } catch(e) {}
+      entrSeances = []
+      entrChargerJour(entrJourActif)
+    }
+
+    function entrMajBoutonJoueurs() {
+      const btn = document.getElementById('entr-select-joueurs-btn')
+      if (!btn) return
+      const total = joueurs.filter(j => j.statut !== 'absent').length
+      btn.textContent = entrJoueursSelectionnes.length === total ? 'Tous les joueurs' : `${entrJoueursSelectionnes.length} joueur(s)`
+    }
+
+    function entrRenderFiltrePoste() {
+      const wrap = document.getElementById('entr-filtre-poste-wrap')
+      if (!wrap) return
+      const postes = [...new Set(joueurs.filter(j=>j.statut!=='absent'&&j.poste).map(j=>j.poste))].sort()
+      const filtres = [
+        { val:'tous', label:'Tous' },
+        { val:'avants', label:'Avants' },
+        { val:'3/4', label:'3/4' },
+        ...postes.map(p=>({ val:p, label:p }))
+      ]
+      wrap.innerHTML = filtres.map(f => {
+        const isActive = entrFiltrePoste.includes(f.val)
+        const id = `entr-fp-${f.val.replace(/[^a-z0-9]/gi,'_')}`
+        return `<button onclick="entrSetFiltrePoste('${f.val}')" id="${id}"
+          style="padding:3px 8px;border-radius:4px;border:1px solid ${isActive?'#FECC00':'#2a2a2a'};
+          background:${isActive?'#FECC0022':'none'};color:${isActive?'#FECC00':'#888'};
+          font-size:10px;cursor:pointer;white-space:nowrap;">${f.label}</button>`
+      }).join('')
+    }
+
+    window.entrSetFiltrePoste = function(val) {
+      if (val === 'tous') {
+        entrFiltrePoste = ['tous']
+      } else {
+        entrFiltrePoste = entrFiltrePoste.filter(f => f !== 'tous')
+        const idx = entrFiltrePoste.indexOf(val)
+        if (idx === -1) entrFiltrePoste.push(val)
+        else entrFiltrePoste.splice(idx, 1)
+        if (entrFiltrePoste.length === 0) entrFiltrePoste = ['tous']
+      }
+      entrRenderFiltrePoste()
+      entrRenderJoueursTable()
+      entrRecalcReps()
+    }
+
+    window.entrOuvrirSelecteurJoueurs = function() {
+      const modal = document.getElementById('entr-modal-joueurs')
+      const container = document.getElementById('entr-joueurs-checkboxes')
+      container.innerHTML = ''
+      const avants = joueurs.filter(j => j.statut!=='absent' && POSTES_AVANTS.some(p=>(j.poste||'').toLowerCase().includes(p.toLowerCase())))
+      const troisQ = joueurs.filter(j => j.statut!=='absent' && POSTES_34.some(p=>(j.poste||'').toLowerCase().includes(p.toLowerCase())))
+      const autres = joueurs.filter(j => j.statut!=='absent' && !avants.includes(j) && !troisQ.includes(j))
+      const groups = [['Avants', avants], ['3/4', troisQ], ['Autres', autres]]
+      groups.forEach(([gname, gjoueurs]) => {
+        if (!gjoueurs.length) return
+        const header = document.createElement('div')
+        header.style.cssText = 'font-size:9px;color:#555;text-transform:uppercase;font-weight:700;padding:8px 4px 4px;display:flex;align-items:center;gap:8px;'
+        header.innerHTML = `${gname}
+          <button onclick="entrSelectGroupe('${gname}')" style="font-size:9px;padding:1px 5px;border-radius:3px;border:1px solid #333;background:none;color:#888;cursor:pointer;">Tous</button>
+          <button onclick="entrDeselectGroupe('${gname}')" style="font-size:9px;padding:1px 5px;border-radius:3px;border:1px solid #333;background:none;color:#888;cursor:pointer;">Aucun</button>`
+        container.appendChild(header)
+        gjoueurs.sort((a,b)=>a.nom.localeCompare(b.nom)).forEach(j => {
+          const checked = entrJoueursSelectionnes.includes(j.id)
+          const div = document.createElement('div')
+          div.dataset.groupe = gname
+          div.style.cssText = 'display:flex;align-items:center;gap:8px;padding:5px 8px;background:#0f0f0f;border-radius:4px;cursor:pointer;'
+          div.innerHTML = `<input type="checkbox" id="entr-jcb-${j.id}" value="${j.id}" ${checked?'checked':''} style="cursor:pointer;">
+            <label for="entr-jcb-${j.id}" style="flex:1;cursor:pointer;font-size:12px;color:#ccc;">${j.nom} ${j.prenom} <span style="color:#555;font-size:10px;">${j.poste||'—'}</span></label>`
+          container.appendChild(div)
+        })
+      })
+      modal.style.display = 'flex'
+    }
+
+    window.entrSelectGroupe = function(gname) { document.querySelectorAll(`#entr-joueurs-checkboxes div[data-groupe="${gname}"] input`).forEach(cb => cb.checked = true) }
+    window.entrDeselectGroupe = function(gname) { document.querySelectorAll(`#entr-joueurs-checkboxes div[data-groupe="${gname}"] input`).forEach(cb => cb.checked = false) }
+    window.entrSelectTous = function() { document.querySelectorAll('#entr-joueurs-checkboxes input').forEach(cb => cb.checked = true) }
+    window.entrDeselectTous = function() { document.querySelectorAll('#entr-joueurs-checkboxes input').forEach(cb => cb.checked = false) }
+    window.entrValiderJoueurs = function() {
+      entrJoueursSelectionnes = [...document.querySelectorAll('#entr-joueurs-checkboxes input:checked')].map(cb => cb.value)
+      entrSetSelJoueurs(entrJoueursSelectionnes)
+      document.getElementById('entr-modal-joueurs').style.display = 'none'
+      entrMajBoutonJoueurs()
+      entrRenderJoueursTable()
+      entrRecalcReps()
+    }
+
+    window.entrAppliquerPctEquipe = function(pct) {
+      const p = parseFloat(pct)
+      if (isNaN(p)) return
+      const realise = entrGetRealiseJour(entrJourActif)
+      entrJoueursFiltres().forEach(id => {
+        const obj = entrGetObjectif(id)
+        realise[id] = Math.round(obj * p / 100)
+        const inp = document.getElementById(`entr-realise-${id}`)
+        if (inp) inp.value = realise[id]
+        entrMajRestant(id, obj, realise[id])
+      })
+      entrSetRealiseJour(entrJourActif, realise)
+      entrRecalcReps()
+    }
+
+    function entrMajRestant(id, obj, realise) {
+      const restant = Math.max(0, obj - realise)
+      const el = document.getElementById(`entr-restant-${id}`)
+      if (el) el.innerHTML = `<span style="color:${restant<=0?'#1D9E75':'#FECC00'};">${restant} m</span>`
+    }
+
+    window.entrMajRealise = function(id, val) {
+      const realise = entrGetRealiseJour(entrJourActif)
+      realise[id] = parseFloat(val) || 0
+      entrSetRealiseJour(entrJourActif, realise)
+      entrMajRestant(id, entrGetObjectif(id), realise[id])
+      entrRecalcReps()
+    }
+
+    function entrRenderJoueursTable() {
+      const wrap = document.getElementById('entr-joueurs-table-wrap')
+      if (!wrap) return
+      const joueursAffiches = joueurs.filter(j => entrJoueursFiltres().includes(j.id))
+        .sort((a,b) => {
+          const ordre = (j) => {
+            if (POSTES_AVANTS.some(p=>(j.poste||'').toLowerCase().includes(p.toLowerCase()))) return 0
+            if (POSTES_34.some(p=>(j.poste||'').toLowerCase().includes(p.toLowerCase()))) return 1
+            return 2
+          }
+          return ordre(a) - ordre(b) || a.nom.localeCompare(b.nom)
+        })
+      if (!joueursAffiches.length) { wrap.innerHTML = '<div style="color:#444;font-size:12px;padding:12px;">Aucun joueur pour ce filtre.</div>'; return }
+      const realise = entrGetRealiseJour(entrJourActif)
+      let html = `<table style="width:100%;border-collapse:collapse;font-size:11px;">
+        <thead><tr>
+          <th style="text-align:left;padding:6px 8px;font-size:9px;color:#555;font-weight:600;text-transform:uppercase;border-bottom:1px solid #2a2a2a;">Joueur</th>
+          <th style="text-align:left;padding:6px 8px;font-size:9px;color:#555;font-weight:600;text-transform:uppercase;border-bottom:1px solid #2a2a2a;">Poste</th>
+          <th style="text-align:center;padding:6px 8px;font-size:9px;color:#555;font-weight:600;text-transform:uppercase;border-bottom:1px solid #2a2a2a;">Objectif HI</th>
+          <th style="text-align:center;padding:6px 8px;font-size:9px;color:#555;font-weight:600;text-transform:uppercase;border-bottom:1px solid #2a2a2a;">Déjà réalisé (m)</th>
+          <th style="text-align:center;padding:6px 8px;font-size:9px;color:#555;font-weight:600;text-transform:uppercase;border-bottom:1px solid #2a2a2a;">Restant</th>
+        </tr></thead><tbody>`
+      joueursAffiches.forEach(j => {
+        const obj = entrGetObjectif(j.id)
+        const r = realise[j.id] ?? 0
+        const restant = Math.max(0, obj - r)
+        const isAvant = POSTES_AVANTS.some(p=>(j.poste||'').toLowerCase().includes(p.toLowerCase()))
+        const is34 = POSTES_34.some(p=>(j.poste||'').toLowerCase().includes(p.toLowerCase()))
+        const groupeColor = isAvant ? '#5588cc' : is34 ? '#55aa88' : '#888'
+        html += `<tr>
+          <td style="padding:6px 8px;font-weight:600;">${j.nom} ${j.prenom[0]}.</td>
+          <td style="padding:6px 8px;font-size:10px;"><span style="color:${groupeColor};">${j.poste||'—'}</span></td>
+          <td style="padding:6px 8px;text-align:center;font-weight:700;color:#888;">${obj||'—'}</td>
+          <td style="padding:6px 8px;text-align:center;">
+            <input type="number" id="entr-realise-${j.id}" value="${r}" min="0" step="5"
+              style="width:70px;padding:3px 6px;border-radius:4px;border:1px solid #2a2a2a;background:#0f0f0f;color:#fff;font-size:11px;text-align:center;outline:none;"
+              oninput="entrMajRealise('${j.id}',this.value)" />
+          </td>
+          <td style="padding:6px 8px;text-align:center;font-weight:700;" id="entr-restant-${j.id}">
+            <span style="color:${restant<=0?'#1D9E75':'#FECC00'};">${restant} m</span>
+          </td>
+        </tr>`
+      })
+      html += '</tbody></table>'
+      wrap.innerHTML = html
+    }
+
+    function entrRecalcReps() {
+      const card = document.getElementById('entr-reps-card')
+      const wrap = document.getElementById('entr-reps-table-wrap')
+      if (!entrSeances.length || !entrJoueursSelectionnes.length) { if(card) card.style.display='none'; return }
+      if (card) card.style.display = 'block'
+
+      const realise = entrGetRealiseJour(entrJourActif)
+      const joueursAffiches = joueurs.filter(j => entrJoueursFiltres().includes(j.id))
+        .sort((a,b) => {
+          const ordre = (j) => {
+            if (POSTES_AVANTS.some(p=>(j.poste||'').toLowerCase().includes(p.toLowerCase()))) return 0
+            if (POSTES_34.some(p=>(j.poste||'').toLowerCase().includes(p.toLowerCase()))) return 1
+            return 2
+          }
+          return ordre(a) - ordre(b) || a.nom.localeCompare(b.nom)
+        })
+
+      joueursAffiches.forEach(j => {
+        const isAvant = POSTES_AVANTS.some(p => (j.poste||'').toLowerCase().includes(p.toLowerCase()))
+        const is34 = POSTES_34.some(p => (j.poste||'').toLowerCase().includes(p.toLowerCase()))
+        const seancesApplicables = entrSeances.filter(s => {
+          const l = s.lignes || 'tous'
+          if (l === 'tous') return true
+          if (l === 'avants') return isAvant
+          if (l === '3/4') return is34
+          return true
+        })
+
+        const obj = entrGetObjectif(j.id)
+        const r = realise[j.id] ?? 0
+        const restant = Math.max(0, obj - r)
+
+        entrSeances.forEach(s => {
+          if (!seancesApplicables.includes(s)) {
+            if (!s.repsParJoueur) s.repsParJoueur = {}
+            s.repsParJoueur[j.id] = 0
+          }
+        })
+
+        const nbSeances = seancesApplicables.length
+        if (!nbSeances) return
+
+        const toutDefini = seancesApplicables.every(s => s.repsParJoueur && s.repsParJoueur[j.id] !== undefined)
+        if (toutDefini) return
+
+        if (restant === 0) {
+          seancesApplicables.forEach(s => { if (!s.repsParJoueur) s.repsParJoueur = {}; if (s.repsParJoueur[j.id] === undefined) s.repsParJoueur[j.id] = 0 })
+          return
+        }
+
+        const hiParSeance = seancesApplicables.map(s => s.hiParRep || 1)
+        const nbS = seancesApplicables.length
+        const repsResult = new Array(nbS).fill(0)
+        let restantLocal = restant
+
+        for (let si = 0; si < nbS; si++) {
+          const hi = hiParSeance[si]
+          const estDernier = si === nbS - 1
+          const rFloor = Math.floor(restantLocal / hi)
+          const rCeil = rFloor + 1
+          const rBest = Math.abs(rCeil * hi - restantLocal) < Math.abs(rFloor * hi - restantLocal) ? rCeil : rFloor
+
+          if (rBest === 0) { if (!estDernier) continue; break }
+
+          if (rBest <= 8) {
+            if (!estDernier) {
+              const ecartPct = Math.abs(rBest * hi - restantLocal) / restantLocal
+              const hiNext = hiParSeance[si + 1]
+              const rNFloor = Math.floor(restantLocal / hiNext)
+              const rNCeil = rNFloor + 1
+              const rNext = Math.abs(rNCeil * hiNext - restantLocal) < Math.abs(rNFloor * hiNext - restantLocal) ? rNCeil : rNFloor
+              const nextEcartPct = rNext <= 8 ? Math.abs(rNext * hiNext - restantLocal) / restantLocal : 1.0
+              if (nextEcartPct < ecartPct - 0.05) continue
+            }
+            repsResult[si] = rBest
+            break
+          } else {
+            if (estDernier && si === 0) { repsResult[si] = rBest; break }
+            repsResult[si] = Math.min(10, rBest)
+            restantLocal -= repsResult[si] * hi
+            if (restantLocal <= 0 || estDernier) break
+          }
+        }
+
+        seancesApplicables.forEach((s, si) => { if (!s.repsParJoueur) s.repsParJoueur = {}; if (s.repsParJoueur[j.id] === undefined) s.repsParJoueur[j.id] = repsResult[si] })
+      })
+
+      let html = `<table style="width:100%;border-collapse:collapse;font-size:11px;min-width:600px;">
+        <thead><tr>
+          <th style="text-align:left;padding:7px 8px;font-size:9px;color:#555;font-weight:600;text-transform:uppercase;border-bottom:1px solid #2a2a2a;white-space:nowrap;">Joueur</th>
+          <th style="text-align:center;padding:7px 8px;font-size:9px;color:#FECC00;font-weight:600;text-transform:uppercase;border-bottom:1px solid #2a2a2a;white-space:nowrap;">HI restant</th>
+          <th style="text-align:center;padding:7px 8px;font-size:9px;color:#EF9F27;font-weight:600;text-transform:uppercase;border-bottom:1px solid #2a2a2a;white-space:nowrap;">Accél obj.</th>`
+      entrSeances.forEach(s => {
+        const ap = s.accelsParRep || s.fleches.length
+        html += `<th style="text-align:center;padding:7px 8px;font-size:9px;color:#FECC00;font-weight:600;text-transform:uppercase;border-bottom:1px solid #2a2a2a;white-space:nowrap;">${s.nom}<br>
+          <span style="color:#FECC0099;font-weight:400;">${s.hiParRep}m</span> <span style="color:#EF9F2799;font-weight:400;">· ${ap}acc.</span></th>`
+      })
+      html += `<th style="text-align:center;padding:7px 8px;font-size:9px;color:#555;font-weight:600;text-transform:uppercase;border-bottom:1px solid #2a2a2a;white-space:nowrap;">Total HI</th>
+          <th style="text-align:center;padding:7px 8px;font-size:9px;color:#EF9F27;font-weight:600;text-transform:uppercase;border-bottom:1px solid #2a2a2a;white-space:nowrap;">Accél.</th>
+        </tr></thead><tbody>`
+
+      joueursAffiches.forEach(j => {
+        const obj = entrGetObjectif(j.id)
+        const r = realise[j.id] ?? 0
+        const restant = Math.max(0, obj - r)
+        const accObjJour = entrGetObjectifAccels(j.id)
+        const isAvant = POSTES_AVANTS.some(p=>(j.poste||'').toLowerCase().includes(p.toLowerCase()))
+        const is34 = POSTES_34.some(p=>(j.poste||'').toLowerCase().includes(p.toLowerCase()))
+        const groupeColor = isAvant ? '#5588cc' : is34 ? '#55aa88' : '#888'
+        let totalHI = 0, totalAccels = 0, repsCells = ''
+        entrSeances.forEach((s, si) => {
+          const reps = s.repsParJoueur?.[j.id] ?? 0
+          totalHI += reps * (s.hiParRep || 0)
+          totalAccels += reps * (s.accelsParRep || s.fleches.length || 0)
+          const rd = entrFormatReps(reps)
+          repsCells += `<td style="text-align:center;padding:6px 8px;">
+            <div style="display:flex;align-items:center;justify-content:center;gap:3px;">
+              <span style="font-weight:700;color:${reps>10?'#EF9F27':'#fff'};">${rd}</span>
+              <div style="display:flex;gap:1px;">
+                <button onclick="entrModReps('${j.id}',${si},-1)" style="padding:1px 4px;border-radius:3px;border:1px solid #333;background:none;color:#888;cursor:pointer;font-size:10px;">−</button>
+                <button onclick="entrModReps('${j.id}',${si},1)" style="padding:1px 4px;border-radius:3px;border:1px solid #333;background:none;color:#888;cursor:pointer;font-size:10px;">+</button>
+              </div>
+            </div>
+          </td>`
+        })
+        const covHI = restant > 0 ? Math.round(totalHI / restant * 100) : (totalHI > 0 ? 100 : 0)
+        const covAcc = accObjJour > 0 ? Math.round(totalAccels / accObjJour * 100) : null
+        const cHI = covHI >= 95 ? '#1D9E75' : covHI >= 80 ? '#EF9F27' : '#E24B4A'
+        const cAcc = covAcc === null ? '#555' : covAcc >= 95 ? '#1D9E75' : covAcc >= 80 ? '#EF9F27' : '#E24B4A'
+        html += `<tr>
+          <td style="padding:6px 8px;font-weight:600;border-left:2px solid ${groupeColor};">${j.nom} ${j.prenom[0]}.</td>
+          <td style="padding:6px 8px;text-align:center;font-weight:700;color:#FECC00;">${restant}m</td>
+          <td style="padding:6px 8px;text-align:center;font-weight:700;color:#EF9F27;">${accObjJour||'—'}</td>
+          ${repsCells}
+          <td style="padding:6px 8px;text-align:center;"><span style="font-weight:700;color:${cHI};">${totalHI}m</span><div style="font-size:9px;color:#555;">${covHI}%</div></td>
+          <td style="padding:6px 8px;text-align:center;"><span style="font-weight:700;color:${cAcc};">${totalAccels}</span>${covAcc!==null?`<div style="font-size:9px;color:#555;">${covAcc}%</div>`:''}</td>
+        </tr>`
+      })
+      html += '</tbody></table>'
+      wrap.innerHTML = html
+    }
+
+    function entrFormatReps(reps) {
+      if (reps <= 0) return '0'
+      if (reps <= 10) return `${reps}`
+      const nbSeries = Math.ceil(reps / 10)
+      const base = Math.floor(reps / nbSeries)
+      const reste = reps % nbSeries
+      const series = []
+      for (let i = 0; i < nbSeries; i++) series.push(base + (i < reste ? 1 : 0))
+      return series.join('+') + ` (${reps})`
+    }
+
+    window.entrRecalculForce = function() {
+      entrSeances.forEach(s => { s.repsParJoueur = {} })
+      entrSauvegarderJour()
+      entrRecalcReps()
+    }
+
+    window.entrModReps = function(joueurId, seanceIdx, delta) {
+      const s = entrSeances[seanceIdx]
+      if (!s) return
+      if (!s.repsParJoueur) s.repsParJoueur = {}
+      s.repsParJoueur[joueurId] = Math.max(0, (s.repsParJoueur[joueurId] ?? 0) + delta)
+      entrSauvegarderJour()
+      entrRecalcReps()
+    }
+
+    window.entrOuvrirBibliotheque = function() {
+      const modal = document.getElementById('entr-modal-bibliotheque')
+      const liste = document.getElementById('entr-biblio-liste')
+      const biblio = entrGetBibliotheque()
+      if (!biblio.length) {
+        liste.innerHTML = '<div style="color:#555;font-size:12px;padding:12px;">Aucune séance enregistrée. Créez d\'abord une nouvelle séance.</div>'
+      } else {
+        const activesIds = entrSeances.map(s => String(s.id))
+        liste.innerHTML = biblio.map((s, i) => {
+          const active = activesIds.includes(String(s.id))
+          return `<div style="display:flex;align-items:center;gap:10px;padding:8px 10px;background:#111;border-radius:6px;border:1px solid ${active?'#FECC00':'#2a2a2a'};">
+            <div style="flex:1;">
+              <div style="font-size:12px;font-weight:700;color:#fff;">${s.nom}</div>
+              <div style="font-size:10px;color:#555;">${s.hiParRep}m HI · ${s.accelsParRep||0} accél. / rép · ${s.plots.length} plots</div>
+            </div>
+            ${active ? `<span style="font-size:10px;color:#FECC00;font-weight:700;">✓ Actif</span>` : `<button class="btn-ghost" onclick="entrAjouterDepuisBiblio(${i})" style="font-size:10px;">+ Ajouter</button>`}
+          </div>`
+        }).join('')
+      }
+      modal.style.display = 'flex'
+    }
+
+    window.entrAjouterDepuisBiblio = function(biblioIdx) {
+      const biblio = entrGetBibliotheque()
+      const s = biblio[biblioIdx]
+      if (!s) return
+      const repsJour = entrGetRepsJour(entrJourActif)
+      entrSeances.push({ ...s, repsParJoueur: repsJour[String(s.id)] || {} })
+      entrSauvegarderJour()
+      entrRenderSeances()
+      entrRecalcReps()
+      entrOuvrirBibliotheque()
+    }
+
+    window.entrAjouterSeance = function() {
+      entrModalSeanceIdx = -1
+      entrPlots = []
+      entrFleches = []
+      entrTool = 'plot'
+      entrFlecheStart = null
+      document.getElementById('entr-seance-nom').value = ''
+      document.getElementById('entr-seance-lignes').value = 'tous'
+      document.getElementById('entr-terrain-hint').textContent = 'Cliquez sur le terrain pour poser des plots.'
+      document.getElementById('entr-modal-seance-title').textContent = 'Nouvelle séance'
+      document.getElementById('entr-modal-seance').style.display = 'flex'
+      setTimeout(() => { entrInitCanvas(); entrMajHIDisplay() }, 50)
+    }
+
+    window.entrEditerSeance = function(idx) {
+      const s = entrSeances[idx]
+      if (!s) return
+      entrModalSeanceIdx = idx
+      entrPlots = (s.plots || []).map(p => ({ mx: p.x, my: p.y, label: p.l }))
+      entrFleches = (s.fleches || []).map(f => ({ from: f.f, to: f.t, dist: f.d }))
+      entrTool = 'plot'
+      entrFlecheStart = null
+      document.getElementById('entr-seance-nom').value = s.nom
+      document.getElementById('entr-seance-lignes').value = s.lignes || 'tous'
+      document.getElementById('entr-modal-seance-title').textContent = 'Modifier séance'
+      document.getElementById('entr-modal-seance').style.display = 'flex'
+      setTimeout(() => { entrInitCanvas(); entrDessinTerrain(); entrMajHIDisplay() }, 50)
+    }
+
+    window.entrValiderSeance = function() {
+      const nom = document.getElementById('entr-seance-nom').value.trim() || `Séance ${entrSeances.length + 1}`
+      const lignes = document.getElementById('entr-seance-lignes').value
+      const hiParRep = entrCalculerHIParRep()
+      const accelsParRep = entrCalculerAccelsParRep()
+      const plotsCompact = entrPlots.map(p => ({ x: p.mx, y: p.my, l: p.label }))
+      const flechesCompact = entrFleches.map(f => ({ f: f.from, t: f.to, d: f.dist }))
+      const seanceId = entrModalSeanceIdx >= 0 ? entrSeances[entrModalSeanceIdx].id : Date.now()
+      const seance = { id: seanceId, nom, lignes, plots: plotsCompact, fleches: flechesCompact, hiParRep, accelsParRep }
+      if (entrModalSeanceIdx >= 0) {
+        seance.repsParJoueur = entrSeances[entrModalSeanceIdx].repsParJoueur || {}
+        entrSeances[entrModalSeanceIdx] = seance
+      } else {
+        seance.repsParJoueur = {}
+        entrSeances.push(seance)
+      }
+      document.getElementById('entr-modal-seance').style.display = 'none'
+      const biblio = entrGetBibliotheque()
+      const existIdx = biblio.findIndex(b => String(b.id) === String(seanceId))
+      const seanceSansReps = { id: seance.id, nom: seance.nom, lignes: seance.lignes, plots: seance.plots, fleches: seance.fleches, hiParRep: seance.hiParRep, accelsParRep: seance.accelsParRep }
+      if (existIdx >= 0) biblio[existIdx] = seanceSansReps
+      else biblio.push(seanceSansReps)
+      entrSetBibliotheque(biblio)
+      entrRenderSeances()
+      entrRecalcReps()
+      entrSauvegarderJour()
+    }
+
+    function entrRenderSeances() {
+      const list = document.getElementById('entr-seances-list')
+      const empty = document.getElementById('entr-seances-empty')
+      list.innerHTML = ''
+      if (!entrSeances.length) { empty.style.display = 'block'; return }
+      empty.style.display = 'none'
+      entrSeances.forEach((s, idx) => {
+        const card = document.createElement('div')
+        card.style.cssText = 'background:#111;border:1px solid #2a2a2a;border-radius:8px;padding:12px;min-width:160px;max-width:200px;display:flex;flex-direction:column;gap:6px;'
+        const lignesLabel = s.lignes === 'avants' ? '🔵 Avants' : s.lignes === '3/4' ? '🟢 3/4' : ''
+        card.innerHTML = `
+          <div style="font-size:12px;font-weight:700;color:#fff;">${s.nom}</div>
+          ${lignesLabel ? `<div style="font-size:9px;font-weight:700;color:#888;background:#222;border-radius:4px;padding:2px 6px;width:fit-content;">${lignesLabel}</div>` : ''}
+          <div style="font-size:11px;color:#FECC00;font-weight:700;">${s.hiParRep} m HI / rép</div>
+          <div style="font-size:11px;color:#EF9F27;font-weight:600;">${s.accelsParRep || s.fleches.length} accél. / rép</div>
+          <div style="font-size:9px;color:#555;">${s.plots.length} plots · ${s.fleches.length} flèche(s)</div>
+          <div style="display:flex;gap:4px;margin-top:4px;flex-wrap:wrap;">
+            <button class="btn-ghost btn-editer" style="font-size:10px;flex:1;">✏️</button>
+            <button class="btn-ghost btn-retirer" style="font-size:10px;color:#EF9F27;border-color:#EF9F27;" title="Retirer de ce jour">↩ Jour</button>
+            <button class="btn-ghost btn-supprimer" style="font-size:10px;color:#E24B4A;border-color:#E24B4A;" title="Supprimer définitivement">🗑</button>
+          </div>`
+        card.querySelector('.btn-editer').addEventListener('click', () => entrEditerSeance(idx))
+        card.querySelector('.btn-retirer').addEventListener('click', () => entrSupprimerSeance(idx))
+        card.querySelector('.btn-supprimer').addEventListener('click', () => entrSupprimerSeanceDefinitive(idx))
+        list.appendChild(card)
+      })
+    }
+
+    window.entrSupprimerSeance = function(idx) {
+      entrSeances.splice(idx, 1)
+      entrSauvegarderJour()
+      entrRenderSeances()
+      entrRecalcReps()
+    }
+
+    window.entrSupprimerSeanceDefinitive = function(idx) {
+      const s = entrSeances[idx]
+      if (!s) return
+      if (!confirm(`Supprimer définitivement « ${s.nom} » de la bibliothèque ?`)) return
+      entrSeances.splice(idx, 1)
+      const biblio = entrGetBibliotheque()
+      const newBiblio = biblio.filter(b => String(b.id) !== String(s.id))
+      entrSetBibliotheque(newBiblio)
+      entrSauvegarderJour()
+      entrRenderSeances()
+      entrRecalcReps()
+    }
+
+    // Terrain canvas
+    const T_LONG = 110, T_LARG = 70, T_ENBUT = 5, T_JEU = 100
+    let terrZoom = 8, terrPanX = 0, terrPanY = 0, terrIsPanning = false, terrPanStart = null, terrLastDist = null, terrCanvasW = 0, terrCanvasH = 0
+
+    function terrPPM() { return terrZoom }
+    function mToPx(mx, my) { const ppm = terrPPM(); return { x: terrPanX + mx * ppm, y: terrPanY + my * ppm } }
+    function pxToM(cx, cy) { const ppm = terrPPM(); return { mx: (cx - terrPanX) / ppm, my: (cy - terrPanY) / ppm } }
+
+    function entrInitCanvas() {
+      const canvas = document.getElementById('entr-terrain-canvas')
+      if (!canvas) return
+      const wrap = document.getElementById('entr-terrain-wrap')
+      const W = wrap.clientWidth || 880
+      const H = Math.round(W * T_LARG / T_LONG)
+      canvas.width = W; canvas.height = H; terrCanvasW = W; terrCanvasH = H
+      const ppmInit = W / (T_LONG + 10)
+      terrZoom = ppmInit
+      terrPanX = 5 * terrZoom
+      terrPanY = (H - T_LARG * terrZoom) / 2
+      const newCanvas = canvas.cloneNode(true)
+      canvas.parentNode.replaceChild(newCanvas, canvas)
+      const c = document.getElementById('entr-terrain-canvas')
+      c.addEventListener('click', entrCanvasClick)
+      c.addEventListener('mousemove', entrCanvasMouseMove)
+      c.addEventListener('wheel', entrCanvasWheel, { passive: false })
+      c.addEventListener('mousedown', entrCanvasMouseDown)
+      c.addEventListener('mouseup', () => { terrIsPanning = false })
+      c.addEventListener('mouseleave', () => { terrIsPanning = false })
+      c.addEventListener('contextmenu', e => e.preventDefault())
+      c.addEventListener('touchstart', entrTouchStart, { passive: false })
+      c.addEventListener('touchmove', entrTouchMove, { passive: false })
+      c.addEventListener('touchend', () => { terrLastDist = null })
+      entrDessinTerrain()
+    }
+
+    function entrCanvasWheel(e) {
+      e.preventDefault()
+      const canvas = document.getElementById('entr-terrain-canvas')
+      const rect = canvas.getBoundingClientRect()
+      const cx = (e.clientX - rect.left) * (canvas.width / rect.width)
+      const cy = (e.clientY - rect.top) * (canvas.height / rect.height)
+      const factor = e.deltaY < 0 ? 1.1 : 0.91
+      entrApplyZoom(factor, cx, cy)
+    }
+
+    function entrTouchStart(e) { if (e.touches.length === 2) { terrLastDist = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY); e.preventDefault() } }
+    function entrTouchMove(e) { if (e.touches.length === 2) { e.preventDefault(); const dist = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY); if (terrLastDist) { const canvas = document.getElementById('entr-terrain-canvas'); const rect = canvas.getBoundingClientRect(); const cx = ((e.touches[0].clientX + e.touches[1].clientX) / 2 - rect.left) * (canvas.width / rect.width); const cy = ((e.touches[0].clientY + e.touches[1].clientY) / 2 - rect.top) * (canvas.height / rect.height); entrApplyZoom(dist / terrLastDist, cx, cy) } terrLastDist = dist } }
+
+    function entrCanvasMouseDown(e) { if (e.button === 1 || e.button === 2) { terrIsPanning = true; terrPanStart = { x: e.clientX - terrPanX, y: e.clientY - terrPanY }; e.preventDefault() } }
+
+    function entrApplyZoom(factor, cx, cy) {
+      const oldZoom = terrZoom
+      const ppmMin = terrCanvasW / (T_LONG + 10)
+      terrZoom = Math.max(ppmMin * 0.9, Math.min(terrCanvasW / 5, terrZoom * factor))
+      terrPanX = cx - (cx - terrPanX) * (terrZoom / oldZoom)
+      terrPanY = cy - (cy - terrPanY) * (terrZoom / oldZoom)
+      entrDessinTerrain()
+    }
+
+    window.entrSetTool = function(tool) {
+      entrTool = tool; entrFlecheStart = null
+      const btnPlot = document.getElementById('entr-tool-plot'), btnFleche = document.getElementById('entr-tool-fleche')
+      if (btnPlot) { btnPlot.style.background = tool === 'plot' ? '#FECC0033' : ''; btnPlot.style.borderColor = tool === 'plot' ? '#FECC00' : '#2a2a2a'; btnPlot.style.color = tool === 'plot' ? '#FECC00' : '' }
+      if (btnFleche) { btnFleche.style.background = tool === 'fleche' ? '#FECC0033' : ''; btnFleche.style.borderColor = tool === 'fleche' ? '#FECC00' : '#2a2a2a'; btnFleche.style.color = tool === 'fleche' ? '#FECC00' : '' }
+      const hint = document.getElementById('entr-terrain-hint')
+      if (tool === 'plot') { if(hint) hint.textContent = 'Cliquez pour poser des plots. Molette ou pinch pour zoomer.' }
+      else { if(hint) hint.textContent = 'Cliquez sur un plot de départ, puis sur un plot d\'arrivée.' }
+      entrDessinTerrain()
+    }
+
+    function entrGetCanvasXY(e) { const canvas = document.getElementById('entr-terrain-canvas'); const rect = canvas.getBoundingClientRect(); return { cx: (e.clientX - rect.left) * (canvas.width / rect.width), cy: (e.clientY - rect.top) * (canvas.height / rect.height) } }
+
+    function entrCanvasClick(e) {
+      if (terrIsPanning) return
+      const { cx, cy } = entrGetCanvasXY(e)
+      const { mx, my } = pxToM(cx, cy)
+      const smx = Math.round(mx), smy = Math.round(my)
+      if (entrTool === 'plot') { const label = String.fromCharCode(65 + entrPlots.length % 26); entrPlots.push({ mx: smx, my: smy, label }); entrDessinTerrain() }
+      else if (entrTool === 'fleche') {
+        const nearIdx = entrTrouverPlotProche(cx, cy)
+        if (nearIdx === -1) return
+        if (entrFlecheStart === null) { entrFlecheStart = nearIdx; entrDessinTerrain() }
+        else { if (nearIdx !== entrFlecheStart) { const p1 = entrPlots[entrFlecheStart], p2 = entrPlots[nearIdx]; const dist = Math.round(Math.hypot(p2.mx - p1.mx, p2.my - p1.my)); entrFleches.push({ from: entrFlecheStart, to: nearIdx, dist }) } entrFlecheStart = null; entrDessinTerrain(); entrMajHIDisplay() }
+      }
+    }
+
+    function entrCanvasMouseMove(e) {
+      if (terrIsPanning) { terrPanX = e.clientX - terrPanStart.x; terrPanY = e.clientY - terrPanStart.y; entrDessinTerrain(); return }
+      if (entrTool !== 'fleche' || entrFlecheStart === null) return
+      const { cx, cy } = entrGetCanvasXY(e)
+      entrDessinTerrain(cx, cy)
+    }
+
+    function entrTrouverPlotProche(cx, cy) {
+      const seuilPx = Math.max(14, terrZoom * 1.2)
+      let best = -1, bestDist = seuilPx
+      entrPlots.forEach((p, i) => { const px = mToPx(p.mx, p.my); const d = Math.hypot(px.x - cx, px.y - cy); if (d < bestDist) { bestDist = d; best = i } })
+      return best
+    }
+
+    function entrCalculerHIParRep() { let sum = 0; entrFleches.forEach(f => { sum += Math.max(0, f.dist - 15) }); return sum }
+    function entrCalculerAccelsParRep() { return entrFleches.length }
+
+    window.entrAnnulerDernierElement = function() { if (entrTool === 'plot' && entrPlots.length) entrPlots.pop(); else if (entrTool === 'fleche' && entrFleches.length) entrFleches.pop(); entrFlecheStart = null; entrDessinTerrain(); entrMajHIDisplay() }
+    window.entrEffacerTerrain = function() { entrPlots = []; entrFleches = []; entrFlecheStart = null; entrDessinTerrain(); entrMajHIDisplay() }
+    window.entrResetZoom = function() { entrInitCanvas() }
+
+    function entrMajHIDisplay() { const el = document.getElementById('entr-hi-par-rep-display'); if (el) el.textContent = `${entrCalculerHIParRep()} m HI / rép · ${entrCalculerAccelsParRep()} accél.` }
+
+    function entrDessinTerrain(cursorCx, cursorCy) {
+      const canvas = document.getElementById('entr-terrain-canvas'); if (!canvas) return
+      const ctx = canvas.getContext('2d'), W = canvas.width, H = canvas.height
+      ctx.fillStyle = '#0a0a0a'; ctx.fillRect(0, 0, W, H)
+
+      // Lignes de terrain
+      ctx.strokeStyle = '#1a3a1a'; ctx.lineWidth = 2
+      const dessinerLigne = (x1, y1, x2, y2, color='#1a3a1a', width=2) => { ctx.strokeStyle = color; ctx.lineWidth = width; ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke() }
+
+      // Contour
+      const tl = mToPx(0, 0), tr = mToPx(T_LONG, 0), br = mToPx(T_LONG, T_LARG), bl = mToPx(0, T_LARG)
+      dessinerLigne(tl.x, tl.y, tr.x, tr.y, '#2a4a2a', 3)
+      dessinerLigne(tr.x, tr.y, br.x, br.y, '#2a4a2a', 3)
+      dessinerLigne(br.x, br.y, bl.x, bl.y, '#2a4a2a', 3)
+      dessinerLigne(bl.x, bl.y, tl.x, tl.y, '#2a4a2a', 3)
+
+      // Lignes en-but
+      const enButHautG = mToPx(T_ENBUT, 0), enButHautD = mToPx(T_ENBUT, T_LARG)
+      const enButBasG = mToPx(T_LONG - T_ENBUT, 0), enButBasD = mToPx(T_LONG - T_ENBUT, T_LARG)
+      dessinerLigne(enButHautG.x, enButHautG.y, enButHautD.x, enButHautD.y, '#3a5a3a', 2)
+      dessinerLigne(enButBasG.x, enButBasG.y, enButBasD.x, enButBasD.y, '#3a5a3a', 2)
+
+      // Ligne médiane
+      const milieuHaut = mToPx(T_LONG/2, 0), milieuBas = mToPx(T_LONG/2, T_LARG)
+      dessinerLigne(milieuHaut.x, milieuHaut.y, milieuBas.x, milieuBas.y, '#3a5a3a', 2)
+
+      // Plots
+      entrPlots.forEach((p, i) => { const px = mToPx(p.mx, p.my); ctx.fillStyle = '#FECC00'; ctx.beginPath(); ctx.arc(px.x, px.y, 6, 0, Math.PI*2); ctx.fill(); ctx.fillStyle = '#fff'; ctx.font = 'bold 10px sans-serif'; ctx.textAlign = 'center'; ctx.fillText(p.label || String.fromCharCode(65+i), px.x, px.y - 10) })
+
+      // Flèches
+      entrFleches.forEach(f => { const p1 = entrPlots[f.from], p2 = entrPlots[f.to]; if (!p1 || !p2) return; const start = mToPx(p1.mx, p1.my), end = mToPx(p2.mx, p2.my); ctx.strokeStyle = '#FECC00'; ctx.lineWidth = 2; ctx.setLineDash([5, 3]); ctx.beginPath(); ctx.moveTo(start.x, start.y); ctx.lineTo(end.x, end.y); ctx.stroke(); ctx.setLineDash([]); const midX = (start.x + end.x) / 2, midY = (start.y + end.y) / 2; ctx.fillStyle = '#FECC00'; ctx.font = '10px sans-serif'; ctx.textAlign = 'center'; ctx.fillText(`${f.dist}m`, midX, midY - 4) })
+
+      // Preview flèche en cours
+      if (entrTool === 'fleche' && entrFlecheStart !== null && cursorCx !== undefined) { const p1 = entrPlots[entrFlecheStart]; if (p1) { const start = mToPx(p1.mx, p1.my); ctx.strokeStyle = '#FECC0088'; ctx.lineWidth = 2; ctx.setLineDash([3, 3]); ctx.beginPath(); ctx.moveTo(start.x, start.y); ctx.lineTo(cursorCx, cursorCy); ctx.stroke(); ctx.setLineDash([]) } }
+    }
+
+    window.handleLogout=async function(){await signOut(auth);window.location.href='login.html'}
+  </script>
+</body>
+</html>

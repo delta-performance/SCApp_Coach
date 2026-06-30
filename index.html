@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>SCA Albi</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', sans-serif;
+      background: #0a0a0a;
+      color: #fff;
+      min-height: 100vh;
+      min-height: 100dvh;
+      display: flex;
+      flex-direction: column;
+      overflow-x: hidden;
+    }
+
+    /* ── HEADER ── */
+    header {
+      padding: env(safe-area-inset-top, 0) 0 0;
+      background: #111;
+      border-bottom: 1px solid #1e1e1e;
+    }
+    .header-inner {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 20px 28px 18px;
+    }
+    .logo-circle {
+      width: 52px; height: 52px;
+      border-radius: 14px;
+      background: #FECC00;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+      font-size: 22px;
+      font-weight: 900;
+      color: #000;
+      letter-spacing: -1px;
+    }
+    .header-text h1 {
+      font-size: 22px;
+      font-weight: 800;
+      color: #fff;
+      letter-spacing: -0.4px;
+    }
+    .header-text p {
+      font-size: 12px;
+      color: #555;
+      margin-top: 2px;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+
+    /* ── DATE BADGE ── */
+    .date-badge {
+      margin-left: auto;
+      text-align: right;
+    }
+    .date-badge .day {
+      font-size: 28px;
+      font-weight: 700;
+      color: #FECC00;
+      line-height: 1;
+    }
+    .date-badge .month {
+      font-size: 11px;
+      color: #555;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    /* ── GRID ── */
+    main {
+      flex: 1;
+      padding: 28px 24px;
+      padding-bottom: calc(28px + env(safe-area-inset-bottom, 0));
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      grid-template-rows: auto;
+      gap: 16px;
+      max-width: 900px;
+      margin: 0 auto;
+      width: 100%;
+    }
+
+    /* ── CARD ── */
+    .card {
+      background: #151515;
+      border: 1px solid #222;
+      border-radius: 20px;
+      padding: 24px 22px;
+      cursor: pointer;
+      text-decoration: none;
+      color: inherit;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      transition: transform 0.12s ease, border-color 0.15s ease, background 0.15s ease;
+      position: relative;
+      overflow: hidden;
+      min-height: 140px;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+    .card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 3px;
+      background: var(--accent, #FECC00);
+      opacity: 0.6;
+    }
+    .card:active {
+      transform: scale(0.97);
+      background: #1c1c1c;
+    }
+    .card:hover {
+      border-color: var(--accent, #FECC00);
+      border-color: color-mix(in srgb, var(--accent, #FECC00) 60%, transparent);
+    }
+
+    /* card wide = full width */
+    .card.wide {
+      grid-column: 1 / -1;
+      min-height: 110px;
+      flex-direction: row;
+      align-items: center;
+      gap: 20px;
+    }
+    .card.wide .card-icon { font-size: 38px; }
+    .card.wide .card-body { flex: 1; }
+
+    .card-icon {
+      font-size: 32px;
+      line-height: 1;
+    }
+    .card-body {}
+    .card-title {
+      font-size: 16px;
+      font-weight: 700;
+      color: #fff;
+      letter-spacing: -0.2px;
+    }
+    .card-sub {
+      font-size: 12px;
+      color: #555;
+      margin-top: 3px;
+      line-height: 1.4;
+    }
+    .card-arrow {
+      margin-left: auto;
+      font-size: 18px;
+      color: #333;
+      flex-shrink: 0;
+    }
+
+    /* accent colors per card */
+    .card-planning   { --accent: #FECC00; }
+    .card-seances    { --accent: #4CAF8F; }
+    .card-equipes    { --accent: #5B9CF6; }
+    .card-gps        { --accent: #F08055; }
+    .card-muscu      { --accent: #C778DD; }
+    .card-tv         { --accent: #E24B4A; }
+
+    /* accent dot on title */
+    .card-title-dot {
+      display: inline-block;
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      background: var(--accent, #FECC00);
+      margin-right: 6px;
+      vertical-align: middle;
+      margin-bottom: 1px;
+    }
+
+    /* ── FOOTER ── */
+    footer {
+      text-align: center;
+      padding: 12px 0 calc(12px + env(safe-area-inset-bottom, 0));
+      font-size: 11px;
+      color: #2a2a2a;
+      border-top: 1px solid #141414;
+    }
+
+    /* ── RESPONSIVE phone ── */
+    @media (max-width: 540px) {
+      main { padding: 20px 16px; gap: 12px; }
+      .card { min-height: 120px; padding: 18px 16px; }
+      .card-icon { font-size: 26px; }
+      .card-title { font-size: 14px; }
+      .header-inner { padding: 16px 20px 14px; }
+    }
+
+    /* ── iPad landscape: 3 cols ── */
+    @media (min-width: 900px) {
+      main { grid-template-columns: 1fr 1fr 1fr; }
+      .card.wide { grid-column: 1 / -1; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="header-inner">
+    <div class="logo-circle">SC</div>
+    <div class="header-text">
+      <h1>SCA Albi</h1>
+      <p>Staff · Outils d'entraînement</p>
+    </div>
+    <div class="date-badge" id="date-badge">
+      <div class="day" id="date-day"></div>
+      <div class="month" id="date-month"></div>
+    </div>
+  </div>
+</header>
+
+<main>
+
+  <!-- Planning -->
+  <a class="card card-planning" href="planning.html">
+    <div class="card-icon">📅</div>
+    <div class="card-body">
+      <div class="card-title"><span class="card-title-dot"></span>Planning</div>
+      <div class="card-sub">Calendrier hebdomadaire, événements</div>
+    </div>
+  </a>
+
+  <!-- Séances (Fiches) -->
+  <a class="card card-seances" href="fiches-seances.html">
+    <div class="card-icon">🏉</div>
+    <div class="card-body">
+      <div class="card-title"><span class="card-title-dot"></span>Séances</div>
+      <div class="card-sub">Fiches séances, plan détaillé, blocs</div>
+    </div>
+  </a>
+
+  <!-- Équipes entraînement -->
+  <a class="card card-equipes" href="equipes.html?mode=entrainement">
+    <div class="card-icon">👥</div>
+    <div class="card-body">
+      <div class="card-title"><span class="card-title-dot"></span>Équipes</div>
+      <div class="card-sub">Composition, séquences, rotations</div>
+    </div>
+  </a>
+
+  <!-- Charge GPS -->
+  <a class="card card-gps" href="gps-planif.html">
+    <div class="card-icon">📡</div>
+    <div class="card-body">
+      <div class="card-title"><span class="card-title-dot"></span>Charge GPS</div>
+      <div class="card-sub">Planification de charge, HI</div>
+    </div>
+  </a>
+
+  <!-- Muscu -->
+  <a class="card card-muscu" href="seances.html">
+    <div class="card-icon">🏋️</div>
+    <div class="card-body">
+      <div class="card-title"><span class="card-title-dot"></span>Musculation</div>
+      <div class="card-sub">Planification cycles, séances, exercices</div>
+    </div>
+  </a>
+
+  <!-- Suivi Poids -->
+  <a class="card card-muscu" href="suivi-poids.html" style="--accent: #378ADD;">
+    <div class="card-icon">⚖️</div>
+    <div class="card-body">
+      <div class="card-title"><span class="card-title-dot"></span>Suivi Poids</div>
+      <div class="card-sub">Pesées, masse grasse, historique</div>
+    </div>
+  </a>
+
+  <!-- Vue TV -->
+  <a class="card card-tv" href="tv.html">
+    <div class="card-icon">📺</div>
+    <div class="card-body">
+      <div class="card-title"><span class="card-title-dot"></span>Vue TV</div>
+      <div class="card-sub">Affichage tableau grand écran</div>
+    </div>
+  </a>
+
+</main>
+
+<footer>SCA Albi &mdash; Outil interne staff</footer>
+
+<script>
+  // Date dynamique
+  const now = new Date()
+  const days = ['Dim.','Lun.','Mar.','Mer.','Jeu.','Ven.','Sam.']
+  const months = ['Jan','Fév','Mar','Avr','Mai','Jun','Jul','Aoû','Sep','Oct','Nov','Déc']
+  document.getElementById('date-day').textContent = now.getDate()
+  document.getElementById('date-month').textContent = months[now.getMonth()]
+</script>
+
+</body>
+</html>

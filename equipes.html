@@ -1,0 +1,2884 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>SCA Albi — Équipes</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #0f0f0f; color: #fff; display: flex; height: 100vh; overflow: hidden; }
+
+    /* SIDEBAR */
+    .sidebar { width: 220px; min-width: 220px; background: #1a1a1a; border-right: 1px solid #2a2a2a; display: flex; flex-direction: column; padding: 20px 0; overflow-y: auto; }
+    .sidebar-logo { display: flex; align-items: center; gap: 10px; padding: 0 20px 24px; border-bottom: 1px solid #2a2a2a; }
+    .sidebar-logo img { width: 36px; }
+    .sidebar-logo span { font-size: 15px; font-weight: 700; color: #FECC00; }
+    .nav-section { padding: 16px 12px 8px; font-size: 10px; font-weight: 600; color: #444; letter-spacing: .08em; text-transform: uppercase; }
+    .nav-item { display: flex; align-items: center; gap: 10px; padding: 9px 20px; font-size: 13px; color: #888; cursor: pointer; border-left: 2px solid transparent; transition: all .15s; }
+    .nav-item:hover { color: #fff; background: #222; }
+    .nav-item.active { color: #FECC00; border-left-color: #FECC00; background: #222; }
+    .nav-dot { width: 7px; height: 7px; border-radius: 50%; background: currentColor; opacity: 0.6; }
+    .sidebar-bottom { margin-top: auto; padding: 16px 20px; border-top: 1px solid #2a2a2a; }
+    .user-info { font-size: 12px; color: #555; margin-bottom: 8px; }
+    .logout-btn { font-size: 12px; color: #555; cursor: pointer; background: none; border: none; }
+    .logout-btn:hover { color: #E24B4A; }
+
+    /* MAIN */
+    .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+    .topbar { height: 56px; border-bottom: 1px solid #2a2a2a; display: flex; align-items: center; padding: 0 20px; gap: 10px; flex-shrink: 0; flex-wrap: wrap; }
+    .topbar-title { font-size: 15px; font-weight: 600; flex: 1; }
+    .content { flex: 1; overflow-y: auto; padding: 20px 24px; }
+
+    /* BOUTONS */
+    .btn-primary { padding: 7px 14px; border-radius: 8px; border: none; background: #FECC00; color: #0f0f0f; font-size: 13px; font-weight: 600; cursor: pointer; }
+    .btn-primary:hover { opacity: .88; }
+    .btn-ghost { padding: 7px 12px; border-radius: 8px; border: 1px solid #2a2a2a; background: none; color: #888; font-size: 13px; cursor: pointer; }
+    .btn-ghost:hover { color: #fff; border-color: #444; }
+    .btn-danger { padding: 7px 12px; border-radius: 8px; border: 1px solid #E24B4A33; background: none; color: #E24B4A; font-size: 13px; cursor: pointer; }
+
+    /* MODE TOGGLE */
+    .mode-toggle { display: flex; gap: 4px; background: #1a1a1a; border: 1px solid #2a2a2a; border-radius: 8px; padding: 3px; }
+    .mode-btn { padding: 5px 12px; border-radius: 6px; border: none; font-size: 12px; font-weight: 500; cursor: pointer; background: none; color: #666; transition: all .15s; white-space: nowrap; }
+    .mode-btn.active { background: #FECC00; color: #0f0f0f; }
+
+    /* ENTRAINEMENT */
+    .entrainement-header { background: #1a1a1a; border: 1px solid #2a2a2a; border-radius: 12px; padding: 14px 18px; margin-bottom: 16px; display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+    .ef { display: flex; flex-direction: column; gap: 3px; }
+    .ef label { font-size: 10px; color: #555; text-transform: uppercase; letter-spacing: .06em; }
+    .ef input { padding: 6px 10px; border-radius: 7px; border: 1px solid #2a2a2a; background: #0f0f0f; color: #fff; font-size: 13px; outline: none; width: 110px; }
+    .ef input:focus { border-color: #FECC00; }
+
+    .equipes-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .equipe-card { background: #1a1a1a; border: 1px solid #2a2a2a; border-radius: 12px; overflow: hidden; }
+    .equipe-card-header { padding: 11px 14px; display: flex; align-items: center; gap: 10px; border-bottom: 2px solid; }
+    .equipe-nom-input { background: none; border: none; font-size: 14px; font-weight: 700; outline: none; flex: 1; }
+
+    /* SLOT ENTRAINEMENT */
+    .terrain-entr { padding: 10px; }
+    .ligne-entr { display: flex; justify-content: center; gap: 4px; margin-bottom: 6px; flex-wrap: wrap; }
+    .slot-entr { display: flex; flex-direction: column; align-items: center; gap: 2px; min-width: 60px; max-width: 75px; }
+    .entr-cercle { width: 44px; height: 44px; border-radius: 50%; border: 2px solid; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; transition: opacity .12s; }
+    .entr-cercle:hover { opacity: .8; }
+    .entr-nom { font-size: 9px; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%; color: #fff; }
+    .entr-seq { display: flex; gap: 2px; flex-wrap: wrap; justify-content: center; max-width: 70px; }
+    .seq-chip { font-size: 8px; padding: 1px 3px; border-radius: 3px; cursor: pointer; border: 1px solid; transition: all .1s; }
+    .entr-stats { font-size: 8px; text-align: center; }
+    .entr-stats .pct { font-weight: 700; }
+    .entr-stats .comp { color: #E24B4A; font-weight: 700; }
+    .entr-empty { font-size: 11px; color: #333; text-align: center; padding: 16px; cursor: pointer; border: 1px dashed #2a2a2a; border-radius: 8px; margin: 8px; }
+    .entr-empty:hover { border-color: #FECC00; color: #FECC00; }
+    .entr-rempl-section { padding: 6px 10px; border-top: 1px solid #111; }
+    .entr-rempl-label { font-size: 9px; color: #444; text-transform: uppercase; margin-bottom: 6px; letter-spacing: 0.08em; }
+    .entr-rempl-row { display: flex; flex-wrap: wrap; gap: 3px; }
+    .slot-rempl-entr { display: flex; flex-direction: column; align-items: center; gap: 1px; min-width: 48px; }
+    .rempl-cercle { width: 34px; height: 34px; border-radius: 50%; border: 1px solid; display: flex; align-items: center; justify-content: center; cursor: pointer; }
+    .rempl-cercle:hover { opacity: .8; }
+    .entr-footer { padding: 8px 12px; background: #111; font-size: 10px; color: #555; display: flex; gap: 14px; border-top: 1px solid #1a1a1a; flex-wrap: wrap; }
+    .entr-footer .fv { font-weight: 700; }
+
+    /* VISION SEQUENCES */
+    .vision-seq-container { display: flex; flex-direction: column; gap: 16px; }
+    .vision-seq-header { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 8px; }
+    .vision-seq-btn { padding: 8px 16px; border-radius: 8px; border: 1px solid #2a2a2a; background: #0f0f0f; color: #888; font-size: 12px; cursor: pointer; white-space: nowrap; }
+    .vision-seq-btn:hover { border-color: #FECC00; color: #FECC00; }
+    .vision-seq-btn.active { background: #FECC00; color: #000; border-color: #FECC00; font-weight: 600; }
+    .vision-seq-content { background: #1a1a1a; border: 1px solid #2a2a2a; border-radius: 12px; padding: 16px; }
+    .vision-seq-equipe { margin-bottom: 16px; }
+    .vision-seq-equipe-header { font-size: 13px; font-weight: 700; padding: 8px 12px; border-radius: 6px; margin-bottom: 8px; }
+    .vision-seq-table { width: 100%; font-size: 11px; border-collapse: collapse; }
+    .vision-seq-table th { text-align: left; padding: 6px; border-bottom: 1px solid #2a2a2a; font-weight: 600; color: #888; }
+    .vision-seq-table td { padding: 6px; border-bottom: 1px solid #111; }
+    .vision-seq-table tr:hover td { background: #111; }
+    .vision-changement { display: inline-block; padding: 2px 6px; background: #E24B4A; color: #fff; font-size: 9px; border-radius: 4px; margin-left: 8px; }
+    .vision-nouveau { display: inline-block; padding: 2px 6px; background: #1D9E75; color: #fff; font-size: 9px; border-radius: 4px; margin-left: 8px; }
+
+    /* MODAL */
+    .modal-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.75); align-items: center; justify-content: center; z-index: 100; }
+    .modal-overlay.open { display: flex; }
+    .modal { background: #1a1a1a; border: 1px solid #2a2a2a; border-radius: 16px; padding: 24px; width: 380px; max-height: 80vh; overflow-y: auto; }
+    .modal-title { font-size: 15px; font-weight: 700; margin-bottom: 14px; }
+    .picker-search { width: 100%; padding: 8px 12px; border-radius: 8px; border: 1px solid #2a2a2a; background: #0f0f0f; color: #fff; font-size: 13px; outline: none; margin-bottom: 8px; }
+    .picker-search:focus { border-color: #FECC00; }
+    .picker-list { max-height: 340px; overflow-y: auto; }
+    .picker-item { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 8px; cursor: pointer; }
+    .picker-item:hover { background: #222; }
+    .picker-nom { font-size: 13px; font-weight: 600; flex: 1; }
+    .picker-poste { font-size: 11px; color: #555; }
+    .modal-actions { display: flex; gap: 10px; margin-top: 14px; }
+
+    /* ============================================================
+       FICHE JOUEUR (overlay style roster)
+    ============================================================ */
+    #fiche-overlay {
+      display: none; position: fixed;
+      top:0; left:0; right:0; bottom:0;
+      background: rgba(0,0,0,.75); z-index: 200;
+      align-items: flex-start; justify-content: flex-end;
+    }
+    #fiche-overlay.open { display: flex; }
+    #fiche-panel {
+      width: 640px; max-width: 90vw; height: 100vh;
+      background: #0f0f0f; border-left: 1px solid #2a2a2a;
+      overflow-y: auto; animation: slideIn .2s ease;
+      display: flex; flex-direction: column;
+    }
+    @keyframes slideIn { from{transform:translateX(40px);opacity:0} to{transform:translateX(0);opacity:1} }
+
+    .fiche-header {
+      position: sticky; top: 0; z-index: 10;
+      background: #0f0f0f; border-bottom: 1px solid #2a2a2a;
+      padding: 14px 20px; display: flex; align-items: center; gap: 14px;
+    }
+    .fiche-avatar {
+      width: 52px; height: 52px; border-radius: 50%; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px; font-weight: 700; color: #fff; overflow: hidden;
+    }
+    .fiche-avatar img { width: 100%; height: 100%; object-fit: cover; }
+    .fiche-nom { font-size: 18px; font-weight: 700; }
+    .fiche-meta { font-size: 12px; color: #555; margin-top: 2px; }
+    .fiche-close {
+      margin-left: auto; width: 32px; height: 32px; border-radius: 50%;
+      border: 1px solid #2a2a2a; background: none; color: #888;
+      font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center;
+    }
+    .fiche-close:hover { color: #fff; border-color: #444; }
+
+    .fiche-tabs {
+      display: flex; border-bottom: 1px solid #2a2a2a; background: #0f0f0f;
+      position: sticky; top: 81px; z-index: 9;
+    }
+    .fiche-tab {
+      padding: 10px 16px; font-size: 12px; font-weight: 500; color: #555;
+      cursor: pointer; border-bottom: 2px solid transparent; transition: all .15s;
+      white-space: nowrap;
+    }
+    .fiche-tab:hover { color: #ccc; }
+    .fiche-tab.active { color: #FECC00; border-bottom-color: #FECC00; }
+
+    .fiche-body { padding: 20px; flex: 1; }
+    .fiche-section { margin-bottom: 22px; }
+    .fiche-section-title {
+      font-size: 10px; font-weight: 700; color: #444; text-transform: uppercase;
+      letter-spacing: .07em; margin-bottom: 10px; display: flex; align-items: center; gap: 8px;
+    }
+    .fiche-section-title::after { content:''; flex:1; height:1px; background:#2a2a2a; }
+
+    .statut-badge {
+      display: inline-flex; align-items: center; gap: 5px;
+      padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: 600;
+    }
+    .statut-ok      { background: #1D9E7522; color: #1D9E75; border: 1px solid #1D9E7544; }
+    .statut-blesse  { background: #E24B4A22; color: #E24B4A; border: 1px solid #E24B4A44; }
+    .statut-absent  { background: #88888822; color: #888;    border: 1px solid #88888844; }
+
+    .fiche-kpi-grid { display: grid; grid-template-columns: repeat(auto-fill,minmax(130px,1fr)); gap: 8px; }
+    .fiche-kpi {
+      background: #1a1a1a; border: 1px solid #2a2a2a; border-radius: 10px;
+      padding: 10px 12px;
+    }
+    .fiche-kpi-label { font-size: 9px; color: #555; text-transform: uppercase; letter-spacing: .05em; margin-bottom: 3px; }
+    .fiche-kpi-val { font-size: 20px; font-weight: 700; line-height: 1; }
+    .fiche-kpi-unit { font-size: 9px; color: #555; margin-top: 2px; }
+
+    .fiche-empty { text-align: center; padding: 40px; color: #444; }
+    .fiche-empty-icon { font-size: 32px; margin-bottom: 10px; }
+
+    /* ============================================================
+       IMPRESSION MODERNE
+    ============================================================ */
+    @media print {
+      * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+      .sidebar, .topbar, .ipad-topbar, .ipad-bottom-nav, .modal-overlay, #fiche-overlay { display: none !important; }
+      body { background: #fff; color: #000; overflow: visible; display: block; margin: 0; padding: 0; font-family: Arial, Helvetica, sans-serif; }
+      .main { overflow: visible; display: block; height: auto; }
+      .content { overflow: visible; padding: 0; }
+    }
+
+    /* ============================================================
+       FEUILLE DE MATCH PRINT — styles toujours présents (visibles uniquement en print)
+    ============================================================ */
+    /* En-tête */
+    .pm-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 16px;
+      border-bottom: 3px solid #FECC00;
+      background: #1a1a1a;
+      gap: 12px;
+    }
+    .pm-logo-sca, .pm-logo-adv {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      min-width: 90px;
+    }
+    .pm-logo-img { height: 52px; width: auto; object-fit: contain; }
+    .pm-club-name { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: #FECC00; text-align: center; }
+    .pm-center { flex: 1; text-align: center; }
+    .pm-competition { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: .12em; color: #888; margin-bottom: 2px; }
+    .pm-date { font-size: 15px; font-weight: 900; color: #fff; text-transform: capitalize; }
+    .pm-journee { font-size: 13px; font-weight: 700; color: #FECC00; margin-top: 2px; }
+    .pm-vs { font-size: 11px; font-weight: 700; color: #555; letter-spacing: .15em; margin-top: 4px; }
+
+    /* Terrain disposition */
+    .pm-body { padding: 12px 16px; }
+    .pm-terrain { margin-bottom: 12px; }
+    .pm-ligne { display: flex; justify-content: center; gap: 6px; margin-bottom: 5px; }
+    .pm-ligne-prop  { gap: 4px; }
+    .pm-ligne-2L    { gap: 20px; }
+    .pm-ligne-3L    { gap: 8px; }
+    .pm-ligne-charn { gap: 30px; }
+    .pm-ligne-34    { gap: 4px; }
+    .pm-ligne-15    { justify-content: center; }
+    .pm-sep { height: 1px; background: #2a2a2a; margin: 6px 40px; }
+
+    .pm-slot {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      background: #111;
+      border: 1px solid #2a2a2a;
+      border-radius: 8px;
+      padding: 6px 8px;
+      min-width: 80px;
+      flex: 1;
+      max-width: 120px;
+    }
+    .pm-slot-15 { min-width: 120px; max-width: 160px; }
+    .pm-num {
+      background: #FECC00;
+      color: #000;
+      font-size: 10px;
+      font-weight: 900;
+      border-radius: 4px;
+      padding: 1px 6px;
+      margin-bottom: 3px;
+      line-height: 1.4;
+    }
+    .pm-nom {
+      font-size: 9px;
+      font-weight: 700;
+      text-transform: uppercase;
+      text-align: center;
+      color: #fff;
+      line-height: 1.2;
+    }
+    .pm-nom-vide { color: #333; font-style: italic; font-weight: 400; }
+
+    /* Remplaçants */
+    .pm-rempl-section { margin-bottom: 10px; }
+    .pm-rempl-title {
+      font-size: 8px; font-weight: 700; text-transform: uppercase; letter-spacing: .1em;
+      color: #555; margin-bottom: 5px;
+    }
+    .pm-rempl-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 4px;
+    }
+    .pm-rempl-slot {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      background: #111;
+      border: 1px solid #222;
+      border-radius: 6px;
+      padding: 4px 6px;
+    }
+    .pm-rempl-num {
+      background: #333;
+      color: #FECC00;
+      font-size: 8px;
+      font-weight: 700;
+      border-radius: 3px;
+      padding: 1px 4px;
+      margin-bottom: 2px;
+    }
+    .pm-rempl-nom { font-size: 8px; font-weight: 600; text-transform: uppercase; color: #ccc; text-align: center; }
+
+    /* Staff */
+    .pm-staff-section { border-top: 1px solid #2a2a2a; padding-top: 8px; }
+    .pm-staff-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 4px;
+    }
+    .pm-staff-cell {
+      background: #111;
+      border: 1px solid #2a2a2a;
+      border-radius: 6px;
+      padding: 4px 8px;
+    }
+    .pm-staff-label { font-size: 7px; text-transform: uppercase; color: #555; letter-spacing: .06em; margin-bottom: 1px; }
+    .pm-staff-val { font-size: 10px; font-weight: 700; color: #fff; }
+
+    @media print {
+      /* Overrides couleurs pour l'impression */
+      .pm-header { background: #000 !important; }
+      .pm-slot { background: #f5f5f5 !important; border-color: #ccc !important; }
+      .pm-nom { color: #000 !important; }
+      .pm-rempl-slot { background: #f9f9f9 !important; border-color: #ddd !important; }
+      .pm-rempl-nom { color: #000 !important; }
+      .pm-staff-cell { background: #f5f5f5 !important; border-color: #ccc !important; }
+      .pm-staff-val { color: #000 !important; }
+      .pm-staff-label { color: #666 !important; }
+      .pm-sep { background: #ccc !important; }
+      .pm-club-name { color: #FECC00 !important; }
+      .pm-date { color: #fff !important; }
+      .pm-journee { color: #FECC00 !important; }
+    }
+
+    /* ============================================================
+       GROUPE PRINT — moderne avec rectangles arrondis
+    ============================================================ */
+    .pg-header {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 12px 16px;
+      border-bottom: 3px solid #FECC00;
+      background: #1a1a1a;
+      margin-bottom: 14px;
+    }
+    .pg-titre {
+      font-size: 16px;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: .1em;
+      color: #fff;
+    }
+    .pg-date { font-size: 11px; color: #888; margin-top: 2px; text-transform: capitalize; }
+
+    .pg-body {
+      display: flex;
+      gap: 14px;
+      padding: 0 16px 16px;
+    }
+    .pg-main { flex: 1.1; }
+    .pg-side { flex: 0.9; display: flex; flex-direction: column; gap: 12px; }
+
+    /* Section groupe */
+    .pg-section-title {
+      font-size: 9px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .12em;
+      padding: 5px 10px;
+      border-radius: 6px 6px 0 0;
+      color: #fff;
+      margin-bottom: 0;
+    }
+    .pg-section-title.green  { background: #1a7a4a; }
+    .pg-section-title.yellow { background: #b8960a; color: #000; }
+    .pg-section-title.blue   { background: #1a5fa8; }
+    .pg-section-title.red    { background: #a82020; }
+
+    .pg-cards-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 4px;
+      padding: 6px;
+      background: #111;
+      border: 1px solid #222;
+      border-top: none;
+      border-radius: 0 0 8px 8px;
+    }
+    .pg-card {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: #1a1a1a;
+      border: 1px solid #2a2a2a;
+      border-radius: 6px;
+      padding: 5px 8px;
+    }
+    .pg-card-num {
+      font-size: 9px;
+      font-weight: 900;
+      color: #FECC00;
+      min-width: 16px;
+      text-align: center;
+    }
+    .pg-card-maillot {
+      font-size: 8px;
+      color: #555;
+      min-width: 18px;
+      text-align: center;
+    }
+    .pg-card-nom {
+      font-size: 9px;
+      font-weight: 700;
+      text-transform: uppercase;
+      color: #fff;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    /* Side sections (HG, Espoirs, Blessés) : 1 colonne */
+    .pg-side-section { margin-bottom: 0; }
+    .pg-side-cards { display: flex; flex-direction: column; gap: 3px; padding: 5px; background: #111; border: 1px solid #222; border-top: none; border-radius: 0 0 8px 8px; }
+    .pg-side-card {
+      display: flex; align-items: center; gap: 6px;
+      background: #1a1a1a; border: 1px solid #2a2a2a; border-radius: 5px; padding: 4px 8px;
+    }
+    .pg-side-card-num { font-size: 8px; font-weight: 900; min-width: 14px; text-align: center; }
+    .pg-side-card-nom { font-size: 9px; font-weight: 700; text-transform: uppercase; color: #fff; }
+
+    @media print {
+      .pg-header { background: #000 !important; }
+      .pg-cards-grid { background: #fff !important; border-color: #ddd !important; }
+      .pg-card { background: #f7f7f7 !important; border-color: #e0e0e0 !important; }
+      .pg-card-nom { color: #000 !important; }
+      .pg-card-num { color: #FECC00 !important; }
+      .pg-card-maillot { color: #888 !important; }
+      .pg-side-cards { background: #fff !important; border-color: #ddd !important; }
+      .pg-side-card { background: #f7f7f7 !important; border-color: #e0e0e0 !important; }
+      .pg-side-card-nom { color: #000 !important; }
+      .pg-titre { color: #fff !important; }
+      .pg-date { color: #aaa !important; }
+    }
+  </style>
+
+  <style>
+  /* ===== iPad-first NAV override ===== */
+  * { -webkit-tap-highlight-color: transparent; }
+  :root {
+    --yellow: #FECC00; --red: #E24B4A; --green: #1D9E75;
+    --bg: #0a0a0a; --bg2: #141414; --bg3: #1c1c1c;
+    --border: #1e1e1e; --border2: #2a2a2a;
+    --text: #fff; --text2: #888; --text3: #555;
+    --safe-bottom: env(safe-area-inset-bottom, 0px);
+    --topbar-h: 60px; --bottom-h: 68px;
+  }
+  /* Kill sidebar */
+  .sidebar { display: none !important; }
+  /* Body layout */
+  body { flex-direction: column !important; overflow: hidden !important; background: var(--bg) !important; }
+  /* Main takes full width */
+  .main { flex: 1 !important; display: flex !important; flex-direction: column !important; overflow: hidden !important;
+          padding-bottom: calc(var(--bottom-h) + var(--safe-bottom)) !important; }
+  /* Existing topbar: keep but restyle */
+  .main > .topbar, #topbar-liste, #topbar-editor {
+    border-bottom: 1px solid var(--border2) !important;
+    display: flex !important; align-items: center !important;
+    padding: 8px 16px !important; gap: 10px !important;
+    flex-shrink: 0 !important; flex-wrap: wrap !important;
+    background: var(--bg) !important; height: auto !important; min-height: 52px !important;
+  }
+  .topbar-title { display: none !important; }
+  /* iPad Topbar */
+  .ipad-topbar {
+    height: var(--topbar-h); background: var(--bg2); border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; padding: 0 16px; gap: 12px; flex-shrink: 0;
+    padding-top: env(safe-area-inset-top, 0);
+  }
+  .ipad-topbar-home { display: flex; align-items: center; gap: 8px; text-decoration: none; }
+  .ipad-topbar-logo {
+    width: 34px; height: 34px; border-radius: 9px; background: var(--yellow);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px; font-weight: 900; color: #000; flex-shrink: 0;
+  }
+  .ipad-topbar-sitename { font-size: 13px; font-weight: 700; color: var(--yellow); }
+  .ipad-topbar-sep { width: 1px; height: 22px; background: var(--border2); margin: 0 4px; }
+  .ipad-topbar-title { font-size: 18px; font-weight: 700; color: var(--text); flex: 1; }
+  /* Bottom Nav */
+  .ipad-bottom-nav {
+    position: fixed; bottom: 0; left: 0; right: 0;
+    height: calc(var(--bottom-h) + var(--safe-bottom));
+    padding-bottom: var(--safe-bottom);
+    background: var(--bg2); border-top: 1px solid var(--border);
+    display: flex; align-items: stretch; z-index: 9999;
+  }
+  .ipad-nav-item {
+    flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 3px; cursor: pointer; text-decoration: none; color: var(--text3);
+    font-size: 10px; font-weight: 600; letter-spacing: 0.02em; transition: color 0.12s;
+    padding: 0 2px; border: none; background: none;
+  }
+  .ipad-nav-item:active { background: #ffffff08; }
+  .ipad-nav-item.active { color: var(--yellow); }
+  .ipad-nav-icon { font-size: 22px; line-height: 1; }
+  /* Bigger buttons */
+  .btn-primary { padding: 11px 18px !important; border-radius: 10px !important; font-size: 14px !important; font-weight: 700 !important; min-height: 44px !important; cursor: pointer !important; }
+  .btn-ghost   { padding: 11px 14px !important; border-radius: 10px !important; font-size: 14px !important; min-height: 44px !important; cursor: pointer !important; }
+  .btn-danger  { padding: 11px 14px !important; border-radius: 10px !important; font-size: 14px !important; min-height: 44px !important; cursor: pointer !important; }
+  .btn-nav     { padding: 10px 14px !important; min-height: 44px !important; border-radius: 9px !important; font-size: 16px !important; }
+  /* Mode toggle */
+  .mode-toggle { border-radius: 10px !important; padding: 4px !important; }
+  .mode-btn    { padding: 9px 14px !important; border-radius: 7px !important; font-size: 13px !important; min-height: 38px !important; }
+  /* Prevent iOS input zoom */
+  input, select, textarea { font-size: 16px !important; }
+  /* Content scroll */
+  .content { flex: 1 !important; overflow-y: auto !important; -webkit-overflow-scrolling: touch !important; padding: 16px 18px !important; }
+  /* Touch targets */
+  .seance-card, .cycle-header, .semaine-header { min-height: 54px !important; }
+  /* Modal */
+  .modal { width: min(580px, 94vw) !important; max-width: 94vw !important; }
+  .modal-box { width: min(500px, 94vw) !important; }
+  /* Responsive training grid for phones */
+  @media (max-width: 640px) {
+    .equipes-grid { grid-template-columns: 1fr !important; }
+  }
+  </style>
+
+</head>
+<body>
+  <!-- iPad TopBar -->
+  <div class="ipad-topbar">
+    <a class="ipad-topbar-home" href="index.html">
+      <div class="ipad-topbar-logo">SC</div>
+      <span class="ipad-topbar-sitename">SCA Albi</span>
+    </a>
+    <div class="ipad-topbar-sep"></div>
+    <div class="ipad-topbar-title">Équipes — Entraînement</div>
+  </div>
+  <!-- Bottom Nav -->
+  <nav class="ipad-bottom-nav">
+    <a class="ipad-nav-item" href="planning.html">
+      <span class="ipad-nav-icon">📅</span>
+      <span>Planning</span>
+    </a>
+    <a class="ipad-nav-item" href="fiches-seances.html">
+      <span class="ipad-nav-icon">🏉</span>
+      <span>Séances</span>
+    </a>
+    <a class="ipad-nav-item active" href="equipes.html">
+      <span class="ipad-nav-icon">👥</span>
+      <span>Équipes</span>
+    </a>
+    <a class="ipad-nav-item" href="gps-planif.html">
+      <span class="ipad-nav-icon">📡</span>
+      <span>Charge GPS</span>
+    </a>
+    <a class="ipad-nav-item" href="seances.html">
+      <span class="ipad-nav-icon">🏋️</span>
+      <span>Musculation</span>
+    </a>
+    <a class="ipad-nav-item" href="suivi-poids.html">
+      <span class="ipad-nav-icon">⚖️</span>
+      <span>Suivi Poids</span>
+    </a>
+    <a class="ipad-nav-item" href="tv.html">
+      <span class="ipad-nav-icon">📺</span>
+      <span>Vue TV</span>
+    </a>
+  </nav>
+
+  <div class="sidebar">
+    <div class="sidebar-logo">
+      <img src="https://www.sca-albi.fr/wp-content/uploads/2023/10/cropped-SCA-bis.png">
+      <span>SCA Albi</span>
+    </div>
+    <div class="nav-section">Effectif</div>
+    <div class="nav-item" onclick="location.href='index.html'"><div class="nav-dot"></div> Roster</div>
+    <div class="nav-section">Musculation</div>
+    <div class="nav-item" onclick="location.href='seances.html'"><div class="nav-dot"></div> Séances</div>
+    <div class="nav-item" onclick="location.href='fiches-seances.html'"><div class="nav-dot"></div> Fiches Séances</div>
+    <div class="nav-item" onclick="location.href='exercices.html'"><div class="nav-dot"></div> Exercices</div>
+    <div class="nav-item" onclick="location.href='suivi-poids.html'"><div class="nav-dot"></div> Suivi Poids</div>
+    <div class="nav-section">Suivi</div>
+    <div class="nav-item" onclick="location.href='wellness.html'"><div class="nav-dot"></div> Wellness</div>
+    <div class="nav-item" onclick="location.href='performances.html'"><div class="nav-dot"></div> Performances</div>
+    <div class="nav-item" onclick="location.href='medical.html'"><div class="nav-dot"></div> Médical</div>
+    <div class="nav-item" onclick="location.href='absences.html'"><div class="nav-dot"></div> Absences</div>
+    <div class="nav-section">Planning</div>
+    <div class="nav-item" onclick="location.href='planning.html'"><div class="nav-dot"></div> Planning club</div>
+    <div class="nav-item" onclick="location.href='planning-blesses.html'"><div class="nav-dot"></div> Blessés</div>
+    <div class="nav-section">Équipes</div>
+    <div class="nav-item active"><div class="nav-dot"></div> Composition équipes</div>
+    <div class="nav-section">GPS</div>
+    <div class="nav-item" onclick="location.href='gps.html'"><div class="nav-dot"></div> Données GPS</div>
+    <div class="nav-item" onclick="location.href='gps-match.html'"><div class="nav-dot"></div> Rapport de match</div>
+    <div class="nav-item" onclick="location.href='gps-planif.html'"><div class="nav-dot"></div> Planif. charge</div>
+    <div class="nav-item" onclick="location.href='profil-force-vitesse.html'"><div class="nav-dot"></div> Profil F-V</div>
+    <div class="sidebar-bottom">
+      <div class="user-info" id="user-email"></div>
+      <button class="logout-btn" onclick="handleLogout()">Se déconnecter</button>
+    </div>
+  </div>
+
+  <div class="main">
+    <div class="topbar">
+      <div class="topbar-title">Entraînement</div>
+    </div>
+
+    <div class="content">
+
+      <!-- ===== ENTRAÎNEMENT ===== -->
+      <div id="mode-entrainement">
+        <div class="entrainement-header">
+          <div class="ef"><label>Date</label><input type="date" id="entr-date" /></div>
+          <div class="ef"><label>Nb séquences</label><input type="number" id="entr-nb-seq" value="10" min="1" max="20" oninput="renderEntrainement()" /></div>
+          <div class="ef" style="min-width:180px;"><label style="color:#FECC00;">Objectifs HI</label><span style="font-size:11px;color:#888;">Individuels (gps-planif)</span></div>
+          <div class="ef"><label>Distance / rep (m)</label><input type="number" id="entr-dist-rep" value="35" oninput="renderEntrainement()" /></div>
+          
+          <!-- Toggle interdiction doubler -->
+          <div class="ef" style="display:flex;align-items:center;gap:8px;min-width:180px;">
+            <input type="checkbox" id="no-double-seq" style="width:auto;" onchange="renderEntrainement()">
+            <label for="no-double-seq" style="white-space:nowrap;">Interdire doubler séquences</label>
+          </div>
+          
+          <!-- Toggle afficher compensations -->
+          <div class="ef" style="display:flex;align-items:center;gap:8px;min-width:140px;">
+            <input type="checkbox" id="show-compensations" style="width:auto;" checked onchange="renderEntrainement()">
+            <label for="show-compensations" style="white-space:nowrap;">Compensations</label>
+          </div>
+          
+          <button class="btn-ghost" onclick="ajouterEquipe()">+ Équipe</button>
+          <button class="btn-ghost" onclick="dupliquerEquipes()">📋 Dupliquer</button>
+          <button class="btn-ghost" onclick="sauvegarderEquipesEntrainement()">💾 Enregistrer</button>
+          <button class="btn-ghost" onclick="ouvrirVisionSeq()">👁 Vision séquences</button>
+          <button class="btn-primary" onclick="imprimerEquipesEntrainement('landscape')">🖨️ Imprimer (Paysage)</button>
+          <button class="btn-primary" style="background:#1d9e75;" onclick="imprimerEquipesEntrainement('portrait')">🖨️ Imprimer (Portrait)</button>
+        </div>
+        
+        <div class="equipes-grid" id="equipes-grid"></div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- MODAL PICKER -->
+  <div class="modal-overlay" id="modal-picker" style="z-index:105;">
+    <div class="modal">
+      <div class="modal-title" id="picker-title">Choisir un joueur</div>
+      <!-- Fiche joueur actuel -->
+      <div id="picker-current-player" style="display:none;margin-bottom:12px;padding:12px;background:#0f0f0f;border:1px solid #2a2a2a;border-radius:10px;">
+        <div style="display:flex;align-items:center;gap:12px;">
+          <img id="picker-current-photo" src="" style="width:60px;height:60px;border-radius:50%;object-fit:cover;border:2px solid #FECC00;">
+          <div style="flex:1;">
+            <div style="font-size:14px;font-weight:700;color:#fff;" id="picker-current-nom"></div>
+            <div style="font-size:11px;color:#888;margin-top:2px;" id="picker-current-poste"></div>
+            <div style="display:flex;gap:4px;margin-top:6px;" id="picker-current-badges"></div>
+          </div>
+          <button class="btn-danger" onclick="remplacerJoueurActuel()" style="font-size:11px;padding:5px 10px;">Remplacer</button>
+        </div>
+      </div>
+      <input class="picker-search" id="picker-search" placeholder="Rechercher..." oninput="filtrerPicker()" style="margin-bottom: 6px;" />
+      <div style="display:flex;gap:4px;margin-bottom:10px;background:#0f0f0f;border:1px solid #2a2a2a;border-radius:8px;padding:3px;">
+        <button id="picker-sort-alpha" class="mode-btn active" style="flex:1;padding:5px 10px;font-size:11px;" onclick="setPickerSort('alpha')">A-Z</button>
+        <button id="picker-sort-poste" class="mode-btn" style="flex:1;padding:5px 10px;font-size:11px;" onclick="setPickerSort('poste')">Par poste</button>
+      </div>
+      <div class="picker-list" id="picker-list"></div>
+      <div class="modal-actions">
+        <button class="btn-ghost" onclick="fermerPicker()">Annuler</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL VISION SEQUENCES -->
+  <div class="modal-overlay" id="modal-vision-seq" style="z-index:101;">
+    <div class="modal" style="width:900px;max-width:95vw;max-height:90vh;overflow-y:auto;">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;flex-wrap:wrap;">
+        <div class="modal-title" style="margin-bottom:0;">Vision par séquence</div>
+        <div class="mode-toggle" style="margin-left:auto;">
+          <button class="mode-btn active" id="vsq-mode-rotations" onclick="setVisionMode('rotations')">Rotations</button>
+          <button class="mode-btn" id="vsq-mode-equipe" onclick="setVisionMode('equipe')">Équipe complète</button>
+        </div>
+      </div>
+      <div class="vision-seq-container">
+        <div class="vision-seq-header" id="vision-seq-buttons"></div>
+        <div class="vision-seq-content" id="vision-seq-content"></div>
+      </div>
+      <div class="modal-actions">
+        <button class="btn-ghost" onclick="fermerVisionSeq()">Fermer</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL GESTION POSTE -->
+  <div class="modal-overlay" id="modal-poste-gestion" style="z-index:102;">
+    <div class="modal" style="width:520px;max-width:95vw;max-height:88vh;overflow-y:auto;">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;">
+        <div class="modal-title" id="poste-modal-title" style="margin-bottom:0;flex:1;"></div>
+        <button class="btn-ghost" style="font-size:11px;padding:4px 8px;" onclick="fermerPosteModal()">✕</button>
+      </div>
+      <div id="poste-modal-body"></div>
+      <div class="modal-actions" style="margin-top:14px;">
+        <button class="btn-ghost" onclick="fermerPosteModal()">Fermer</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- FICHE JOUEUR OVERLAY (style roster) -->
+  <div id="fiche-overlay" onclick="if(event.target===this)fermerFicheJoueur()">
+    <div id="fiche-panel">
+      <div class="fiche-header" id="fiche-header"></div>
+      <div class="fiche-tabs" id="fiche-tabs"></div>
+      <div class="fiche-body" id="fiche-body">
+        <div class="fiche-empty"><div class="fiche-empty-icon">⏳</div>Chargement...</div>
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from './firebase-bundle.js'
+    import { getAuth, onAuthStateChanged, signOut } from './firebase-bundle.js'
+    import { getFirestore, collection, doc, setDoc, getDoc, getDocs } from './firebase-bundle.js'
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyCvMs-5LX9Ivk3OkzUR3iz9Kk1E5b9_7Vk",
+      authDomain: "delta-rugby-app.firebaseapp.com",
+      projectId: "delta-rugby-app",
+      storageBucket: "delta-rugby-app.firebasestorage.app",
+      messagingSenderId: "61187079762",
+      appId: "1:61187079762:web:56cd1eaa8beb9e1a2ee98b"
+    }
+    const fbApp = initializeApp(firebaseConfig)
+    const auth = getAuth(fbApp)
+    const db = getFirestore(fbApp)
+
+    // ==================== ÉTAT ====================
+    let joueurs = []
+    let blessures = []
+    let absences = [] // Absences en cours
+    let gpsData = [] // Données GPS pour les alertes
+    let wellnessData = [] // Données wellness pour les alertes
+
+    // Équipes entraînement
+    // posteRemplacants[ei][posteIdx] = [{ jid, seqs: [1,2,...] }, ...]
+    let equipes = [
+      { nom: 'Équipe Jaune', couleur: '#FECC00', titulaires: Array(15).fill(null) },
+      { nom: 'Équipe Noire', couleur: '#000',    titulaires: Array(15).fill(null) }
+    ]
+    // Remplaçants par poste : posteRemplacants[ei][posteIdx] = [{jid, seqs:[...]}]
+    let posteRemplacants = { 0: {}, 1: {} }
+
+    // Séquences par joueur titulaire dans chaque équipe : { "ei_jid": [1,3,5,...] }
+    let sequencesMap = {}
+
+    // Objectifs HI individuels par jour depuis gps-planif
+    let planifObjectifs = {} // joueurId -> {distHI, distHIParJour, distHIReelleParJour, pctParJour}
+    let planifJoursActifs = ['Lundi', 'Mardi', 'Jeudi']
+    let planifPctParJour = { Lundi: 33, Mardi: 34, Jeudi: 33 }
+
+    let pickerCallback = null
+    let pickerContext = null
+    let pickerCurrentJid = null
+    let pickerSortMode = 'alpha'
+
+    // Modal gestion de poste
+    let posteModalContext = null // { ei, posteIdx }
+
+    onAuthStateChanged(auth, async user => {
+      if (!user) { window.location.href = 'login.html'; return }
+      document.getElementById('user-email').textContent = user.email
+      document.getElementById('entr-date').value = new Date().toISOString().split('T')[0]
+
+      const [jSnap, bSnap, aSnap, gpsSnap, wSnap] = await Promise.all([
+        getDocs(collection(db, 'joueurs')),
+        getDocs(collection(db, 'blessures')),
+        getDocs(collection(db, 'absences')),
+        getDocs(collection(db, 'gps')),
+        getDocs(collection(db, 'wellness'))
+      ])
+      joueurs = jSnap.docs.map(d => ({ id: d.id, ...d.data() }))
+      blessures = bSnap.docs.map(d => ({ id: d.id, ...d.data() }))
+      absences = aSnap.docs.map(d => ({ id: d.id, ...d.data() }))
+      gpsData = gpsSnap.docs.map(d => ({ id: d.id, ...d.data() }))
+      wellnessData = wSnap.docs.map(d => ({ id: d.id, ...d.data() }))
+
+      // Charger les équipes d'entraînement sauvegardées
+      await chargerEquipesEntrainement()
+
+      // Charger les objectifs HI individuels depuis la planification GPS
+      await chargerObjectifsHI()
+      renderEntrainement() // Re-render avec les objectifs chargés
+    })
+
+    function getJ(jid) {
+      if (!jid) return null;
+      let found = joueurs.find(x => x.id === jid);
+      if (found) return found;
+      if (typeof jid === 'string' && jid.startsWith('custom_')) {
+        const decoded = decodeURIComponent(jid.substring(7));
+        return {
+          id: jid,
+          nom: decoded,
+          prenom: '',
+          poste: 'Personnalisé',
+          photo: ''
+        };
+      }
+      return null;
+    }
+
+    // Vérifie si un joueur a une absence en cours
+    function getAbsenceEnCours(joueurId, dateRef = null) {
+      const refDate = dateRef || document.getElementById('entr-date')?.value || new Date().toISOString().split('T')[0]
+      return absences.find(a => 
+        a.joueurId === joueurId && 
+        a.statut === 'encours' &&
+        a.debut <= refDate &&
+        (!a.fin || a.fin >= refDate)
+      )
+    }
+
+    // Obtenir le statut effectif du joueur (en prenant en compte les blessures actives)
+    function getEffectiveStatut(j) {
+      if (!j) return 'ok'
+      const absenceEnCours = getAbsenceEnCours(j.id)
+      if (absenceEnCours) return 'absent'
+      const isBlesse = blessures.some(b => b.joueurId === j.id && b.statut !== 'gueri')
+      if (isBlesse) return 'blesse'
+      return 'ok'
+    }
+
+    // ==================== ENTRAÎNEMENT ====================
+    window.renderEntrainement = function() {
+      const c = document.getElementById('equipes-grid')
+      c.innerHTML = ''
+      const nbSeq = parseInt(document.getElementById('entr-nb-seq').value) || 10
+      const distRep = parseFloat(document.getElementById('entr-dist-rep').value) || 35
+      const seqNums = Array.from({ length: nbSeq }, (_, i) => i + 1)
+      // Note: les objectifs HI individuels sont maintenant dans planifObjectifs (chargés depuis Firebase)
+
+      equipes.forEach((equipe, ei) => {
+        const card = document.createElement('div')
+        card.className = 'equipe-card'
+
+        // Header - couleur de fond selon l'équipe
+        const isYellow = equipe.couleur === '#FECC00' || equipe.couleur.toLowerCase() === '#fecc00'
+        const isBlack = equipe.couleur === '#000' || equipe.couleur === '#000000'
+        const textColor = isYellow ? '#000' : '#fff'
+        const borderColor = isBlack ? '#444' : equipe.couleur
+        const hdr = document.createElement('div')
+        hdr.className = 'equipe-card-header'
+        hdr.style.borderBottomColor = borderColor
+        hdr.style.background = equipe.couleur
+        hdr.innerHTML = `
+          <input class="equipe-nom-input" style="color:${textColor};" value="${equipe.nom}" onchange="equipes[${ei}].nom=this.value" />
+          <button onclick="ajouterJoueurEquipe(${ei},'titu')" style="padding:3px 8px;border-radius:6px;border:1px solid ${isBlack ? '#666' : equipe.couleur + '44'};background:none;color:${isBlack ? '#aaa' : equipe.couleur};font-size:10px;cursor:pointer;">+ Titu</button>
+          <button onclick="ajouterJoueurEquipe(${ei},'rempl')" style="padding:3px 8px;border-radius:6px;border:1px solid ${isBlack ? '#555' : equipe.couleur + '33'};background:none;color:${isBlack ? '#888' : equipe.couleur};font-size:10px;cursor:pointer;opacity:.7;">+ Rempl</button>
+          <button onclick="retirerEquipe(${ei})" style="padding:3px 8px;border-radius:6px;border:none;background:none;color:${isBlack ? '#666' : '#333'};font-size:10px;cursor:pointer;">✕</button>
+        `
+        card.appendChild(hdr)
+
+        // Format terrain (titulaires)
+        const terrain = document.createElement('div')
+        terrain.className = 'terrain-entr'
+
+        // Disposition terrain par poste
+        const titus = equipe.titulaires.map((jid, i) => ({ jid, num: i + 1 }))
+        const rangees = [
+          titus.filter(t => [1,2,3].includes(t.num)),
+          titus.filter(t => [4,5].includes(t.num)),
+          titus.filter(t => [6,7,8].includes(t.num)),
+          titus.filter(t => [9,10].includes(t.num)),
+          titus.filter(t => [11,12,13,14].includes(t.num)),
+          titus.filter(t => [15].includes(t.num)),
+        ]
+
+        rangees.forEach(rangee => {
+          const ligneEl = document.createElement('div')
+          ligneEl.className = 'ligne-entr'
+          rangee.forEach(({ jid, num }) => {
+            ligneEl.appendChild(makeSlotEntr(jid, num, equipe, ei, 'titu', nbSeq, distRep, seqNums))
+          })
+          terrain.appendChild(ligneEl)
+        })
+
+        if (equipe.titulaires.every(jid => !jid)) {
+          const emptyMsg = document.createElement('div')
+          emptyMsg.className = 'entr-empty'
+          emptyMsg.textContent = '+ Ajouter des joueurs titulaires'
+          emptyMsg.onclick = () => ajouterJoueurEquipe(ei, 'titu')
+          terrain.appendChild(emptyMsg)
+        }
+
+        card.appendChild(terrain)
+
+        // Résumé des remplaçants par poste
+        const prEq = posteRemplacants[ei] || {}
+        const postesAvecRemplacement = Object.keys(prEq).filter(pi => prEq[pi] && prEq[pi].length > 0)
+        if (postesAvecRemplacement.length > 0) {
+          const remplSection = document.createElement('div')
+          remplSection.className = 'entr-rempl-section'
+          remplSection.innerHTML = '<div class="entr-rempl-label">Remplaçants par poste</div>'
+          postesAvecRemplacement.sort((a,b)=>+a-+b).forEach(piStr => {
+            const pi = parseInt(piStr)
+            const tituJid = equipe.titulaires[pi]
+            const titu = getJ(tituJid)
+            const rempls = prEq[pi] || []
+            const row = document.createElement('div')
+            row.style.cssText = 'display:flex;align-items:center;gap:8px;padding:4px 0;border-bottom:1px solid #111;flex-wrap:wrap;cursor:pointer;'
+            row.onmouseover = () => row.style.background = '#111'
+            row.onmouseout = () => row.style.background = ''
+            row.onclick = () => ouvrirPosteModal(ei, pi)
+            const posteLabel = document.createElement('span')
+            posteLabel.style.cssText = `font-size:9px;font-weight:700;min-width:28px;color:${equipe.couleur};`
+            posteLabel.textContent = `P${pi+1}`
+            row.appendChild(posteLabel)
+            const arrowEl = document.createElement('span')
+            arrowEl.style.cssText = 'font-size:9px;color:#444;'
+            arrowEl.textContent = '↓'
+            row.appendChild(arrowEl)
+            rempls.forEach(({jid: rjid, seqs: rseqs}) => {
+              const rj = getJ(rjid)
+              if (!rj) return
+              // Calculer compensation pour ce remplaçant
+              const rnbF = rseqs?.length || 0
+              const rhiJ = getObjectifHI(rjid) || 500
+              const rhiDone = nbSeq > 0 ? (rnbF / nbSeq) * rhiJ : 0
+              const rdiff = rhiJ - rhiDone
+              const rrepsComp = rdiff > 0 ? Math.ceil(rdiff / distRep) : 0
+              const badge = document.createElement('span')
+              badge.style.cssText = `font-size:9px;padding:2px 6px;border-radius:4px;background:${equipe.couleur}22;color:${equipe.couleur};border:1px solid ${equipe.couleur}44;display:flex;align-items:center;gap:4px;`
+              const compText = rrepsComp > 0 ? `<span style="color:#E24B4A;font-weight:700;">${rrepsComp}rep</span>` : '<span style="color:#1D9E75;">✓</span>'
+              badge.innerHTML = `${rj.nom}${rseqs?.length ? ' ['+rseqs.join(',')+']' : ''} ${compText}`
+              row.appendChild(badge)
+            })
+            const editBtn = document.createElement('span')
+            editBtn.style.cssText = 'font-size:9px;color:#444;margin-left:auto;'
+            editBtn.textContent = '✏️'
+            row.appendChild(editBtn)
+            remplSection.appendChild(row)
+          })
+          card.appendChild(remplSection)
+        }
+
+        // Footer stats
+        const allTitus = equipe.titulaires.filter(Boolean)
+        const allRemplJids = Object.values(prEq).flat().map(r=>r.jid).filter(Boolean)
+        const allJoueurs = [...new Set([...allTitus, ...allRemplJids])]
+        const repsTotal = allTitus.reduce((a, jid) => {
+          const seqs = (sequencesMap[ei + '_' + jid] || []).length
+          const hiJ = getObjectifHI(jid) || 500
+          const hiDone = (seqs / nbSeq) * hiJ
+          const diff = hiJ - hiDone
+          return a + (diff > 0 ? Math.ceil(diff / distRep) : 0)
+        }, 0)
+
+        const footer = document.createElement('div')
+        footer.className = 'entr-footer'
+        footer.innerHTML = `
+          <span>${allJoueurs.length} joueurs</span>
+          <span style="color:${equipe.couleur};" class="fv">${equipe.nom}</span>
+          <span style="color:#E24B4A;">${repsTotal} rep. comp. total</span>
+        `
+        card.appendChild(footer)
+        c.appendChild(card)
+      })
+    }
+
+    function makeSlotEntr(jid, num, equipe, ei, type, nbSeq, distRep, seqNums, small = false) {
+      const slot = document.createElement('div')
+      slot.className = small ? 'slot-rempl-entr' : 'slot-entr'
+
+      const j = getJ(jid)
+      const seqKey = ei + '_' + jid
+      const seqActives = jid ? (sequencesMap[seqKey] || []) : []
+      const nbF = seqActives.length
+      // Utiliser l'objectif HI individuel du joueur pour aujourd'hui depuis gps-planif
+      const hiJ = jid ? (getObjectifHI(jid) || 500) : 500
+      const hiDone = nbSeq > 0 ? (nbF / nbSeq) * hiJ : 0
+      const diff = hiJ - hiDone
+      const repsComp = diff > 0 ? Math.ceil(diff / distRep) : 0
+      const pct = nbSeq > 0 ? Math.round((nbF / nbSeq) * 100) : 0
+
+      // Compter les remplaçants configurés pour ce poste
+      const posteIdx = num - 1
+      const prEq = posteRemplacants[ei] || {}
+      const remplsPoste = (type === 'titu' && prEq[posteIdx]) ? prEq[posteIdx].filter(r=>r.jid) : []
+
+      const cercle = document.createElement('div')
+      cercle.className = small ? 'rempl-cercle' : 'entr-cercle'
+      cercle.style.cssText = `border-color:${equipe.couleur}; background:${equipe.couleur}15; position:relative;`
+      if (!j) {
+        cercle.style.borderStyle = 'dashed'
+        cercle.style.borderColor = '#2a2a2a'
+        cercle.innerHTML = `<div style="font-size:${small?'14px':'16px'};color:#333;">+</div>`
+        cercle.onclick = () => {
+          if (type === 'titu') {
+            // Ouvrir modal de gestion du poste
+            ouvrirPosteModal(ei, posteIdx)
+          } else {
+            pickerContext = { ei, excludeJid: null }
+            ouvrirPicker('Choisir un joueur', newJid => {
+              pickerContext = null
+              if (!newJid) return
+              equipes[ei].titulaires[num - 1] = newJid
+              renderEntrainement()
+            }, null)
+          }
+        }
+      } else {
+        cercle.innerHTML = `<div style="font-size:${small?'9px':'11px'};font-weight:700;color:${equipe.couleur};">${j.prenom[0]}${j.nom[0]}</div>`
+        // Badge remplaçants
+        if (type === 'titu' && remplsPoste.length > 0) {
+          const badge = document.createElement('div')
+          badge.style.cssText = `position:absolute;top:-4px;right:-4px;background:${equipe.couleur};color:#000;font-size:8px;font-weight:700;width:16px;height:16px;border-radius:50%;display:flex;align-items:center;justify-content:center;`
+          badge.textContent = remplsPoste.length
+          cercle.appendChild(badge)
+        }
+        cercle.onclick = () => {
+          if (type === 'titu') {
+            ouvrirPosteModal(ei, posteIdx)
+          } else {
+            pickerContext = { ei, excludeJid: jid }
+            ouvrirPicker('Remplacer', newJid => {
+              pickerContext = null
+              equipes[ei].titulaires[num - 1] = newJid
+              renderEntrainement()
+            }, jid)
+          }
+        }
+      }
+      slot.appendChild(cercle)
+
+      if (j) {
+        const nomEl = document.createElement('div')
+        nomEl.className = small ? '' : 'entr-nom'
+        nomEl.style.cssText = small ? 'font-size:8px;text-align:center;color:#666;width:48px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;' : ''
+        nomEl.textContent = j.nom
+        slot.appendChild(nomEl)
+
+        if (!small) {
+          // Séquences
+          const seqEl = document.createElement('div')
+          seqEl.className = 'entr-seq'
+          seqNums.forEach(n => {
+            const chip = document.createElement('span')
+            chip.className = 'seq-chip'
+            const isOn = seqActives.includes(n)
+            chip.style.cssText = isOn
+              ? `background:${equipe.couleur}33;border-color:${equipe.couleur};color:${equipe.couleur};`
+              : `border-color:#2a2a2a;color:#333;`
+            chip.textContent = n
+            chip.onclick = () => {
+              const noDouble = document.getElementById('no-double-seq')?.checked || false
+              if (!sequencesMap[seqKey]) sequencesMap[seqKey] = []
+              const idx = sequencesMap[seqKey].indexOf(n)
+              if (idx === -1) {
+                // Vérifier si déjà ailleurs avant d'ajouter
+                const elsewhere = checkSequenceElsewhere(jid, n, ei, posteIdx)
+                if (elsewhere) {
+                  const eqName = equipes[elsewhere.ei].nom
+                  alert(`⚠️ ${j.nom} ${j.prenom} a déjà la séquence ${n} au poste ${elsewhere.posteIdx + 1} (${eqName})`)
+                  return
+                }
+                // Vérifier si un remplaçant a déjà cette séquence
+                const rempls = posteRemplacants[ei]?.[posteIdx] || []
+                const conflictRempl = rempls.find(r => r.seqs && r.seqs.includes(n))
+                if (conflictRempl) {
+                  const rj = getJ(conflictRempl.jid)
+                  const confirmReplace = confirm(`⚠️ Le remplaçant ${rj ? rj.nom + ' ' + rj.prenom : ''} a déjà la séquence ${n}.\n\nVoulez-vous la retirer du remplaçant et l'assigner au titulaire ?`)
+                  if (!confirmReplace) return
+                  conflictRempl.seqs = conflictRempl.seqs.filter(s => s !== n)
+                }
+                if (noDouble) {
+                  equipe.titulaires.forEach(otherJid => {
+                    if (!otherJid || otherJid === jid) return
+                    const otherKey = ei + '_' + otherJid
+                    if (!sequencesMap[otherKey]) return
+                    const oidx = sequencesMap[otherKey].indexOf(n)
+                    if (oidx !== -1) sequencesMap[otherKey].splice(oidx, 1)
+                  })
+                }
+                sequencesMap[seqKey].push(n)
+              } else {
+                sequencesMap[seqKey].splice(idx, 1)
+              }
+              sequencesMap[seqKey].sort((a,b) => a-b)
+              renderEntrainement()
+            }
+            seqEl.appendChild(chip)
+          })
+          slot.appendChild(seqEl)
+
+          // Stats
+          const showComp = document.getElementById('show-compensations')?.checked !== false
+          const statsEl = document.createElement('div')
+          statsEl.className = 'entr-stats'
+          statsEl.innerHTML = showComp 
+            ? `<span class="pct" style="color:${equipe.couleur};">${pct}%</span> ${repsComp > 0 ? `<span class="comp">${repsComp}rep</span>` : '<span style="color:#1D9E75;">✓</span>'}`
+            : `<span class="pct" style="color:${equipe.couleur};">${pct}%</span>`
+          slot.appendChild(statsEl)
+        }
+      }
+
+      return slot
+    }
+
+    window.ajouterJoueurEquipe = function(ei, type) {
+      ouvrirPicker('Ajouter à ' + equipes[ei].nom, jid => {
+        if (!jid) return
+        if (type === 'titu') {
+          const vide = equipes[ei].titulaires.indexOf(null)
+          if (vide !== -1) equipes[ei].titulaires[vide] = jid
+          else equipes[ei].titulaires.push(jid)
+        }
+        renderEntrainement()
+      })
+    }
+
+    // ==================== MODAL GESTION POSTE ====================
+    window.ouvrirPosteModal = function(ei, posteIdx) {
+      posteModalContext = { ei, posteIdx }
+      const equipe = equipes[ei]
+      const tituJid = equipe.titulaires[posteIdx]
+      const titu = getJ(tituJid)
+      const nbSeq = parseInt(document.getElementById('entr-nb-seq').value) || 10
+      const seqNums = Array.from({ length: nbSeq }, (_, i) => i + 1)
+      const couleur = equipe.couleur
+
+      if (!posteRemplacants[ei]) posteRemplacants[ei] = {}
+      if (!posteRemplacants[ei][posteIdx]) posteRemplacants[ei][posteIdx] = []
+
+      const modal = document.getElementById('modal-poste-gestion')
+      modal.classList.add('open')
+      renderPosteModal()
+    }
+
+    // Vérifier si un joueur a déjà une séquence assignée à un autre poste
+    function checkSequenceElsewhere(jid, n, currentEi, currentPosteIdx) {
+      // Vérifier dans toutes les équipes
+      for (let e = 0; e < equipes.length; e++) {
+        const eq = equipes[e]
+        // Vérifier titulaires de cette équipe
+        eq.titulaires.forEach((tituJid, pIdx) => {
+          if (tituJid === jid && (e !== currentEi || pIdx !== currentPosteIdx)) {
+            const seqs = sequencesMap[e + '_' + jid] || []
+            if (seqs.includes(n)) return { ei: e, posteIdx: pIdx, type: 'titu' }
+          }
+        })
+        // Vérifier remplaçants de cette équipe
+        const remplsEq = posteRemplacants[e] || {}
+        for (const [pIdx, remplList] of Object.entries(remplsEq)) {
+          const pIdxNum = parseInt(pIdx)
+          if (e === currentEi && pIdxNum === currentPosteIdx) continue
+          for (const r of remplList) {
+            if (r.jid === jid && r.seqs && r.seqs.includes(n)) {
+              return { ei: e, posteIdx: pIdxNum, type: 'rempl' }
+            }
+          }
+        }
+      }
+      return null
+    }
+
+    // Trouver toutes les assignations d'un joueur
+    function getAllPlayerAssignments(jid) {
+      const assignments = []
+      for (let e = 0; e < equipes.length; e++) {
+        const eq = equipes[e]
+        // Vérifier titulaires
+        eq.titulaires.forEach((tituJid, pIdx) => {
+          if (tituJid === jid) {
+            const seqs = sequencesMap[e + '_' + jid] || []
+            assignments.push({ 
+              ei: e, 
+              equipe: eq.nom, 
+              posteIdx: pIdx, 
+              type: 'titu', 
+              seqs,
+              couleur: eq.couleur 
+            })
+          }
+        })
+        // Vérifier remplaçants
+        const remplsEq = posteRemplacants[e] || {}
+        for (const [pIdx, remplList] of Object.entries(remplsEq)) {
+          for (const r of remplList) {
+            if (r.jid === jid) {
+              assignments.push({ 
+                ei: e, 
+                equipe: eq.nom, 
+                posteIdx: parseInt(pIdx), 
+                type: 'rempl', 
+                seqs: r.seqs || [],
+                couleur: eq.couleur 
+              })
+            }
+          }
+        }
+      }
+      return assignments
+    }
+
+    window.fermerPosteModal = function() {
+      const { ei, posteIdx } = posteModalContext
+      const equipe = equipes[ei]
+      const tituJid = equipe.titulaires[posteIdx]
+      const nbSeq = parseInt(document.getElementById('entr-nb-seq').value) || 10
+      const seqNums = Array.from({ length: nbSeq }, (_, i) => i + 1)
+      const rempls = posteRemplacants[ei]?.[posteIdx] || []
+      
+      // Vérifier les séquences couvertes
+      const coveredSeqs = new Set()
+      // Titulaire
+      if (tituJid) {
+        const tituSeqs = sequencesMap[ei + '_' + tituJid] || []
+        tituSeqs.forEach(s => coveredSeqs.add(s))
+      }
+      // Remplaçants
+      rempls.forEach(r => {
+        if (r.seqs) r.seqs.forEach(s => coveredSeqs.add(s))
+      })
+      
+      // Séquences manquantes
+      const missing = seqNums.filter(n => !coveredSeqs.has(n))
+      if (missing.length > 0) {
+        const confirmClose = confirm(`⚠️ Attention : séquence${missing.length > 1 ? 's' : ''} ${missing.join(', ')} non assignée${missing.length > 1 ? 's' : ''} sur ce poste.\n\nVoulez-vous quand même fermer ?`)
+        if (!confirmClose) return
+      }
+      
+      document.getElementById('modal-poste-gestion').classList.remove('open')
+      posteModalContext = null
+    }
+
+    window.renderPosteModal = function() {
+      const { ei, posteIdx } = posteModalContext
+      const equipe = equipes[ei]
+      const tituJid = equipe.titulaires[posteIdx]
+      const titu = getJ(tituJid)
+      const nbSeq = parseInt(document.getElementById('entr-nb-seq').value) || 10
+      const seqNums = Array.from({ length: nbSeq }, (_, i) => i + 1)
+      const couleur = equipe.couleur
+      const noDouble = document.getElementById('no-double-seq')?.checked || false
+
+      if (!posteRemplacants[ei]) posteRemplacants[ei] = {}
+      if (!posteRemplacants[ei][posteIdx]) posteRemplacants[ei][posteIdx] = []
+      const rempls = posteRemplacants[ei][posteIdx]
+
+      // Header
+      const titleEl = document.getElementById('poste-modal-title')
+      titleEl.textContent = `Poste ${posteIdx+1} — ${titu ? titu.nom + ' ' + titu.prenom : 'Vide'}`
+      titleEl.style.color = couleur
+
+      // Corps : titulaire d'abord
+      const body = document.getElementById('poste-modal-body')
+      body.innerHTML = ''
+
+      // Section titulaire
+      const tituSection = document.createElement('div')
+      tituSection.style.cssText = 'margin-bottom:12px;'
+      const tituHeader = document.createElement('div')
+      tituHeader.style.cssText = 'font-size:10px;color:#555;text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;'
+      tituHeader.textContent = 'Titulaire'
+      tituSection.appendChild(tituHeader)
+
+      // Row titulaire
+      const tituRow = document.createElement('div')
+      tituRow.style.cssText = 'display:flex;align-items:center;gap:10px;padding:10px;background:#0f0f0f;border-radius:8px;margin-bottom:4px;'
+      const tituCircle = document.createElement('div')
+      tituCircle.style.cssText = `width:38px;height:38px;border-radius:50%;border:2px solid ${couleur};background:${couleur}20;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:${couleur};cursor:pointer;`
+      if (titu) {
+        tituCircle.textContent = titu.prenom[0] + titu.nom[0]
+      } else {
+        tituCircle.textContent = '+'
+        tituCircle.style.borderStyle = 'dashed'
+        tituCircle.style.borderColor = '#333'
+        tituCircle.style.color = '#333'
+      }
+      tituCircle.onclick = () => {
+        ouvrirPicker('Choisir le titulaire', newJid => {
+          if (!newJid) return
+          equipes[ei].titulaires[posteIdx] = newJid
+          renderEntrainement()
+          renderPosteModal()
+        }, tituJid)
+      }
+      tituRow.appendChild(tituCircle)
+
+      const tituInfo = document.createElement('div')
+      tituInfo.style.cssText = 'flex:1;'
+      if (titu) {
+        const objectifHI = getObjectifHI(titu.id)
+        const objectifDisplay = objectifHI !== null ? `<span style="color:#FECC00;font-weight:700;">HI: ${Math.round(objectifHI)}m</span>` : '<span style="color:#555;">—</span>'
+        tituInfo.innerHTML = `<div style="font-size:13px;font-weight:600;">${titu.nom} ${titu.prenom} <span style="margin-left:8px;font-size:11px;">${objectifDisplay}</span></div><div style="font-size:10px;color:#555;">${titu.poste||''}</div>`
+      } else {
+        tituInfo.innerHTML = `<div style="font-size:12px;color:#555;cursor:pointer;" id="titu-info-${ei}-${posteIdx}">Cliquer pour assigner un titulaire</div>`
+      }
+      tituRow.appendChild(tituInfo)
+      
+      // Ajouter event listener après insertion pour avoir accès à equipes
+      if (!titu) {
+        setTimeout(() => {
+          const el = document.getElementById(`titu-info-${ei}-${posteIdx}`)
+          if (el) {
+            el.onclick = () => {
+              ouvrirPicker('Choisir le titulaire', newJid => {
+                if (!newJid) return
+                equipes[ei].titulaires[posteIdx] = newJid
+                renderEntrainement()
+                renderPosteModal()
+              }, null)
+            }
+          }
+        }, 0)
+      }
+
+      // Séquences du titulaire
+      if (titu) {
+        const seqKey = ei + '_' + tituJid
+        const seqActives = sequencesMap[seqKey] || []
+        const allSelected = seqNums.every(n => seqActives.includes(n))
+        const seqContainer = document.createElement('div')
+        seqContainer.style.cssText = 'display:flex;gap:3px;flex-wrap:wrap;align-items:center;'
+
+        // Bouton "Tout" toggle avec style dynamique
+        const toutCocherBtn = document.createElement('span')
+        toutCocherBtn.textContent = '✓ Tout'
+        const updateToutBtnStyle = () => {
+          const currentAllSelected = seqNums.every(n => (sequencesMap[seqKey] || []).includes(n))
+          if (currentAllSelected) {
+            toutCocherBtn.style.cssText = `font-size:10px;padding:3px 6px;border-radius:4px;border:1px solid ${couleur};background:${couleur};color:#000;cursor:pointer;margin-right:6px;`
+          } else {
+            toutCocherBtn.style.cssText = `font-size:10px;padding:3px 6px;border-radius:4px;border:1px solid #555;background:transparent;color:#888;cursor:pointer;margin-right:6px;`
+          }
+        }
+        updateToutBtnStyle()
+        toutCocherBtn.onclick = () => {
+          const currentSeqs = sequencesMap[seqKey] || []
+          const currentAllSelected = seqNums.every(n => currentSeqs.includes(n))
+          if (currentAllSelected) {
+            // Tout décocher
+            sequencesMap[seqKey] = []
+          } else {
+            // Vérifier si déjà ailleurs avant de tout cocher
+            const conflicts = []
+            seqNums.forEach(n => {
+              const elsewhere = checkSequenceElsewhere(tituJid, n, ei, posteIdx)
+              if (elsewhere) {
+                const eqName = equipes[elsewhere.ei].nom
+                conflicts.push(`séquence ${n} déjà au poste ${elsewhere.posteIdx + 1} (${eqName})`)
+              }
+            })
+            if (conflicts.length > 0) {
+              alert(`⚠️ ${titu.nom} ${titu.prenom} :\n\n${conflicts.join('\n')}`)
+              return
+            }
+            // Tout cocher - toujours retirer les séquences des remplaçants
+            rempls.forEach(r => {
+              if (r.seqs) r.seqs = r.seqs.filter(s => !seqNums.includes(s))
+            })
+            sequencesMap[seqKey] = [...seqNums]
+          }
+          renderEntrainement()
+          renderPosteModal()
+        }
+        seqContainer.appendChild(toutCocherBtn)
+
+        seqNums.forEach(n => {
+          const chip = document.createElement('span')
+          chip.className = 'seq-chip'
+          const isOn = seqActives.includes(n)
+          chip.style.cssText = isOn
+            ? `background:${couleur}33;border-color:${couleur};color:${couleur};cursor:pointer;`
+            : `border-color:#2a2a2a;color:#333;cursor:pointer;`
+          chip.textContent = n
+          chip.onclick = () => {
+            if (!sequencesMap[seqKey]) sequencesMap[seqKey] = []
+            const isCurrentlyOn = sequencesMap[seqKey].includes(n)
+            if (isCurrentlyOn) {
+              // Décocher : juste retirer
+              sequencesMap[seqKey] = sequencesMap[seqKey].filter(s => s !== n)
+            } else {
+              // Vérifier si le titulaire a déjà cette séquence ailleurs
+              const elsewhere = checkSequenceElsewhere(tituJid, n, ei, posteIdx)
+              if (elsewhere) {
+                const eqName = equipes[elsewhere.ei].nom
+                alert(`⚠️ ${titu.nom} ${titu.prenom} a déjà la séquence ${n} au poste ${elsewhere.posteIdx + 1} (${eqName})`)
+              }
+              // Si déjà pris par un remplaçant, retirer chez lui et mettre chez titu
+              const conflictRempl = rempls.find(r => r.seqs && r.seqs.includes(n))
+              if (conflictRempl) {
+                conflictRempl.seqs = conflictRempl.seqs.filter(s => s !== n)
+              }
+              sequencesMap[seqKey].push(n)
+              sequencesMap[seqKey].sort((a,b)=>a-b)
+            }
+            renderEntrainement()
+            renderPosteModal()
+          }
+          seqContainer.appendChild(chip)
+        })
+        tituRow.appendChild(seqContainer)
+      }
+      tituSection.appendChild(tituRow)
+
+      // Afficher les assignations existantes du joueur dans le même rectangle en dessous
+      if (titu) {
+        const tituAssignments = getAllPlayerAssignments(tituJid)
+        if (tituAssignments.length > 1) { // Plus que l'assignation actuelle
+          tituAssignments.forEach(assign => {
+            if (assign.ei === ei && assign.posteIdx === posteIdx) return // Skip current assignment
+            
+            const assignRow = document.createElement('div')
+            assignRow.style.cssText = 'display:flex;align-items:center;gap:10px;padding:10px;background:#0a0a0a;border-radius:8px;margin-bottom:4px;'
+            
+            // Info compacte
+            const assignInfo = document.createElement('div')
+            assignInfo.style.cssText = 'flex:1;min-width:0;'
+            assignInfo.innerHTML = `<div style="font-size:10px;color:#555;">${assign.equipe} - Poste ${assign.posteIdx + 1} <span style="background:#FECC00;color:#000;padding:1px 3px;border-radius:2px;font-size:8px;font-weight:600;">${assign.type === 'titu' ? 'T' : 'R'}</span></div>`
+            assignRow.appendChild(assignInfo)
+            
+            // Séquences alignées à droite
+            const assignSeqContainer = document.createElement('div')
+            assignSeqContainer.style.cssText = 'display:flex;gap:3px;flex-wrap:wrap;align-items:center;'
+            
+            seqNums.forEach(n => {
+              const chip = document.createElement('span')
+              chip.className = 'seq-chip'
+              const isOn = assign.seqs.includes(n)
+              chip.style.cssText = isOn
+                ? `background:${assign.couleur}33;border-color:${assign.couleur};color:${assign.couleur};`
+                : `border-color:#0a0a0a;color:#0a0a0a;` // Même couleur que le fond
+              chip.textContent = n
+              assignSeqContainer.appendChild(chip)
+            })
+            
+            assignRow.appendChild(assignSeqContainer)
+            tituSection.appendChild(assignRow)
+          })
+        }
+      }
+
+      // Bouton retirer titulaire
+      if (titu) {
+        const retirBtn = document.createElement('button')
+        retirBtn.className = 'btn-danger'
+        retirBtn.style.cssText = 'font-size:10px;padding:3px 8px;'
+        retirBtn.textContent = '✕ Retirer du poste'
+        retirBtn.onclick = () => {
+          equipes[ei].titulaires[posteIdx] = null
+          renderEntrainement()
+          renderPosteModal()
+        }
+        tituSection.appendChild(retirBtn)
+      }
+      body.appendChild(tituSection)
+
+      // Séparateur
+      const sep = document.createElement('div')
+      sep.style.cssText = 'height:1px;background:#2a2a2a;margin:12px 0;'
+      body.appendChild(sep)
+
+      // Section remplaçants
+      const remplHeader = document.createElement('div')
+      remplHeader.style.cssText = 'font-size:10px;color:#555;text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;'
+      remplHeader.textContent = 'Remplaçants sur ce poste'
+      body.appendChild(remplHeader)
+
+      rempls.forEach((rempl, ri) => {
+        const rj = getJ(rempl.jid)
+        if (!rj) return
+        const rRow = document.createElement('div')
+        rRow.style.cssText = 'display:flex;align-items:center;gap:10px;padding:10px;background:#0f0f0f;border-radius:8px;margin-bottom:8px;'
+
+        const rCircle = document.createElement('div')
+        rCircle.style.cssText = `width:34px;height:34px;border-radius:50%;border:1px solid ${couleur}88;background:${couleur}15;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:${couleur};flex-shrink:0;`
+        rCircle.textContent = rj.prenom[0] + rj.nom[0]
+        rRow.appendChild(rCircle)
+
+        const rInfo = document.createElement('div')
+        rInfo.style.cssText = 'flex:1;min-width:0;'
+        const objectifHIRempl = getObjectifHI(rj.id)
+        const objectifDisplayRempl = objectifHIRempl !== null ? `<span style="color:#FECC00;font-weight:700;">HI: ${Math.round(objectifHIRempl)}m</span>` : '<span style="color:#555;">—</span>'
+        rInfo.innerHTML = `<div style="font-size:12px;font-weight:600;">${rj.nom} ${rj.prenom} <span style="margin-left:8px;font-size:10px;">${objectifDisplayRempl}</span></div><div style="font-size:9px;color:#555;">${rj.poste||''}</div>`
+        rRow.appendChild(rInfo)
+
+        // Séquences du remplaçant
+        const seqContainer = document.createElement('div')
+        seqContainer.style.cssText = 'display:flex;gap:3px;flex-wrap:wrap;align-items:center;'
+        const tituSeqKey = ei + '_' + tituJid
+        if (!rempl.seqs) rempl.seqs = []
+        const remplSeqs = rempl.seqs
+        const allRemplSelected = seqNums.every(n => remplSeqs.includes(n))
+
+        // Bouton "Tout" toggle pour remplaçant
+        const toutBtn = document.createElement('span')
+        toutBtn.textContent = '✓ Tout'
+        const updateToutBtnStyle = () => {
+          const currentAllSelected = seqNums.every(n => rempl.seqs.includes(n))
+          if (currentAllSelected) {
+            toutBtn.style.cssText = `font-size:10px;padding:3px 6px;border-radius:4px;border:1px solid ${couleur};background:${couleur};color:#000;cursor:pointer;margin-right:6px;`
+          } else {
+            toutBtn.style.cssText = `font-size:10px;padding:3px 6px;border-radius:4px;border:1px solid #555;background:transparent;color:#888;cursor:pointer;margin-right:6px;`
+          }
+        }
+        updateToutBtnStyle()
+        toutBtn.onclick = () => {
+          const currentAllSelected = seqNums.every(n => rempl.seqs.includes(n))
+          if (currentAllSelected) {
+            // Tout décocher
+            rempl.seqs = []
+          } else {
+            // Vérifier si déjà ailleurs avant de tout cocher
+            const conflicts = []
+            seqNums.forEach(n => {
+              const elsewhere = checkSequenceElsewhere(rempl.jid, n, ei, posteIdx)
+              if (elsewhere) {
+                const eqName = equipes[elsewhere.ei].nom
+                const rj = getJ(rempl.jid)
+                conflicts.push(`séquence ${n} déjà au poste ${elsewhere.posteIdx + 1} (${eqName})`)
+              }
+            })
+            if (conflicts.length > 0) {
+              const rj = getJ(rempl.jid)
+              alert(`⚠️ ${rj ? rj.nom + ' ' + rj.prenom : 'Joueur'} :\n\n${conflicts.join('\n')}`)
+              return
+            }
+            // Tout cocher - toujours retirer les séquences du titulaire et autres remplaçants
+            rempls.forEach((r, ri2) => {
+              if (ri2 !== ri && r.seqs) r.seqs = r.seqs.filter(s => !seqNums.includes(s))
+            })
+            if (tituJid && sequencesMap[tituSeqKey]) {
+              sequencesMap[tituSeqKey] = sequencesMap[tituSeqKey].filter(s => !seqNums.includes(s))
+            }
+            rempl.seqs = [...seqNums]
+          }
+          renderEntrainement()
+          renderPosteModal()
+        }
+        seqContainer.appendChild(toutBtn)
+
+        seqNums.forEach(n => {
+          const chip = document.createElement('span')
+          chip.className = 'seq-chip'
+          const isOn = remplSeqs.includes(n)
+          chip.style.cssText = isOn
+            ? `background:${couleur}33;border-color:${couleur};color:${couleur};cursor:pointer;`
+            : `border-color:#2a2a2a;color:#333;cursor:pointer;`
+          chip.textContent = n
+          chip.title = isOn ? `Séquence ${n} assignée à ce remplaçant` : `Assigner séquence ${n}`
+          chip.onclick = () => {
+            if (!rempl.seqs) rempl.seqs = []
+            const isCurrentlyOn = rempl.seqs.includes(n)
+            if (isCurrentlyOn) {
+              // Désélectionner
+              rempl.seqs = rempl.seqs.filter(s => s !== n)
+            } else {
+              // Vérifier si le remplaçant a déjà cette séquence ailleurs
+              const elsewhere = checkSequenceElsewhere(rempl.jid, n, ei, posteIdx)
+              if (elsewhere) {
+                const rj = getJ(rempl.jid)
+                const eqName = equipes[elsewhere.ei].nom
+                alert(`⚠️ ${rj ? rj.nom + ' ' + rj.prenom : 'Joueur'} a déjà la séquence ${n} au poste ${elsewhere.posteIdx + 1} (${eqName})`)
+              }
+              // Si déjà pris par un autre remplaçant, retirer chez lui
+              const existingRempl = rempls.find((r, ri2) => ri2 !== ri && r.seqs && r.seqs.includes(n))
+              if (existingRempl) {
+                existingRempl.seqs = existingRempl.seqs.filter(s => s !== n)
+              }
+              // Si déjà pris par le titulaire, retirer chez lui
+              if (tituJid && sequencesMap[tituSeqKey] && sequencesMap[tituSeqKey].includes(n)) {
+                sequencesMap[tituSeqKey] = sequencesMap[tituSeqKey].filter(s => s !== n)
+              }
+              rempl.seqs.push(n)
+              rempl.seqs.sort((a,b)=>a-b)
+            }
+            renderEntrainement()
+            renderPosteModal()
+          }
+          seqContainer.appendChild(chip)
+        })
+        rRow.appendChild(seqContainer)
+
+        // Bouton retirer ce remplaçant
+        const removeBtn = document.createElement('button')
+        removeBtn.className = 'btn-danger'
+        removeBtn.style.cssText = 'font-size:10px;padding:3px 8px;flex-shrink:0;'
+        removeBtn.textContent = '✕'
+        removeBtn.onclick = () => {
+          rempls.splice(ri, 1)
+          renderEntrainement()
+          renderPosteModal()
+        }
+        rRow.appendChild(removeBtn)
+        body.appendChild(rRow)
+      })
+
+      // Afficher les assignations existantes des remplaçants après la boucle
+      rempls.forEach((rempl, ri) => {
+        if (!rempl.jid) return
+        const rempAssignments = getAllPlayerAssignments(rempl.jid)
+        if (rempAssignments.length > 1) { // Plus que l'assignation actuelle
+          rempAssignments.forEach(assign => {
+            if (assign.ei === ei && assign.posteIdx === posteIdx && assign.type === 'rempl') return // Skip current assignment
+            
+            const assignRow = document.createElement('div')
+            assignRow.style.cssText = 'display:flex;align-items:center;gap:10px;padding:10px;background:#0a0a0a;border-radius:8px;margin-bottom:4px;'
+            
+            // Info compacte
+            const assignInfo = document.createElement('div')
+            assignInfo.style.cssText = 'flex:1;min-width:0;'
+            const rj = joueurs.find(j => j.id === rempl.jid)
+            assignInfo.innerHTML = `<div style="font-size:10px;color:#555;">${rj?.nom} ${rj?.prenom} - ${assign.equipe} - Poste ${assign.posteIdx + 1} <span style="background:#FECC00;color:#000;padding:1px 3px;border-radius:2px;font-size:8px;font-weight:600;">${assign.type === 'titu' ? 'T' : 'R'}</span></div>`
+            assignRow.appendChild(assignInfo)
+            
+            // Séquences alignées à droite
+            const assignSeqContainer = document.createElement('div')
+            assignSeqContainer.style.cssText = 'display:flex;gap:3px;flex-wrap:wrap;align-items:center;'
+            
+            seqNums.forEach(n => {
+              const chip = document.createElement('span')
+              chip.className = 'seq-chip'
+              const isOn = assign.seqs.includes(n)
+              chip.style.cssText = isOn
+                ? `background:${assign.couleur}33;border-color:${assign.couleur};color:${assign.couleur};`
+                : `border-color:#0a0a0a;color:#0a0a0a;` // Même couleur que le fond
+              chip.textContent = n
+              assignSeqContainer.appendChild(chip)
+            })
+            
+            assignRow.appendChild(assignSeqContainer)
+            body.appendChild(assignRow)
+          })
+        }
+      })
+
+      // Bouton ajouter remplaçant
+      const addBtn = document.createElement('button')
+      addBtn.className = 'btn-ghost'
+      addBtn.style.cssText = 'width:100%;margin-top:4px;font-size:12px;'
+      addBtn.textContent = '+ Ajouter un remplaçant'
+      addBtn.onclick = () => {
+        ouvrirPicker('Choisir un remplaçant', newJid => {
+          if (!newJid) return
+          if (!posteRemplacants[ei]) posteRemplacants[ei] = {}
+          if (!posteRemplacants[ei][posteIdx]) posteRemplacants[ei][posteIdx] = []
+          // Un joueur peut apparaître plusieurs fois dans l'équipe (postes différents)
+          posteRemplacants[ei][posteIdx].push({ jid: newJid, seqs: [] })
+          renderEntrainement()
+          renderPosteModal()
+        }, null)
+      }
+      body.appendChild(addBtn)
+    }
+
+
+    window.ajouterEquipe = function() {
+      const couleurs = ['#FECC00','#fff','#E24B4A','#1D9E75','#378ADD']
+      const ei = equipes.length
+      equipes.push({ nom: 'Équipe ' + (ei + 1), couleur: couleurs[ei % couleurs.length], titulaires: Array(15).fill(null) })
+      posteRemplacants[ei] = {}
+      renderEntrainement()
+    }
+
+    window.retirerEquipe = function(ei) {
+      if (!confirm('Supprimer cette équipe ?')) return
+      equipes.splice(ei, 1)
+      delete posteRemplacants[ei]
+      // Reindex posteRemplacants
+      const newPR = {}
+      equipes.forEach((_, i) => { newPR[i] = posteRemplacants[i > ei ? i+1 : i] || {} })
+      Object.assign(posteRemplacants, newPR)
+      renderEntrainement()
+    }
+
+    // Dupliquer les équipes d'entraînement
+    window.dupliquerEquipes = function() {
+      const couleurs = ['#FECC00','#fff','#E24B4A','#1D9E75','#378ADD']
+      const startIdx = equipes.length
+      equipes.forEach((eq, idx) => {
+        const newEq = { 
+          nom: eq.nom + ' (Copie)', 
+          couleur: couleurs[(startIdx + idx) % couleurs.length], 
+          titulaires: [...eq.titulaires] 
+        }
+        equipes.push(newEq)
+        posteRemplacants[startIdx + idx] = {}
+        // Copier les remplaçants
+        if (posteRemplacants[idx]) {
+          Object.keys(posteRemplacants[idx]).forEach(posteIdx => {
+            posteRemplacants[startIdx + idx][posteIdx] = posteRemplacants[idx][posteIdx].map(r => ({...r}))
+          })
+        }
+      })
+      renderEntrainement()
+      alert('Équipes dupliquées avec succès !')
+    }
+
+    // Sauvegarder les équipes d'entraînement sur Firebase
+    window.sauvegarderEquipesEntrainement = async function() {
+      try {
+        const data = {
+          equipes: equipes,
+          posteRemplacants: posteRemplacants,
+          sequencesMap: sequencesMap,
+          nbSeq: parseInt(document.getElementById('entr-nb-seq')?.value) || 10,
+          distRep: parseFloat(document.getElementById('entr-dist-rep')?.value) || 35,
+          date: new Date().toISOString()
+        }
+        await setDoc(doc(db, 'entrainements', 'current'), data)
+        alert('Équipes sauvegardées sur Firebase !')
+      } catch (e) {
+        alert('Erreur sauvegarde: ' + e.message)
+      }
+    }
+
+    // Charger les équipes d'entraînement depuis Firebase
+    window.chargerEquipesEntrainement = async function() {
+      try {
+        const snap = await getDoc(doc(db, 'entrainements', 'current'))
+        if (snap.exists()) {
+          const data = snap.data()
+          if (data.nbSeq) {
+            document.getElementById('entr-nb-seq').value = data.nbSeq
+          }
+          if (data.distRep) {
+            document.getElementById('entr-dist-rep').value = data.distRep
+          }
+          if (data.equipes) {
+            equipes.length = 0
+            data.equipes.forEach(e => {
+              // Migration: corriger l'équipe noire qui était #fff au lieu de #000
+              if (e.nom === 'Équipe Noire' && e.couleur === '#fff') {
+                e.couleur = '#000'
+              }
+              equipes.push(e)
+            })
+          }
+          if (data.posteRemplacants) {
+            Object.keys(posteRemplacants).forEach(k => delete posteRemplacants[k])
+            Object.assign(posteRemplacants, data.posteRemplacants)
+          }
+          if (data.sequencesMap) {
+            Object.keys(sequencesMap).forEach(k => delete sequencesMap[k])
+            Object.assign(sequencesMap, data.sequencesMap)
+          }
+          renderEntrainement()
+          console.log('Équipes chargées depuis Firebase')
+        }
+      } catch (e) {
+        console.error('Erreur chargement:', e)
+      }
+    }
+
+    // Charger les objectifs HI individuels depuis la dernière planification GPS
+    window.chargerObjectifsHI = async function() {
+      try {
+        // Récupérer toutes les planifications et trouver la plus récente
+        const snap = await getDocs(collection(db, 'planificationsGPS'))
+        if (snap.empty) return
+
+        let latestPlanif = null
+        let latestDate = ''
+
+        snap.forEach(doc => {
+          const data = doc.data()
+          if (data.semaine && data.resultats) {
+            if (!latestDate || data.semaine > latestDate) {
+              latestDate = data.semaine
+              latestPlanif = data
+            }
+          }
+        })
+
+        if (!latestPlanif) return
+
+        console.log('Planification chargée:', latestPlanif.semaine)
+        console.log('Jours actifs:', latestPlanif.joursActifs)
+        console.log('Nb résultats:', latestPlanif.resultats?.length)
+
+        // Stocker les jours actifs et pourcentages pour le calcul adaptatif
+        planifJoursActifs = latestPlanif.joursActifs || ['Lundi', 'Mardi', 'Jeudi']
+        planifPctParJour = latestPlanif.pctParJour || { Lundi: 33, Mardi: 34, Jeudi: 33 }
+
+        // Convertir en map joueurId -> données complètes pour calcul adaptatif
+        planifObjectifs = {}
+        latestPlanif.resultats.forEach(r => {
+          if (r.joueurId) {
+            planifObjectifs[r.joueurId] = {
+              distHI: r.distHI || 0,
+              distHIParJour: r.distHIParJour || {},
+              distHIReelleParJour: r.distHIReelleParJour || {},
+              chargeReelleParJour: r.chargeReelleParJour || {},
+              pctParJour: r.pctParJour || planifPctParJour
+            }
+            // Debug pour Soave
+            if (r.joueurId.includes('soave') || r.joueurId.includes('Soave')) {
+              console.log('Données Soave:', r)
+            }
+          }
+        })
+
+        console.log('Objectifs HI chargés pour', Object.keys(planifObjectifs).length, 'joueurs')
+      } catch (e) {
+        console.error('Erreur chargement objectifs HI:', e)
+      }
+    }
+
+    // Calculer l'objectif adaptatif (compense l'écart du jour précédent)
+    function calculObjectifAdaptatif(joueurData, jour, chargeTotale, joursActifs, pctParJour) {
+      const pctJour = pctParJour[jour] || 0
+      const objectifInitial = Math.round(chargeTotale * (pctJour / 100))
+
+      console.log('  [Adaptatif] Jour:', jour, 'chargeTotale:', chargeTotale, 'pctJour:', pctJour)
+      console.log('  [Adaptatif] objectifInitial:', objectifInitial)
+      console.log('  [Adaptatif] joursActifs:', joursActifs)
+
+      // Trouver l'index du jour actuel
+      const idxJour = joursActifs.indexOf(jour)
+      console.log('  [Adaptatif] idxJour:', idxJour)
+      if (idxJour <= 0) {
+        console.log('  [Adaptatif] Premier jour, pas d adaptation')
+        return objectifInitial
+      }
+
+      // Vérifier si le jour précédent a une valeur réelle
+      const jPrec = joursActifs[idxJour - 1]
+      console.log('  [Adaptatif] jPrec:', jPrec)
+      console.log('  [Adaptatif] distHIReelleParJour:', joueurData.distHIReelleParJour)
+      const aReellePrec = joueurData.distHIReelleParJour && joueurData.distHIReelleParJour[jPrec] !== undefined
+      console.log('  [Adaptatif] aReellePrec:', aReellePrec)
+
+      if (!aReellePrec) {
+        console.log('  [Adaptatif] Pas de réalisation veille, retourne initial')
+        return objectifInitial
+      }
+
+      // Calculer la charge réalisée la veille
+      const chargeReellePrec = joueurData.distHIReelleParJour[jPrec] || 0
+      const pctPrec = pctParJour[jPrec] || 0
+      const objectifPrec = Math.round(chargeTotale * (pctPrec / 100))
+
+      // Calculer l'écart (positif = en surplus, négatif = en déficit)
+      const ecart = chargeReellePrec - objectifPrec
+
+      console.log('  [Adaptatif] chargeReellePrec:', chargeReellePrec, 'objectifPrec:', objectifPrec, 'ecart:', ecart)
+
+      // Adapter l'objectif du jour actuel pour compenser l'écart
+      const objectifAdaptatif = objectifInitial - ecart
+
+      console.log('  [Adaptatif] objectifAdaptatif:', objectifAdaptatif)
+
+      return Math.max(0, Math.round(objectifAdaptatif))
+    }
+
+    // Obtenir l'objectif HI d'un joueur pour aujourd'hui (avec calcul adaptatif)
+    function getObjectifHI(joueurId) {
+      const joursFR = ['Dimanche', 'Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi']
+      const aujourdhui = new Date()
+      const nomJour = joursFR[aujourdhui.getDay()]
+
+      const joueurData = planifObjectifs[joueurId]
+      if (!joueurData) return null
+
+      // Debug
+      console.log('getObjectifHI pour joueur', joueurId, 'jour', nomJour)
+      console.log('  distHI:', joueurData.distHI)
+      console.log('  distHIReelleParJour:', joueurData.distHIReelleParJour)
+      console.log('  planifJoursActifs:', planifJoursActifs)
+
+      // Vérifier si ce jour fait partie des jours actifs de la planification
+      if (!planifJoursActifs.includes(nomJour)) {
+        return joueurData.distHIParJour[nomJour] || null
+      }
+
+      // Calculer l'objectif adaptatif
+      const pctParJour = joueurData.pctParJour || planifPctParJour
+      const result = calculObjectifAdaptatif(joueurData, nomJour, joueurData.distHI, planifJoursActifs, pctParJour)
+      console.log('  objectif calculé:', result)
+      return result
+    }
+
+    // Imprimer les équipes d'entraînement
+    window.imprimerEquipesEntrainement = function() {
+      const nbSeq = parseInt(document.getElementById('entr-nb-seq')?.value) || 10
+      const distRep = parseInt(document.getElementById('entr-dist-rep')?.value) || 35
+      const showComp = document.getElementById('show-compensations')?.checked !== false
+      const printDate = document.getElementById('entr-date')?.value || new Date().toISOString().split('T')[0]
+
+      const printWindow = window.open('', '_blank')
+      let html = `
+        <html>
+        <head>
+          <title>Équipes d'entraînement</title>
+          <style>
+            @page { size: A4 landscape; margin: 8mm; }
+            * { box-sizing: border-box; margin: 0; padding: 0; }
+            body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif; background: #fff; color: #000; padding: 8mm; font-size: 9px; }
+            .print-header { text-align: center; margin-bottom: 8px; padding-bottom: 6px; border-bottom: 2px solid #FECC00; }
+            .print-title { font-size: 14px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; }
+            .print-date { font-size: 10px; color: #666; margin-top: 2px; }
+            .teams-container { display: flex; gap: 12px; justify-content: center; }
+            .team { flex: 1; max-width: 48%; page-break-inside: avoid; background: #fafafa; border: 1px solid #ddd; border-radius: 8px; overflow: hidden; }
+            .team-header { font-size: 12px; font-weight: 700; padding: 8px 12px; background: #1a1a1a; color: #fff; text-align: center; border-bottom: 2px solid; }
+            .terrain-print { padding: 8px; }
+            .ligne-print { display: flex; justify-content: center; gap: 6px; margin-bottom: 6px; flex-wrap: wrap; }
+            .slot-print { display: flex; flex-direction: column; align-items: center; min-width: 52px; max-width: 65px; }
+            .slot-cercle-print { width: 44px; height: 44px; border-radius: 50%; border: 2px solid #ccc; background: #f5f5f5; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; margin-bottom: 3px; }
+            .slot-cercle-print.filled { border-color: #FECC00; background: #fff8e1; }
+            .slot-num-print { position: absolute; left: -10px; top: 50%; transform: translateY(-50%); font-size: 10px; font-weight: 700; background: #000; color: #FECC00; padding: 2px 5px; border-radius: 4px; }
+            .slot-nom-print { font-size: 7px; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%; font-weight: 600; }
+            .slot-nom-print.empty { color: #bbb; font-style: italic; }
+            .slot-seqs-print { display: flex; gap: 1px; flex-wrap: wrap; justify-content: center; max-width: 55px; margin-top: 2px; }
+            .seq-chip-print { font-size: 6px; padding: 1px 3px; border-radius: 2px; border: 1px solid; }
+            .slot-stats-print { font-size: 6px; text-align: center; margin-top: 2px; }
+            .slot-stats-print .comp { color: #c00; font-weight: 700; }
+            .rempl-section-print { padding: 6px 8px; border-top: 1px solid #eee; background: #f0f0f0; }
+            .rempl-label-print { font-size: 7px; color: #888; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px; }
+            .rempl-row-print { display: flex; flex-wrap: wrap; gap: 4px; justify-content: center; }
+            .slot-rempl-print { display: flex; flex-direction: column; align-items: center; min-width: 38px; }
+            .rempl-cercle-print { width: 28px; height: 28px; border-radius: 50%; border: 1px solid #bbb; background: #fff; display: flex; align-items: center; justify-content: center; }
+            .rempl-nom-print { font-size: 6px; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%; margin-top: 1px; }
+            .sous-label-print { font-size: 6px; color: #888; text-align: center; text-transform: uppercase; letter-spacing: 0.05em; margin: 4px 0 2px; }
+            .sep-print { height: 1px; background: #ddd; margin: 4px 20px; }
+            @media print {
+              body { padding: 6mm; }
+              .team { page-break-inside: avoid; }
+            }
+          </style>
+        </head>
+        <body>
+          <div class="print-header">
+            <div class="print-title">Équipes d'entraînement</div>
+            <div class="print-date">${new Date(printDate).toLocaleDateString('fr-FR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</div>
+          </div>
+          <div class="teams-container">
+      `
+
+      function getObjectifHI(jid) {
+        const dateEntr = document.getElementById('entr-date')?.value
+        const jourSemaine = dateEntr ? new Date(dateEntr).toLocaleDateString('fr-FR', { weekday: 'long' }) : null
+        if (jourSemaine && planifObjectifs[jid]) {
+          return planifObjectifs[jid].distHIParJour?.[jourSemaine] || planifObjectifs[jid].distHI || 500
+        }
+        return 500
+      }
+
+      equipes.forEach((eq, ei) => {
+        const headerTextColor = eq.couleur === '#FECC00' || eq.couleur.toLowerCase() === '#fecc00' ? '#000' : '#fff'
+        html += `<div class="team"><div class="team-header" style="border-color:${eq.couleur};background:${eq.couleur};color:${headerTextColor}">${eq.nom}</div><div class="terrain-print">`
+
+        // 1ère ligne
+        html += `<div class="sous-label-print">1ère Ligne</div>`
+        html += `<div class="ligne-print">`
+        for (let i = 0; i < 3; i++) {
+          html += renderSlotPrint(ei, i, eq, nbSeq, distRep, showComp)
+        }
+        html += `</div>`
+
+        // 2ème ligne
+        html += `<div class="sous-label-print">2ème Ligne</div>`
+        html += `<div class="ligne-print" style="gap:12px;">`
+        for (let i = 3; i < 5; i++) {
+          html += renderSlotPrint(ei, i, eq, nbSeq, distRep, showComp)
+        }
+        html += `</div>`
+
+        // 3ème ligne
+        html += `<div class="sous-label-print">3ème Ligne</div>`
+        html += `<div class="ligne-print">`
+        for (let i = 5; i < 8; i++) {
+          html += renderSlotPrint(ei, i, eq, nbSeq, distRep, showComp)
+        }
+        html += `</div>`
+
+        html += `<div class="sep-print"></div>`
+
+        // Charnière
+        html += `<div class="ligne-print" style="gap:15px;">`
+        for (let i = 8; i < 10; i++) {
+          html += renderSlotPrint(ei, i, eq, nbSeq, distRep, showComp)
+        }
+        html += `</div>`
+
+        // 3/4
+        html += `<div class="ligne-print">`
+        for (let i = 10; i < 14; i++) {
+          html += renderSlotPrint(ei, i, eq, nbSeq, distRep, showComp)
+        }
+        html += `</div>`
+
+        // Arrière
+        html += `<div class="ligne-print">`
+        html += renderSlotPrint(ei, 14, eq, nbSeq, distRep, showComp)
+        html += `</div>`
+
+        // Remplaçants
+        const hasRempls = Object.values(posteRemplacants[ei] || {}).some(arr => arr && arr.length > 0)
+        if (hasRempls) {
+          html += `<div class="rempl-section-print"><div class="rempl-label-print">Remplaçants</div><div class="rempl-row-print">`
+          for (let posteIdx = 0; posteIdx < 15; posteIdx++) {
+            const rempls = posteRemplacants[ei]?.[posteIdx] || []
+            rempls.forEach(r => {
+              const rj = joueurs.find(j => j.id === r.jid)
+              if (rj) {
+                // Calcul compensation pour ce remplaçant
+                const rnbF = r.seqs?.length || 0
+                const rhiJ = getObjectifHI(r.jid) || 500
+                const rhiDone = nbSeq > 0 ? (rnbF / nbSeq) * rhiJ : 0
+                const rdiff = rhiJ - rhiDone
+                const rrepsComp = rdiff > 0 ? Math.ceil(rdiff / distRep) : 0
+                const compText = rrepsComp > 0 ? `<span style="color:#c00;font-weight:700;font-size:6px">${rrepsComp}rep</span>` : '<span style="color:#1D9E75;font-size:6px">✓</span>'
+
+                html += `<div class="slot-rempl-print">`
+                html += `<div class="rempl-cercle-print" style="border-color:${eq.couleur}66">${posteIdx + 1}</div>`
+                html += `<div class="rempl-nom-print">${rj.nom}</div>`
+                if (r.seqs && r.seqs.length > 0) {
+                  html += `<div class="slot-seqs-print">${r.seqs.map(s => `<span class="seq-chip-print" style="background:${eq.couleur}22;border-color:${eq.couleur};color:#000">${s}</span>`).join('')}</div>`
+                }
+                html += `<div style="margin-top:1px">${compText}</div>`
+                html += `</div>`
+              }
+            })
+          }
+          html += `</div></div>`
+        }
+
+        html += `</div></div>`
+      })
+
+      function renderSlotPrint(ei, posteIdx, equipe, nbSeq, distRep, showComp) {
+        const jid = equipe.titulaires[posteIdx]
+        if (!jid) {
+          return `<div class="slot-print">
+            <div class="slot-cercle-print"><span class="slot-num-print">${posteIdx + 1}</span></div>
+            <div class="slot-nom-print empty">-</div>
+          </div>`
+        }
+        const j = joueurs.find(j => j.id === jid)
+        if (!j) {
+          return `<div class="slot-print">
+            <div class="slot-cercle-print"><span class="slot-num-print">${posteIdx + 1}</span></div>
+            <div class="slot-nom-print empty">-</div>
+          </div>`
+        }
+
+        const seqKey = ei + '_' + jid
+        const seqs = sequencesMap[seqKey] || []
+        const nbF = seqs.length
+        const hiJ = getObjectifHI(jid) || 500
+        const hiDone = nbSeq > 0 ? (nbF / nbSeq) * hiJ : 0
+        const diff = hiJ - hiDone
+        const repsComp = diff > 0 ? Math.ceil(diff / distRep) : 0
+        const pct = nbSeq > 0 ? Math.round((nbF / nbSeq) * 100) : 0
+
+        // Initiales du joueur
+        const initiales = (j.prenom?.[0] || '') + (j.nom?.[0] || '')
+        const photoHtml = j.photo ? `<img src="${j.photo}" style="width:44px;height:44px;border-radius:50%;object-fit:cover;position:absolute;top:0;left:0;" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">` : ''
+
+        let html = `<div class="slot-print" style="position:relative;">
+          <span class="slot-num-print" style="background:${equipe.couleur};color:#000;position:absolute;left:-8px;top:50%;transform:translateY(-50%);z-index:10;">${posteIdx + 1}</span>
+          <div class="slot-cercle-print filled" style="border-color:${equipe.couleur};display:flex;align-items:center;justify-content:center;overflow:hidden;position:relative;">
+            ${photoHtml}
+            <span style="font-size:11px;font-weight:700;color:${equipe.couleur};display:${j.photo ? 'none' : 'flex'};z-index:5;">${initiales}</span>
+          </div>
+          <div class="slot-nom-print">${j.nom}</div>`
+
+        if (seqs.length > 0) {
+          html += `<div class="slot-seqs-print">${seqs.map(s => `<span class="seq-chip-print" style="background:${equipe.couleur}22;border-color:${equipe.couleur};color:#000">${s}</span>`).join('')}</div>`
+        }
+
+        if (showComp) {
+          html += `<div class="slot-stats-print"><span style="color:${equipe.couleur};font-weight:700">${pct}%</span> ${repsComp > 0 ? `<span class="comp">${repsComp}rep</span>` : '<span style="color:#1D9E75">✓</span>'}</div>`
+        } else {
+          html += `<div class="slot-stats-print"><span style="color:${equipe.couleur};font-weight:700">${pct}%</span></div>`
+        }
+
+        html += `</div>`
+        return html
+      }
+
+      html += '</div></body></html>'
+      printWindow.document.write(html)
+      printWindow.document.close()
+      printWindow.print()
+    }
+
+    // ==================== PICKER ====================
+    window.ouvrirPicker = function(title, callback, currentJid = null) {
+      pickerCallback = callback
+      pickerCurrentJid = currentJid
+      document.getElementById('picker-title').textContent = title
+      document.getElementById('picker-search').value = ''
+      
+      // Update toggle buttons class based on current pickerSortMode
+      document.getElementById('picker-sort-alpha').classList.toggle('active', pickerSortMode === 'alpha')
+      document.getElementById('picker-sort-poste').classList.toggle('active', pickerSortMode === 'poste')
+
+      afficherFicheJoueurActuel(currentJid)
+      filtrerPicker()
+      document.getElementById('modal-picker').classList.add('open')
+    }
+
+    // Fonctions pour calculer les alertes GPS
+    function parseDateGPS(v) {
+      const s = String(v || '').trim()
+      let m = s.match(/^(\d{1,2})[\/-](\d{1,2})[\/-](\d{4})$/)
+      if (m) return new Date(+m[3], +m[2] - 1, +m[1])
+      m = s.match(/^(\d{4})[\/-](\d{1,2})[\/-](\d{1,2})$/)
+      if (m) return new Date(+m[1], +m[2] - 1, +m[3])
+      const d = new Date(s)
+      return isNaN(d.getTime()) ? null : d
+    }
+
+    function matchNomGPS(nom, prenom, gpsNoms) {
+      const nr = nom.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+      const pr = (prenom || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+      for (const nomGPS of gpsNoms) {
+        const ng = nomGPS.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+        if (ng.includes(nr) || ng.includes(pr)) return nomGPS
+        const ngParts = ng.split(/\s+/).filter(p => p.length > 1)
+        const allMatch = ngParts.every(part => nr.includes(part) || pr.includes(part))
+        if (allMatch && ngParts.length >= 2) return nomGPS
+      }
+      return null
+    }
+
+    function joursDepuis90Vmax6m(j, gpsData) {
+      if (!gpsData || !gpsData.length) return null
+      const ref = new Date()
+      // Supporte différents formats de noms de colonnes
+      const getNom = r => r.Nom || r.nom || r['Player Name'] || r.playerName || ''
+      const getVmax = r => r.Vmax || r.vmax || r['Maximum Velocity'] || r.maximumVelocity || r['Max Vel'] || 0
+      const getDate = r => r.Date || r.date || r['Date'] || ''
+      
+      const gpsNoms = [...new Set(gpsData.map(r => getNom(r)))]
+      const nomGPS = matchNomGPS(j.nom, j.prenom, gpsNoms)
+      if (!nomGPS) return null
+      const seances = gpsData
+        .filter(r => getNom(r) === nomGPS)
+        .map(r => ({ date: parseDateGPS(getDate(r)), vmax: parseFloat(getVmax(r)) || 0 }))
+        .filter(s => s.date && s.vmax > 0)
+        .sort((a, b) => b.date - a.date)
+      if (!seances.length) return null
+      const six = new Date(ref)
+      six.setMonth(six.getMonth() - 6)
+      const vmax6m = Math.max(...seances.filter(s => s.date >= six && s.date <= ref).map(s => s.vmax)) || 0
+      if (vmax6m === 0) return null
+      for (const s of seances) {
+        if (s.date > ref) continue
+        if (s.vmax >= vmax6m * 0.9) {
+          const diffMs = ref - s.date
+          return Math.floor(diffMs / (1000 * 60 * 60 * 24))
+        }
+      }
+      return null
+    }
+
+    function checkVmaxPerf14j(j, gpsData) {
+      if (!gpsData || !gpsData.length) return null
+      const ref = new Date()
+      const limit14j = new Date(ref.getTime() - 14 * 24 * 60 * 60 * 1000)
+      
+      // Supporte différents formats de noms de colonnes
+      const getNom = r => r.Nom || r.nom || r['Player Name'] || r.playerName || ''
+      const getVmax = r => r.Vmax || r.vmax || r['Maximum Velocity'] || r.maximumVelocity || r['Max Vel'] || 0
+      const getDate = r => r.Date || r.date || r['Date'] || ''
+      
+      const gpsNoms = [...new Set(gpsData.map(r => getNom(r)))]
+      const nomGPS = matchNomGPS(j.nom, j.prenom, gpsNoms)
+      if (!nomGPS) return null
+      const seances14j = gpsData
+        .filter(r => getNom(r) === nomGPS)
+        .map(r => ({ date: parseDateGPS(getDate(r)), vmax: parseFloat(getVmax(r)) || 0 }))
+        .filter(s => s.date && s.date >= limit14j && s.date <= ref && s.vmax > 0)
+        .sort((a, b) => b.date - a.date)
+      if (!seances14j.length) return null
+      const six = new Date(ref)
+      six.setMonth(six.getMonth() - 6)
+      const vmax6m = Math.max(...gpsData
+        .filter(r => getNom(r) === nomGPS)
+        .map(r => ({ date: parseDateGPS(getDate(r)), vmax: parseFloat(getVmax(r)) || 0 }))
+        .filter(s => s.date && s.date >= six && s.date <= ref && s.vmax > 0)
+        .map(s => s.vmax)) || 0
+      const vmaxAbs = Math.max(...gpsData.filter(r => getNom(r) === nomGPS).map(r => parseFloat(getVmax(r)) || 0).filter(v => v > 0)) || 0
+      const maxVmax14j = Math.max(...seances14j.map(s => s.vmax))
+      if (vmaxAbs > 0 && maxVmax14j >= vmaxAbs) return 'record'
+      if (vmax6m > 0 && maxVmax14j >= vmax6m) return '100'
+      return null
+    }
+
+    // Fonction pour calculer le score wellness
+    function calculerWellnessScore(joueurId) {
+      const today = new Date().toISOString().split('T')[0]
+      const w = wellnessData.find(x => x.joueurId === joueurId && x.date === today)
+      if (!w) return null
+      const sum = (w.fatigue || 0) + (w.sommeil || 0) + (w.stress || 0) + (w.humeur || 0)
+      return sum / 4
+    }
+
+    function afficherFicheJoueurActuel(jid) {
+      const ficheDiv = document.getElementById('picker-current-player')
+      if (!jid) {
+        ficheDiv.style.display = 'none'
+        return
+      }
+      const j = getJ(jid)
+      if (!j) {
+        ficheDiv.style.display = 'none'
+        return
+      }
+      
+      // Photo
+      const photoEl = document.getElementById('picker-current-photo')
+      if (j.photo) {
+        photoEl.src = j.photo
+        photoEl.style.display = 'block'
+      } else {
+        photoEl.style.display = 'none'
+      }
+      
+      // Nom et poste
+      document.getElementById('picker-current-nom').textContent = j.nom + ' ' + j.prenom
+      document.getElementById('picker-current-poste').textContent = j.poste || 'Poste non défini'
+      
+      // Badges
+      const badgesDiv = document.getElementById('picker-current-badges')
+      badgesDiv.innerHTML = ''
+      
+      // Badge statut
+      const absenceEnCours = getAbsenceEnCours(j.id)
+      const effectiveStatut = getEffectiveStatut(j)
+      if (effectiveStatut === 'blesse') {
+        badgesDiv.innerHTML += '<span style="background:#E24B4A22;color:#E24B4A;font-size:9px;padding:2px 6px;border-radius:4px;border:1px solid #E24B4A44;">BLESSÉ</span>'
+      } else if (effectiveStatut === 'absent') {
+        badgesDiv.innerHTML += '<span style="background:#888822;color:#888;font-size:9px;padding:2px 6px;border-radius:4px;border:1px solid #888844;">ABSENT</span>'
+      }
+      
+      // Badge absence si applicable
+      if (absenceEnCours) {
+        badgesDiv.innerHTML += `<span style="background:#666;color:#fff;font-size:9px;padding:2px 6px;border-radius:4px;" title="${absenceEnCours.motif || ''}">${absenceEnCours.type || 'Absent'}</span>`
+      }
+      
+      // Badge catégorie (G, T, D, etc.)
+      if (j.cat) {
+        const catColors = { 'G': '#85B7EB', 'T': '#FECC00', 'D': '#5DCAA5', 'GD': '#AFA9EC' }
+        const catColor = catColors[j.cat] || '#888'
+        badgesDiv.innerHTML += `<span style="background:${catColor}22;color:${catColor};font-size:9px;padding:2px 6px;border-radius:4px;border:1px solid ${catColor}44;font-weight:700;">${j.cat}</span>`
+      }
+      
+      // Pictos GPS
+      const jours90 = joursDepuis90Vmax6m(j, gpsData)
+      const vmaxPerf = checkVmaxPerf14j(j, gpsData)
+      if (jours90 !== null && jours90 >= 7) {
+        const color = jours90 > 14 ? '#E24B4A' : '#666'
+        badgesDiv.innerHTML += `<span style="background:${color};color:#fff;font-size:9px;padding:2px 6px;border-radius:50%;width:18px;height:18px;display:inline-flex;align-items:center;justify-content:center;" title="${jours90} jours sans 90% Vmax">⚠</span>`
+      }
+      if (vmaxPerf === 'record') {
+        badgesDiv.innerHTML += `<span style="background:#FECC0022;color:#FECC00;border:1px solid #FECC0044;font-size:9px;padding:2px 6px;border-radius:4px;" title="Record Vmax absolu dans les 14 derniers jours !">⚡️⚡️</span>`
+      } else if (vmaxPerf === '100') {
+        badgesDiv.innerHTML += `<span style="background:#FECC0022;color:#FECC00;border:1px solid #FECC0044;font-size:9px;padding:2px 6px;border-radius:4px;" title="100% Vmax 6 mois atteint dans les 14 derniers jours !">⚡️</span>`
+      }
+      
+      // Picto wellness (alerte si score < 3.5)
+      const wScore = calculerWellnessScore(j.id)
+      if (wScore !== null && wScore < 3.5 && effectiveStatut === 'ok') {
+        badgesDiv.innerHTML += `<span style="background:#E67E22;color:#fff;font-size:9px;padding:2px 6px;border-radius:50%;width:18px;height:18px;display:inline-flex;align-items:center;justify-content:center;" title="Wellness faible: ${wScore.toFixed(1)}">▲</span>`
+      }
+      
+      // Autres badges
+      if (j.espoir) {
+        badgesDiv.innerHTML += '<span style="background:#378ADD22;color:#85B7EB;border:1px solid #378ADD44;font-size:9px;padding:2px 6px;border-radius:4px;">ESPOIR</span>'
+      }
+      if (j.cdf) {
+        badgesDiv.innerHTML += '<span style="background:#9B59B622;color:#BB8FCE;border:1px solid #9B59B644;font-size:9px;padding:2px 6px;border-radius:4px;">🎓 CDF</span>'
+      }
+      
+      // Bouton vers fiche joueur
+      const btnFiche = document.createElement('button')
+      btnFiche.className = 'picker-more-link'
+      btnFiche.style.cssText = 'display:block;width:100%;margin-top:10px;text-align:center;color:#FECC00;font-size:11px;padding:6px;border:1px solid #FECC0044;border-radius:6px;background:none;cursor:pointer;'
+      btnFiche.textContent = 'Plus d\'info →'
+      btnFiche.onclick = () => ouvrirFicheJoueur(j.id)
+      
+      // Nettoyer l'ancien bouton s'il existe
+      const oldLink = ficheDiv.querySelector('.picker-more-link')
+      if (oldLink) oldLink.remove()
+      
+      ficheDiv.appendChild(btnFiche)
+      
+      ficheDiv.style.display = 'block'
+    }
+
+    window.remplacerJoueurActuel = function() {
+      // Cacher la fiche et montrer la liste pour choisir un remplaçant
+      document.getElementById('picker-current-player').style.display = 'none'
+      document.getElementById('picker-search').focus()
+    }
+
+    window.fermerPicker = function() {
+      document.getElementById('modal-picker').classList.remove('open')
+      document.getElementById('picker-current-player').style.display = 'none'
+      pickerCallback = null
+      pickerCurrentJid = null
+    }
+
+    // ==================== FICHE JOUEUR (style roster) ====================
+    let ficheJoueurActuel = null
+    let ficheOngletActif = 'identite'
+
+    const COULEURS_POSTE = {
+      'Pilier': '#E24B4A', 'Talonneur': '#E24B4A',
+      '2e Ligne': '#378ADD', '3e Ligne': '#378ADD',
+      'Demi de mêlée': '#FECC00', "Demi d'ouverture": '#FECC00',
+      'Centre': '#1D9E75', 'Ailier': '#1D9E75', 'Arrière': '#1D9E75'
+    }
+
+    const FICHE_TABS = [
+      { id: 'identite', label: 'Identité' },
+      { id: 'perf', label: 'Perfs' },
+      { id: 'blesse', label: 'Blessures' },
+      { id: 'charge', label: 'Charge' }
+    ]
+
+    window.ouvrirFicheJoueur = function(jid) {
+      const j = getJ(jid)
+      if (!j) return
+      
+      ficheJoueurActuel = j
+      ficheOngletActif = 'identite'
+      
+      // En-tête
+      const couleur = COULEURS_POSTE[j.poste] || '#333'
+      const hdr = document.getElementById('fiche-header')
+      const absenceEnCours = getAbsenceEnCours(j.id)
+      const effectiveStatut = getEffectiveStatut(j)
+      
+      hdr.innerHTML = `
+        <div class="fiche-avatar" style="background:${couleur}33;border:2px solid ${couleur}66;">
+          ${j.photo ? `<img src="${j.photo}" onerror="this.outerHTML='${(j.prenom?.[0]||'')+(j.nom?.[0]||'')}'">` : (j.prenom?.[0]||'')+(j.nom?.[0]||'')}
+        </div>
+        <div>
+          <div class="fiche-nom">${j.prenom} ${j.nom}</div>
+          <div class="fiche-meta">${j.poste||'—'}
+            ${j.espoir?'· <span style="color:#378ADD;">Espoir</span>':''}
+            ${j.cdf?'· <span style="color:#00ddff;">CDF</span>':''}
+            · <span class="statut-badge statut-${effectiveStatut}">${effectiveStatut==='ok'?'🟢':effectiveStatut==='blesse'?'🔴':'⚫'} ${effectiveStatut.toUpperCase()}</span>
+          </div>
+        </div>
+        <button class="fiche-close" onclick="fermerFicheJoueur()">✕</button>
+      `
+
+      // Tabs
+      const tabsEl = document.getElementById('fiche-tabs')
+      tabsEl.innerHTML = ''
+      FICHE_TABS.forEach(t => {
+        const btn = document.createElement('button')
+        btn.className = 'fiche-tab' + (t.id === ficheOngletActif ? ' active' : '')
+        btn.textContent = t.label
+        btn.onclick = () => {
+          ficheOngletActif = t.id
+          tabsEl.querySelectorAll('.fiche-tab').forEach(b => b.classList.remove('active'))
+          btn.classList.add('active')
+          chargerOngletFicheJoueur(j, t.id)
+        }
+        tabsEl.appendChild(btn)
+      })
+
+      chargerOngletFicheJoueur(j, 'identite')
+      document.getElementById('fiche-overlay').classList.add('open')
+    }
+
+    window.fermerFicheJoueur = function() {
+      document.getElementById('fiche-overlay').classList.remove('open')
+      ficheJoueurActuel = null
+    }
+
+    function chargerOngletFicheJoueur(j, onglet) {
+      const body = document.getElementById('fiche-body')
+      
+      if (onglet === 'identite') {
+        const absenceEnCours = getAbsenceEnCours(j.id)
+        body.innerHTML = `
+          <div class="fiche-section">
+            <div class="fiche-section-title">Informations</div>
+            <div class="fiche-kpi-grid">
+              <div class="fiche-kpi">
+                <div class="fiche-kpi-label">Taille</div>
+                <div class="fiche-kpi-val">${j.taille||'—'} <span style="font-size:12px;color:#888;">cm</span></div>
+              </div>
+              <div class="fiche-kpi">
+                <div class="fiche-kpi-label">Poids</div>
+                <div class="fiche-kpi-val">${j.poids||'—'} <span style="font-size:12px;color:#888;">kg</span></div>
+              </div>
+              <div class="fiche-kpi">
+                <div class="fiche-kpi-label">Âge</div>
+                <div class="fiche-kpi-val">${j.dateNaissance ? Math.floor((new Date()-new Date(j.dateNaissance))/(365.25*24*60*60*1000)) : '—'}</div>
+              </div>
+              <div class="fiche-kpi">
+                <div class="fiche-kpi-label">Catégorie</div>
+                <div class="fiche-kpi-val">${j.cat||'—'}</div>
+              </div>
+            </div>
+          </div>
+          ${absenceEnCours ? `
+          <div class="fiche-section">
+            <div class="fiche-section-title">Absence en cours</div>
+            <div style="background:#1a1a1a;border:1px solid #2a2a2a;border-radius:10px;padding:12px;">
+              <div style="font-size:13px;font-weight:600;color:#E24B4A;">${absenceEnCours.type||'Absent'}</div>
+              <div style="font-size:11px;color:#888;margin-top:4px;">${absenceEnCours.motif||'Non spécifié'}</div>
+              <div style="font-size:10px;color:#555;margin-top:4px;">${absenceEnCours.debut||''} → ${absenceEnCours.fin||'?'}</div>
+            </div>
+          </div>
+          ` : ''}
+          <div class="fiche-section">
+            <div class="fiche-section-title">Contact</div>
+            <div style="font-size:12px;color:#888;line-height:1.6;">
+              ${j.email?`<div>📧 ${j.email}</div>`:''}
+              ${j.telephone?`<div>📱 ${j.telephone}</div>`:''}
+              ${j.urgence?`<div style="margin-top:8px;color:#E24B4A;">🚨 Urgence: ${j.urgence}</div>`:''}
+            </div>
+          </div>
+        `
+      } else if (onglet === 'blesse') {
+        const joueurBlessures = blessures.filter(b => b.joueurId === j.id).sort((a,b)=>(b.debut||'').localeCompare(a.debut||''))
+        body.innerHTML = `
+          <div class="fiche-section">
+            <div class="fiche-section-title">Historique blessures</div>
+            ${joueurBlessures.length ? joueurBlessures.map(b => `
+              <div style="background:#1a1a1a;border:1px solid #E24B4A22;border-radius:10px;padding:12px;margin-bottom:8px;border-left:3px solid #E24B4A;">
+                <div style="font-size:12px;font-weight:600;">${b.type||'Blessure'}</div>
+                <div style="font-size:10px;color:#888;">${b.debut||''} ${b.fin?'→ '+b.fin:'(en cours)'}</div>
+                ${b.description?`<div style="font-size:11px;color:#aaa;margin-top:4px;">${b.description}</div>`:''}
+              </div>
+            `).join('') : '<div style="color:#555;font-size:12px;text-align:center;padding:20px;">Aucune blessure enregistrée</div>'}
+          </div>
+        `
+      } else {
+        body.innerHTML = `
+          <div class="fiche-empty"><div class="fiche-empty-icon">🚧</div>Onglet en construction</div>
+        `
+      }
+    }
+    // Récupère tous les IDs de joueurs déjà présents dans les équipes d'entraînement
+function getUsedIds() {
+  const used = new Set();
+  equipes.forEach((eq, ei) => {
+    if (eq.titulaires) {
+      eq.titulaires.forEach(id => { if (id) used.add(id); });
+    }
+    const prEq = posteRemplacants[ei] || {};
+    Object.values(prEq).forEach(remplList => {
+      if (remplList) {
+        remplList.forEach(r => { if (r.jid) used.add(r.jid); });
+      }
+    });
+  });
+  return used;
+}
+
+function getPosteIndex(poste) {
+  if (!poste) return 999;
+  
+  const POSTES_ORDER = [
+    'Pilier gauche',
+    'Talonneur',
+    'Pilier droit',
+    '2e Ligne',
+    'N8',
+    '3e Ligne aile',
+    'Demi de mêlée',
+    "Demi d'ouverture",
+    'Centre',
+    'Ailier',
+    'Arrière'
+  ];
+  
+  let idx = POSTES_ORDER.indexOf(poste);
+  if (idx !== -1) return idx;
+  
+  const pLower = poste.toLowerCase().trim();
+  
+  if (pLower.includes('pilier g') || pLower === 'pilierg') return 0;
+  if (pLower.includes('talon')) return 1;
+  if (pLower.includes('pilier d') || pLower === 'pilierd') return 2;
+  if (pLower.includes('pilier')) return 0;
+  if (pLower.includes('2e') || pLower.includes('2ème') || pLower === '2l') return 3;
+  if (pLower.includes('n8') || pLower.includes('numéro 8') || pLower.includes('numero 8') || pLower.includes('troisième ligne centre') || pLower.includes('troisieme ligne centre')) return 4;
+  if (pLower.includes('3e') || pLower.includes('3ème') || pLower.includes('aile')) return 5;
+  if (pLower.includes('mêlée') || pLower.includes('mele') || pLower === '9') return 6;
+  if (pLower.includes('ouverture') || pLower.includes('ouv') || pLower === '10') return 7;
+  if (pLower.includes('centre') || pLower.includes('ctr')) return 8;
+  if (pLower.includes('ailier') || pLower.includes('ail')) return 9;
+  if (pLower.includes('arrière') || pLower.includes('arriere') || pLower === '15') return 10;
+  
+  for (let i = 0; i < POSTES_ORDER.length; i++) {
+    const oLower = POSTES_ORDER[i].toLowerCase();
+    if (pLower.includes(oLower) || oLower.includes(pLower)) return i;
+  }
+  
+  return 999;
+}
+
+window.setPickerSort = function(mode) {
+  pickerSortMode = mode;
+  document.getElementById('picker-sort-alpha').classList.toggle('active', mode === 'alpha');
+  document.getElementById('picker-sort-poste').classList.toggle('active', mode === 'poste');
+  filtrerPicker();
+}
+
+    window.filtrerPicker = function() {
+  const q = (document.getElementById('picker-search').value || '').toLowerCase();
+  const c = document.getElementById('picker-list');
+  c.innerHTML = '';
+
+  const usedIds = getUsedIds();
+  const noDoubleSeq = document.getElementById('no-double-seq')?.checked || false;
+
+  // Option pour vider la case
+  const vide = document.createElement('div');
+  vide.className = 'picker-item';
+  vide.innerHTML = '<span style="color:#555;font-style:italic;">— Vider le poste —</span>';
+  vide.onclick = () => { if (pickerCallback) pickerCallback(null); fermerPicker() };
+  c.appendChild(vide);
+
+  // Option pour ajouter un joueur personnalisé (sans nom)
+  const customOpt = document.createElement('div');
+  customOpt.className = 'picker-item';
+  customOpt.innerHTML = '<span style="color:#FECC00;font-style:italic;">+ Joueur personnalisé (sans nom)...</span>';
+  customOpt.onclick = () => {
+    const customName = prompt('Nom du joueur personnalisé (laisser vide pour "Joueur personnalisé") :') || 'Joueur personnalisé';
+    const customId = 'custom_' + encodeURIComponent(customName);
+    if (pickerCallback) pickerCallback(customId);
+    fermerPicker();
+  };
+  c.appendChild(customOpt);
+
+  // En mode entraînement avec no-double-seq, récupérer les séquences déjà prises
+  let usedSeqs = new Set();
+  if (true && noDoubleSeq && pickerContext) {
+    const { ei, excludeJid } = pickerContext;
+    equipes[ei].titulaires.concat(equipes[ei].remplacants).forEach(jid => {
+      if (jid && jid !== excludeJid) {
+        const seqKey = ei + '_' + jid;
+        const seqs = sequencesMap[seqKey] || [];
+        seqs.forEach(s => usedSeqs.add(s));
+      }
+    });
+  }
+
+  // Filtrer les joueurs selon la recherche et no-double-seq
+  const filteredJoueurs = joueurs.filter(j => {
+    const matchNom = (j.nom + ' ' + j.prenom).toLowerCase().includes(q);
+    
+    // Si no-double-seq activé, vérifier que le joueur n'a pas de séquences en commun
+    let seqDisponible = true;
+    if (true && noDoubleSeq && pickerContext) {
+      const { ei } = pickerContext;
+      const seqKey = ei + '_' + j.id;
+      const seqs = sequencesMap[seqKey] || [];
+      seqDisponible = !seqs.some(s => usedSeqs.has(s));
+    }
+    
+    return matchNom && seqDisponible;
+  });
+
+  // Classer les joueurs en catégories
+  const dejaAjoutes = filteredJoueurs.filter(j => usedIds.has(j.id));
+  const disponibles = filteredJoueurs.filter(j => {
+    if (usedIds.has(j.id)) return false;
+    const effectiveStatut = getEffectiveStatut(j);
+    return effectiveStatut !== 'blesse' && effectiveStatut !== 'absent';
+  });
+  const blesses = filteredJoueurs.filter(j => {
+    if (usedIds.has(j.id)) return false;
+    const effectiveStatut = getEffectiveStatut(j);
+    return effectiveStatut === 'blesse';
+  });
+  const absents = filteredJoueurs.filter(j => {
+    if (usedIds.has(j.id)) return false;
+    const effectiveStatut = getEffectiveStatut(j);
+    return effectiveStatut === 'absent';
+  });
+
+  // Fonction pour créer un header de catégorie
+  const createCategoryHeader = (title, color) => {
+    const header = document.createElement('div');
+    header.style.cssText = `padding: 8px 10px; font-size: 11px; font-weight: 600; color: ${color}; text-transform: uppercase; letter-spacing: 0.08em; border-bottom: 1px solid #2a2a2a; margin-top: 4px;`;
+    header.textContent = `-- ${title} --`;
+    return header;
+  };
+
+  // Fonction pour créer un item joueur
+  const createPlayerItem = (j, isUsed = false) => {
+    const item = document.createElement('div');
+    item.className = 'picker-item';
+    
+    // Vérifier si le joueur a une absence en cours
+    const absenceEnCours = getAbsenceEnCours(j.id);
+    const effectiveStatut = getEffectiveStatut(j);
+    
+    const col = effectiveStatut === 'blesse' ? '#E24B4A' : effectiveStatut === 'absent' ? '#888' : '#1D9E75';
+    const absentBadge = absenceEnCours ? `<span style="background:#888;font-size:9px;padding:2px 5px;border-radius:3px;color:#fff;margin-left:5px;">ABSENT</span>` : '';
+    const tooltip = absenceEnCours ? `title="${absenceEnCours.type || 'Absent'}${absenceEnCours.motif ? ': ' + absenceEnCours.motif : ''}"` : '';
+    const usedBadge = isUsed ? `<span style="background:#FECC00;font-size:9px;padding:2px 5px;border-radius:3px;color:#000;margin-left:5px;font-weight:600;">DÉJÀ AJOUTÉ</span>` : '';
+    
+    item.innerHTML = `
+      <div style="width:8px;height:8px;border-radius:50%;background:${col};flex-shrink:0;"></div>
+      <div class="picker-nom" ${tooltip}>${j.nom} ${j.prenom}${absentBadge}${usedBadge}</div>
+      <div class="picker-poste">${j.poste||''}</div>
+    `;
+    
+    // Style spécial pour les joueurs déjà ajoutés ou absents
+    if (isUsed) {
+      item.style.opacity = '0.7';
+      item.style.background = '#252518';
+    } else if (absenceEnCours || effectiveStatut === 'absent') {
+      item.style.opacity = '0.6';
+      item.style.background = '#222';
+    } else if (effectiveStatut === 'blesse') {
+      item.style.opacity = '0.8';
+    }
+    
+    item.onclick = () => { 
+      if (pickerCallback) pickerCallback(j.id); 
+      fermerPicker(); 
+    };
+    return item;
+  };
+
+  const sortPickerList = (arr) => {
+    if (pickerSortMode === 'poste') {
+      return arr.sort((a,b) => {
+        const diff = getPosteIndex(a.poste) - getPosteIndex(b.poste);
+        if (diff !== 0) return diff;
+        return a.nom.localeCompare(b.nom);
+      });
+    } else {
+      return arr.sort((a,b) => a.nom.localeCompare(b.nom));
+    }
+  };
+
+  // Afficher les catégories dans l'ordre
+  if (disponibles.length > 0) {
+    c.appendChild(createCategoryHeader('dispo', '#1D9E75'));
+    sortPickerList(disponibles).forEach(j => {
+      c.appendChild(createPlayerItem(j, false));
+    });
+  }
+
+  if (dejaAjoutes.length > 0) {
+    c.appendChild(createCategoryHeader('déjà ajouté', '#FECC00'));
+    sortPickerList(dejaAjoutes).forEach(j => {
+      c.appendChild(createPlayerItem(j, true));
+    });
+  }
+
+  if (blesses.length > 0) {
+    c.appendChild(createCategoryHeader('blessés', '#E24B4A'));
+    sortPickerList(blesses).forEach(j => {
+      c.appendChild(createPlayerItem(j, false));
+    });
+  }
+
+  if (absents.length > 0) {
+    c.appendChild(createCategoryHeader('absents', '#888'));
+    sortPickerList(absents).forEach(j => {
+      c.appendChild(createPlayerItem(j, false));
+    });
+  }
+}
+
+    window.handleLogout = async function() {
+      await signOut(auth)
+      window.location.href = 'login.html'
+    }
+
+    // ==================== VISION SEQUENCES ====================
+    let visionSeqMode = 'rotations'
+
+    window.setVisionMode = function(mode) {
+      visionSeqMode = mode
+      document.getElementById('vsq-mode-rotations').classList.toggle('active', mode === 'rotations')
+      document.getElementById('vsq-mode-equipe').classList.toggle('active', mode === 'equipe')
+      const seqBtns = document.getElementById('vision-seq-buttons')
+      const activeBtn = seqBtns.querySelector('.vision-seq-btn.active')
+      const seqNum = activeBtn ? parseInt(activeBtn.textContent.replace('Séquence ', '')) : 1
+      afficherVisionSeq(seqNum)
+    }
+
+    window.ouvrirVisionSeq = function() {
+      const nbSeq = parseInt(document.getElementById('entr-nb-seq').value) || 10
+      const buttonsContainer = document.getElementById('vision-seq-buttons')
+      buttonsContainer.innerHTML = ''
+      
+      for (let i = 1; i <= nbSeq; i++) {
+        const btn = document.createElement('button')
+        btn.className = 'vision-seq-btn' + (i === 1 ? ' active' : '')
+        btn.textContent = 'Séquence ' + i
+        btn.onclick = () => afficherVisionSeq(i)
+        buttonsContainer.appendChild(btn)
+      }
+      
+      afficherVisionSeq(1)
+      document.getElementById('modal-vision-seq').classList.add('open')
+    }
+
+    window.fermerVisionSeq = function() {
+      document.getElementById('modal-vision-seq').classList.remove('open')
+    }
+
+    function afficherVisionSeq(seqNum) {
+      document.querySelectorAll('.vision-seq-btn').forEach((btn, idx) => {
+        btn.classList.toggle('active', idx + 1 === seqNum)
+      })
+      if (visionSeqMode === 'equipe') {
+        afficherVisionEquipe(seqNum)
+      } else {
+        afficherVisionRotations(seqNum)
+      }
+    }
+
+    function afficherVisionRotations(seqNum) {
+      const content = document.getElementById('vision-seq-content')
+      content.innerHTML = ''
+      const prevSeq = seqNum > 1 ? seqNum - 1 : null
+
+      equipes.forEach((equipe, ei) => {
+        const equipeDiv = document.createElement('div')
+        equipeDiv.className = 'vision-seq-equipe'
+        
+        const header = document.createElement('div')
+        header.className = 'vision-seq-equipe-header'
+        header.style.background = equipe.couleur + '22'
+        header.style.color = equipe.couleur
+        header.textContent = equipe.nom + ' — Rotations séquence ' + seqNum
+        equipeDiv.appendChild(header)
+        
+        const table = document.createElement('table')
+        table.className = 'vision-seq-table'
+        const thead = document.createElement('thead')
+        thead.innerHTML = '<tr><th>N°</th><th>Joueur</th><th>Statut</th><th>Info</th></tr>'
+        table.appendChild(thead)
+        const tbody = document.createElement('tbody')
+
+        equipe.titulaires.forEach((tituJid, posteIdx) => {
+          if (!tituJid) return
+          const tituSeqKey = ei + '_' + tituJid
+          const tituSeqs = sequencesMap[tituSeqKey] || []
+          const tituActif = tituSeqs.length === 0 || tituSeqs.includes(seqNum)
+
+          // Remplaçants sur ce poste actifs à cette séquence
+          const prEq = (posteRemplacants[ei] || {})
+          const remplsPoste = prEq[posteIdx] || []
+          const remplActif = remplsPoste.find(r => r.seqs && r.seqs.includes(seqNum))
+
+          const joueurSurTerrain = remplActif ? remplActif.jid : (tituActif ? tituJid : null)
+
+          if (!joueurSurTerrain) {
+            const tituJ = getJ(tituJid)
+            const tr = document.createElement('tr')
+            tr.style.opacity = '0.3'
+            tr.innerHTML = `<td>${posteIdx+1}</td><td>${tituJ ? tituJ.nom + ' ' + tituJ.prenom : '?'}</td><td style="color:#555;">Absent</td><td></td>`
+            tbody.appendChild(tr)
+            return
+          }
+
+          const j = getJ(joueurSurTerrain)
+          const prevJoueur = getPrevJoueurPosteNew(ei, posteIdx, prevSeq)
+          const isChange = prevSeq && prevJoueur && prevJoueur !== joueurSurTerrain
+
+          let statut = ''
+          const prevActive = prevSeq && (joueurSurTerrain === tituJid
+            ? (tituSeqs.length === 0 || tituSeqs.includes(prevSeq))
+            : (remplActif && remplActif.seqs.includes(prevSeq)))
+          if (tituSeqs.length === 0 && !remplActif) statut = 'Toutes séq.'
+          else statut = prevActive ? 'En jeu' : '<span class="vision-nouveau">ENTRANT</span>'
+
+          let info = ''
+          if (remplActif) {
+            const tituJ = getJ(tituJid)
+            info = `<span style="color:#888;font-size:9px;">↩ remplace ${tituJ ? tituJ.nom : '?'}</span>`
+          }
+
+          const tr = document.createElement('tr')
+          if (isChange) tr.style.background = '#1D9E7508'
+          tr.innerHTML = `
+            <td style="font-weight:700;color:${equipe.couleur}">${posteIdx+1}</td>
+            <td style="font-weight:600;">${j ? j.nom + ' ' + j.prenom : '?'}${isChange ? ' <span class="vision-nouveau">↑</span>' : ''}</td>
+            <td>${statut}</td>
+            <td style="font-size:10px;">${info}</td>
+          `
+          tbody.appendChild(tr)
+        })
+
+        if (tbody.children.length === 0) {
+          const tr = document.createElement('tr')
+          tr.innerHTML = '<td colspan="4" style="text-align:center;color:#666;">Aucun joueur actif</td>'
+          tbody.appendChild(tr)
+        }
+
+        table.appendChild(tbody)
+        equipeDiv.appendChild(table)
+        content.appendChild(equipeDiv)
+      })
+    }
+
+    function afficherVisionEquipe(seqNum) {
+      const content = document.getElementById('vision-seq-content')
+      content.innerHTML = ''
+
+      equipes.forEach((equipe, ei) => {
+        const equipeDiv = document.createElement('div')
+        equipeDiv.className = 'vision-seq-equipe'
+
+        const header = document.createElement('div')
+        header.className = 'vision-seq-equipe-header'
+        header.style.background = equipe.couleur + '22'
+        header.style.color = equipe.couleur
+        header.textContent = `${equipe.nom} — Équipe séquence ${seqNum}`
+        equipeDiv.appendChild(header)
+
+        // Construire l'équipe pour cette séquence
+        const POSTES_NOM = ['Pilier G','Talonneur','Pilier D','2e Ligne G','2e Ligne D','3L Aile G','3L Aile D','3L Centre','Demi mêlée','Demi ouv.','Ailier G','Centre G','Centre D','Ailier D','Arrière']
+        const prEq = posteRemplacants[ei] || {}
+
+        const terrain = document.createElement('div')
+        terrain.style.cssText = 'display:grid;grid-template-columns:repeat(3,1fr);gap:6px;padding:8px;'
+
+        equipe.titulaires.forEach((tituJid, posteIdx) => {
+          const remplsPoste = prEq[posteIdx] || []
+          const remplActif = remplsPoste.find(r => r.seqs && r.seqs.includes(seqNum))
+          const tituSeqs = tituJid ? (sequencesMap[ei + '_' + tituJid] || []) : []
+          const tituActif = tituJid && (tituSeqs.length === 0 || tituSeqs.includes(seqNum)) && !remplActif
+
+          const joueurJid = remplActif ? remplActif.jid : (tituActif ? tituJid : null)
+          const j = getJ(joueurJid)
+          const isRemplacement = remplActif != null
+
+          const cell = document.createElement('div')
+          cell.style.cssText = `padding:8px 10px;border-radius:8px;background:${joueurJid ? (isRemplacement ? equipe.couleur+'18' : '#111') : '#0a0a0a'};border:1px solid ${isRemplacement ? equipe.couleur+'44' : '#1a1a1a'};`
+
+          const numLabel = document.createElement('div')
+          numLabel.style.cssText = `font-size:9px;font-weight:700;color:${equipe.couleur};margin-bottom:2px;`
+          numLabel.textContent = `${posteIdx+1} · ${POSTES_NOM[posteIdx] || ''}`
+          cell.appendChild(numLabel)
+
+          const nomLabel = document.createElement('div')
+          nomLabel.style.cssText = `font-size:12px;font-weight:600;color:${joueurJid ? '#fff' : '#333'};`
+          nomLabel.textContent = j ? j.nom + ' ' + j.prenom : '—'
+          cell.appendChild(nomLabel)
+
+          if (isRemplacement && tituJid) {
+            const tituJ = getJ(tituJid)
+            const replLabel = document.createElement('div')
+            replLabel.style.cssText = 'font-size:9px;color:#E24B4A;margin-top:2px;'
+            replLabel.textContent = `↩ ${tituJ ? tituJ.nom : '?'}`
+            cell.appendChild(replLabel)
+          }
+
+          terrain.appendChild(cell)
+        })
+
+        equipeDiv.appendChild(terrain)
+        content.appendChild(equipeDiv)
+      })
+    }
+
+    function getPrevJoueurPosteNew(ei, posteIdx, prevSeq) {
+      if (!prevSeq) return null
+      const equipe = equipes[ei]
+      const tituJid = equipe.titulaires[posteIdx]
+      if (!tituJid) return null
+      const prEq = posteRemplacants[ei] || {}
+      const remplsPoste = prEq[posteIdx] || []
+      const prevRempl = remplsPoste.find(r => r.seqs && r.seqs.includes(prevSeq))
+      if (prevRempl) return prevRempl.jid
+      const tituSeqs = sequencesMap[ei + '_' + tituJid] || []
+      if (tituSeqs.length === 0 || tituSeqs.includes(prevSeq)) return tituJid
+      return null
+    }
+
+
+  </script>
+</body>
+</html>

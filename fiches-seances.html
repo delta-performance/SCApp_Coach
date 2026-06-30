@@ -1,0 +1,629 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>SCA Albi — Fiches Séances</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #0f0f0f; color: #fff; display: flex; height: 100vh; overflow: hidden; }
+    
+    /* iPad TopBar */
+    .ipad-topbar { position: fixed; top: 0; left: 0; right: 0; height: 44px; background: #111; border-bottom: 1px solid #2a2a2a; display: flex; align-items: center; padding: 0 12px; z-index: 50; }
+    .ipad-topbar-home { display: flex; align-items: center; gap: 8px; text-decoration: none; color: inherit; }
+    .ipad-topbar-logo { width: 28px; height: 28px; border-radius: 6px; background: #FECC00; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 800; color: #000; }
+    .ipad-topbar-sitename { font-size: 13px; font-weight: 700; color: #FECC00; }
+    .ipad-topbar-sep { width: 1px; height: 20px; background: #333; margin: 0 12px; }
+    .ipad-topbar-title { font-size: 13px; font-weight: 600; flex: 1; text-align: center; }
+
+    /* iPad Bottom Nav */
+    .ipad-bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; height: 64px; background: #111; border-top: 1px solid #2a2a2a; display: flex; justify-content: space-around; align-items: center; padding-bottom: env(safe-area-inset-bottom, 0); z-index: 50; }
+    .ipad-nav-item { display: flex; flex-direction: column; align-items: center; gap: 4px; text-decoration: none; color: #666; font-size: 10px; padding: 8px 16px; }
+    .ipad-nav-item.active { color: #FECC00; }
+    .ipad-nav-icon { font-size: 22px; line-height: 1; }
+
+    /* MAIN - Full width sans sidebar */
+    .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; margin-top: 44px; margin-bottom: 64px; }
+    .topbar { height: 56px; border-bottom: 1px solid #2a2a2a; display: flex; align-items: center; padding: 0 24px; gap: 8px; flex-shrink: 0; flex-wrap: wrap; background: #0f0f0f; }
+    .topbar-title { font-size: 15px; font-weight: 600; flex: 1; }
+    .content { flex: 1; overflow-y: auto; padding: 20px 24px; }
+
+    /* BOUTONS */
+    .btn-primary { padding: 7px 14px; border-radius: 8px; border: none; background: #FECC00; color: #0f0f0f; font-size: 12px; font-weight: 600; cursor: pointer; white-space: nowrap; }
+    .btn-primary:hover { opacity: .88; }
+    .btn-ghost { padding: 6px 12px; border-radius: 8px; border: 1px solid #2a2a2a; background: none; color: #888; font-size: 12px; cursor: pointer; white-space: nowrap; }
+    .btn-ghost:hover { color: #fff; border-color: #444; }
+
+    /* TABLEAU STYLE */
+    .fiches-container { background: #1a1a1a; border: 1px solid #2a2a2a; border-radius: 12px; overflow: hidden; }
+    .fiches-header { display: grid; grid-template-columns: 100px 1fr 80px 60px 70px; gap: 8px; padding: 12px 16px; background: #222; border-bottom: 1px solid #2a2a2a; font-size: 10px; font-weight: 700; color: #666; text-transform: uppercase; letter-spacing: .04em; }
+    .fiches-row { display: grid; grid-template-columns: 100px 1fr 80px 60px 70px; gap: 8px; padding: 10px 16px; border-bottom: 1px solid #1a1a1a; align-items: center; transition: background .15s; cursor: pointer; }
+    .fiches-row:hover { background: #222; }
+    .fiches-row:last-child { border-bottom: none; }
+    
+    .fiche-date { font-size: 12px; font-weight: 600; color: #FECC00; }
+    .fiche-theme { font-size: 12px; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .fiche-duree { font-size: 11px; color: #666; text-align: center; }
+    .fiche-blocs { font-size: 11px; color: #666; text-align: center; }
+    .fiche-actions { display: flex; gap: 4px; justify-content: flex-end; }
+    
+    .action-btn { padding: 4px 8px; border-radius: 5px; border: 1px solid #2a2a2a; background: none; color: #555; font-size: 11px; cursor: pointer; transition: all .15s; }
+    .action-btn:hover { color: #fff; border-color: #444; }
+    .action-btn.delete:hover { color: #E24B4A; border-color: #E24B4A44; }
+
+    /* FILTERS */
+    .filters-bar { display: flex; gap: 10px; margin-bottom: 16px; flex-wrap: wrap; align-items: center; }
+    .filter-select { padding: 6px 12px; border-radius: 6px; border: 1px solid #2a2a2a; background: #1a1a1a; color: #fff; font-size: 12px; outline: none; cursor: pointer; }
+    .filter-select:focus { border-color: #FECC00; }
+    .search-input { padding: 6px 12px; border-radius: 6px; border: 1px solid #2a2a2a; background: #1a1a1a; color: #fff; font-size: 12px; outline: none; min-width: 180px; }
+    .search-input:focus { border-color: #FECC00; }
+
+    /* EMPTY STATE */
+    .empty-state { color: #444; font-size: 13px; text-align: center; padding: 60px 20px; }
+
+    /* MODAL */
+    .modal-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.85); align-items: center; justify-content: center; z-index: 200; padding: 20px; }
+    .modal-overlay.open { display: flex; }
+    .modal { background: #1a1a1a; border: 1px solid #2a2a2a; border-radius: 12px; padding: 20px; width: 100%; max-width: 1000px; max-height: 90vh; overflow-y: auto; }
+    .modal-title { font-size: 16px; font-weight: 700; margin-bottom: 16px; color: #FECC00; }
+    
+    /* MODAL LAYOUT - iPad responsive */
+    .modal-layout { display: flex; flex-direction: column; gap: 20px; }
+    @media (min-width: 900px) {
+      .modal-layout { display: grid; grid-template-columns: 300px 1fr; gap: 24px; }
+    }
+    .modal-left { display: flex; flex-direction: column; gap: 12px; }
+    .modal-right { display: flex; flex-direction: column; gap: 12px; }
+    
+    /* FORM GROUPS */
+    .form-group { margin-bottom: 0; }
+    .form-label { display: block; font-size: 10px; color: #555; margin-bottom: 4px; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; }
+    .form-input { width: 100%; padding: 8px 10px; border-radius: 6px; border: 1px solid #2a2a2a; background: #0f0f0f; color: #fff; font-size: 13px; outline: none; transition: border-color .15s; }
+    .form-input:focus { border-color: #FECC00; }
+    .form-textarea { width: 100%; padding: 8px 10px; border-radius: 6px; border: 1px solid #2a2a2a; background: #0f0f0f; color: #fff; font-size: 13px; outline: none; resize: vertical; min-height: 60px; }
+    .form-textarea:focus { border-color: #FECC00; }
+    
+    /* SECTION TITLES */
+    .section-title { font-size: 11px; font-weight: 700; color: #FECC00; text-transform: uppercase; letter-spacing: .04em; margin-bottom: 10px; padding-bottom: 6px; border-bottom: 1px solid #2a2a2a; }
+    
+    /* BLOCS TABLE - iPad scrollable */
+    .blocs-container { background: #141414; border: 1px solid #1e1e1e; border-radius: 8px; overflow-x: auto; }
+    .blocs-header { display: grid; grid-template-columns: 50px 45px 120px 1fr 50px 50px 50px 40px; gap: 4px; padding: 10px 12px; background: #1c1c1c; border-bottom: 1px solid #1e1e1e; font-size: 8px; font-weight: 700; color: #666; text-transform: uppercase; letter-spacing: .02em; min-width: 500px; }
+    .bloc-row { display: grid; grid-template-columns: 50px 45px 120px 1fr 50px 50px 50px 40px; gap: 4px; padding: 8px 12px; border-bottom: 1px solid #1a1a1a; align-items: center; transition: background .12s; min-width: 500px; }
+    .bloc-row:hover { background: #1a1a1a; }
+    .bloc-row:last-child { border-bottom: none; }
+    
+    .bloc-time { font-size: 10px; color: #FECC00; font-weight: 600; text-align: center; }
+    .bloc-duree-input { padding: 3px 4px; border-radius: 4px; border: 1px solid #2a2a2a; background: #0f0f0f; color: #fff; font-size: 11px; text-align: center; outline: none; width: 100%; }
+    .bloc-duree-input:focus { border-color: #FECC00; }
+    .bloc-categorie-select { padding: 3px 4px; border-radius: 4px; border: 1px solid #2a2a2a; background: #0f0f0f; color: #fff; font-size: 9px; outline: none; width: 100%; }
+    .bloc-categorie-select:focus { border-color: #FECC00; }
+    .bloc-contenu-input { padding: 3px 6px; border-radius: 4px; border: 1px solid #2a2a2a; background: #0f0f0f; color: #fff; font-size: 11px; outline: none; width: 100%; }
+    .bloc-contenu-input:focus { border-color: #FECC00; }
+    .bloc-resp-input { padding: 3px 4px; border-radius: 4px; border: 1px solid #2a2a2a; background: #0f0f0f; color: #fff; font-size: 11px; text-align: center; outline: none; width: 100%; }
+    .bloc-resp-input:focus { border-color: #FECC00; }
+    .bloc-intensity-input { padding: 3px 4px; border-radius: 4px; border: 1px solid #2a2a2a; background: #0f0f0f; color: #fff; font-size: 11px; text-align: center; outline: none; width: 100%; }
+    .bloc-intensity-input:focus { border-color: #FECC00; }
+    .bloc-delete-btn { padding: 4px 6px; border-radius: 4px; border: 1px solid #2a2a2a; background: none; color: #555; font-size: 11px; cursor: pointer; transition: all .15s; }
+    .bloc-delete-btn:hover { color: #E24B4A; border-color: #E24B4A44; }
+    
+    .add-bloc-btn { width: 100%; padding: 10px; border-radius: 6px; border: 1px dashed #2a2a2a; background: none; color: #666; font-size: 12px; cursor: pointer; transition: all .15s; margin-top: 8px; }
+    .add-bloc-btn:hover { border-color: #FECC00; color: #FECC00; }
+    
+    /* TOTAL DURATION DISPLAY */
+    .total-duration { background: #FECC0011; border: 1px solid #FECC0033; border-radius: 6px; padding: 8px 12px; font-size: 12px; color: #FECC00; font-weight: 600; text-align: center; }
+    
+    .modal-actions { display: flex; gap: 10px; margin-top: 20px; padding-top: 16px; border-top: 1px solid #2a2a2a; justify-content: flex-end; }
+
+    /* Responsive adjustments */
+    @media (max-width: 768px) {
+      .sidebar { display: none; }
+      .main { margin-left: 0; }
+      .fiches-header { grid-template-columns: 80px 1fr 60px 50px 60px; font-size: 9px; }
+      .fiches-row { grid-template-columns: 80px 1fr 60px 50px 60px; }
+    }
+  </style>
+</head>
+<body>
+  <!-- iPad TopBar -->
+  <div class="ipad-topbar">
+    <a class="ipad-topbar-home" href="index.html">
+      <div class="ipad-topbar-logo">SC</div>
+      <span class="ipad-topbar-sitename">SCA Albi</span>
+    </a>
+    <div class="ipad-topbar-sep"></div>
+    <div class="ipad-topbar-title">Fiches Séances</div>
+  </div>
+
+  <!-- iPad Bottom Nav -->
+  <nav class="ipad-bottom-nav">
+    <a class="ipad-nav-item" href="planning.html">
+      <span class="ipad-nav-icon">📅</span>
+      <span>Planning</span>
+    </a>
+    <a class="ipad-nav-item active" href="fiches-seances.html">
+      <span class="ipad-nav-icon">�</span>
+      <span>Séances</span>
+    </a>
+    <a class="ipad-nav-item" href="equipes.html?mode=entrainement">
+      <span class="ipad-nav-icon">👥</span>
+      <span>Équipes</span>
+    </a>
+    <a class="ipad-nav-item" href="gps-planif.html">
+      <span class="ipad-nav-icon">📡</span>
+      <span>Charge GPS</span>
+    </a>
+    <a class="ipad-nav-item" href="seances.html">
+      <span class="ipad-nav-icon">🏋️</span>
+      <span>Musculation</span>
+    </a>
+    <a class="ipad-nav-item" href="suivi-poids.html">
+      <span class="ipad-nav-icon">⚖️</span>
+      <span>Suivi Poids</span>
+    </a>
+    <a class="ipad-nav-item" href="tv.html">
+      <span class="ipad-nav-icon">📺</span>
+      <span>Vue TV</span>
+    </a>
+  </nav>
+
+  <div class="main">
+    <div class="topbar">
+      <div class="topbar-title">Fiches Séances</div>
+      <div class="filters-bar">
+        <select class="filter-select" id="filter-periode" onchange="filterFiches()">
+          <option value="">Toutes les périodes</option>
+          <option value="week">Cette semaine</option>
+          <option value="month">Ce mois</option>
+          <option value="season">Cette saison</option>
+        </select>
+        <input type="text" class="search-input" id="search-input" placeholder="Rechercher..." oninput="filterFiches()">
+      </div>
+      <div style="flex:1"></div>
+      <button class="btn-ghost" onclick="exportFiches()">📥 Exporter</button>
+      <button class="btn-primary" onclick="openModal()">+ Nouvelle fiche</button>
+    </div>
+
+    <div class="content">
+      <div class="fiches-container">
+        <div class="fiches-header">
+          <span>Date</span>
+          <span>Thème</span>
+          <span>Durée</span>
+          <span>Blocs</span>
+          <span>Actions</span>
+        </div>
+        <div id="fiches-list">
+          <div class="empty-state">Aucune fiche de séance pour le moment</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL NOUVELLE FICHE -->
+  <div class="modal-overlay" id="modal-fiche">
+    <div class="modal">
+      <div class="modal-title" id="modal-title">Nouvelle fiche de séance</div>
+      <div class="modal-layout">
+        <!-- COLONNE GAUCHE: INFOS GÉNÉRALES -->
+        <div class="modal-left">
+          <div class="section-title">Informations Générales</div>
+          <div class="form-group">
+            <label class="form-label">Date *</label>
+            <input type="date" class="form-input" id="fiche-date">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Heure de début</label>
+            <input type="time" class="form-input" id="fiche-heure-debut" value="14:00">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Groupe / Équipe</label>
+            <select class="form-input" id="fiche-groupe">
+              <option value="Pro">Pro</option>
+              <option value="Espoirs">Espoirs</option>
+              <option value="Blessés">Blessés</option>
+              <option value="U19">U19</option>
+              <option value="U18">U18</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Thème de la séance *</label>
+            <input type="text" class="form-input" id="fiche-theme" placeholder="Ex: Travail défensif, Force max...">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Objectifs de la séance</label>
+            <textarea class="form-textarea" id="fiche-objectifs" placeholder="Objectifs principaux..." style="min-height: 60px;"></textarea>
+          </div>
+          
+          <div class="total-duration" id="total-duration-display">Durée totale: 0 min</div>
+        </div>
+        
+        <!-- COLONNE DROITE: PLAN DE SÉANCE -->
+        <div class="modal-right">
+          <div class="section-title">Plan de Séance</div>
+          <div class="blocs-container">
+            <div class="blocs-header">
+              <span>Heure</span>
+              <span>Durée</span>
+              <span>Catégorie</span>
+              <span>Contenu</span>
+              <span>Resp.</span>
+              <span>Int.C</span>
+              <span>Int.Ct</span>
+              <span></span>
+            </div>
+            <div id="blocs-list">
+              <!-- Les blocs seront ajoutés dynamiquement ici -->
+            </div>
+          </div>
+          <button class="add-bloc-btn" onclick="addBloc()">+ Ajouter un bloc / exercice</button>
+        </div>
+      </div>
+      <div class="modal-actions">
+        <button class="btn-ghost" onclick="closeModal()">Annuler</button>
+        <button class="btn-primary" onclick="saveFiche()">Enregistrer</button>
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from './firebase-bundle.js';
+    import { getFirestore, collection, addDoc, getDocs, updateDoc, deleteDoc, doc, query, orderBy } from './firebase-bundle.js';
+    import { getAuth, onAuthStateChanged, signOut } from './firebase-bundle.js';
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyCvMs-5LX9Ivk3OkzUR3iz9Kk1E5b9_7Vk",
+      authDomain: "delta-rugby-app.firebaseapp.com",
+      projectId: "delta-rugby-app",
+      storageBucket: "delta-rugby-app.firebasestorage.app",
+      messagingSenderId: "61187079762",
+      appId: "1:61187079762:web:56cd1eaa8beb9e1a2ee98b"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const auth = getAuth(app);
+
+    let fiches = [];
+    let editingId = null;
+    let currentBlocs = [];
+    let blocIdCounter = 0;
+
+    const categories = [
+      'Échauffement',
+      'Clarté / Lancement',
+      'Vitesse / Skills',
+      'Rugby Collectif',
+      'Cellules Avants / ¾',
+      'Séquence de jeu',
+      'Rangement / Bilan'
+    ];
+
+    onAuthStateChanged(auth, (user) => {
+      if (user) {
+        loadFiches();
+      } else {
+        window.location.href = 'index.html';
+      }
+    });
+
+    async function loadFiches() {
+      try {
+        const q = query(collection(db, 'fiches_seances'), orderBy('date', 'desc'));
+        const snapshot = await getDocs(q);
+        fiches = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        renderFiches();
+      } catch (error) {
+        console.error('Erreur chargement fiches:', error);
+      }
+    }
+
+    function renderFiches(filteredFiches = null) {
+      const list = document.getElementById('fiches-list');
+      const toRender = filteredFiches || fiches;
+
+      if (toRender.length === 0) {
+        list.innerHTML = '<div class="empty-state">Aucune fiche de séance trouvée</div>';
+        return;
+      }
+
+      list.innerHTML = toRender.map(fiche => {
+        const totalDuree = calculateTotalDuree(fiche.blocs || []);
+        const nbBlocs = (fiche.blocs || []).length;
+        return `
+        <div class="fiches-row" onclick="editFiche('${fiche.id}')">
+          <div class="fiche-date">${formatDate(fiche.date)}</div>
+          <div class="fiche-theme">${fiche.theme || '-'}</div>
+          <div class="fiche-duree">${totalDuree > 0 ? totalDuree + ' min' : '-'}</div>
+          <div class="fiche-blocs">${nbBlocs}</div>
+          <div class="fiche-actions">
+            <button class="action-btn" onclick="event.stopPropagation(); editFiche('${fiche.id}')">✏️</button>
+            <button class="action-btn delete" onclick="event.stopPropagation(); deleteFiche('${fiche.id}')">🗑️</button>
+          </div>
+        </div>
+      `;
+      }).join('');
+    }
+
+    function formatDate(dateStr) {
+      if (!dateStr) return '-';
+      const date = new Date(dateStr + 'T00:00:00');
+      return date.toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: '2-digit' });
+    }
+
+    function calculateTotalDuree(blocs) {
+      if (!blocs || blocs.length === 0) return 0;
+      return blocs.reduce((total, bloc) => total + (parseInt(bloc.duree) || 0), 0);
+    }
+
+    function calculateBlocHeure(heureDebut, blocs, currentIndex) {
+      if (!heureDebut) return '-';
+      let totalMinutes = 0;
+      for (let i = 0; i < currentIndex; i++) {
+        totalMinutes += parseInt(blocs[i].duree) || 0;
+      }
+      const [hours, minutes] = heureDebut.split(':').map(Number);
+      const totalDate = new Date();
+      totalDate.setHours(hours, minutes + totalMinutes, 0);
+      return totalDate.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+    }
+
+    function filterFiches() {
+      const periodeFilter = document.getElementById('filter-periode').value;
+      const searchQuery = document.getElementById('search-input').value.toLowerCase();
+
+      let filtered = fiches;
+
+      if (searchQuery) {
+        filtered = filtered.filter(f => 
+          (f.theme && f.theme.toLowerCase().includes(searchQuery)) ||
+          (f.objectifs && f.objectifs.toLowerCase().includes(searchQuery))
+        );
+      }
+
+      if (periodeFilter) {
+        const now = new Date();
+        filtered = filtered.filter(f => {
+          const ficheDate = new Date(f.date + 'T00:00:00');
+          if (periodeFilter === 'week') {
+            const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+            return ficheDate >= weekAgo;
+          } else if (periodeFilter === 'month') {
+            const monthAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+            return ficheDate >= monthAgo;
+          } else if (periodeFilter === 'season') {
+            const seasonStart = new Date(now.getFullYear(), 7, 1);
+            return ficheDate >= seasonStart;
+          }
+          return true;
+        });
+      }
+
+      renderFiches(filtered);
+    }
+
+    function openModal() {
+      editingId = null;
+      currentBlocs = [];
+      blocIdCounter = 0;
+      document.getElementById('modal-title').textContent = 'Nouvelle fiche de séance';
+      document.getElementById('fiche-date').value = new Date().toISOString().split('T')[0];
+      document.getElementById('fiche-heure-debut').value = '14:00';
+      document.getElementById('fiche-heure-debut').onchange = () => renderBlocs();
+      document.getElementById('fiche-groupe').value = 'Pro';
+      document.getElementById('fiche-theme').value = '';
+      document.getElementById('fiche-objectifs').value = '';
+      document.getElementById('blocs-list').innerHTML = '';
+      updateTotalDuration();
+      document.getElementById('modal-fiche').classList.add('open');
+    }
+
+    function closeModal() {
+      document.getElementById('modal-fiche').classList.remove('open');
+    }
+
+    function addBloc() {
+      const blocId = ++blocIdCounter;
+      const bloc = {
+        id: blocId,
+        duree: 15,
+        categorie: categories[0],
+        contenu: '',
+        responsable: '',
+        intensiteCourse: 0,
+        intensiteContact: 0
+      };
+      currentBlocs.push(bloc);
+      renderBlocs();
+      updateTotalDuration();
+    }
+
+    function removeBloc(blocId) {
+      currentBlocs = currentBlocs.filter(b => b.id !== blocId);
+      renderBlocs();
+      updateTotalDuration();
+    }
+
+    function updateBloc(blocId, field, value) {
+      const bloc = currentBlocs.find(b => b.id === blocId);
+      if (bloc) {
+        bloc[field] = value;
+        if (field === 'duree') {
+          renderBlocs();
+          updateTotalDuration();
+        }
+      }
+    }
+
+    function renderBlocs() {
+      const container = document.getElementById('blocs-list');
+      const heureDebut = document.getElementById('fiche-heure-debut').value;
+      
+      container.innerHTML = currentBlocs.map((bloc, index) => {
+        const heure = calculateBlocHeure(heureDebut, currentBlocs, index);
+        return `
+        <div class="bloc-row" data-bloc-id="${bloc.id}">
+          <div class="bloc-time">${heure}</div>
+          <input type="number" class="bloc-duree-input" value="${bloc.duree}" 
+                 onchange="updateBloc(${bloc.id}, 'duree', this.value)" min="1" max="180">
+          <select class="bloc-categorie-select" onchange="updateBloc(${bloc.id}, 'categorie', this.value)">
+            ${categories.map(cat => `<option value="${cat}" ${bloc.categorie === cat ? 'selected' : ''}>${cat}</option>`).join('')}
+          </select>
+          <input type="text" class="bloc-contenu-input" value="${bloc.contenu}" 
+                 placeholder="Description..." onchange="updateBloc(${bloc.id}, 'contenu', this.value)">
+          <input type="text" class="bloc-resp-input" value="${bloc.responsable}" 
+                 placeholder="Init." maxlength="3" onchange="updateBloc(${bloc.id}, 'responsable', this.value)">
+          <select class="bloc-intensity-input" onchange="updateBloc(${bloc.id}, 'intensiteCourse', this.value)">
+            ${[0,1,2,3,4,5].map(val => `<option value="${val}" ${bloc.intensiteCourse == val ? 'selected' : ''}>${val}</option>`).join('')}
+          </select>
+          <select class="bloc-intensity-input" onchange="updateBloc(${bloc.id}, 'intensiteContact', this.value)">
+            ${[0,1,2,3,4,5].map(val => `<option value="${val}" ${bloc.intensiteContact == val ? 'selected' : ''}>${val}</option>`).join('')}
+          </select>
+          <button class="bloc-delete-btn" onclick="removeBloc(${bloc.id})">🗑️</button>
+        </div>
+      `;
+      }).join('');
+    }
+
+    function updateTotalDuration() {
+      const total = calculateTotalDuree(currentBlocs);
+      document.getElementById('total-duration-display').textContent = `Durée totale: ${total} min`;
+    }
+
+    async function saveFiche() {
+      const date = document.getElementById('fiche-date').value;
+      const heureDebut = document.getElementById('fiche-heure-debut').value;
+      const groupe = document.getElementById('fiche-groupe').value;
+      const theme = document.getElementById('fiche-theme').value;
+      const objectifs = document.getElementById('fiche-objectifs').value;
+
+      if (!date || !theme) {
+        alert('Veuillez remplir les champs obligatoires');
+        return;
+      }
+
+      try {
+        const data = {
+          date,
+          heureDebut,
+          groupe,
+          theme,
+          objectifs,
+          blocs: currentBlocs.map(b => ({
+            duree: parseInt(b.duree),
+            categorie: b.categorie,
+            contenu: b.contenu,
+            responsable: b.responsable,
+            intensiteCourse: parseInt(b.intensiteCourse) || 0,
+            intensiteContact: parseInt(b.intensiteContact) || 0
+          })),
+          dureeTotale: calculateTotalDuree(currentBlocs),
+          updatedAt: new Date().toISOString()
+        };
+
+        if (editingId) {
+          await updateDoc(doc(db, 'fiches_seances', editingId), data);
+        } else {
+          await addDoc(collection(db, 'fiches_seances'), data);
+        }
+
+        closeModal();
+        loadFiches();
+      } catch (error) {
+        console.error('Erreur sauvegarde:', error);
+        alert('Erreur lors de la sauvegarde');
+      }
+    }
+
+    async function editFiche(id) {
+      const fiche = fiches.find(f => f.id === id);
+      if (!fiche) return;
+
+      editingId = id;
+      currentBlocs = [];
+      blocIdCounter = 0;
+      
+      document.getElementById('modal-title').textContent = 'Modifier la fiche';
+      document.getElementById('fiche-date').value = fiche.date || '';
+      document.getElementById('fiche-heure-debut').value = fiche.heureDebut || '14:00';
+      document.getElementById('fiche-heure-debut').onchange = () => renderBlocs();
+      document.getElementById('fiche-groupe').value = fiche.groupe || 'Pro';
+      document.getElementById('fiche-theme').value = fiche.theme || '';
+      document.getElementById('fiche-objectifs').value = fiche.objectifs || '';
+      
+      if (fiche.blocs && fiche.blocs.length > 0) {
+        fiche.blocs.forEach(bloc => {
+          currentBlocs.push({
+            id: ++blocIdCounter,
+            duree: bloc.duree || 15,
+            categorie: bloc.categorie || categories[0],
+            contenu: bloc.contenu || '',
+            responsable: bloc.responsable || '',
+            intensiteCourse: bloc.intensiteCourse || 0,
+            intensiteContact: bloc.intensiteContact || 0
+          });
+        });
+      }
+      
+      renderBlocs();
+      updateTotalDuration();
+      document.getElementById('modal-fiche').classList.add('open');
+    }
+
+    async function deleteFiche(id) {
+      if (!confirm('Supprimer cette fiche ?')) return;
+      try {
+        await deleteDoc(doc(db, 'fiches_seances', id));
+        loadFiches();
+      } catch (error) {
+        console.error('Erreur suppression:', error);
+        alert('Erreur lors de la suppression');
+      }
+    }
+
+    function exportFiches() {
+      if (fiches.length === 0) {
+        alert('Aucune fiche à exporter');
+        return;
+      }
+
+      const csv = [
+        ['Date', 'Heure', 'Groupe', 'Thème', 'Durée Totale (min)', 'Nb Blocs', 'Détail Blocs'],
+        ...fiches.map(f => {
+          const blocsDetail = (f.blocs || []).map((b, i) => 
+            `B${i+1}: ${b.duree}min - ${b.categorie} - ${b.contenu} - ${b.responsable} - Int.Course: ${b.intensiteCourse}/5 - Int.Contact: ${b.intensiteContact}/5`
+          ).join(' | ');
+          return [
+            f.date || '',
+            f.heureDebut || '',
+            f.groupe || '',
+            f.theme || '',
+            f.dureeTotale || '',
+            (f.blocs || []).length,
+            blocsDetail
+          ];
+        })
+      ].map(row => row.map(cell => `"${cell}"`).join(',')).join('\n');
+
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = `fiches-seances-${new Date().toISOString().split('T')[0]}.csv`;
+      link.click();
+    }
+
+    window.openModal = openModal;
+    window.closeModal = closeModal;
+    window.saveFiche = saveFiche;
+    window.editFiche = editFiche;
+    window.deleteFiche = deleteFiche;
+    window.filterFiches = filterFiches;
+    window.exportFiches = exportFiches;
+    window.addBloc = addBloc;
+    window.removeBloc = removeBloc;
+    window.updateBloc = updateBloc;
+  </script>
+</body>
+</html>

@@ -1,0 +1,1390 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>SCA Albi — Vue TV</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #0f0f0f; color: #fff;
+      height: 100vh; overflow: hidden;
+      display: flex; flex-direction: column;
+    }
+
+    /* TOPBAR TV */
+    .tv-topbar {
+      height: 60px; background: #1a1a1a;
+      border-bottom: 2px solid #FECC00;
+      display: flex; align-items: center;
+      padding: 0 28px; gap: 16px; flex-shrink: 0;
+    }
+    .tv-logo { width: 36px; }
+    .tv-title { font-size: 18px; font-weight: 700; color: #FECC00; flex: 1; }
+    .tv-date { font-size: 13px; color: #555; }
+    .tv-clock { font-size: 18px; font-weight: 600; color: #fff; min-width: 60px; text-align: right; }
+    .tv-btn {
+      padding: 7px 16px; border-radius: 8px;
+      border: 1px solid #2a2a2a; background: none;
+      color: #888; font-size: 13px; cursor: pointer; font-weight: 500;
+    }
+    .tv-btn.active { background: #FECC00; color: #0f0f0f; border-color: #FECC00; }
+    .tv-btn:hover:not(.active) { color: #fff; border-color: #444; }
+    
+    /* Navigation blocs */
+    .bloc-nav { display: flex; align-items: center; gap: 8px; margin-left: 8px; }
+    .bloc-nav-btn { 
+      padding: 6px 12px; border-radius: 8px; border: 1px solid #2a2a2a; 
+      background: #1a1a1a; color: #888; font-size: 12px; cursor: pointer; 
+      display: flex; align-items: center; gap: 4px;
+    }
+    .bloc-nav-btn:hover:not(:disabled) { color: #fff; border-color: #444; }
+    .bloc-nav-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+    .bloc-nav-btn.primary { background: #FECC00; color: #0f0f0f; border-color: #FECC00; }
+    .bloc-counter { font-size: 13px; color: #888; min-width: 80px; text-align: center; }
+    .bloc-tabs { display: flex; gap: 4px; margin-left: 8px; }
+    .bloc-tab { 
+      padding: 5px 12px; border-radius: 6px; border: 1px solid #2a2a2a; 
+      background: #1a1a1a; color: #888; font-size: 11px; cursor: pointer; 
+      font-weight: 600;
+    }
+    .bloc-tab:hover { color: #fff; border-color: #444; }
+    .bloc-tab.active { background: #FECC00; color: #0f0f0f; border-color: #FECC00; }
+    
+    /* Filtre joueurs */
+    .joueurs-filter-btn { 
+      padding: 6px 12px; border-radius: 7px; border: 1px solid #2a2a2a; 
+      background: #111; color: #888; font-size: 12px; cursor: pointer; 
+    }
+    .joueurs-filter-btn:hover { color: #fff; border-color: #444; }
+    .joueurs-filter-btn.active { border-color: #1D9E75; color: #1D9E75; }
+    
+    /* Modal joueurs */
+    .modal-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.75); align-items: center; justify-content: center; z-index: 100; }
+    .modal-overlay.open { display: flex; }
+    .modal-joueurs { background: #1a1a1a; border: 1px solid #2a2a2a; border-radius: 16px; padding: 24px; width: 400px; max-height: 70vh; display: flex; flex-direction: column; }
+    .modal-joueurs h3 { font-size: 16px; font-weight: 600; margin-bottom: 16px; color: #fff; }
+    .modal-joueurs-list { overflow-y: auto; flex: 1; display: flex; flex-direction: column; gap: 6px; max-height: 50vh; }
+    .modal-joueur-item { display: flex; align-items: center; gap: 10px; padding: 8px 12px; border-radius: 8px; cursor: pointer; }
+    .modal-joueur-item:hover { background: #222; }
+    .modal-joueur-item.selected { background: #1D9E7522; border: 1px solid #1D9E75; }
+    .modal-joueur-checkbox { width: 18px; height: 18px; accent-color: #1D9E75; }
+    .modal-actions { display: flex; gap: 10px; margin-top: 16px; justify-content: flex-end; }
+    .btn-modal { padding: 8px 16px; border-radius: 8px; border: 1px solid #2a2a2a; background: #111; color: #888; font-size: 13px; cursor: pointer; }
+    .btn-modal:hover { color: #fff; border-color: #444; }
+    .btn-modal.primary { background: #1D9E75; color: #fff; border-color: #1D9E75; }
+    .btn-modal.primary:hover { opacity: 0.9; }
+    
+    .tv-select {
+      padding: 7px 12px; border-radius: 8px;
+      border: 1px solid #2a2a2a; background: #1a1a1a;
+      color: #fff; font-size: 13px; outline: none; max-width: 280px;
+    }
+
+    /* ZONE PRINCIPALE */
+    .tv-content {
+      flex: 1; overflow: hidden;
+      padding: 16px 20px;
+      display: flex; flex-direction: column;
+    }
+
+    /* VUE COLLECTIVE */
+    .vue-collective {
+      flex: 1; overflow: hidden;
+      display: flex; flex-direction: column; gap: 12px;
+    }
+    .blocs-scroll {
+      flex: 1; overflow-y: auto;
+      display: flex; flex-direction: column; gap: 12px;
+    }
+    .tv-bloc {
+      background: #1a1a1a; border: 1px solid #2a2a2a;
+      border-radius: 12px; overflow: hidden; flex-shrink: 0;
+    }
+    .tv-bloc-header {
+      padding: 10px 18px; background: #222;
+      border-bottom: 2px solid #FECC00;
+      font-size: 15px; font-weight: 700; color: #FECC00;
+      display: flex; align-items: center; gap: 12px;
+    }
+    .tv-groupes {
+      display: flex; overflow-x: auto;
+    }
+    .tv-groupe-col {
+      flex: 1; min-width: 200px;
+      border-right: 1px solid #2a2a2a;
+    }
+    .tv-groupe-col:last-child { border-right: none; }
+    .tv-groupe-header {
+      padding: 8px 14px; background: #1e1e1e;
+      border-bottom: 1px solid #2a2a2a;
+      font-size: 12px; font-weight: 700;
+      color: #888; text-transform: uppercase; letter-spacing: .06em;
+    }
+    .tv-exos {
+      padding: 8px 14px;
+      border-bottom: 1px solid #222;
+    }
+    .tv-exo-item { padding: 3px 0; }
+    .tv-exo-nom { font-size: 13px; color: #ccc; font-weight: 500; display: flex; align-items: center; gap: 8px; }
+    .tv-exo-params { font-size: 11px; color: #555; }
+    .tv-exo-photo { width: 56px; height: 56px; border-radius: 8px; object-fit: cover; border: 1px solid #2a2a2a; flex-shrink: 0; }
+    .tv-exo-photo-placeholder { width: 56px; height: 56px; border-radius: 8px; background: #2a2a2a; border: 1px solid #333; flex-shrink: 0; }
+    .tv-joueurs { padding: 8px 14px; }
+    .tv-joueur-row {
+      display: flex; align-items: center; gap: 8px;
+      padding: 6px 8px; border-radius: 8px;
+      margin-bottom: 4px; cursor: pointer;
+      border: 1px solid #2a2a2a; background: #111;
+      transition: all .15s;
+    }
+    .tv-joueur-row:hover, .tv-joueur-row:active { border-color: #FECC00; background: #1a1a00; }
+    .tv-joueur-nom { font-size: 13px; color: #fff; flex: 1; font-weight: 500; }
+    .tv-charge-prescrite {
+      font-size: 13px; color: #FECC00; font-weight: 700;
+      min-width: 55px; text-align: right;
+    }
+    .tv-charge-reelle {
+      width: 64px; padding: 4px 8px; border-radius: 6px;
+      border: 1px solid #2a2a2a; background: #0f0f0f;
+      color: #1D9E75; font-size: 14px; font-weight: 700;
+      text-align: center; outline: none;
+    }
+    .tv-charge-reelle:focus { border-color: #1D9E75; }
+
+    /* VUE INDIVIDUELLE */
+    .vue-indiv {
+      flex: 1; overflow-y: auto;
+      display: none;
+    }
+    .indiv-header {
+      display: flex; align-items: center; gap: 16px;
+      margin-bottom: 20px;
+    }
+    .indiv-avatar {
+      width: 64px; height: 64px; border-radius: 50%;
+      overflow: hidden; border: 2px solid #FECC00;
+      flex-shrink: 0;
+    }
+    .indiv-avatar img { width: 100%; height: 100%; object-fit: cover; }
+    .indiv-avatar-initials {
+      width: 64px; height: 64px; border-radius: 50%;
+      background: #333; border: 2px solid #FECC00;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 22px; font-weight: 700; color: #FECC00; flex-shrink: 0;
+    }
+    .indiv-nom { font-size: 22px; font-weight: 700; }
+    .indiv-poste { font-size: 14px; color: #555; }
+    .indiv-groupe-badge {
+      display: inline-block; padding: 4px 12px; border-radius: 20px;
+      background: #FECC0022; color: #FECC00; font-size: 12px; font-weight: 700;
+      border: 1px solid #FECC0044; margin-top: 4px;
+    }
+    .indiv-blocs { display: flex; flex-direction: column; gap: 14px; }
+    .indiv-bloc-card {
+      background: #1a1a1a; border: 1px solid #2a2a2a;
+      border-radius: 12px; overflow: hidden;
+    }
+    .indiv-bloc-header {
+      padding: 8px 16px; background: #222;
+      border-bottom: 1px solid #2a2a2a;
+      font-size: 13px; font-weight: 700; color: #FECC00;
+    }
+    .indiv-exo-card {
+      padding: 12px 16px; border-bottom: 1px solid #111;
+    }
+    .indiv-exo-card:last-child { border-bottom: none; }
+    .indiv-exo-nom {
+      font-size: 15px; font-weight: 700; margin-bottom: 4px;
+    }
+    .indiv-exo-params { font-size: 12px; color: #666; margin-bottom: 10px; }
+    .indiv-series { display: flex; gap: 8px; flex-wrap: wrap; }
+    .serie-box {
+      background: #111; border: 1px solid #2a2a2a;
+      border-radius: 8px; padding: 8px 10px;
+      text-align: center; min-width: 70px;
+    }
+    .serie-label { font-size: 10px; color: #555; margin-bottom: 4px; }
+    .serie-prescrit { font-size: 11px; color: #555; margin-top: 4px; }
+    .serie-input {
+      width: 100%; background: none; border: none;
+      color: #FECC00; font-size: 18px; font-weight: 700;
+      text-align: center; outline: none;
+    }
+    .serie-input::placeholder { color: #333; font-size: 14px; }
+
+    /* PREVIEW CHARGE */
+    .charge-preview {
+      position: absolute;
+      right: 4px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: #333;
+      color: #888;
+      font-size: 9px;
+      padding: 2px 5px;
+      border-radius: 3px;
+      white-space: nowrap;
+      pointer-events: none;
+    }
+    .charge-preview::before {
+      content: '→ ';
+    }
+    .charge-preview-box {
+      font-size: 10px;
+      color: #555;
+      text-align: center;
+      margin-top: 2px;
+      padding: 2px 4px;
+      background: #0a0a0a;
+      border-radius: 3px;
+    }
+    .charge-preview-pill {
+      font-size: 9px;
+      color: #666;
+      background: #222;
+      padding: 1px 4px;
+      border-radius: 3px;
+      margin-top: 2px;
+      white-space: nowrap;
+    }
+
+    /* BOUTON RETOUR vue indiv */
+    .btn-retour-collectif {
+      padding: 8px 18px; border-radius: 8px;
+      border: 1px solid #2a2a2a; background: none;
+      color: #888; font-size: 13px; cursor: pointer;
+      margin-bottom: 16px;
+    }
+    .btn-retour-collectif:hover { color: #fff; border-color: #444; }
+
+    .empty-state { color: #444; font-size: 14px; text-align: center; padding: 60px 0; }
+
+    /* Custom Toggle Switch for TV Mode */
+    .switch-container {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: #1a1a1a;
+      padding: 6px 14px;
+      border-radius: 20px;
+      border: 1px solid #2a2a2a;
+    }
+    .switch-label {
+      font-size: 12px;
+      font-weight: 600;
+      color: #888;
+      user-select: none;
+    }
+    .switch-tv {
+      position: relative;
+      display: inline-block;
+      width: 44px;
+      height: 24px;
+    }
+    .switch-tv input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+    .slider-tv {
+      position: absolute;
+      cursor: pointer;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background-color: #333;
+      transition: .3s;
+      border-radius: 24px;
+      border: 1px solid #444;
+    }
+    .slider-tv:before {
+      position: absolute;
+      content: "";
+      height: 16px;
+      width: 16px;
+      left: 3px;
+      bottom: 3px;
+      background-color: #fff;
+      transition: .3s;
+      border-radius: 50%;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.4);
+    }
+    input:checked + .slider-tv {
+      background-color: #1D9E75;
+      border-color: #1D9E75;
+    }
+    input:checked + .slider-tv:before {
+      transform: translateX(20px);
+    }
+  </style>
+
+  <style>
+  * { -webkit-tap-highlight-color: transparent; }
+  input, select { font-size: 16px !important; }
+  .tv-btn { min-height: 44px !important; padding: 8px 16px !important; }
+  .bloc-nav-btn { min-height: 44px !important; padding: 8px 14px !important; }
+  .tv-home-btn {
+    display: flex; align-items: center; gap: 6px;
+    padding: 7px 12px; border-radius: 9px;
+    border: 1px solid #2a2a2a; background: none;
+    color: #888; font-size: 13px; cursor: pointer;
+    text-decoration: none; white-space: nowrap;
+  }
+  .tv-home-btn:hover { color: #fff; border-color: #444; }
+  
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
+  .spinning {
+    animation: spin 1s linear infinite;
+    color: #FECC00 !important;
+  }
+  </style>
+
+</head>
+<body>
+
+  <div class="tv-topbar">
+    <img class="tv-logo" src="https://www.sca-albi.fr/wp-content/uploads/2023/10/cropped-SCA-bis.png" alt="SCA Logo">
+    <div style="color: #FECC00; font-weight: 700; font-size: 18px; display: flex; align-items: center; gap: 8px; margin-right: 12px; white-space: nowrap;">
+      SCA Albi
+      <button onclick="synchroniserGlobale()" id="tv-global-sync" style="background:none; border:none; color:#555; font-size:20px; cursor:pointer; padding:4px; display:inline-flex; align-items:center; justify-content:center; border-radius:50%; transition:all 0.2s; outline:none;" onmouseover="this.style.color='#fff'; this.style.background='#222'" onmouseout="this.style.color='#555'; this.style.background='none'" title="Synchroniser">↻</button>
+    </div>
+    <select class="tv-select" id="tv-seance-select" onchange="chargerSeance()">
+      <option value="">Sélectionner une séance...</option>
+    </select>
+    <button class="tv-btn active" id="btn-col" onclick="setVue('collective')">Collectif</button>
+    <button class="tv-btn" id="btn-ind" onclick="setVue('individuelle')">Individuel</button>
+    <div style="border-left:1px solid #2a2a2a;margin:0 8px;height:24px;"></div>
+    <select id="tv-filter-blesses" onchange="renderCollectif()" style="padding:5px 10px;border-radius:7px;border:1px solid #2a2a2a;background:#111;color:#fff;font-size:12px;outline:none;">
+      <option value="all">Tous les joueurs</option>
+      <option value="blesses">Uniquement blessés</option>
+      <option value="non-blesses">Exclure blessés</option>
+    </select>
+    <select id="tv-filter-ligne" onchange="onLigneFilterChange()" style="padding:5px 10px;border-radius:7px;border:1px solid #2a2a2a;background:#111;color:#fff;font-size:12px;outline:none;">
+      <option value="all">Toutes les lignes</option>
+      <option value="avants">Avants</option>
+      <option value="3/4">3/4</option>
+      <option value="arriere">Arrière</option>
+    </select>
+    <button class="joueurs-filter-btn" id="btn-filtre-joueurs" onclick="ouvrirModalJoueurs()">Joueurs ▼</button>
+    
+    <!-- Navigation blocs -->
+    <div class="bloc-nav" id="bloc-nav-container" style="display:none;">
+      <button class="bloc-nav-btn" id="btn-bloc-prev" onclick="changeBloc(-1)">◀ Préc</button>
+      <span class="bloc-counter" id="bloc-counter">Bloc 1/4</span>
+      <button class="bloc-nav-btn" id="btn-bloc-next" onclick="changeBloc(1)">Suiv ▶</button>
+      <button class="bloc-nav-btn primary" id="btn-voir-tous" onclick="toggleVoirTousBlocs()" style="margin-left:8px;">Voir tous</button>
+    </div>
+    
+    <div class="tv-date" id="tv-date"></div>
+        <a class="tv-home-btn" href="index.html">⌂ Accueil</a>
+    <div class="tv-clock" id="tv-clock"></div>
+  </div>
+
+  <div class="tv-content">
+    <div class="vue-collective" id="vue-collective">
+      <div class="blocs-scroll" id="blocs-scroll">
+        <div class="empty-state">Sélectionne une séance ci-dessus</div>
+      </div>
+    </div>
+    <div class="vue-indiv" id="vue-indiv">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;flex-wrap:wrap;">
+        <button class="btn-retour-collectif" onclick="setVue('collective')" style="margin-bottom:0;">← Retour vue collective</button>
+        <select id="tv-indiv-joueur-select" onchange="ouvrirIndividu(this.value)" class="tv-select" style="max-width:240px;">
+          <option value="">Choisir un joueur...</option>
+        </select>
+        <div class="switch-container" id="tv-saisie-toggle-container" style="margin-left: auto;">
+          <span class="switch-label" id="tv-saisie-toggle-label">Toutes les séries d'un coup</span>
+          <label class="switch-tv">
+            <input type="checkbox" id="tv-saisie-toggle" checked onchange="toggleSaisieMode(this.checked)">
+            <span class="slider-tv"></span>
+          </label>
+        </div>
+      </div>
+      <div class="indiv-header" id="indiv-header"></div>
+      <div class="indiv-blocs" id="indiv-blocs"></div>
+    </div>
+  </div>
+  
+  <!-- Modal sélection joueurs -->
+  <div class="modal-overlay" id="modal-joueurs">
+    <div class="modal-joueurs">
+      <h3>Sélectionner des joueurs</h3>
+      <div class="modal-joueurs-list" id="modal-joueurs-list"></div>
+      <div class="modal-actions">
+        <button class="btn-modal" onclick="fermerModalJoueurs()">Annuler</button>
+        <button class="btn-modal primary" onclick="appliquerFiltreJoueurs()">Appliquer</button>
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from './firebase-bundle.js'
+    import { getAuth, onAuthStateChanged } from './firebase-bundle.js'
+    import { getFirestore, collection, doc, setDoc, getDoc, getDocs, onSnapshot, serverTimestamp } from './firebase-bundle.js'
+
+    // Fonctions inline de seances-charges.js pour éviter les erreurs CORS
+    function rpeToPercent(rpe) { return rpe / 10 }
+    function arrondir(charge) { return Math.round(charge / 2.5) * 2.5 }
+    
+    function chargePredicte(exercice, rpe, nbReps, maxTestes = {}, ratios = {}, intensityUnit = 'RPE') {
+      let pct = 0
+      const val = parseFloat(rpe)
+      if (!val) return null
+
+      if (intensityUnit === '%' || intensityUnit === 'PCT') {
+        pct = val / 100
+      } else if (intensityUnit === 'VITESSE') {
+        let pctVal = Math.round(100 - ((val - 0.2) / (1.3 - 0.2)) * 70)
+        pctVal = Math.max(10, Math.min(100, pctVal))
+        pct = pctVal / 100
+      } else {
+        pct = val / 10
+      }
+
+      // Cas 1 : 1RM direct
+      let oneRM = maxTestes[exercice] || maxTestes[(exercice || '').toUpperCase().trim()]
+      if (oneRM && oneRM > 0) {
+        const charge = pct * oneRM
+        return arrondir(charge)
+      }
+
+      // Cas 2 : ratio via mvt roi
+      if (ratios) {
+        const ratioData = ratios[exercice]
+        if (ratioData) {
+          const { ratio, mvtRoi } = ratioData
+          const oneRMMvtRoi = maxTestes[mvtRoi] || maxTestes[(mvtRoi || '').toUpperCase().trim()]
+          if (oneRMMvtRoi && oneRMMvtRoi > 0) {
+            const charge = pct * ratio * oneRMMvtRoi
+            return arrondir(charge)
+          }
+        }
+
+        // Cas 2b : ratio via format Firestore "cible_vs_tested"
+        const nomLower = (exercice || '').toLowerCase().trim()
+        for (const [key, valRatio] of Object.entries(ratios)) {
+          const match = key.match(/^(.+)_vs_(.+)$/)
+          if (!match) continue
+          const cible = match[1].toLowerCase().trim()
+          const tested = match[2].trim()
+          if (cible === nomLower) {
+            const testMax = maxTestes[tested] || maxTestes[tested.toUpperCase()] || maxTestes[tested.toLowerCase()]
+            if (testMax && testMax > 0) {
+              const charge = pct * valRatio * testMax
+              return arrondir(charge)
+            }
+          }
+        }
+      }
+      return null
+    }
+    
+    function chargePreviewPct(exercice, pct, maxTestes = {}, ratios = {}) {
+      if (!pct || pct <= 0) return null
+      
+      // Chercher 1RM direct
+      let oneRM = maxTestes[exercice] || maxTestes[(exercice || '').toUpperCase().trim()]
+      
+      // Si pas de 1RM direct, chercher via ratio
+      if (!oneRM && ratios) {
+        const ratioData = ratios[exercice]
+        if (ratioData) {
+          const { ratio, mvtRoi } = ratioData
+          const oneRMMvtRoi = maxTestes[mvtRoi] || maxTestes[(mvtRoi || '').toUpperCase().trim()]
+          if (oneRMMvtRoi && oneRMMvtRoi > 0) {
+            oneRM = oneRMMvtRoi * ratio
+          }
+        }
+        
+        // Si toujours pas de 1RM, essayer avec le format Firestore "cible_vs_tested"
+        if (!oneRM) {
+          const nomLower = (exercice || '').toLowerCase().trim()
+          for (const [key, val] of Object.entries(ratios)) {
+            const match = key.match(/^(.+)_vs_(.+)$/)
+            if (!match) continue
+            const cible = match[1].toLowerCase().trim()
+            const tested = match[2].trim()
+            if (cible === nomLower) {
+              const testMax = maxTestes[tested] || maxTestes[tested.toUpperCase()] || maxTestes[tested.toLowerCase()]
+              if (testMax && testMax > 0) {
+                oneRM = testMax * val
+                break
+              }
+            }
+          }
+        }
+      }
+      
+      if (!oneRM || oneRM <= 0) return null
+      const charge = (pct / 100) * oneRM
+      return arrondir(charge)
+    }
+    
+    function labelCharge(exercice, rpe, nbReps, maxTestes = {}, ratios = {}, intensityUnit = 'RPE') {
+      const c = chargePredicte(exercice, rpe, nbReps, maxTestes, ratios, intensityUnit)
+      if (c !== null) return c + ' kg'
+      
+      if (intensityUnit === 'PCT' || intensityUnit === '%') {
+        return rpe + '%'
+      } else if (intensityUnit === 'VITESSE') {
+        return rpe + ' m/s'
+      }
+      return 'RPE ' + rpe
+    }
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyCvMs-5LX9Ivk3OkzUR3iz9Kk1E5b9_7Vk",
+      authDomain: "delta-rugby-app.firebaseapp.com",
+      projectId: "delta-rugby-app",
+      storageBucket: "delta-rugby-app.firebasestorage.app",
+      messagingSenderId: "61187079762",
+      appId: "1:61187079762:web:56cd1eaa8beb9e1a2ee98b"
+    }
+
+    const fbApp = initializeApp(firebaseConfig)
+    const auth = getAuth(fbApp)
+    const db = getFirestore(fbApp)
+
+    let joueurs = []
+    let seances = []
+    let seanceActive = null
+    let ratios = {}
+    let chargesReelles = {}
+    let currentVue = 'collective'
+    let joueurActif = null
+    let saisieUniqueMode = localStorage.getItem('tv_saisie_unique_mode') !== 'false'
+    let exercicesDB = [] // Base d'exercices avec photos
+    let currentBlocIndex = 0 // Index du bloc actuellement affiché
+    let voirTousBlocs = false // Mode "voir tous les blocs"
+    let selectedJoueursIds = [] // IDs des joueurs sélectionnés manuellement
+    let ligneFilterActive = 'all' // Filtre ligne actif
+
+    // Horloge
+    function majHorloge() {
+      const now = new Date()
+      document.getElementById('tv-clock').textContent =
+        now.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })
+      document.getElementById('tv-date').textContent =
+        now.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })
+    }
+    majHorloge()
+    setInterval(majHorloge, 30000)
+
+    // Init
+    onAuthStateChanged(auth, async user => {
+      if (!user) { window.location.href = 'login.html'; return }
+
+      const [joueursSnap, maxSnap, ratiosSnap, exosSnap] = await Promise.all([
+        getDocs(collection(db, 'joueurs')),
+        getDocs(collection(db, 'maxTestes')),
+        getDoc(doc(db, 'config', 'ratios')),
+        getDoc(doc(db, 'config', 'exercices'))
+      ])
+
+      function makeNomId(j) {
+        return ((j.nom || '') + '_' + (j.prenom || '')).replace(/\s/g, '_').toLowerCase()
+          .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+      }
+
+      joueurs = joueursSnap.docs.map(d => {
+        const pData = d.data()
+        const playerObj = { id: d.id, ...pData }
+        const nomId = makeNomId(playerObj)
+        const mx = maxSnap.docs.find(x => x.id === d.id) || maxSnap.docs.find(x => x.id === nomId)
+        return { ...playerObj, maxTestes: mx ? mx.data() : {} }
+      })
+      ratios = ratiosSnap.exists() ? ratiosSnap.data() : {}
+      exercicesDB = exosSnap.exists() ? (exosSnap.data().liste || []) : []
+
+      // Re-render immédiat pour rafraîchir l'écran avec les données de Firebase
+      if (seanceActive) {
+        renderCollectif()
+        if (joueurActif) {
+          renderIndividu(joueurActif)
+        }
+      }
+
+      // Écoute séances en temps réel
+      onSnapshot(collection(db, 'seances'), snap => {
+        seances = snap.docs.map(d => ({ id: d.id, ...d.data() }))
+        seances.sort((a, b) => (b.date || '').localeCompare(a.date || ''))
+        remplirSelect()
+      })
+    }) // <-- C'est cette parenthèse/accolade de fermeture qui manquait !
+
+    function remplirSelect() {
+      const sel = document.getElementById('tv-seance-select')
+      const val = sel.value
+      sel.innerHTML = '<option value="">Sélectionner une séance...</option>'
+      seances.forEach(s => {
+        const o = document.createElement('option')
+        o.value = s.id
+        o.textContent = formatDate(s.date) + ' — ' + (s.theme || '')
+        sel.appendChild(o)
+      })
+      if (val) sel.value = val
+    }
+
+    function formatDate(d) {
+      if (!d) return ''
+      return new Date(d).toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric', month: 'short' })
+    }
+
+    window.synchroniserGlobale = async function() {
+      const btn = document.getElementById('tv-global-sync')
+      if (btn) { btn.textContent = '↻ Sync...'; btn.disabled = true; }
+      try {
+        const [joueursSnap, maxSnap, ratiosSnap, exosSnap] = await Promise.all([
+          getDocs(collection(db, 'joueurs')),
+          getDocs(collection(db, 'maxTestes')),
+          getDoc(doc(db, 'config', 'ratios')),
+          getDoc(doc(db, 'config', 'exercices'))
+        ])
+
+        joueurs = joueursSnap.docs.map(d => {
+          const pData = d.data()
+          const playerObj = { id: d.id, ...pData }
+          const nomId = makeNomId(playerObj)
+          const mx = maxSnap.docs.find(x => x.id === d.id) || maxSnap.docs.find(x => x.id === nomId)
+          return { ...playerObj, maxTestes: mx ? mx.data() : {} }
+        })
+        ratios = ratiosSnap.exists() ? ratiosSnap.data() : {}
+        exercicesDB = exosSnap.exists() ? (exosSnap.data().liste || []) : []
+
+        // Recharger la séance active si elle existe
+        if (seanceActive?.id) {
+          const snap = await getDoc(doc(db, 'seances', seanceActive.id))
+          if (snap.exists()) {
+            seanceActive = { id: snap.id, ...snap.data() }
+          }
+          // Recharger toutes les charges réelles
+          chargesReelles = {}
+          const tousJoueurs = [...new Set(seanceActive.blocs?.flatMap(b =>
+            b.groupes?.flatMap(g => g.joueurs || []) || []) || [])]
+          await Promise.all(tousJoueurs.map(async jid => {
+            try {
+              const snap = await getDoc(doc(db, 'chargesReelles', `${seanceActive.id}_${jid}`))
+              if (snap.exists()) Object.assign(chargesReelles, snap.data())
+            } catch(e) {}
+          }))
+        }
+
+        // Re-render
+        if (seanceActive) {
+          renderCollectif()
+          if (joueurActif) {
+            renderIndividu(joueurActif)
+          }
+        }
+      } catch (e) {
+        console.error('Erreur lors de la synchronisation globale:', e);
+      }
+      if (btn) { btn.textContent = '↻ Synchroniser'; btn.disabled = false; }
+    }
+
+    window.chargerSeance = async function() {
+      const id = document.getElementById('tv-seance-select').value
+      if (!id) return
+      seanceActive = seances.find(s => s.id === id)
+      if (!seanceActive) return
+
+      // Charger charges réelles existantes
+      chargesReelles = {}
+      const tousJoueurs = [...new Set(seanceActive.blocs?.flatMap(b =>
+        b.groupes?.flatMap(g => g.joueurs || []) || []) || [])]
+      await Promise.all(tousJoueurs.map(async jid => {
+        try {
+          const snap = await getDoc(doc(db, 'chargesReelles', `${seanceActive.id}_${jid}`))
+          if (snap.exists()) Object.assign(chargesReelles, snap.data())
+        } catch(e) {}
+      }))
+
+      document.getElementById('tv-title').textContent =
+        'SCA Albi — ' + formatDate(seanceActive.date) + ' · ' + (seanceActive.theme || '')
+
+      renderCollectif()
+    }
+
+    // ==================== VUE ====================
+    function remplirSelectIndivJoueurs() {
+      const selectIndiv = document.getElementById('tv-indiv-joueur-select')
+      if (!selectIndiv) return
+      selectIndiv.innerHTML = '<option value="">Choisir un joueur...</option>'
+      if (!seanceActive) return
+      
+      const ids = [...new Set(seanceActive.blocs?.flatMap(b => b.groupes?.flatMap(g => g.joueurs || []) || []) || [])]
+      // Trier les joueurs par nom
+      const joueursSession = joueurs.filter(j => ids.includes(j.id)).sort((a, b) => (a.nom || '').localeCompare(b.nom || ''))
+      
+      joueursSession.forEach(j => {
+        const opt = document.createElement('option')
+        opt.value = j.id
+        opt.textContent = `${j.nom} ${j.prenom || ''}`
+        selectIndiv.appendChild(opt)
+      })
+      if (joueurActif) {
+        selectIndiv.value = joueurActif
+      }
+    }
+
+    window.setVue = function(vue) {
+      currentVue = vue
+      document.getElementById('vue-collective').style.display = vue === 'collective' ? 'flex' : 'none'
+      document.getElementById('vue-indiv').style.display = vue === 'individuelle' ? 'block' : 'none'
+      document.getElementById('btn-col').classList.toggle('active', vue === 'collective')
+      document.getElementById('btn-ind').classList.toggle('active', vue === 'individuelle')
+      
+      if (vue === 'individuelle') {
+        remplirSelectIndivJoueurs()
+        if (!joueurActif && seanceActive) {
+          const ids = [...new Set(seanceActive.blocs?.flatMap(b => b.groupes?.flatMap(g => g.joueurs || []) || []) || [])]
+          if (ids.length > 0) {
+            joueurActif = ids[0]
+            const selectIndiv = document.getElementById('tv-indiv-joueur-select')
+            if (selectIndiv) selectIndiv.value = joueurActif
+          }
+        }
+        if (joueurActif) {
+          renderIndividu(joueurActif)
+        }
+      }
+    }
+
+    // ==================== NAVIGATION BLOCS ====================
+    window.changeBloc = function(direction) {
+      if (!seanceActive?.blocs?.length) return
+      const maxIndex = seanceActive.blocs.length - 1
+      currentBlocIndex = Math.max(0, Math.min(maxIndex, currentBlocIndex + direction))
+      renderCollectif()
+    }
+    
+    window.toggleVoirTousBlocs = function() {
+      voirTousBlocs = !voirTousBlocs
+      document.getElementById('btn-voir-tous').textContent = voirTousBlocs ? 'Un seul bloc' : 'Voir tous'
+      document.getElementById('btn-voir-tous').classList.toggle('primary', !voirTousBlocs)
+      renderCollectif()
+    }
+    
+    // ==================== FILTRE JOUEURS ====================
+    window.onLigneFilterChange = function() {
+      ligneFilterActive = document.getElementById('tv-filter-ligne').value
+      selectedJoueursIds = [] // Reset selection manuelle quand on change de ligne
+      document.getElementById('btn-filtre-joueurs').classList.remove('active')
+      renderCollectif()
+    }
+    
+    window.ouvrirModalJoueurs = function() {
+      const list = document.getElementById('modal-joueurs-list')
+      list.innerHTML = ''
+      
+      // Trier joueurs par nom
+      const sortedJoueurs = [...joueurs].sort((a, b) => a.nom?.localeCompare(b.nom))
+      
+      sortedJoueurs.forEach(j => {
+        const item = document.createElement('div')
+        item.className = 'modal-joueur-item'
+        if (selectedJoueursIds.includes(j.id)) item.classList.add('selected')
+        
+        item.innerHTML = `
+          <input type="checkbox" class="modal-joueur-checkbox" ${selectedJoueursIds.includes(j.id) ? 'checked' : ''}>
+          <span>${j.nom} ${j.prenom} - ${j.poste || 'Sans poste'}</span>
+        `
+        
+        item.onclick = (e) => {
+          if (e.target.type !== 'checkbox') {
+            const cb = item.querySelector('input')
+            cb.checked = !cb.checked
+          }
+          item.classList.toggle('selected', item.querySelector('input').checked)
+        }
+        
+        list.appendChild(item)
+      })
+      
+      document.getElementById('modal-joueurs').classList.add('open')
+    }
+    
+    window.fermerModalJoueurs = function() {
+      document.getElementById('modal-joueurs').classList.remove('open')
+    }
+    
+    window.appliquerFiltreJoueurs = function() {
+      const items = document.querySelectorAll('.modal-joueur-item')
+      selectedJoueursIds = []
+      items.forEach(item => {
+        const cb = item.querySelector('input')
+        if (cb.checked) {
+          const joueurText = item.querySelector('span').textContent
+          // Extraire le nom du joueur
+          const j = joueurs.find(joueur => {
+            const fullName = `${joueur.nom} ${joueur.prenom}`
+            return joueurText.startsWith(fullName)
+          })
+          if (j) selectedJoueursIds.push(j.id)
+        }
+      })
+      
+      document.getElementById('btn-filtre-joueurs').classList.toggle('active', selectedJoueursIds.length > 0)
+      fermerModalJoueurs()
+      renderCollectif()
+    }
+    
+    function updateBlocNav() {
+      const navContainer = document.getElementById('bloc-nav-container')
+      const counter = document.getElementById('bloc-counter')
+      const btnPrev = document.getElementById('btn-bloc-prev')
+      const btnNext = document.getElementById('btn-bloc-next')
+      
+      if (!seanceActive?.blocs?.length || seanceActive.blocs.length <= 1) {
+        navContainer.style.display = 'none'
+        return
+      }
+      
+      navContainer.style.display = 'flex'
+      counter.textContent = `Bloc ${currentBlocIndex + 1}/${seanceActive.blocs.length}`
+      
+      if (voirTousBlocs) {
+        counter.textContent = `Tous les blocs`
+        btnPrev.disabled = true
+        btnNext.disabled = true
+      } else {
+        btnPrev.disabled = currentBlocIndex === 0
+        btnNext.disabled = currentBlocIndex >= seanceActive.blocs.length - 1
+      }
+    }
+
+    // ==================== COLLECTIF ====================
+    function renderCollectif() {
+      const c = document.getElementById('blocs-scroll')
+      c.innerHTML = ''
+      if (!seanceActive?.blocs?.length) {
+        c.innerHTML = '<div class="empty-state">Aucun bloc dans cette séance.</div>'
+        document.getElementById('bloc-nav-container').style.display = 'none'
+        return
+      }
+
+      // Mettre à jour la navigation
+      updateBlocNav()
+
+      // Récupérer les filtres sélectionnés
+      const filterValue = document.getElementById('tv-filter-blesses')?.value || 'all'
+      const filterLigne = document.getElementById('tv-filter-ligne')?.value || 'all'
+      
+      // Si des joueurs sont sélectionnés manuellement, on les utilise
+      const hasSelectedJoueurs = selectedJoueursIds.length > 0
+      
+      // Fonction pour déterminer si un joueur correspond au filtre ligne
+      function joueurMatchesLigne(j) {
+        if (filterLigne === 'all') return true
+        const poste = (j.poste || '').toLowerCase()
+        const postesAvants = ['pilier', 'talonneur', '2e ligne', 'deuxieme ligne', '3e ligne', 'troisieme ligne', '1er ligne', 'premiere ligne']
+        const postes34 = ["demi de melée", "demi d'ouverture", "centre", "ailier"]
+        const postesArriere = ['arriere', 'fullback', 'demi de melée']
+        
+        if (filterLigne === 'avants') return postesAvants.some(p => poste.includes(p))
+        if (filterLigne === '3/4') return postes34.some(p => poste.includes(p))
+        if (filterLigne === 'arriere') return postesArriere.some(p => poste.includes(p))
+        return true
+      }
+      
+      // Déterminer quels blocs afficher
+      const blocsToRender = voirTousBlocs 
+        ? seanceActive.blocs 
+        : [seanceActive.blocs[currentBlocIndex]].filter(Boolean)
+
+      blocsToRender.forEach(bloc => {
+        const groupesAvecJoueurs = []
+
+        // D'abord, filtrer tous les groupes pour ne garder que ceux avec des joueurs
+        bloc.groupes?.forEach(groupe => {
+          // Filtrer les joueurs selon les critères
+          let filteredJoueurs = groupe.joueurs?.filter(jid => {
+            const j = joueurs.find(x => x.id === jid)
+            if (!j) return false
+            if (filterValue === 'blesses') return j.statut === 'blesse'
+            if (filterValue === 'non-blesses') return j.statut !== 'blesse'
+            return true
+          }) || []
+
+          // Si des joueurs sont sélectionnés manuellement, on filtre par eux
+          if (hasSelectedJoueurs) {
+            filteredJoueurs = filteredJoueurs.filter(jid => selectedJoueursIds.includes(jid))
+          } else {
+            // Sinon filtre par ligne
+            filteredJoueurs = filteredJoueurs.filter(jid => {
+              const j = joueurs.find(x => x.id === jid)
+              if (!j) return false
+              return joueurMatchesLigne(j)
+            })
+          }
+
+          // Ne garder que les groupes avec au moins un joueur après filtrage
+          if (filteredJoueurs.length > 0) {
+            groupesAvecJoueurs.push({ groupe, filteredJoueurs })
+          }
+        })
+
+        // Ne pas afficher le bloc s'il n'a aucun groupe avec des joueurs
+        if (groupesAvecJoueurs.length === 0) {
+          return
+        }
+
+        const card = document.createElement('div')
+        card.className = 'tv-bloc'
+
+        const hdr = document.createElement('div')
+        hdr.className = 'tv-bloc-header'
+        hdr.textContent = bloc.nom
+        card.appendChild(hdr)
+
+        const groupes = document.createElement('div')
+        groupes.className = 'tv-groupes'
+
+        groupesAvecJoueurs.forEach(({ groupe, filteredJoueurs }) => {
+          const col = document.createElement('div')
+          col.className = 'tv-groupe-col'
+
+          // Header groupe
+          const ghdr = document.createElement('div')
+          ghdr.className = 'tv-groupe-header'
+          ghdr.textContent = groupe.nom + ' · ' + filteredJoueurs.length + ' joueurs'
+          col.appendChild(ghdr)
+
+          // Exercices
+          const exosDiv = document.createElement('div')
+          exosDiv.className = 'tv-exos'
+          groupe.exercices?.forEach(exo => {
+            const item = document.createElement('div')
+            item.className = 'tv-exo-item'
+            
+            // Chercher la photo de l'exercice dans la base
+            const exoDB = exercicesDB.find(e => e.nom?.toLowerCase() === exo.exercice?.toLowerCase())
+            const photoHtml = exoDB?.photo 
+              ? `<img src="${exoDB.photo}" class="tv-exo-photo" onerror="this.style.display='none'" />`
+              : `<div class="tv-exo-photo-placeholder"></div>`
+            
+            item.innerHTML = `
+              <div class="tv-exo-nom">${photoHtml}${exo.isSuperset ? '↳ ' : ''}${exo.numExo}. ${exo.exercice || '—'}</div>
+              <div class="tv-exo-params">${exo.nbSets}×${exo.nbReps} · RPE ${exo.rpe}${exo.recup ? ' · ' + exo.recup : ''}${exo.commentaire ? ' · ' + exo.commentaire : ''}</div>
+            `
+            exosDiv.appendChild(item)
+          })
+          col.appendChild(exosDiv)
+
+          // Joueurs
+          const joueursDiv = document.createElement('div')
+          joueursDiv.className = 'tv-joueurs'
+
+          filteredJoueurs.forEach(jid => {
+            const j = joueurs.find(x => x.id === jid)
+            if (!j) return
+
+            const row = document.createElement('div')
+            row.className = 'tv-joueur-row'
+            row.onclick = () => ouvrirIndividu(jid)
+            row.style.flexWrap = 'wrap';
+            row.style.gap = '6px';
+
+            const nom = document.createElement('div')
+            nom.className = 'tv-joueur-nom'
+            nom.textContent = j.nom + ' ' + j.prenom[0] + '.'
+            nom.style.minWidth = '100px';
+            nom.style.fontSize = '12px';
+
+            // Conteneur scrollable pour toutes les charges
+            const chargesContainer = document.createElement('div')
+            chargesContainer.style.cssText = 'display:flex;gap:4px;overflow-x:auto;flex:1;scrollbar-width:thin;scrollbar-color:#2a2a2a #0a0a0a;';
+            
+            // Afficher une pill pour CHAQUE exercice du groupe
+            groupe.exercices?.forEach((exo, exoIndex) => {
+              const chargePrescrite = labelCharge(exo.exercice, exo.rpe, exo.nbReps, j.maxTestes || {}, ratios, exo.intensityUnit || exo.intensityType)
+              const typeLabel = exo.intensityType === 'PCT' ? '%' : exo.intensityType === 'VITESSE' ? 'm/s' : 'RPE';
+              
+              // Calculer le max des charges déjà remplies pour cet exercice
+              let maxChargeReelle = null;
+              let hasAnyCharge = false;
+              for (let s = 1; s <= (exo.nbSets || 1); s++) {
+                const clefSerie = `${seanceActive.id}_${bloc.id}_${groupe.id}_${exo.id}_${jid}_s${s}`;
+                if (chargesReelles[clefSerie] && chargesReelles[clefSerie] !== '') {
+                  hasAnyCharge = true;
+                  const val = parseFloat(chargesReelles[clefSerie]);
+                  if (!isNaN(val) && (maxChargeReelle === null || val > maxChargeReelle)) {
+                    maxChargeReelle = val;
+                  }
+                }
+              }
+              
+              const pill = document.createElement('div')
+              pill.style.cssText = `
+                background: #FECC0022; border: 1px solid #FECC0044; border-radius: 8px;
+                padding: 4px 6px; min-width: 70px; flex-shrink: 0;
+                display: flex; flex-direction: column; align-items: center;
+                position: relative;
+              `;
+              
+              // Si toutes les séries sont remplies → vert
+              const allCompleted = hasAnyCharge && (maxChargeReelle !== null);
+              if (allCompleted) {
+                pill.style.borderColor = '#1D9E75';
+                pill.style.background = '#1D9E7522';
+              }
+              
+              // INTENSITÉ EN HAUT (RPE 7)
+              const intensiteTop = document.createElement('div')
+              intensiteTop.style.cssText = 'font-size: 9px; color: #888; text-transform: uppercase; font-weight: 600;';
+              intensiteTop.textContent = `${typeLabel}${exo.rpe}`;
+              pill.appendChild(intensiteTop);
+              
+              // PREVIEW CHARGE CALCULÉE (si % et 1RM connu)
+              const intensityUnit = exo.intensityUnit || 'RPE';
+              if (intensityUnit === '%' || intensityUnit === 'PCT') {
+                const pct = parseFloat(exo.rpe);
+                if (pct > 0) {
+                  const chargeKg = chargePreviewPct(exo.exercice, pct, j.maxTestes || {}, ratios);
+                  if (chargeKg !== null) {
+                    const previewDiv = document.createElement('div');
+                    previewDiv.className = 'charge-preview-pill';
+                    previewDiv.textContent = `${chargeKg} kg`;
+                    pill.appendChild(previewDiv);
+                  }
+                }
+              }
+              
+              // INPUT CHARGE AU MILIEU (plus petit)
+              const chargeInput = document.createElement('input')
+              chargeInput.type = 'text'
+              chargeInput.style.cssText = `
+                width: 55px; background: transparent; border: none; border-bottom: 1px solid #444;
+                color: #FECC00; font-size: 14px; font-weight: 700; text-align: center;
+                padding: 2px 0; margin: 2px 0; outline: none;
+              `;
+              // Afficher le max des charges remplies, ou la charge prescrite, ou ---
+              if (maxChargeReelle !== null) {
+                chargeInput.value = maxChargeReelle + ' kg';
+              } else if (chargePrescrite && chargePrescrite !== '—' && chargePrescrite.includes('kg')) {
+                chargeInput.placeholder = chargePrescrite;
+              } else {
+                chargeInput.placeholder = '---';
+              }
+              
+              // Sauvegarder la charge pour TOUTES les séries
+              chargeInput.onchange = async () => {
+                const val = chargeInput.value.replace(/[^0-9.]/g, ''); // Extraire juste le nombre
+                if (!val) return;
+                
+                const chargeNum = parseFloat(val);
+                const reps = exo.nbReps || 1;
+                
+                // Sauvegarder pour toutes les séries de cet exercice
+                for (let s = 1; s <= (exo.nbSets || 1); s++) {
+                  const clefSerie = `${seanceActive.id}_${bloc.id}_${groupe.id}_${exo.id}_${jid}_s${s}`;
+                  chargesReelles[clefSerie] = val;
+                  await setDoc(doc(db, 'chargesReelles', `${seanceActive.id}_${jid}`),
+                    { [clefSerie]: val, updatedAt: serverTimestamp() }, { merge: true });
+                }
+                
+                // Calculer et enregistrer le 1RM dans dataPerf
+                const oneRM = calcOneRM(chargeNum, reps);
+                const j = joueurs.find(x => x.id === jid);
+                const poids = j?.poids || null;
+                const ratioPDC = poids ? parseFloat((oneRM / poids).toFixed(2)) : null;
+                const date = seanceActive.date || new Date().toISOString().split('T')[0];
+                const exerciceNom = exo.exercice || 'Exercice';
+                
+                const perfId = `${jid}_${exerciceNom}_${date}_${Date.now()}`;
+                await setDoc(doc(db, 'dataPerf', perfId), {
+                  joueurId: jid,
+                  exercice: exerciceNom,
+                  date: date,
+                  charge: chargeNum,
+                  reps: reps,
+                  unite: 'kg',
+                  oneRM: oneRM,
+                  ratioPDC: ratioPDC,
+                  seanceId: seanceActive.id,
+                  createdAt: serverTimestamp()
+                });
+                
+                // Mettre à jour maxTestes si nouveau PR
+                const maxSnap = await getDoc(doc(db, 'maxTestes', jid));
+                const maxTestes = maxSnap.exists() ? maxSnap.data() : {};
+                const maxActuel = maxTestes[exerciceNom] || 0;
+                if (oneRM > maxActuel) {
+                  await setDoc(doc(db, 'maxTestes', jid), 
+                    { [exerciceNom]: oneRM }, { merge: true });
+                }
+                
+                // Mettre à jour l'affichage
+                pill.style.borderColor = '#1D9E75';
+                pill.style.background = '#1D9E7522';
+                chargeInput.value = val + ' kg';
+              };
+              
+              // Stopper propagation pour ne pas ouvrir la vue individuelle
+              chargeInput.onclick = (e) => e.stopPropagation();
+              
+              pill.appendChild(chargeInput);
+              
+              // EXERCICE EN BAS (Box squat)
+              const exoName = document.createElement('div')
+              exoName.style.cssText = 'font-size: 9px; color: #aaa; margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 70px;';
+              exoName.textContent = exo.exercice || '—';
+              pill.appendChild(exoName);
+              
+              chargesContainer.appendChild(pill);
+            });
+
+            row.appendChild(nom)
+            row.appendChild(chargesContainer)
+            joueursDiv.appendChild(row)
+          })
+
+          col.appendChild(joueursDiv)
+          groupes.appendChild(col)
+        })
+
+        card.appendChild(groupes)
+        c.appendChild(card)
+      })
+
+      // Afficher un état vide si aucun bloc n'a de joueurs après filtrage
+      if (c.children.length === 0) {
+        c.innerHTML = '<div class="empty-state">Aucun joueur ne correspond aux filtres sélectionnés.</div>'
+      }
+    }
+
+    // ==================== INDIVIDUEL ====================
+    function ouvrirIndividu(jid) {
+      joueurActif = jid
+      setVue('individuelle')
+      renderIndividu(jid)
+    }
+
+    function renderIndividu(jid) {
+      const j = joueurs.find(x => x.id === jid)
+      if (!j || !seanceActive) return
+
+      // Set initial checkbox state in UI
+      const toggleEl = document.getElementById('tv-saisie-toggle')
+      if (toggleEl) {
+        toggleEl.checked = saisieUniqueMode
+      }
+      const label = document.getElementById('tv-saisie-toggle-label')
+      if (label) {
+        label.textContent = saisieUniqueMode ? "Toutes les séries d'un coup" : "Série par série"
+      }
+
+      // Header
+      const hdr = document.getElementById('indiv-header')
+      const avatarHtml = j.photo
+        ? `<div class="indiv-avatar"><img src="${j.photo}" onerror="this.parentElement.className='indiv-avatar-initials'; this.parentElement.textContent='${j.prenom[0]}${j.nom[0]}'" /></div>`
+        : `<div class="indiv-avatar-initials">${j.prenom[0]}${j.nom[0]}</div>`
+      hdr.innerHTML = `
+        ${avatarHtml}
+        <div>
+          <div class="indiv-nom">${j.prenom} ${j.nom}</div>
+          <div class="indiv-poste">${j.poste || ''}</div>
+        </div>
+      `
+
+      // Blocs
+      const blocsDiv = document.getElementById('indiv-blocs')
+      blocsDiv.innerHTML = ''
+
+      seanceActive.blocs.forEach(bloc => {
+        const groupeJ = bloc.groupes?.find(g => g.joueurs?.includes(jid))
+        if (!groupeJ) return
+
+        // Badge groupe
+        const blocCard = document.createElement('div')
+        blocCard.className = 'indiv-bloc-card'
+
+        blocCard.innerHTML = `
+          <div class="indiv-bloc-header">
+            ${bloc.nom}
+            <span class="indiv-groupe-badge" style="margin-left:10px;">${groupeJ.nom}</span>
+          </div>
+        `
+
+        groupeJ.exercices?.forEach(exo => {
+          const intensityUnitIndiv = exo.intensityUnit || exo.intensityType || 'RPE';
+          const charge = labelCharge(exo.exercice, exo.rpe, exo.nbReps, j.maxTestes || {}, ratios, intensityUnitIndiv)
+          
+          // Chercher la photo de l'exercice dans la base
+          const exoDB = exercicesDB.find(e => e.nom?.toLowerCase() === exo.exercice?.toLowerCase())
+          const photoHtml = exoDB?.photo 
+            ? `<img src="${exoDB.photo}" style="width:72px;height:72px;border-radius:10px;object-fit:cover;border:1px solid #2a2a2a;margin-right:12px;" onerror="this.style.display='none'" />`
+            : ''
+
+          // Calculer preview charge si % et 1RM connu
+          let chargePreviewHtml = '';
+          if ((intensityUnitIndiv === '%' || intensityUnitIndiv === 'PCT') && exo.rpe > 0) {
+            const pct = parseFloat(exo.rpe);
+            const chargeKg = chargePreviewPct(exo.exercice, pct, j.maxTestes || {}, ratios);
+            if (chargeKg !== null) {
+              chargePreviewHtml = `<span style="color:#666;font-size:11px;margin-left:8px;">${chargeKg} kg</span>`;
+            }
+          }
+
+          const exoCard = document.createElement('div')
+          exoCard.className = 'indiv-exo-card'
+          exoCard.innerHTML = `
+            <div class="indiv-exo-nom" style="display:flex;align-items:center;">${photoHtml}${exo.isSuperset ? '↳ ' : ''}${exo.numExo}. ${exo.exercice || '—'}${chargePreviewHtml}</div>
+            <div class="indiv-exo-params">
+              ${exo.nbSets} séries × ${exo.nbReps} reps · ${intensityUnitIndiv === 'PCT' || intensityUnitIndiv === '%' ? exo.rpe + '%' : intensityUnitIndiv === 'VITESSE' ? exo.rpe + ' m/s' : 'RPE ' + exo.rpe}
+              ${exo.tempo ? '· Tempo ' + exo.tempo : ''}
+              ${exo.recup ? '· ' + exo.recup : ''}
+              ${exo.commentaire ? '· ' + exo.commentaire : ''}
+            </div>
+          `
+
+          const seriesDiv = document.createElement('div')
+          seriesDiv.className = 'indiv-series'
+
+          if (saisieUniqueMode) {
+            const clefBase = `${seanceActive.id}_${bloc.id}_${groupeJ.id}_${exo.id}_${jid}`
+            const clefS1 = `${clefBase}_s1`
+            const box = document.createElement('div')
+            box.className = 'serie-box'
+            box.style.minWidth = '140px'
+
+            const chargeAffichee = charge.includes('kg') ? charge : ''
+            box.innerHTML = `
+              <div class="serie-label" style="font-weight: bold; color: #FECC00;">Toutes séries (1-${exo.nbSets})</div>
+              <input class="serie-input"
+                style="font-size: 20px;"
+                placeholder="${chargeAffichee || exo.rpe}"
+                value="${chargesReelles[clefS1] || ''}"
+                onchange="sauvegarderToutesLesSeries('${clefBase}', ${exo.nbSets}, '${seanceActive.id}', '${jid}', this.value, {exercice:'${exo.exercice}', nbReps:${exo.nbReps}})" />
+              <div class="serie-prescrit">${chargeAffichee ? 'Préco : ' + chargeAffichee : (intensityUnitIndiv === 'PCT' || intensityUnitIndiv === '%' ? exo.rpe + '%' : 'RPE ' + exo.rpe)}</div>
+            `
+            seriesDiv.appendChild(box)
+          } else {
+            for (let s = 1; s <= exo.nbSets; s++) {
+              const clef = `${seanceActive.id}_${bloc.id}_${groupeJ.id}_${exo.id}_${jid}_s${s}`
+              const box = document.createElement('div')
+              box.className = 'serie-box'
+
+              const chargeAffichee = charge.includes('kg') ? charge : ''
+              box.innerHTML = `
+                <div class="serie-label">Série ${s}</div>
+                <input class="serie-input"
+                  placeholder="${chargeAffichee || exo.rpe}"
+                  value="${chargesReelles[clef] || ''}"
+                  onchange="sauvegarderSerie('${clef}','${seanceActive.id}','${jid}',this.value,{exercice:'${exo.exercice}',nbReps:${exo.nbReps}})" />
+                <div class="serie-prescrit">${chargeAffichee ? 'Préco : ' + chargeAffichee : (intensityUnitIndiv === 'PCT' || intensityUnitIndiv === '%' ? exo.rpe + '%' : 'RPE ' + exo.rpe)}</div>
+              `
+              seriesDiv.appendChild(box)
+            }
+          }
+
+          exoCard.appendChild(seriesDiv)
+          blocCard.appendChild(exoCard)
+        })
+
+        blocsDiv.appendChild(blocCard)
+      })
+    }
+
+    window.sauvegarderSerie = async function(clef, seanceId, joueurId, val, exoData = null) {
+      const chargeNum = parseFloat(val);
+      chargesReelles[clef] = val
+      await setDoc(doc(db, 'chargesReelles', `${seanceId}_${joueurId}`),
+        { [clef]: val, updatedAt: serverTimestamp() }, { merge: true })
+      
+      // Si on a les données de l'exercice, calculer et enregistrer le 1RM
+      if (exoData && seanceActive) {
+        const reps = exoData.nbReps || 1;
+        const oneRM = calcOneRM(chargeNum, reps);
+        const j = joueurs.find(x => x.id === joueurId);
+        const poids = j?.poids || null;
+        const ratioPDC = poids ? parseFloat((oneRM / poids).toFixed(2)) : null;
+        const date = seanceActive.date || new Date().toISOString().split('T')[0];
+        
+        const perfId = `${joueurId}_${exoData.exercice}_${date}_${Date.now()}`;
+        await setDoc(doc(db, 'dataPerf', perfId), {
+          joueurId: joueurId,
+          exercice: exoData.exercice,
+          date: date,
+          charge: chargeNum,
+          reps: reps,
+          unite: 'kg',
+          oneRM: oneRM,
+          ratioPDC: ratioPDC,
+          seanceId: seanceActive.id,
+          createdAt: serverTimestamp()
+        });
+        
+        // Mettre à jour maxTestes si nouveau PR
+        const maxSnap = await getDoc(doc(db, 'maxTestes', joueurId));
+        const maxTestes = maxSnap.exists() ? maxSnap.data() : {};
+        const maxActuel = maxTestes[exoData.exercice] || 0;
+        if (oneRM > maxActuel) {
+          await setDoc(doc(db, 'maxTestes', joueurId), 
+            { [exoData.exercice]: oneRM }, { merge: true });
+        }
+      }
+    }
+
+    window.toggleSaisieMode = function(checked) {
+      saisieUniqueMode = checked
+      localStorage.setItem('tv_saisie_unique_mode', checked)
+      
+      const label = document.getElementById('tv-saisie-toggle-label')
+      if (label) {
+        label.textContent = checked ? "Toutes les séries d'un coup" : "Série par série"
+      }
+      
+      if (joueurActif) {
+        renderIndividu(joueurActif)
+      }
+    }
+
+    window.sauvegarderToutesLesSeries = async function(clefBase, nbSets, seanceId, joueurId, val, exoData = null) {
+      const chargeNum = parseFloat(val);
+      const updates = {}
+      for (let s = 1; s <= nbSets; s++) {
+        const clef = `${clefBase}_s${s}`
+        chargesReelles[clef] = val
+        updates[clef] = val
+      }
+      updates.updatedAt = serverTimestamp()
+      await setDoc(doc(db, 'chargesReelles', `${seanceId}_${joueurId}`), updates, { merge: true })
+      
+      // Si on a les données de l'exercice, calculer et enregistrer le 1RM
+      if (exoData && seanceActive) {
+        const reps = exoData.nbReps || 1;
+        const oneRM = calcOneRM(chargeNum, reps);
+        const j = joueurs.find(x => x.id === joueurId);
+        const poids = j?.poids || null;
+        const ratioPDC = poids ? parseFloat((oneRM / poids).toFixed(2)) : null;
+        const date = seanceActive.date || new Date().toISOString().split('T')[0];
+        
+        const perfId = `${joueurId}_${exoData.exercice}_${date}_${Date.now()}`;
+        await setDoc(doc(db, 'dataPerf', perfId), {
+          joueurId: joueurId,
+          exercice: exoData.exercice,
+          date: date,
+          charge: chargeNum,
+          reps: reps,
+          unite: 'kg',
+          oneRM: oneRM,
+          ratioPDC: ratioPDC,
+          seanceId: seanceActive.id,
+          createdAt: serverTimestamp()
+        });
+        
+        // Mettre à jour maxTestes si nouveau PR
+        const maxSnap = await getDoc(doc(db, 'maxTestes', joueurId));
+        const maxTestes = maxSnap.exists() ? maxSnap.data() : {};
+        const maxActuel = maxTestes[exoData.exercice] || 0;
+        if (oneRM > maxActuel) {
+          await setDoc(doc(db, 'maxTestes', joueurId), 
+            { [exoData.exercice]: oneRM }, { merge: true });
+        }
+      }
+    }
+  </script>
+</body>
+</html>

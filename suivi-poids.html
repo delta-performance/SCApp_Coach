@@ -1,0 +1,860 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>SCA Albi — Suivi Poids</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #0f0f0f; color: #fff; display: flex; height: 100vh; overflow: hidden; }
+    
+    /* iPad TopBar */
+    .ipad-topbar { position: fixed; top: 0; left: 0; right: 0; height: 44px; background: #111; border-bottom: 1px solid #2a2a2a; display: flex; align-items: center; padding: 0 12px; z-index: 50; }
+    .ipad-topbar-home { display: flex; align-items: center; gap: 8px; text-decoration: none; color: inherit; }
+    .ipad-topbar-logo { width: 28px; height: 28px; border-radius: 6px; background: #FECC00; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 800; color: #000; }
+    .ipad-topbar-sitename { font-size: 13px; font-weight: 700; color: #FECC00; }
+    .ipad-topbar-sep { width: 1px; height: 20px; background: #333; margin: 0 12px; }
+    .ipad-topbar-title { font-size: 13px; font-weight: 600; flex: 1; text-align: center; }
+
+    /* iPad Bottom Nav */
+    .ipad-bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; height: 64px; background: #111; border-top: 1px solid #2a2a2a; display: flex; justify-content: space-around; align-items: center; padding-bottom: env(safe-area-inset-bottom, 0); z-index: 50; }
+    .ipad-nav-item { display: flex; flex-direction: column; align-items: center; gap: 4px; text-decoration: none; color: #666; font-size: 10px; padding: 8px 16px; }
+    .ipad-nav-item.active { color: #FECC00; }
+    .ipad-nav-icon { font-size: 22px; line-height: 1; }
+
+    .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; margin-top: 44px; margin-bottom: 64px; }
+    .topbar { height: 56px; border-bottom: 1px solid #2a2a2a; display: flex; align-items: center; padding: 0 28px; gap: 12px; }
+    .topbar-title { font-size: 15px; font-weight: 600; flex: 1; }
+    .topbar-date { font-size: 12px; color: #555; }
+    .content { flex: 1; overflow-y: auto; padding: 24px 28px; }
+
+    /* STATS SUMMARY */
+    .stats-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 24px; }
+    .stat-card { background: #1a1a1a; border: 1px solid #2a2a2a; border-radius: 10px; padding: 14px 16px; }
+    .stat-label { font-size: 11px; color: #555; margin-bottom: 6px; text-transform: uppercase; letter-spacing: .06em; }
+    .stat-value { font-size: 24px; font-weight: 700; color: #fff; }
+    .stat-sub { font-size: 11px; color: #555; margin-top: 3px; }
+
+    /* FILTRES */
+    .toolbar { display: flex; align-items: center; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
+    .filter-btn { padding: 5px 14px; border-radius: 20px; border: 1px solid #2a2a2a; background: #1a1a1a; color: #888; font-size: 12px; cursor: pointer; transition: all .15s; }
+    .filter-btn:hover { color: #fff; border-color: #444; }
+    .filter-btn.active { background: #FECC00; color: #0f0f0f; border-color: #FECC00; font-weight: 600; }
+    .search-input { padding: 6px 12px; border-radius: 20px; border: 1px solid #2a2a2a; background: #1a1a1a; color: #fff; font-size: 12px; outline: none; margin-left: auto; width: 180px; }
+    .search-input:focus { border-color: #FECC00; }
+
+    /* ROSTER POIDS */
+    .poste-section { margin-bottom: 20px; }
+    .poste-label { font-size: 11px; font-weight: 600; color: #555; letter-spacing: .06em; text-transform: uppercase; margin-bottom: 8px; }
+    .players-grid { display: flex; flex-wrap: wrap; gap: 8px; }
+    .player-card {
+      width: 96px; border-radius: 10px; border: 1px solid #2a2a2a;
+      overflow: hidden; cursor: pointer; transition: transform .12s, border-color .15s;
+      position: relative; background: #1a1a1a;
+    }
+    .player-card:hover { transform: scale(1.03); border-color: #FECC00; }
+    .player-photo { width: 96px; height: 96px; display: flex; align-items: center; justify-content: center; font-size: 24px; font-weight: 700; color: #fff; }
+    .player-photo img { width: 96px; height: 96px; object-fit: cover; }
+    .player-info { padding: 6px 8px 8px; }
+    .player-name { font-size: 11px; font-weight: 600; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .poids-display { font-size: 14px; font-weight: 700; color: #FECC00; margin-top: 4px; }
+    .poids-date { font-size: 9px; color: #555; margin-top: 2px; }
+    .mini-chart { height: 24px; display: flex; align-items: flex-end; gap: 1px; margin-top: 6px; }
+    .mini-bar { flex: 1; background: #FECC00; border-radius: 1px 1px 0 0; min-height: 2px; }
+    .mg-bar { height: 4px; border-radius: 2px; background: #2a2a2a; margin: 4px 0 2px; overflow: hidden; }
+    .mg-fill { height: 100%; border-radius: 2px; transition: width 0.3s; }
+    .mg-fill.low { background: #1D9E75; }
+    .mg-fill.medium { background: #FECC00; }
+    .mg-fill.high { background: #EF9F27; }
+    .mg-display { font-size: 10px; color: #888; margin-top: 1px; }
+    .player-pictos { position: absolute; top: 4px; right: 4px; display: flex; flex-direction: column; gap: 3px; }
+    .picto { width: 18px; height: 18px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 700; }
+    .no-data-overlay {
+      position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.55); display: flex; align-items: flex-start; justify-content: center;
+      padding-top: 40px;
+      font-size: 10px; color: #aaa; border-radius: 10px;
+      font-weight: 600; pointer-events: none;
+    }
+
+    /* MODAL DETAIL */
+    .modal-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.75); align-items: center; justify-content: center; z-index: 100; }
+    .modal-overlay.open { display: flex; }
+    .modal { background: #1a1a1a; border: 1px solid #2a2a2a; border-radius: 16px; padding: 28px; width: min(480px, 94vw); max-height: 80vh; overflow-y: auto; }
+    .modal-header { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; }
+    .modal-avatar { width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 16px; font-weight: 700; color: #FECC00; }
+    .modal-nom { font-size: 16px; font-weight: 700; }
+    .modal-poste { font-size: 12px; color: #555; }
+    .modal-close { margin-left: auto; background: none; border: none; color: #555; font-size: 18px; cursor: pointer; }
+    .modal-close:hover { color: #fff; }
+    .detail-section { margin-bottom: 16px; }
+    .detail-title { font-size: 11px; color: #555; text-transform: uppercase; letter-spacing: .06em; margin-bottom: 8px; }
+    .detail-row { display: flex; justify-content: space-between; align-items: center; padding: 6px 0; border-bottom: 1px solid #222; }
+    .detail-key { font-size: 13px; color: #888; }
+    .detail-val { font-size: 13px; font-weight: 600; }
+    .historique-chart { height: 120px; background: #111; border-radius: 8px; margin-top: 6px; display: flex; align-items: flex-end; gap: 4px; padding: 8px; }
+    .histo-bar { flex: 1; border-radius: 3px 3px 0 0; min-height: 4px; transition: height .3s; position: relative; }
+    .histo-bar span { position: absolute; top: -16px; left: 50%; transform: translateX(-50%); font-size: 9px; color: #FECC00; font-weight: 700; }
+    .histo-bar small { position: absolute; bottom: -14px; left: 50%; transform: translateX(-50%); font-size: 8px; color: #555; white-space: nowrap; }
+    
+    /* Onglets modal */
+    .modal-tabs { display: flex; border-bottom: 1px solid #2a2a2a; margin-bottom: 20px; }
+    .modal-tab { flex: 1; padding: 10px; text-align: center; font-size: 13px; color: #888; cursor: pointer; border-bottom: 2px solid transparent; }
+    .modal-tab:hover { color: #fff; }
+    .modal-tab.active { color: #FECC00; border-bottom-color: #FECC00; }
+    .modal-content-tab { display: none; }
+    .modal-content-tab.active { display: block; }
+    
+    /* Saisie poids */
+    .saisie-poids { display: flex; gap: 8px; align-items: center; margin-top: 12px; }
+    .saisie-poids input { width: 100px; padding: 8px 12px; border-radius: 8px; border: 1px solid #2a2a2a; background: #111; color: #FECC00; font-size: 16px; font-weight: 700; text-align: center; }
+    .saisie-poids button { padding: 8px 16px; border-radius: 8px; border: none; background: #FECC00; color: #0f0f0f; font-size: 13px; font-weight: 700; cursor: pointer; }
+    .saisie-poids button:hover { background: #e6b800; }
+    
+    /* Pli cutanes - 4 sites Durnin-Wormseley */
+    .plis-section { background: #111; border: 1px solid #2a2a2a; border-radius: 10px; padding: 14px; margin-top: 12px; }
+    .plis-title { font-size: 11px; color: #555; text-transform: uppercase; letter-spacing: .06em; margin-bottom: 10px; }
+    .plis-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; }
+    .plis-input-group { display: flex; flex-direction: column; gap: 4px; }
+    .plis-input-group label { font-size: 10px; color: #888; }
+    .plis-input-group input { padding: 8px; border-radius: 6px; border: 1px solid #2a2a2a; background: #0f0f0f; color: #FECC00; font-size: 14px; font-weight: 700; text-align: center; }
+    .plis-result { display: flex; justify-content: space-between; align-items: center; padding: 10px 12px; background: #1a1a1a; border-radius: 8px; margin-top: 10px; }
+    .plis-result-label { font-size: 12px; color: #888; }
+    .plis-result-value { font-size: 18px; font-weight: 700; color: #FECC00; }
+    .plis-calc-btn { width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #2a2a2a; background: #1a1a1a; color: #888; font-size: 12px; cursor: pointer; margin-top: 10px; }
+    .plis-calc-btn:hover { border-color: #FECC00; color: #FECC00; }
+    
+    /* Courbe detaillee */
+    .courbe-chart { height: 200px; background: #111; border-radius: 8px; display: flex; align-items: flex-end; gap: 4px; padding: 12px; position: relative; }
+    .courbe-bar { flex: 1; border-radius: 3px 3px 0 0; min-height: 4px; transition: height .3s; position: relative; }
+    .courbe-bar span { position: absolute; top: -16px; left: 50%; transform: translateX(-50%); font-size: 9px; color: #FECC00; font-weight: 700; }
+    .courbe-bar small { position: absolute; bottom: -14px; left: 50%; transform: translateX(-50%); font-size: 8px; color: #555; white-space: nowrap; }
+
+    /* iPad adjustments */
+    @media (max-width: 1024px) {
+      .stats-row { grid-template-columns: repeat(2, 1fr); }
+      .player-card { width: 88px; }
+      .player-photo { width: 88px; height: 88px; }
+    }
+    
+    @media (max-width: 768px) {
+      .stats-row { grid-template-columns: 1fr 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <!-- iPad TopBar -->
+  <div class="ipad-topbar">
+    <a class="ipad-topbar-home" href="index.html">
+      <div class="ipad-topbar-logo">SC</div>
+      <span class="ipad-topbar-sitename">SCA Albi</span>
+    </a>
+    <div class="ipad-topbar-sep"></div>
+    <div class="ipad-topbar-title">Suivi Poids</div>
+  </div>
+
+  <!-- iPad Bottom Nav -->
+  <nav class="ipad-bottom-nav">
+    <a class="ipad-nav-item" href="planning.html">
+      <span class="ipad-nav-icon">📅</span>
+      <span>Planning</span>
+    </a>
+    <a class="ipad-nav-item" href="fiches-seances.html">
+      <span class="ipad-nav-icon">�</span>
+      <span>Séances</span>
+    </a>
+    <a class="ipad-nav-item" href="equipes.html?mode=entrainement">
+      <span class="ipad-nav-icon">👥</span>
+      <span>Équipes</span>
+    </a>
+    <a class="ipad-nav-item" href="gps-planif.html">
+      <span class="ipad-nav-icon">📡</span>
+      <span>Charge GPS</span>
+    </a>
+    <a class="ipad-nav-item" href="seances.html">
+      <span class="ipad-nav-icon">🏋️</span>
+      <span>Musculation</span>
+    </a>
+    <a class="ipad-nav-item active" href="suivi-poids.html">
+      <span class="ipad-nav-icon">⚖️</span>
+      <span>Suivi Poids</span>
+    </a>
+    <a class="ipad-nav-item" href="tv.html">
+      <span class="ipad-nav-icon">📺</span>
+      <span>Vue TV</span>
+    </a>
+  </nav>
+
+  <div class="main">
+    <div class="topbar">
+      <div class="topbar-title">Suivi Poids</div>
+      <div class="topbar-date" id="topbar-date"></div>
+    </div>
+    <div class="content">
+      <div class="stats-row">
+        <div class="stat-card">
+          <div class="stat-label">Pesees aujourd'hui</div>
+          <div class="stat-value" id="stat-recus">—</div>
+          <div class="stat-sub" id="stat-recus-sub">sur — joueurs</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Poids moyen equipe</div>
+          <div class="stat-value" id="stat-moy">—</div>
+          <div class="stat-sub">kg</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Variation 7j moyenne</div>
+          <div class="stat-value" id="stat-var">—</div>
+          <div class="stat-sub">kg</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Alertes</div>
+          <div class="stat-value" id="stat-alertes" style="color:#E24B4A">—</div>
+          <div class="stat-sub">variation > ±2kg</div>
+        </div>
+      </div>
+
+      <div class="toolbar">
+        <button class="filter-btn active" onclick="setFilter('tous',this)">Tous</button>
+        <button class="filter-btn" onclick="setFilter('peses',this)">Peses</button>
+        <button class="filter-btn" onclick="setFilter('manquants',this)">Manquants</button>
+        <button class="filter-btn" onclick="setFilter('alertes',this)">Alertes</button>
+        <input class="search-input" id="search" placeholder="Rechercher..." oninput="renderRoster()" />
+      </div>
+
+      <div id="roster-poids"></div>
+    </div>
+  </div>
+
+  <!-- MODAL DETAIL -->
+  <div class="modal-overlay" id="modal-detail">
+    <div class="modal">
+      <div class="modal-header">
+        <div class="modal-avatar" id="detail-avatar"></div>
+        <div>
+          <div class="modal-nom" id="detail-nom"></div>
+          <div class="modal-poste" id="detail-poste"></div>
+        </div>
+        <button class="modal-close" onclick="fermerDetail()">✕</button>
+      </div>
+      <div id="detail-contenu"></div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from './firebase-bundle.js'
+    import { getAuth, onAuthStateChanged, signOut } from './firebase-bundle.js'
+    import { getFirestore, collection, doc, getDocs, onSnapshot, setDoc, deleteDoc, serverTimestamp } from './firebase-bundle.js'
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyCvMs-5LX9Ivk3OkzUR3iz9Kk1E5b9_7Vk",
+      authDomain: "delta-rugby-app.firebaseapp.com",
+      projectId: "delta-rugby-app",
+      storageBucket: "delta-rugby-app.firebasestorage.app",
+      messagingSenderId: "61187079762",
+      appId: "1:61187079762:web:56cd1eaa8beb9e1a2ee98b"
+    }
+
+    const fbApp = initializeApp(firebaseConfig)
+    const auth = getAuth(fbApp)
+    const db = getFirestore(fbApp)
+
+    const POSTES_ORDER = ['Pilier gauche','Talonneur','Pilier droit','2e Ligne','N8','3e Ligne aile','Demi de melee',"Demi d'ouverture",'Centre','Ailier','Arriere']
+    const COULEURS_POSTE = { 'Pilier gauche':'#8B3A3A','Pilier droit':'#7A2A2A','Talonneur':'#6B3A8B','2e Ligne':'#3A6B8B','N8':'#1A6B4A','3e Ligne aile':'#3A8B6B','Demi de melee':'#8B6B3A',"Demi d'ouverture":'#6B8B3A','Centre':'#3A4A8B','Ailier':'#8B3A6B','Arriere':'#2A6B5B' }
+
+    let joueurs = []
+    let poidsAujourdhui = {}
+    let poidsHistorique = {}
+    let currentFilter = 'tous'
+
+    const aujourdhui = new Date().toISOString().split('T')[0]
+
+    onAuthStateChanged(auth, async user => {
+      if (!user) { window.location.href = 'login.html'; return }
+      document.getElementById('topbar-date').textContent = new Date().toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })
+
+      const snap = await getDocs(collection(db, 'joueurs'))
+      joueurs = snap.docs.map(d => ({ id: d.id, ...d.data() }))
+
+      // Ecoute poids temps reel
+      onSnapshot(collection(db, 'poids'), snap => {
+        poidsAujourdhui = {}
+        poidsHistorique = {}
+        snap.docs.forEach(d => {
+          const data = d.data()
+          const jid = data.joueurId
+          if (!jid) return
+          if (!poidsHistorique[jid]) poidsHistorique[jid] = []
+          poidsHistorique[jid].push({ date: data.date, poids: data.poids })
+          if (data.date === aujourdhui) poidsAujourdhui[jid] = data
+        })
+        // Trier historiques par date
+        Object.keys(poidsHistorique).forEach(jid => {
+          poidsHistorique[jid].sort((a, b) => a.date.localeCompare(b.date))
+        })
+        majStats()
+        renderRoster()
+      })
+    })
+
+    function majStats() {
+      const joueursDispo = joueurs.filter(j => j.statut !== 'absent')
+      const recus = Object.keys(poidsAujourdhui).length
+      const poidsValues = Object.values(poidsAujourdhui).map(p => p.poids).filter(Boolean)
+      const moy = poidsValues.length ? (poidsValues.reduce((a, b) => a + b, 0) / poidsValues.length).toFixed(1) : '—'
+      
+      // Calcul variation moyenne sur 7 jours
+      let varMoy = '—'
+      let alertes = 0
+      if (poidsValues.length > 0) {
+        let totalVar = 0
+        let countVar = 0
+        joueurs.forEach(j => {
+          const histo = poidsHistorique[j.id] || []
+          if (histo.length >= 2) {
+            const last7 = histo.slice(-8, -1) // 7 jours avant aujourd'hui
+            if (last7.length > 0) {
+              const moy7 = last7.reduce((a, b) => a + b.poids, 0) / last7.length
+              const today = poidsAujourdhui[j.id]?.poids
+              if (today) {
+                const var_ = today - moy7
+                totalVar += var_
+                countVar++
+                if (Math.abs(var_) > 2) alertes++
+              }
+            }
+          }
+        })
+        varMoy = countVar > 0 ? (totalVar / countVar).toFixed(2) : '—'
+      }
+
+      document.getElementById('stat-recus').textContent = recus
+      document.getElementById('stat-recus-sub').textContent = `sur ${joueursDispo.length} joueurs`
+      document.getElementById('stat-moy').textContent = moy
+      document.getElementById('stat-var').textContent = varMoy
+      document.getElementById('stat-alertes').textContent = alertes
+    }
+
+    window.renderRoster = function() {
+      const container = document.getElementById('roster-poids')
+      container.innerHTML = ''
+      const search = document.getElementById('search').value.toLowerCase()
+
+      const filtres = joueurs.filter(j => {
+        const p = poidsAujourdhui[j.id]
+        const nom = (j.nom + ' ' + j.prenom).toLowerCase()
+        if (search && !nom.includes(search)) return false
+        if (currentFilter === 'peses') return !!p
+        if (currentFilter === 'manquants') return !p && j.statut !== 'absent'
+        if (currentFilter === 'alertes') {
+          if (!p) return false
+          const histo = poidsHistorique[j.id] || []
+          if (histo.length < 2) return false
+          const last7 = histo.slice(-8, -1)
+          if (last7.length === 0) return false
+          const moy7 = last7.reduce((a, b) => a + b.poids, 0) / last7.length
+          return Math.abs(p.poids - moy7) > 2
+        }
+        return true
+      })
+
+      POSTES_ORDER.forEach(poste => {
+        const groupe = filtres.filter(j => j.poste === poste)
+        if (!groupe.length) return
+
+        const sec = document.createElement('div')
+        sec.className = 'poste-section'
+        sec.innerHTML = `<div class="poste-label">${poste}s (${groupe.length})</div>`
+
+        const grid = document.createElement('div')
+        grid.className = 'players-grid'
+        groupe.forEach(j => grid.appendChild(makeCard(j)))
+        sec.appendChild(grid)
+        container.appendChild(sec)
+      })
+    }
+
+    function makeCard(j) {
+      const p = poidsAujourdhui[j.id]
+      const poids = p?.poids || null
+      const histo = poidsHistorique[j.id] || []
+      let variation = null
+      if (poids && histo.length >= 2) {
+        const last7 = histo.slice(-8, -1)
+        if (last7.length > 0) {
+          const moy7 = last7.reduce((a, b) => a + b.poids, 0) / last7.length
+          variation = poids - moy7
+        }
+      }
+      const hasAlert = variation !== null && Math.abs(variation) > 2
+      const isUnavail = j.statut === 'absent' || j.statut === 'blesse'
+
+      const card = document.createElement('div')
+      card.className = 'player-card'
+      card.style.opacity = isUnavail ? '0.45' : '1'
+      card.style.filter = isUnavail ? 'grayscale(0.6)' : 'none'
+      card.style.borderColor = hasAlert ? '#E24B4A' : (poids ? '#FECC0055' : '#2a2a2a')
+      card.onclick = () => ouvrirDetail(j)
+
+      // Photo / initiales
+      const photo = document.createElement('div')
+      photo.className = 'player-photo'
+      photo.style.background = COULEURS_POSTE[j.poste] || '#333'
+      if (j.photo) {
+        const img = document.createElement('img')
+        img.src = j.photo
+        img.onerror = () => { photo.textContent = j.prenom[0] + j.nom[0] }
+        photo.appendChild(img)
+      } else {
+        photo.textContent = j.prenom[0] + j.nom[0]
+      }
+      card.appendChild(photo)
+
+      // Pictos
+      const pictos = document.createElement('div')
+      pictos.className = 'player-pictos'
+      if (j.statut === 'blesse') { const pDiv = document.createElement('div'); pDiv.className = 'picto'; pDiv.style.cssText = 'background:#E24B4A'; pDiv.textContent = '!'; pictos.appendChild(pDiv) }
+      if (j.statut === 'absent') { const pDiv = document.createElement('div'); pDiv.className = 'picto'; pDiv.style.cssText = 'background:#444'; pDiv.textContent = 'A'; pictos.appendChild(pDiv) }
+      if (hasAlert) { const pDiv = document.createElement('div'); pDiv.className = 'picto'; pDiv.style.cssText = 'background:#EF9F27'; pDiv.textContent = '▲'; pictos.appendChild(pDiv) }
+      if (j.espoir) { const pDiv = document.createElement('div'); pDiv.className = 'picto'; pDiv.style.cssText = 'background:#378ADD'; pDiv.textContent = 'E'; pictos.appendChild(pDiv) }
+      card.appendChild(pictos)
+
+      // Info
+      const info = document.createElement('div')
+      info.className = 'player-info'
+      const nom = document.createElement('div')
+      nom.className = 'player-name'
+      nom.textContent = j.nom
+
+      const poidsDisplay = document.createElement('div')
+      poidsDisplay.className = 'poids-display'
+      poidsDisplay.textContent = poids ? `${poids} kg` : '—'
+      if (hasAlert) poidsDisplay.style.color = '#E24B4A'
+
+      const dateDisplay = document.createElement('div')
+      dateDisplay.className = 'poids-date'
+      dateDisplay.textContent = p ? 'Aujourd\'hui' : (histo.length > 0 ? `Dernier: ${histo[histo.length-1].date.slice(5)}` : 'Jamaise pese')
+
+      // Mini-graphique historique (7 derniers jours)
+      const miniChart = document.createElement('div')
+      miniChart.className = 'mini-chart'
+      if (histo.length > 0) {
+        const recent = histo.slice(-7)
+        const minP = Math.min(...recent.map(h => h.poids))
+        const maxP = Math.max(...recent.map(h => h.poids))
+        const range = maxP - minP || 1
+        recent.forEach(h => {
+          const bar = document.createElement('div')
+          bar.className = 'mini-bar'
+          const h_pct = 20 + ((h.poids - minP) / range) * 80
+          bar.style.height = `${h_pct}%`
+          if (h.date === aujourdhui) bar.style.background = '#1D9E75'
+          miniChart.appendChild(bar)
+        })
+      }
+
+      // Barre de masse grasse
+      const mgBar = document.createElement('div')
+      mgBar.className = 'mg-bar'
+      const mgFill = document.createElement('div')
+      mgFill.className = 'mg-fill'
+      const masseGrasse = p?.masseGrasse
+      if (masseGrasse) {
+        const pct = Math.min((masseGrasse / 25) * 100, 100) // Max 25% pour la barre
+        mgFill.style.width = `${pct}%`
+        if (masseGrasse < 14) mgFill.classList.add('low')
+        else if (masseGrasse < 18) mgFill.classList.add('medium')
+        else mgFill.classList.add('high')
+      } else {
+        mgFill.style.width = '0%'
+      }
+      mgBar.appendChild(mgFill)
+
+      const mgDisplay = document.createElement('div')
+      mgDisplay.className = 'mg-display'
+      mgDisplay.textContent = masseGrasse ? `MG: ${masseGrasse.toFixed(1)}%` : 'MG: —'
+
+      info.appendChild(nom); info.appendChild(poidsDisplay); info.appendChild(dateDisplay); info.appendChild(miniChart); info.appendChild(mgBar); info.appendChild(mgDisplay)
+      if (!p && j.statut !== 'absent') {
+        const overlay = document.createElement('div')
+        overlay.className = 'no-data-overlay'
+        overlay.textContent = 'Pas pese'
+        card.appendChild(overlay)
+      }
+      card.appendChild(info)
+      return card
+    }
+
+    function ouvrirDetail(j) {
+      const p = poidsAujourdhui[j.id]
+      const histo = poidsHistorique[j.id] || []
+
+      document.getElementById('detail-avatar').textContent = j.prenom[0] + j.nom[0]
+      document.getElementById('detail-avatar').style.background = COULEURS_POSTE[j.poste] || '#333'
+      document.getElementById('detail-nom').textContent = j.prenom + ' ' + j.nom
+      document.getElementById('detail-poste').textContent = j.poste || ''
+
+      const c = document.getElementById('detail-contenu')
+      c.innerHTML = ''
+
+      // Onglets
+      const tabsDiv = document.createElement('div')
+      tabsDiv.className = 'modal-tabs'
+      tabsDiv.innerHTML = `
+        <div class="modal-tab active" onclick="switchTab('saisie')">Saisie</div>
+        <div class="modal-tab" onclick="switchTab('courbe')">Courbe</div>
+      `
+      c.appendChild(tabsDiv)
+
+      // === ONGLET SAISIE ===
+      const saisieTab = document.createElement('div')
+      saisieTab.className = 'modal-content-tab active'
+      saisieTab.id = 'tab-saisie'
+      
+      // Section saisie poids
+      const saisieSec = document.createElement('div')
+      saisieSec.className = 'detail-section'
+      saisieSec.innerHTML = '<div class="detail-title">Saisie du poids</div>'
+      const saisieDiv = document.createElement('div')
+      saisieDiv.className = 'saisie-poids'
+      const input = document.createElement('input')
+      input.type = 'number'
+      input.id = 'modal-poids-input'
+      input.min = '40'
+      input.max = '200'
+      input.step = '0.1'
+      input.placeholder = '85'
+      input.value = p?.poids || ''
+      const btn = document.createElement('button')
+      btn.textContent = 'Enregistrer'
+      btn.onclick = () => sauverPoids(j.id, input.value)
+      saisieDiv.appendChild(input)
+      saisieDiv.appendChild(btn)
+      saisieSec.appendChild(saisieDiv)
+      saisieTab.appendChild(saisieSec)
+
+      // Info actuelle
+      if (p) {
+        const infoSec = document.createElement('div')
+        infoSec.className = 'detail-section'
+        infoSec.innerHTML = `
+          <div class="detail-row">
+            <span class="detail-key">Poids actuel</span>
+            <span class="detail-val" style="color:#FECC00; font-size:20px;">${p.poids} kg</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-key">Date</span>
+            <span class="detail-val">${p.date}</span>
+          </div>
+        `
+        // Calcul variation
+        if (histo.length >= 2) {
+          const last7 = histo.slice(0, -1).slice(-7)
+          if (last7.length > 0) {
+            const moy7 = last7.reduce((a, b) => a + b.poids, 0) / last7.length
+            const var_ = p.poids - moy7
+            const varColor = Math.abs(var_) > 2 ? '#E24B4A' : (var_ > 0 ? '#1D9E75' : '#EF9F27')
+            infoSec.innerHTML += `
+              <div class="detail-row">
+                <span class="detail-key">Variation vs 7j</span>
+                <span class="detail-val" style="color:${varColor};">${var_ > 0 ? '+' : ''}${var_.toFixed(2)} kg</span>
+              </div>
+            `
+          }
+        }
+        // Afficher masse grasse si disponible
+        if (p?.masseGrasse) {
+          const mgColor = p.masseGrasse < 6 ? '#E24B4A' : (p.masseGrasse < 14 ? '#1D9E75' : '#FECC00')
+          infoSec.innerHTML += `
+            <div class="detail-row">
+              <span class="detail-key">Masse grasse</span>
+              <span class="detail-val" style="color:${mgColor}; font-size:18px;">${p.masseGrasse.toFixed(1)}%</span>
+            </div>
+          `
+        }
+        saisieTab.appendChild(infoSec)
+      }
+
+      // Section plis cutanes (4 sites Durnin-Wormseley)
+      const plisSec = document.createElement('div')
+      plisSec.className = 'detail-section'
+      plisSec.innerHTML = `
+        <div class="plis-section">
+          <div class="plis-title">Pli cutane - 4 sites Durnin & Womersley (mm)</div>
+          <div class="plis-grid">
+            <div class="plis-input-group">
+              <label>Biceps</label>
+              <input type="number" id="pli-biceps" min="1" max="50" step="0.1" placeholder="mm" value="${p?.pliBiceps || ''}">
+            </div>
+            <div class="plis-input-group">
+              <label>Triceps</label>
+              <input type="number" id="pli-triceps" min="1" max="50" step="0.1" placeholder="mm" value="${p?.pliTriceps || ''}">
+            </div>
+            <div class="plis-input-group">
+              <label>Subscapulaire</label>
+              <input type="number" id="pli-subscapulaire" min="1" max="50" step="0.1" placeholder="mm" value="${p?.pliSubscapulaire || ''}">
+            </div>
+            <div class="plis-input-group">
+              <label>Supra-iliaque</label>
+              <input type="number" id="pli-suprailiaque" min="1" max="50" step="0.1" placeholder="mm" value="${p?.pliSuprailiaque || ''}">
+            </div>
+          </div>
+          <button class="plis-calc-btn" onclick="calculerMasseGrasse('${j.id}')">Calculer la masse grasse</button>
+          <div id="plis-result-container" style="display:none; margin-top:10px;">
+            <div class="plis-result">
+              <span class="plis-result-label">Masse grasse estimee</span>
+              <span class="plis-result-value" id="masse-grasse-value">—%</span>
+            </div>
+            <div id="age-info" style="font-size:11px;color:#888;margin-top:4px;text-align:center;"></div>
+            <div style="font-size:10px;color:#555;margin-top:6px;text-align:center;">
+              Formule Durnin & Womersley (4 sites) - adaptee a l'age du joueur
+            </div>
+          </div>
+        </div>
+      `
+      saisieTab.appendChild(plisSec)
+      c.appendChild(saisieTab)
+
+      // === ONGLET COURBE ===
+      const courbeTab = document.createElement('div')
+      courbeTab.className = 'modal-content-tab'
+      courbeTab.id = 'tab-courbe'
+      
+      if (histo.length > 0) {
+        // Courbe de poids
+        const sec = document.createElement('div')
+        sec.className = 'detail-section'
+        sec.innerHTML = '<div class="detail-title">Courbe de poids - 30 derniers jours</div>'
+        const chart = document.createElement('div')
+        chart.className = 'courbe-chart'
+        const recent = histo.slice(-30)
+        const minP = Math.min(...recent.map(h => h.poids))
+        const maxP = Math.max(...recent.map(h => h.poids))
+        const range = maxP - minP || 1
+        recent.forEach(h => {
+          const bar = document.createElement('div')
+          bar.className = 'courbe-bar'
+          const h_pct = 20 + ((h.poids - minP) / range) * 80
+          const isToday = h.date === aujourdhui
+          bar.style.cssText = `height:${h_pct}%; background:${isToday ? '#1D9E75' : '#FECC00'};`
+          bar.innerHTML = `<span>${h.poids.toFixed(1)}</span><small>${h.date.slice(5)}</small>`
+          bar.title = `${h.date}: ${h.poids} kg`
+          chart.appendChild(bar)
+        })
+        sec.appendChild(chart)
+        courbeTab.appendChild(sec)
+        
+        // Courbe de masse grasse
+        const mgHisto = recent.filter(h => h.masseGrasse)
+        if (mgHisto.length > 0) {
+          const mgSec = document.createElement('div')
+          mgSec.className = 'detail-section'
+          mgSec.innerHTML = '<div class="detail-title">Courbe de masse grasse - 30 derniers jours</div>'
+          const mgChart = document.createElement('div')
+          mgChart.className = 'courbe-chart'
+          const minMG = Math.min(...mgHisto.map(h => h.masseGrasse))
+          const maxMG = Math.max(...mgHisto.map(h => h.masseGrasse))
+          const rangeMG = maxMG - minMG || 1
+          mgHisto.forEach(h => {
+            const bar = document.createElement('div')
+            bar.className = 'courbe-bar'
+            const h_pct = 20 + ((h.masseGrasse - minMG) / rangeMG) * 80
+            const color = h.masseGrasse < 14 ? '#1D9E75' : h.masseGrasse < 18 ? '#FECC00' : '#EF9F27'
+            bar.style.cssText = `height:${h_pct}%; background:${color};`
+            bar.innerHTML = `<span>${h.masseGrasse.toFixed(1)}%</span><small>${h.date.slice(5)}</small>`
+            bar.title = `${h.date}: ${h.masseGrasse.toFixed(1)}%`
+            mgChart.appendChild(bar)
+          })
+          mgSec.appendChild(mgChart)
+          courbeTab.appendChild(mgSec)
+        }
+        
+        // Stats sur la periode
+        const statsSec = document.createElement('div')
+        statsSec.className = 'detail-section'
+        const debut = recent[0].poids
+        const fin = recent[recent.length - 1].poids
+        const evolution = fin - debut
+        const minVal = Math.min(...recent.map(h => h.poids))
+        const maxVal = Math.max(...recent.map(h => h.poids))
+        statsSec.innerHTML = `
+          <div class="detail-title">Statistiques periode</div>
+          <div class="detail-row">
+            <span class="detail-key">Evolution</span>
+            <span class="detail-val" style="color:${evolution >= 0 ? '#1D9E75' : '#E24B4A'};">${evolution > 0 ? '+' : ''}${evolution.toFixed(2)} kg</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-key">Min / Max</span>
+            <span class="detail-val">${minVal.toFixed(1)} / ${maxVal.toFixed(1)} kg</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-key">Amplitude</span>
+            <span class="detail-val">${(maxVal - minVal).toFixed(1)} kg</span>
+          </div>
+        `
+        courbeTab.appendChild(statsSec)
+        
+        // Boutons modifier/supprimer pour l'entree du jour
+        if (p) {
+          const actionsSec = document.createElement('div')
+          actionsSec.className = 'detail-section'
+          actionsSec.style.marginTop = '20px'
+          actionsSec.innerHTML = `
+            <div class="detail-title">Actions</div>
+            <div style="display:flex;gap:10px;">
+              <button onclick="supprimerEntree('${j.id}', '${p.date}')" style="flex:1;padding:10px;border-radius:8px;border:1px solid #E24B4A;background:#E24B4A22;color:#E24B4A;font-size:13px;cursor:pointer;">
+                🗑 Supprimer entree
+              </button>
+            </div>
+          `
+          courbeTab.appendChild(actionsSec)
+        }
+      } else {
+        courbeTab.innerHTML = '<div style="color:#555; text-align:center; padding:40px;">Aucun historique de poids.</div>'
+      }
+      c.appendChild(courbeTab)
+
+      document.getElementById('modal-detail').classList.add('open')
+    }
+
+    window.switchTab = function(tab) {
+      document.querySelectorAll('.modal-tab').forEach(t => t.classList.remove('active'))
+      document.querySelectorAll('.modal-content-tab').forEach(t => t.classList.remove('active'))
+      document.querySelector(`.modal-tab[onclick="switchTab('${tab}')"]`).classList.add('active')
+      document.getElementById('tab-' + tab).classList.add('active')
+    }
+
+    async function sauverPoids(joueurId, val) {
+      const poids = parseFloat(val)
+      if (!poids || poids < 40 || poids > 200) {
+        alert('Veuillez entrer un poids valide (40-200 kg)')
+        return
+      }
+      // Recuperer les valeurs des 4 plis si presents
+      const pliBiceps = parseFloat(document.getElementById('pli-biceps')?.value) || null
+      const pliTriceps = parseFloat(document.getElementById('pli-triceps')?.value) || null
+      const pliSubscapulaire = parseFloat(document.getElementById('pli-subscapulaire')?.value) || null
+      const pliSuprailiaque = parseFloat(document.getElementById('pli-suprailiaque')?.value) || null
+      const masseGrasse = parseFloat(document.getElementById('masse-grasse-value')?.dataset?.value) || null
+      
+      try {
+        const data = {
+          joueurId: joueurId,
+          date: aujourdhui,
+          poids: poids,
+          updatedAt: serverTimestamp()
+        }
+        if (pliBiceps) data.pliBiceps = pliBiceps
+        if (pliTriceps) data.pliTriceps = pliTriceps
+        if (pliSubscapulaire) data.pliSubscapulaire = pliSubscapulaire
+        if (pliSuprailiaque) data.pliSuprailiaque = pliSuprailiaque
+        if (masseGrasse) data.masseGrasse = masseGrasse
+        
+        await setDoc(doc(db, 'poids', `${joueurId}_${aujourdhui}`), data)
+        // Fermer modal et rafraichir
+        fermerDetail()
+      } catch (e) {
+        console.error(e)
+        alert('Erreur lors de la sauvegarde')
+      }
+    }
+
+    // Calculer l'age a partir de la date de naissance
+    function calculerAge(dateNaissance) {
+      if (!dateNaissance) return 25 // Valeur par defaut
+      const today = new Date()
+      const birth = new Date(dateNaissance)
+      let age = today.getFullYear() - birth.getFullYear()
+      const m = today.getMonth() - birth.getMonth()
+      if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) {
+        age--
+      }
+      return age
+    }
+
+    window.calculerMasseGrasse = function(joueurId) {
+      const pliBiceps = parseFloat(document.getElementById('pli-biceps').value)
+      const pliTriceps = parseFloat(document.getElementById('pli-triceps').value)
+      const pliSubscapulaire = parseFloat(document.getElementById('pli-subscapulaire').value)
+      const pliSuprailiaque = parseFloat(document.getElementById('pli-suprailiaque').value)
+      
+      if (!pliBiceps || !pliTriceps || !pliSubscapulaire || !pliSuprailiaque) {
+        alert('Veuillez saisir les 4 valeurs de plis cutanes')
+        return
+      }
+      
+      // Recuperer le joueur et calculer son age
+      const joueur = joueurs.find(j => j.id === joueurId)
+      const age = calculerAge(joueur?.dateNaissance)
+      
+      // Formule Durnin & Womersley - 4 sites (adaptee selon l'age)
+      const sommePlis = pliBiceps + pliTriceps + pliSubscapulaire + pliSuprailiaque
+      const logSomme = Math.log10(sommePlis)
+      
+      // Coefficients selon la tranche d'age (hommes)
+      let a, b
+      if (age < 20) { a = 1.1620; b = 0.0630 }      // 17-19 ans
+      else if (age < 30) { a = 1.1631; b = 0.0632 } // 20-29 ans
+      else if (age < 40) { a = 1.1422; b = 0.0544 } // 30-39 ans
+      else if (age < 50) { a = 1.1620; b = 0.0700 } // 40-49 ans
+      else { a = 1.1715; b = 0.0779 }               // 50+ ans
+      
+      const densite = a - (b * logSomme)
+      
+      // Masse grasse % = (495 / D) - 450
+      const masseGrasse = ((495 / densite) - 450)
+      
+      const resultContainer = document.getElementById('plis-result-container')
+      const resultValue = document.getElementById('masse-grasse-value')
+      resultContainer.style.display = 'block'
+      resultValue.textContent = masseGrasse.toFixed(1) + '%'
+      resultValue.dataset.value = masseGrasse.toFixed(2)
+      
+      // Afficher l'age utilise pour le calcul
+      const ageInfo = document.getElementById('age-info')
+      if (ageInfo) ageInfo.textContent = `Age: ${age} ans`
+      
+      // Color selon la valeur
+      if (masseGrasse < 6) resultValue.style.color = '#E24B4A' // Trop bas
+      else if (masseGrasse < 14) resultValue.style.color = '#1D9E75' // Athlete
+      else if (masseGrasse < 18) resultValue.style.color = '#FECC00' // Fitness
+      else resultValue.style.color = '#EF9F27' // Acceptable+
+    }
+
+    // Modifier une entree de poids existante
+    window.modifierEntree = async function(joueurId, date, nouvellesDonnees) {
+      try {
+        await setDoc(doc(db, 'poids', `${joueurId}_${date}`), nouvellesDonnees, { merge: true })
+        fermerDetail()
+      } catch (e) {
+        console.error(e)
+        alert('Erreur lors de la modification')
+      }
+    }
+
+    // Supprimer une entree de poids
+    window.supprimerEntree = async function(joueurId, date) {
+      if (!confirm('Supprimer cette entree de poids ?')) return
+      try {
+        await deleteDoc(doc(db, 'poids', `${joueurId}_${date}`))
+        fermerDetail()
+      } catch (e) {
+        console.error(e)
+        alert('Erreur lors de la suppression')
+      }
+    }
+
+    window.fermerDetail = function() {
+      document.getElementById('modal-detail').classList.remove('open')
+    }
+
+    window.setFilter = function(f, btn) {
+      currentFilter = f
+      document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'))
+      btn.classList.add('active')
+      renderRoster()
+    }
+
+  </script>
+</body>
+</html>

@@ -1,0 +1,660 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>SCA Albi — Planification Muscu</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #0f0f0f; color: #fff; display: flex; height: 100vh; overflow: hidden; }
+    .sidebar { width: 220px; min-width: 220px; background: #1a1a1a; border-right: 1px solid #2a2a2a; display: flex; flex-direction: column; padding: 20px 0; }
+    .sidebar-logo { display: flex; align-items: center; gap: 10px; padding: 0 20px 24px; border-bottom: 1px solid #2a2a2a; }
+    .sidebar-logo img { width: 36px; }
+    .sidebar-logo span { font-size: 15px; font-weight: 700; color: #FECC00; }
+    .nav-section { padding: 16px 12px 8px; font-size: 10px; font-weight: 600; color: #444; letter-spacing: .08em; text-transform: uppercase; }
+    .nav-item { display: flex; align-items: center; gap: 10px; padding: 9px 20px; font-size: 13px; color: #888; cursor: pointer; border-left: 2px solid transparent; transition: all .15s; }
+    .nav-item:hover { color: #fff; background: #222; }
+    .nav-item.active { color: #FECC00; border-left-color: #FECC00; background: #222; }
+    .nav-dot { width: 7px; height: 7px; border-radius: 50%; background: currentColor; opacity: 0.6; }
+    .sidebar-bottom { margin-top: auto; padding: 16px 20px; border-top: 1px solid #2a2a2a; }
+    .user-info { font-size: 12px; color: #555; margin-bottom: 8px; }
+    .logout-btn { font-size: 12px; color: #555; cursor: pointer; background: none; border: none; }
+    .logout-btn:hover { color: #E24B4A; }
+    .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+    .topbar { height: 56px; border-bottom: 1px solid #2a2a2a; display: flex; align-items: center; padding: 0 24px; gap: 12px; flex-shrink: 0; }
+    .topbar-title { font-size: 15px; font-weight: 600; flex: 1; }
+    .btn-primary { padding: 7px 14px; border-radius: 8px; border: none; background: #FECC00; color: #0f0f0f; font-size: 13px; font-weight: 600; cursor: pointer; }
+    .btn-primary:hover { opacity: .88; }
+    .btn-ghost { padding: 7px 12px; border-radius: 8px; border: 1px solid #2a2a2a; background: none; color: #888; font-size: 13px; cursor: pointer; }
+    .btn-ghost:hover { color: #fff; border-color: #444; }
+    .content { flex: 1; overflow-y: auto; padding: 20px 24px; }
+
+    /* CASCADE */
+    .cycles-list { display: flex; flex-direction: column; gap: 16px; }
+
+    .cycle-block {
+      background: #1a1a1a; border: 1px solid #2a2a2a; border-radius: 12px; overflow: hidden;
+    }
+    .cycle-header {
+      display: flex; align-items: center; gap: 12px; padding: 14px 18px;
+      background: #222; border-bottom: 1px solid #2a2a2a; cursor: pointer;
+    }
+    .cycle-header:hover { background: #282828; }
+    .cycle-num { font-size: 11px; font-weight: 700; color: #FECC00; background: #FECC0022; border: 1px solid #FECC0044; border-radius: 6px; padding: 2px 8px; white-space: nowrap; }
+    .cycle-nom { font-size: 15px; font-weight: 700; flex: 1; }
+    .cycle-meta { font-size: 11px; color: #555; }
+    .cycle-chevron { font-size: 12px; color: #555; transition: transform .2s; }
+    .cycle-chevron.open { transform: rotate(90deg); }
+    .cycle-actions { display: flex; gap: 6px; }
+    .mini-btn { padding: 4px 10px; border-radius: 6px; border: 1px solid #2a2a2a; background: none; color: #666; font-size: 11px; cursor: pointer; }
+    .mini-btn:hover { color: #fff; border-color: #444; }
+
+    .cycle-body { display: none; padding: 0; }
+    .cycle-body.open { display: block; }
+
+    /* SEMAINES */
+    .semaine-block { border-top: 1px solid #1a1a1a; }
+    .semaine-header {
+      display: flex; align-items: center; gap: 10px; padding: 10px 18px 10px 32px;
+      background: #1c1c1c; border-bottom: 1px solid #111; cursor: pointer;
+    }
+    .semaine-header:hover { background: #1f1f1f; }
+    .semaine-num { font-size: 10px; font-weight: 700; color: #888; min-width: 60px; }
+    .semaine-dates { font-size: 12px; color: #fff; flex: 1; }
+    .semaine-meta { font-size: 11px; color: #555; }
+    .semaine-chevron { font-size: 11px; color: #444; transition: transform .2s; }
+    .semaine-chevron.open { transform: rotate(90deg); }
+
+    .semaine-body { display: none; padding: 8px 18px 8px 48px; background: #111; }
+    .semaine-body.open { display: block; }
+
+    /* SÉANCES dans une semaine */
+    .seance-row {
+      display: flex; align-items: center; gap: 12px; padding: 8px 10px;
+      border-radius: 8px; margin-bottom: 4px; cursor: pointer; transition: background .12s;
+    }
+    .seance-row:hover { background: #1a1a1a; }
+    .seance-date-pill { font-size: 10px; color: #FECC00; background: #FECC0011; border: 1px solid #FECC0033; border-radius: 4px; padding: 2px 7px; white-space: nowrap; }
+    .seance-theme { font-size: 12px; color: #ccc; flex: 1; }
+    .seance-blocs-meta { font-size: 10px; color: #444; }
+    .seance-badges { display: flex; gap: 4px; flex-wrap: wrap; }
+    .seance-badge { font-size: 9px; padding: 1px 6px; border-radius: 4px; }
+    .badge-noj { background: #EF9F2722; color: #EF9F27; border: 1px solid #EF9F2744; }
+    .badge-blesse { background: #E24B4A22; color: #E24B4A; border: 1px solid #E24B4A44; }
+    .seance-row-actions { display: flex; gap: 4px; opacity: 0; transition: opacity .12s; }
+    .seance-row:hover .seance-row-actions { opacity: 1; }
+
+    /* MODAL CYCLE */
+    .modal-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.75); align-items: center; justify-content: center; z-index: 100; }
+    .modal-overlay.open { display: flex; }
+    .modal { background: #1a1a1a; border: 1px solid #2a2a2a; border-radius: 16px; padding: 28px; width: 440px; max-height: 80vh; overflow-y: auto; }
+    .modal-title { font-size: 15px; font-weight: 700; margin-bottom: 20px; }
+    .form-field { margin-bottom: 12px; }
+    .form-field label { display: block; font-size: 11px; color: #555; margin-bottom: 5px; }
+    .form-field input, .form-field select, .form-field textarea { width: 100%; padding: 8px 10px; border-radius: 8px; border: 1px solid #2a2a2a; background: #0f0f0f; color: #fff; font-size: 13px; outline: none; }
+    .form-field input:focus, .form-field select:focus { border-color: #FECC00; }
+    .form-grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .modal-actions { display: flex; gap: 10px; margin-top: 20px; }
+
+    /* MODAL DUPLIQUER SÉANCE */
+    .seance-dest-list { max-height: 200px; overflow-y: auto; }
+    .seance-dest-item { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 8px; cursor: pointer; transition: background .12s; }
+    .seance-dest-item:hover { background: #222; }
+    .seance-dest-item input[type="radio"] { accent-color: #FECC00; }
+
+    .empty { color: #444; text-align: center; padding: 60px; font-size: 13px; }
+  </style>
+
+  <style>
+  /* ===== iPad-first NAV override ===== */
+  * { -webkit-tap-highlight-color: transparent; }
+  :root {
+    --yellow: #FECC00; --red: #E24B4A; --green: #1D9E75;
+    --bg: #0a0a0a; --bg2: #141414; --bg3: #1c1c1c;
+    --border: #1e1e1e; --border2: #2a2a2a;
+    --text: #fff; --text2: #888; --text3: #555;
+    --safe-bottom: env(safe-area-inset-bottom, 0px);
+    --topbar-h: 60px; --bottom-h: 68px;
+  }
+  /* Kill sidebar */
+  .sidebar { display: none !important; }
+  /* Body layout */
+  body { flex-direction: column !important; overflow: hidden !important; background: var(--bg) !important; }
+  /* Main takes full width */
+  .main { flex: 1 !important; display: flex !important; flex-direction: column !important; overflow: hidden !important;
+          padding-bottom: calc(var(--bottom-h) + var(--safe-bottom)) !important; }
+  /* Existing topbar: keep but restyle */
+  .main > .topbar, #topbar-liste, #topbar-editor {
+    border-bottom: 1px solid var(--border2) !important;
+    display: flex !important; align-items: center !important;
+    padding: 8px 16px !important; gap: 10px !important;
+    flex-shrink: 0 !important; flex-wrap: wrap !important;
+    background: var(--bg) !important; height: auto !important; min-height: 52px !important;
+  }
+  .topbar-title { display: none !important; }
+  /* iPad Topbar */
+  .ipad-topbar {
+    height: var(--topbar-h); background: var(--bg2); border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; padding: 0 16px; gap: 12px; flex-shrink: 0;
+    padding-top: env(safe-area-inset-top, 0);
+  }
+  .ipad-topbar-home { display: flex; align-items: center; gap: 8px; text-decoration: none; }
+  .ipad-topbar-logo {
+    width: 34px; height: 34px; border-radius: 9px; background: var(--yellow);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px; font-weight: 900; color: #000; flex-shrink: 0;
+  }
+  .ipad-topbar-sitename { font-size: 13px; font-weight: 700; color: var(--yellow); }
+  .ipad-topbar-sep { width: 1px; height: 22px; background: var(--border2); margin: 0 4px; }
+  .ipad-topbar-title { font-size: 18px; font-weight: 700; color: var(--text); flex: 1; }
+  /* Bottom Nav */
+  .ipad-bottom-nav {
+    position: fixed; bottom: 0; left: 0; right: 0;
+    height: calc(var(--bottom-h) + var(--safe-bottom));
+    padding-bottom: var(--safe-bottom);
+    background: var(--bg2); border-top: 1px solid var(--border);
+    display: flex; align-items: stretch; z-index: 9999;
+  }
+  .ipad-nav-item {
+    flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 3px; cursor: pointer; text-decoration: none; color: var(--text3);
+    font-size: 10px; font-weight: 600; letter-spacing: 0.02em; transition: color 0.12s;
+    padding: 0 2px; border: none; background: none;
+  }
+  .ipad-nav-item:active { background: #ffffff08; }
+  .ipad-nav-item.active { color: var(--yellow); }
+  .ipad-nav-icon { font-size: 22px; line-height: 1; }
+  /* Bigger buttons */
+  .btn-primary { padding: 11px 18px !important; border-radius: 10px !important; font-size: 14px !important; font-weight: 700 !important; min-height: 44px !important; cursor: pointer !important; }
+  .btn-ghost   { padding: 11px 14px !important; border-radius: 10px !important; font-size: 14px !important; min-height: 44px !important; cursor: pointer !important; }
+  .btn-danger  { padding: 11px 14px !important; border-radius: 10px !important; font-size: 14px !important; min-height: 44px !important; cursor: pointer !important; }
+  .btn-nav     { padding: 10px 14px !important; min-height: 44px !important; border-radius: 9px !important; font-size: 16px !important; }
+  /* Mode toggle */
+  .mode-toggle { border-radius: 10px !important; padding: 4px !important; }
+  .mode-btn    { padding: 9px 14px !important; border-radius: 7px !important; font-size: 13px !important; min-height: 38px !important; }
+  /* Prevent iOS input zoom */
+  input, select, textarea { font-size: 16px !important; }
+  /* Content scroll */
+  .content { flex: 1 !important; overflow-y: auto !important; -webkit-overflow-scrolling: touch !important; padding: 16px 18px !important; }
+  /* Touch targets */
+  .seance-card, .cycle-header, .semaine-header { min-height: 54px !important; }
+  /* Modal */
+  .modal { width: min(580px, 94vw) !important; max-width: 94vw !important; }
+  .modal-box { width: min(500px, 94vw) !important; }
+  </style>
+
+</head>
+<body>
+  <!-- iPad TopBar -->
+  <div class="ipad-topbar">
+    <a class="ipad-topbar-home" href="index.html">
+      <div class="ipad-topbar-logo">SC</div>
+      <span class="ipad-topbar-sitename">SCA Albi</span>
+    </a>
+    <div class="ipad-topbar-sep"></div>
+    <div class="ipad-topbar-title">Planification muscu</div>
+  </div>
+  <!-- Bottom Nav -->
+  <nav class="ipad-bottom-nav">
+    <a class="ipad-nav-item" href="planning.html">
+      <span class="ipad-nav-icon">📅</span>
+      <span>Planning</span>
+    </a>
+    <a class="ipad-nav-item" href="fiches-seances.html">
+      <span class="ipad-nav-icon">🏉</span>
+      <span>Séances</span>
+    </a>
+    <a class="ipad-nav-item" href="equipes.html?mode=entrainement">
+      <span class="ipad-nav-icon">👥</span>
+      <span>Équipes</span>
+    </a>
+    <a class="ipad-nav-item" href="gps-planif.html">
+      <span class="ipad-nav-icon">📡</span>
+      <span>Charge GPS</span>
+    </a>
+    <a class="ipad-nav-item active" href="seances.html">
+      <span class="ipad-nav-icon">🏋️</span>
+      <span>Musculation</span>
+    </a>
+    <a class="ipad-nav-item" href="suivi-poids.html">
+      <span class="ipad-nav-icon">⚖️</span>
+      <span>Suivi Poids</span>
+    </a>
+    <a class="ipad-nav-item" href="tv.html">
+      <span class="ipad-nav-icon">📺</span>
+      <span>Vue TV</span>
+    </a>
+  </nav>
+
+  <div class="sidebar">
+    <div class="sidebar-logo">
+      <img src="https://www.sca-albi.fr/wp-content/uploads/2023/10/cropped-SCA-bis.png">
+      <span>SCA Albi</span>
+    </div>
+    <div class="nav-section">Effectif</div>
+    <div class="nav-item" onclick="location.href='index.html'"><div class="nav-dot"></div> Roster</div>
+    <div class="nav-section">Entraînement</div>
+    <div class="nav-item" onclick="location.href='seances.html'"><div class="nav-dot"></div> Séances</div>
+    <div class="nav-item" onclick="location.href='exercices.html'"><div class="nav-dot"></div> Exercices</div>
+    <div class="nav-item active" onclick="location.href='planification-muscu.html'"><div class="nav-dot"></div> Planification muscu</div>
+    <div class="nav-section">Suivi</div>
+    <div class="nav-item" onclick="location.href='wellness.html'"><div class="nav-dot"></div> Wellness</div>
+    <div class="nav-item" onclick="location.href='performances.html'"><div class="nav-dot"></div> Performances</div>
+    <div class="nav-item" onclick="location.href='medical.html'"><div class="nav-dot"></div> Médical</div>
+    <div class="nav-item" onclick="location.href='absences.html'"><div class="nav-dot"></div> Absences</div>
+    <div class="nav-item" onclick="location.href='suivi-poids.html'"><div class="nav-dot"></div> Suivi Poids</div>
+    <div class="nav-section">Planning</div>
+    <div class="nav-item" onclick="location.href='planning.html'"><div class="nav-dot"></div> Planning club</div>
+    <div class="nav-item" onclick="location.href='planning-blesses.html'"><div class="nav-dot"></div> Blessés</div>
+    <div class="nav-section">Équipes</div>
+    <div class="nav-item" onclick="location.href='equipes.html'"><div class="nav-dot"></div> Composition équipes</div>
+    <div class="nav-section">GPS</div>
+    <div class="nav-item" onclick="location.href='gps.html'"><div class="nav-dot"></div> Données GPS</div>
+    <div class="nav-item" onclick="location.href='gps-match.html'"><div class="nav-dot"></div> Rapport de match</div>
+    <div class="nav-item" onclick="location.href='gps-planif.html'"><div class="nav-dot"></div> Planification charge</div>
+    <div class="nav-item" onclick="location.href='profil-force-vitesse.html'"><div class="nav-dot"></div> Profil F-V</div>
+    <div class="sidebar-bottom">
+      <div class="user-info" id="user-email"></div>
+      <button class="logout-btn" onclick="handleLogout()">Se déconnecter</button>
+    </div>
+  </div>
+
+  <div class="main">
+    <div class="topbar">
+      <div class="topbar-title">Planification muscu</div>
+      <button class="btn-primary" onclick="ouvrirModalCycle()">+ Nouveau cycle</button>
+    </div>
+    <div class="content">
+      <div class="cycles-list" id="cycles-list">
+        <div class="empty">Chargement...</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL CYCLE -->
+  <div class="modal-overlay" id="modal-cycle">
+    <div class="modal">
+      <div class="modal-title" id="modal-cycle-title">Nouveau cycle</div>
+      <div class="form-grid2">
+        <div class="form-field">
+          <label>Numéro de cycle</label>
+          <input type="number" id="cy-num" placeholder="1" min="1" />
+        </div>
+        <div class="form-field">
+          <label>Nom du cycle</label>
+          <input type="text" id="cy-nom" placeholder="Ex: Développement force" />
+        </div>
+        <div class="form-field">
+          <label>Date de début</label>
+          <input type="date" id="cy-debut" />
+        </div>
+        <div class="form-field">
+          <label>Nombre de semaines</label>
+          <input type="number" id="cy-semaines" value="4" min="1" max="20" />
+        </div>
+      </div>
+      <div class="form-field">
+        <label>Objectif / Description</label>
+        <textarea id="cy-desc" rows="2" placeholder="Objectifs du cycle..."></textarea>
+      </div>
+      <div class="modal-actions">
+        <button class="btn-ghost" onclick="fermerModalCycle()">Annuler</button>
+        <button class="btn-ghost" id="btn-del-cycle" style="display:none;border-color:#E24B4A33;color:#E24B4A;" onclick="supprimerCycle()">Supprimer</button>
+        <button class="btn-primary" onclick="sauvegarderCycle()">Enregistrer</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL DUPLIQUER SÉANCE -->
+  <div class="modal-overlay" id="modal-dup-seance">
+    <div class="modal">
+      <div class="modal-title">Dupliquer la séance</div>
+      <div class="form-field">
+        <label>Nouvelle date</label>
+        <input type="date" id="dup-date" />
+      </div>
+      <div class="form-field">
+        <label>Numéro de cycle destination</label>
+        <select id="dup-cycle-sel" style="width:100%;padding:8px 10px;border-radius:8px;border:1px solid #2a2a2a;background:#0f0f0f;color:#fff;font-size:13px;outline:none;"></select>
+      </div>
+      <div class="form-field">
+        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
+          <input type="checkbox" id="dup-avec-joueurs" style="accent-color:#FECC00;" checked />
+          Dupliquer avec l'attribution des joueurs
+        </label>
+      </div>
+      <div class="modal-actions">
+        <button class="btn-ghost" onclick="fermerModalDup()">Annuler</button>
+        <button class="btn-primary" onclick="confirmerDup()">Dupliquer</button>
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from './firebase-bundle.js'
+    import { getAuth, onAuthStateChanged, signOut } from './firebase-bundle.js'
+    import { getFirestore, collection, doc, setDoc, getDoc, getDocs, deleteDoc, onSnapshot, serverTimestamp } from './firebase-bundle.js'
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyCvMs-5LX9Ivk3OkzUR3iz9Kk1E5b9_7Vk",
+      authDomain: "delta-rugby-app.firebaseapp.com",
+      projectId: "delta-rugby-app",
+      storageBucket: "delta-rugby-app.firebasestorage.app",
+      messagingSenderId: "61187079762",
+      appId: "1:61187079762:web:56cd1eaa8beb9e1a2ee98b"
+    }
+    const fbApp = initializeApp(firebaseConfig)
+    const auth = getAuth(fbApp)
+    const db = getFirestore(fbApp)
+
+    let cycles = []
+    let seances = []
+    let editingCycleId = null
+    let dupSeanceData = null
+
+    onAuthStateChanged(auth, user => {
+      if (!user) { window.location.href = 'login.html'; return }
+      document.getElementById('user-email').textContent = user.email
+
+      onSnapshot(collection(db, 'cycles'), snapC => {
+        cycles = snapC.docs.map(d => ({ id: d.id, ...d.data() }))
+        cycles.sort((a, b) => (a.numero || 0) - (b.numero || 0))
+        onSnapshot(collection(db, 'seances'), snapS => {
+          seances = snapS.docs.map(d => ({ id: d.id, ...d.data() }))
+          seances.sort((a, b) => (a.date || '').localeCompare(b.date || ''))
+          render()
+        })
+      })
+    })
+
+    // ==================== RENDER CASCADE ====================
+    function render() {
+      const c = document.getElementById('cycles-list')
+      c.innerHTML = ''
+
+      if (!cycles.length) {
+        c.innerHTML = '<div class="empty">Aucun cycle. Crée ton premier cycle !</div>'
+        return
+      }
+
+      cycles.forEach(cycle => {
+        const block = document.createElement('div')
+        block.className = 'cycle-block'
+
+        // Header cycle
+        const hdr = document.createElement('div')
+        hdr.className = 'cycle-header'
+
+        const nbSemaines = cycle.nbSemaines || 4
+        const seancesDuCycle = seances.filter(s => s.cycleId === cycle.id)
+
+        hdr.innerHTML = `
+          <span class="cycle-num">Cycle n°${cycle.numero || '?'}</span>
+          <span class="cycle-nom">${cycle.nom || 'Sans nom'}</span>
+          <span class="cycle-meta">${nbSemaines} semaine(s) · ${seancesDuCycle.length} séance(s)</span>
+          <span class="cycle-chevron" id="chevron-cycle-${cycle.id}">▶</span>
+        `
+
+        // Actions cycle
+        const actions = document.createElement('div')
+        actions.className = 'cycle-actions'
+        actions.innerHTML = `
+          <button class="mini-btn" onclick="event.stopPropagation();ouvrirModalCycle(cycles.find(c=>c.id==='${cycle.id}'))">Éditer</button>
+          <button class="mini-btn" onclick="event.stopPropagation();dupliquerCycle('${cycle.id}')">Dupliquer</button>
+        `
+        hdr.appendChild(actions)
+
+        const body = document.createElement('div')
+        body.className = 'cycle-body'
+        body.id = `body-cycle-${cycle.id}`
+
+        hdr.onclick = () => {
+          const isOpen = body.classList.contains('open')
+          body.classList.toggle('open', !isOpen)
+          document.getElementById(`chevron-cycle-${cycle.id}`).classList.toggle('open', !isOpen)
+          if (!isOpen) renderSemainesCycle(cycle, body, seancesDuCycle, nbSemaines)
+        }
+
+        block.appendChild(hdr)
+        block.appendChild(body)
+        c.appendChild(block)
+      })
+    }
+
+    function renderSemainesCycle(cycle, body, seancesDuCycle, nbSemaines) {
+      body.innerHTML = ''
+      const debutCycle = cycle.dateDebut ? new Date(cycle.dateDebut) : new Date()
+
+      for (let s = 1; s <= nbSemaines; s++) {
+        const lundiSemaine = new Date(debutCycle)
+        lundiSemaine.setDate(debutCycle.getDate() + (s - 1) * 7)
+        const dimancheSemaine = new Date(lundiSemaine)
+        dimancheSemaine.setDate(lundiSemaine.getDate() + 6)
+
+        const lundiStr = lundiSemaine.toISOString().split('T')[0]
+        const dimStr = dimancheSemaine.toISOString().split('T')[0]
+
+        // Séances de cette semaine dans ce cycle
+        const seancesSemaine = seancesDuCycle.filter(seq => seq.date >= lundiStr && seq.date <= dimStr)
+
+        const sBlock = document.createElement('div')
+        sBlock.className = 'semaine-block'
+
+        const sHdr = document.createElement('div')
+        sHdr.className = 'semaine-header'
+        sHdr.innerHTML = `
+          <span class="semaine-num">Semaine ${s}</span>
+          <span class="semaine-dates">${lundiSemaine.toLocaleDateString('fr-FR', {day:'numeric', month:'short'})} → ${dimancheSemaine.toLocaleDateString('fr-FR', {day:'numeric', month:'short', year:'numeric'})}</span>
+          <span class="semaine-meta">${seancesSemaine.length} séance(s)</span>
+          <span class="semaine-chevron" id="chevron-s-${cycle.id}-${s}">▶</span>
+        `
+
+        const sBody = document.createElement('div')
+        sBody.className = 'semaine-body'
+        sBody.id = `body-s-${cycle.id}-${s}`
+
+        sHdr.onclick = () => {
+          const isOpen = sBody.classList.contains('open')
+          sBody.classList.toggle('open', !isOpen)
+          document.getElementById(`chevron-s-${cycle.id}-${s}`).classList.toggle('open', !isOpen)
+          if (!isOpen) renderSeancesSemaine(sBody, seancesSemaine, cycle)
+        }
+
+        sBlock.appendChild(sHdr)
+        sBlock.appendChild(sBody)
+        body.appendChild(sBlock)
+      }
+
+      // Séances hors semaines définies
+      const toutesLundis = Array.from({ length: nbSemaines }, (_, i) => {
+        const d = new Date(debutCycle)
+        d.setDate(debutCycle.getDate() + i * 7)
+        return d.toISOString().split('T')[0]
+      })
+      const debutStr = toutesLundis[0]
+      const finStr = (() => {
+        const d = new Date(debutCycle)
+        d.setDate(debutCycle.getDate() + nbSemaines * 7)
+        return d.toISOString().split('T')[0]
+      })()
+      const horsPlage = seancesDuCycle.filter(s => s.date < debutStr || s.date >= finStr)
+      if (horsPlage.length) {
+        const hpBlock = document.createElement('div')
+        hpBlock.className = 'semaine-block'
+        hpBlock.innerHTML = `<div class="semaine-header" style="opacity:.5;"><span class="semaine-num">Hors plage</span><span class="semaine-dates">${horsPlage.length} séance(s) hors du cycle</span></div>`
+        body.appendChild(hpBlock)
+      }
+    }
+
+    function renderSeancesSemaine(container, seances, cycle) {
+      container.innerHTML = ''
+      if (!seances.length) {
+        container.innerHTML = '<div style="color:#333;font-size:12px;padding:8px 0;">Aucune séance cette semaine.</div>'
+        return
+      }
+      seances.forEach(s => {
+        const nbBlocs = s.blocs?.length || 0
+        const nbJoueurs = s.blocs?.reduce((a, b) => a + (b.groupes?.reduce((a2, g) => a2 + (g.joueurs?.length || 0), 0) || 0), 0) || 0
+        const hasJoueurs = nbJoueurs > 0
+        const estBlessé = s.estBlessé
+
+        const row = document.createElement('div')
+        row.className = 'seance-row'
+        row.innerHTML = `
+          <span class="seance-date-pill">${formatDate(s.date)}</span>
+          <span class="seance-theme">${s.theme || 'Sans thème'}</span>
+          <div class="seance-badges">
+            ${!hasJoueurs ? '<span class="seance-badge badge-noj">Sans joueurs</span>' : ''}
+            ${estBlessé ? '<span class="seance-badge badge-blesse">Blessés</span>' : ''}
+          </div>
+          <span class="seance-blocs-meta">${nbBlocs} bloc(s)</span>
+          <div class="seance-row-actions">
+            <button class="mini-btn" onclick="event.stopPropagation();editerSeance('${s.id}')">Éditer</button>
+            <button class="mini-btn" onclick="event.stopPropagation();ouvrirModalDup('${s.id}')">Dupliquer</button>
+          </div>
+        `
+        row.onclick = () => editerSeance(s.id)
+        container.appendChild(row)
+      })
+    }
+
+    function formatDate(d) {
+      if (!d) return '—'
+      return new Date(d).toLocaleDateString('fr-FR', { weekday:'short', day:'numeric', month:'short' })
+    }
+
+    // ==================== CYCLE MODAL ====================
+    window.ouvrirModalCycle = function(cycle = null) {
+      editingCycleId = cycle?.id || null
+      document.getElementById('modal-cycle-title').textContent = cycle ? 'Modifier le cycle' : 'Nouveau cycle'
+      document.getElementById('btn-del-cycle').style.display = cycle ? 'block' : 'none'
+      document.getElementById('cy-num').value = cycle?.numero || (cycles.length + 1)
+      document.getElementById('cy-nom').value = cycle?.nom || ''
+      document.getElementById('cy-debut').value = cycle?.dateDebut || new Date().toISOString().split('T')[0]
+      document.getElementById('cy-semaines').value = cycle?.nbSemaines || 4
+      document.getElementById('cy-desc').value = cycle?.description || ''
+      document.getElementById('modal-cycle').classList.add('open')
+    }
+
+    window.fermerModalCycle = function() {
+      document.getElementById('modal-cycle').classList.remove('open')
+      editingCycleId = null
+    }
+
+    window.sauvegarderCycle = async function() {
+      const nom = document.getElementById('cy-nom').value.trim()
+      if (!nom) { alert('Nom obligatoire.'); return }
+      const id = editingCycleId || `cycle_${Date.now()}`
+      await setDoc(doc(db, 'cycles', id), {
+        numero: parseInt(document.getElementById('cy-num').value) || 1,
+        nom,
+        dateDebut: document.getElementById('cy-debut').value,
+        nbSemaines: parseInt(document.getElementById('cy-semaines').value) || 4,
+        description: document.getElementById('cy-desc').value,
+        updatedAt: serverTimestamp()
+      })
+      fermerModalCycle()
+    }
+
+    window.supprimerCycle = async function() {
+      if (!editingCycleId || !confirm('Supprimer ce cycle ? Les séances ne seront pas supprimées.')) return
+      await deleteDoc(doc(db, 'cycles', editingCycleId))
+      fermerModalCycle()
+    }
+
+    // ==================== DUPLIQUER CYCLE ====================
+    window.dupliquerCycle = async function(cycleId) {
+      const nouvDebut = prompt('Date de début du nouveau cycle (YYYY-MM-DD) :')
+      if (!nouvDebut) return
+
+      const cycle = cycles.find(c => c.id === cycleId)
+      if (!cycle) return
+
+      // Créer le nouveau cycle
+      const newCycleId = `cycle_${Date.now()}`
+      const debutOrig = new Date(cycle.dateDebut)
+      const debutNouv = new Date(nouvDebut)
+      const diffJours = Math.round((debutNouv - debutOrig) / 86400000)
+
+      await setDoc(doc(db, 'cycles', newCycleId), {
+        ...cycle,
+        id: undefined,
+        numero: (cycle.numero || 1) + 1,
+        nom: cycle.nom + ' (copie)',
+        dateDebut: nouvDebut,
+        updatedAt: serverTimestamp()
+      })
+
+      // Dupliquer toutes les séances
+      const seancesCycle = seances.filter(s => s.cycleId === cycleId)
+      for (const s of seancesCycle) {
+        const newDate = new Date(s.date)
+        newDate.setDate(newDate.getDate() + diffJours)
+        const { id, ...sData } = s
+        await setDoc(doc(collection(db, 'seances')), {
+          ...sData,
+          cycleId: newCycleId,
+          date: newDate.toISOString().split('T')[0],
+          updatedAt: serverTimestamp()
+        })
+      }
+      alert(`Cycle dupliqué avec ${seancesCycle.length} séance(s) !`)
+    }
+
+    // ==================== DUPLIQUER SÉANCE ====================
+    window.ouvrirModalDup = function(seanceId) {
+      dupSeanceData = { seanceId }
+      document.getElementById('dup-date').value = new Date().toISOString().split('T')[0]
+
+      const sel = document.getElementById('dup-cycle-sel')
+      sel.innerHTML = '<option value="">— Même cycle —</option>'
+      cycles.forEach(c => sel.appendChild(new Option(`Cycle n°${c.numero} — ${c.nom}`, c.id)))
+
+      document.getElementById('modal-dup-seance').classList.add('open')
+    }
+
+    window.fermerModalDup = function() {
+      document.getElementById('modal-dup-seance').classList.remove('open')
+      dupSeanceData = null
+    }
+
+    window.confirmerDup = async function() {
+      if (!dupSeanceData) return
+      const { seanceId } = dupSeanceData
+      const nouvelleDate = document.getElementById('dup-date').value
+      const cycleDestId = document.getElementById('dup-cycle-sel').value
+      const avecJoueurs = document.getElementById('dup-avec-joueurs').checked
+
+      const snap = await getDoc(doc(db, 'seances', seanceId))
+      if (!snap.exists()) return
+      const sData = { ...snap.data() }
+
+      if (!avecJoueurs) {
+        // Retirer joueurs des groupes
+        sData.blocs?.forEach(b => b.groupes?.forEach(g => { g.joueurs = [] }))
+      }
+
+      if (cycleDestId) sData.cycleId = cycleDestId
+
+      await setDoc(doc(collection(db, 'seances')), {
+        ...sData,
+        date: nouvelleDate,
+        updatedAt: serverTimestamp()
+      })
+
+      fermerModalDup()
+      alert('Séance dupliquée !')
+    }
+
+    // ==================== EDITER SÉANCE ====================
+    window.editerSeance = function(seanceId) {
+      localStorage.setItem('edit_seance_id', seanceId)
+      location.href = 'seances.html'
+    }
+
+    window.handleLogout = async function() {
+      await signOut(auth)
+      window.location.href = 'login.html'
+    }
+  </script>
+</body>
+</html>

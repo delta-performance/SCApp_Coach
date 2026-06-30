@@ -1,0 +1,4442 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>SCA Albi — Planning</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #0f0f0f; color: #fff; display: flex; height: 100vh; overflow: hidden; }
+    .sidebar { width: 220px; min-width: 220px; background: #1a1a1a; border-right: 1px solid #2a2a2a; display: flex; flex-direction: column; padding: 20px 0; }
+    .sidebar-logo { display: flex; align-items: center; gap: 10px; padding: 0 20px 24px; border-bottom: 1px solid #2a2a2a; }
+    .sidebar-logo img { width: 36px; }
+    .sidebar-logo span { font-size: 15px; font-weight: 700; color: #FECC00; }
+    .nav-section { padding: 16px 12px 8px; font-size: 10px; font-weight: 600; color: #444; letter-spacing: .08em; text-transform: uppercase; }
+    .nav-item { display: flex; align-items: center; gap: 10px; padding: 9px 20px; font-size: 13px; color: #888; cursor: pointer; border-left: 2px solid transparent; transition: all .15s; }
+    .nav-item:hover { color: #fff; background: #222; }
+    .nav-item.active { color: #FECC00; border-left-color: #FECC00; background: #222; }
+    .nav-item.stats-active { color: #FECC00; border-left-color: #FECC00; background: #222; }
+    .nav-dot { width: 7px; height: 7px; border-radius: 50%; background: currentColor; opacity: 0.6; }
+    .sidebar-bottom { margin-top: auto; padding: 16px 20px; border-top: 1px solid #2a2a2a; }
+    .user-info { font-size: 12px; color: #555; margin-bottom: 8px; }
+    .logout-btn { font-size: 12px; color: #555; cursor: pointer; background: none; border: none; }
+    .logout-btn:hover { color: #E24B4A; }
+    .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+    .topbar { height: 56px; border-bottom: 1px solid #2a2a2a; display: flex; align-items: center; padding: 0 20px; gap: 10px; flex-shrink: 0; }
+    .topbar-title { font-size: 15px; font-weight: 600; }
+
+    /* CONTROLS */
+    .btn-primary { padding: 7px 14px; border-radius: 8px; border: none; background: #FECC00; color: #0f0f0f; font-size: 13px; font-weight: 600; cursor: pointer; }
+    .btn-primary:hover { opacity: .88; }
+    .btn-ghost { padding: 7px 12px; border-radius: 8px; border: 1px solid #2a2a2a; background: none; color: #888; font-size: 13px; cursor: pointer; }
+    .btn-ghost:hover { color: #fff; border-color: #444; }
+    .btn-nav { padding: 6px 10px; border-radius: 6px; border: 1px solid #2a2a2a; background: none; color: #888; font-size: 14px; cursor: pointer; }
+    .btn-nav:hover { color: #fff; border-color: #444; }
+    .semaine-label { font-size: 13px; font-weight: 600; color: #fff; min-width: 200px; text-align: center; }
+
+    /* GRILLE PLANNING */
+    .planning-wrap { flex: 1; overflow: auto; }
+    
+    .planning-header { display: contents; }
+    .col-heure { width: 60px; min-width: 60px; }
+    .col-jour { flex: 1; min-width: 120px; }
+
+    .header-jour.today { border-bottom: 2px solid #FECC00; }
+    .jour-nom { font-size: 12px; font-weight: 700; color: #888; text-transform: uppercase; letter-spacing: .05em; }
+    .jour-num { font-size: 18px; font-weight: 700; color: #fff; }
+    .jour-num.today-num { color: #FECC00; }
+
+    .time-label { height: 60px; display: flex; align-items: flex-start; padding: 4px 8px; font-size: 11px; color: #333; }
+
+    .day-col:last-child { border-right: none; }
+    .hour-slot:hover { background: #FECC0006; }
+    .half-slot { height: 30px; border-bottom: 1px dashed #111; }
+
+    /* ÉVÉNEMENTS */
+    .event-block {
+      position: absolute; left: 3px; right: 3px;
+      border-radius: 6px; padding: 4px 7px;
+      cursor: pointer; overflow: hidden;
+      border: 1px solid transparent;
+      transition: opacity .12s;
+      z-index: 1;
+    }
+    .event-block:hover { opacity: .85; z-index: 2; }
+    .event-titre { font-size: 12px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .event-heure { font-size: 10px; opacity: .8; }
+    .event-lieu { font-size: 10px; opacity: .7; }
+
+    /* Resize handle */
+    .event-resize {
+      position: absolute; bottom: 0; left: 0; right: 0; height: 8px;
+      cursor: ns-resize; border-radius: 0 0 6px 6px;
+      background: rgba(0,0,0,0.2);
+    }
+    .event-resize:hover { background: rgba(0,0,0,0.4); }
+    
+
+    /* MODAL ÉVÉNEMENT */
+    .modal-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.75); align-items: center; justify-content: center; z-index: 100; }
+    .modal-overlay.open { display: flex; }
+    .modal { background: #1a1a1a; border: 1px solid #2a2a2a; border-radius: 16px; padding: 28px; width: 460px; max-height: 85vh; overflow-y: auto; }
+    .modal-title { font-size: 15px; font-weight: 700; margin-bottom: 20px; }
+    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
+    .form-field label { display: block; font-size: 11px; color: #555; margin-bottom: 4px; }
+    .form-field input, .form-field select, .form-field textarea {
+      width: 100%; padding: 8px 10px; border-radius: 8px;
+      border: 1px solid #2a2a2a; background: #0f0f0f;
+      color: #fff; font-size: 13px; outline: none;
+    }
+    .form-field input:focus, .form-field select:focus { border-color: #FECC00; }
+    .form-field textarea { resize: vertical; min-height: 60px; }
+    .form-full { grid-column: 1 / -1; }
+    .modal-actions { display: flex; gap: 10px; margin-top: 20px; }
+    .btn-danger { padding: 8px 14px; border-radius: 8px; border: 1px solid #E24B4A33; background: none; color: #E24B4A; font-size: 13px; cursor: pointer; }
+
+    /* COULEURS TYPE */
+    .type-match { background: #E24B4A33; border-color: #E24B4A66; color: #F09595; }
+    .type-entrainement { background: #378ADD33; border-color: #378ADD66; color: #85B7EB; }
+    .type-muscu { background: #FECC0033; border-color: #FECC0066; color: #FECC00; }
+    .type-reunion { background: #88878033; border-color: #88878066; color: #B4B2A9; }
+    .type-medical { background: #1D9E7533; border-color: #1D9E7566; color: #5DCAA5; }
+    .type-deplacement { background: #7F77DD33; border-color: #7F77DD66; color: #AFA9EC; }
+    .type-autre { background: #2a2a2a; border-color: #444; color: #888; }
+
+    /* LÉGENDE */
+    .legende { display: flex; gap: 12px; flex-wrap: wrap; padding: 8px 16px; border-top: 1px solid #2a2a2a; flex-shrink: 0; }
+    .legende-item { display: flex; align-items: center; gap: 5px; font-size: 11px; color: #555; }
+    .legende-dot { width: 10px; height: 10px; border-radius: 3px; }
+
+    /* SPLIT JOUR */
+    .split-indicator { position: absolute; top: 2px; right: 4px; font-size: 9px; color: #555; }
+
+    /* DRAG TIME INDICATOR */
+    .drag-time-indicator {
+      position: fixed;
+      background: #FECC00;
+      color: #0f0f0f;
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 600;
+      pointer-events: none;
+      z-index: 1000;
+      white-space: nowrap;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+    }
+
+    /* CUSTOM PROMPT MODAL */
+    .custom-prompt-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0,0,0,0.75);
+      align-items: center;
+      justify-content: center;
+      z-index: 2000;
+    }
+    .custom-prompt-overlay.open {
+      display: flex;
+    }
+    .custom-prompt {
+      background: #1a1a1a;
+      border: 1px solid #2a2a2a;
+      border-radius: 12px;
+      padding: 24px;
+      width: 400px;
+      max-width: 90vw;
+    }
+    .custom-prompt-title {
+      font-size: 16px;
+      font-weight: 700;
+      color: #fff;
+      margin-bottom: 16px;
+    }
+    .custom-prompt-input {
+      width: 100%;
+      padding: 10px 12px;
+      border-radius: 8px;
+      border: 1px solid #2a2a2a;
+      background: #0f0f0f;
+      color: #fff;
+      font-size: 14px;
+      margin-bottom: 16px;
+      outline: none;
+    }
+    .custom-prompt-input:focus {
+      border-color: #FECC00;
+    }
+    .custom-prompt-buttons {
+      display: flex;
+      gap: 12px;
+      justify-content: flex-end;
+    }
+
+    /* DATE PICKER MODAL */
+    .date-picker-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0,0,0,0.75);
+      align-items: center;
+      justify-content: center;
+      z-index: 2000;
+    }
+    .date-picker-overlay.open {
+      display: flex;
+    }
+    .date-picker {
+      background: #1a1a1a;
+      border: 1px solid #2a2a2a;
+      border-radius: 12px;
+      padding: 24px;
+      width: 450px;
+      max-width: 90vw;
+    }
+    .date-picker-title {
+      font-size: 16px;
+      font-weight: 700;
+      color: #fff;
+      margin-bottom: 20px;
+    }
+    .calendar-grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 8px;
+      margin-bottom: 20px;
+    }
+    .calendar-header {
+      font-size: 12px;
+      font-weight: 600;
+      color: #666;
+      text-align: center;
+      padding: 8px 4px;
+    }
+    .calendar-day {
+      aspect-ratio: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 6px;
+      font-size: 13px;
+      cursor: pointer;
+      transition: all 0.2s;
+      color: #888;
+    }
+    .calendar-day:hover {
+      background: #2a2a2a;
+      color: #fff;
+    }
+    .calendar-day.monday {
+      color: #FECC00;
+      font-weight: 600;
+    }
+    .calendar-day.monday:hover {
+      background: #FECC0010;
+    }
+    .calendar-day.selected {
+      background: #FECC00;
+      color: #0f0f0f;
+    }
+    .calendar-nav {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+    .calendar-nav button {
+      padding: 6px 12px;
+      border: 1px solid #2a2a2a;
+      background: #0f0f0f;
+      color: #fff;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 12px;
+    }
+    .calendar-nav button:hover {
+      border-color: #FECC00;
+    }
+    .calendar-month-year {
+      font-size: 14px;
+      font-weight: 600;
+      color: #fff;
+    }
+
+    /* MULTI-SELECTION MODE */
+    .multi-select-mode {
+      background: #1a1a1a;
+      border: 1px solid #FECC00;
+      border-radius: 8px;
+      padding: 12px 16px;
+      margin-bottom: 8px;
+      display: none;
+    }
+    .multi-select-mode.active {
+      display: block;
+    }
+    .multi-select-info {
+      font-size: 12px;
+      color: #FECC00;
+      margin-bottom: 8px;
+    }
+    .multi-select-actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .multi-select-btn {
+      padding: 4px 8px;
+      border-radius: 4px;
+      border: 1px solid #2a2a2a;
+      background: #0f0f0f;
+      color: #fff;
+      font-size: 11px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .multi-select-btn:hover {
+      border-color: #FECC00;
+      color: #FECC00;
+    }
+    .multi-select-btn.danger {
+      border-color: #E24B4A;
+      color: #E24B4A;
+    }
+    .multi-select-btn.danger:hover {
+      background: #E24B4A;
+      color: #fff;
+    }
+
+    /* EVENT SELECTION */
+    .event-block.selected {
+      border: 2px solid #FECC00 !important;
+      box-shadow: 0 0 8px rgba(254, 204, 0, 0.5);
+      z-index: 15 !important;
+    }
+    .event-block.multi-select-hover {
+      opacity: 0.7;
+      border-color: #FECC00 !important;
+    }
+
+    /* TOOLTIP DÉTAILS CRÉNEAU */
+    .event-tooltip {
+      position: fixed;
+      background: #1a1a1a;
+      border: 1px solid #FECC00;
+      border-radius: 8px;
+      padding: 12px 14px;
+      min-width: 220px;
+      max-width: 300px;
+      z-index: 10000;
+      pointer-events: none;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.15s, visibility 0.15s;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+    }
+    .event-tooltip.visible {
+      opacity: 1;
+      visibility: visible;
+    }
+    .event-tooltip-header {
+      font-size: 13px;
+      font-weight: 700;
+      color: #FECC00;
+      margin-bottom: 8px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid #333;
+    }
+    .event-tooltip-row {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 4px;
+      font-size: 11px;
+    }
+    .event-tooltip-label {
+      color: #666;
+      min-width: 70px;
+      flex-shrink: 0;
+    }
+    .event-tooltip-value {
+      color: #fff;
+      font-weight: 500;
+    }
+    .event-tooltip-badge {
+      display: inline-block;
+      padding: 2px 6px;
+      border-radius: 3px;
+      font-size: 10px;
+      font-weight: 600;
+      margin-top: 4px;
+    }
+
+    /* SELECTION COUNTER */
+    .selection-counter {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: #FECC00;
+      color: #0f0f0f;
+      padding: 8px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+      z-index: 1000;
+      display: none;
+    }
+    .selection-counter.active {
+      display: block;
+    }
+
+    /* STATS STYLES */
+    .stat-summary-card {
+      background: #1a1a1a;
+      border: 1px solid #2a2a2a;
+      border-radius: 8px;
+      padding: 16px;
+      text-align: center;
+      transition: all 0.2s;
+    }
+    .stat-summary-card:hover {
+      border-color: #333;
+      transform: translateY(-1px);
+    }
+    .stat-summary-label {
+      font-size: 11px;
+      color: #888;
+      margin-bottom: 8px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .stat-summary-value {
+      font-size: 18px;
+      font-weight: 700;
+      color: #FECC00;
+    }
+    
+    .stat-detail-row {
+      background: #1a1a1a;
+      border: 1px solid #2a2a2a;
+      border-radius: 8px;
+      padding: 12px 16px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      transition: all 0.2s;
+    }
+    .stat-detail-row:hover {
+      border-color: #333;
+      background: #222;
+    }
+    .stat-detail-color {
+      width: 8px;
+      height: 8px;
+      border-radius: 2px;
+      flex-shrink: 0;
+    }
+    .stat-detail-info {
+      flex: 1;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+    }
+    .stat-detail-type {
+      font-size: 13px;
+      font-weight: 600;
+      color: #fff;
+    }
+    .stat-detail-count {
+      font-size: 11px;
+      color: #888;
+    }
+    .stat-detail-hours {
+      font-size: 14px;
+      font-weight: 600;
+      color: #FECC00;
+      min-width: 120px;
+      text-align: right;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 2px;
+    }
+    .stat-detail-decimal {
+      font-size: 14px;
+      font-weight: 600;
+    }
+    .stat-detail-time {
+      font-size: 11px;
+      color: #888;
+    }
+  </style>
+
+  <style>
+  /* ===== iPad-first NAV override ===== */
+  * { -webkit-tap-highlight-color: transparent; }
+  :root {
+    --yellow: #FECC00; --red: #E24B4A; --green: #1D9E75;
+    --bg: #0a0a0a; --bg2: #141414; --bg3: #1c1c1c;
+    --border: #1e1e1e; --border2: #2a2a2a;
+    --text: #fff; --text2: #888; --text3: #555;
+    --safe-bottom: env(safe-area-inset-bottom, 0px);
+    --topbar-h: 60px; --bottom-h: 68px;
+  }
+  /* Kill sidebar */
+  .sidebar { display: none !important; }
+  /* Body layout */
+  body { flex-direction: column !important; overflow: hidden !important; background: var(--bg) !important; }
+  /* Main takes full width */
+  .main { flex: 1 !important; display: flex !important; flex-direction: column !important; overflow: hidden !important;
+          padding-bottom: calc(var(--bottom-h) + var(--safe-bottom)) !important; }
+  /* Existing topbar: keep but restyle */
+  .main > .topbar, #topbar-liste, #topbar-editor {
+    border-bottom: 1px solid var(--border2) !important;
+    display: flex !important; align-items: center !important;
+    padding: 8px 16px !important; gap: 10px !important;
+    flex-shrink: 0 !important; flex-wrap: wrap !important;
+    background: var(--bg) !important; height: auto !important; min-height: 52px !important;
+  }
+  .topbar-title { display: none !important; }
+  /* iPad Topbar */
+  .ipad-topbar {
+    height: var(--topbar-h); background: var(--bg2); border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; padding: 0 16px; gap: 12px; flex-shrink: 0;
+    padding-top: env(safe-area-inset-top, 0);
+  }
+  .ipad-topbar-home { display: flex; align-items: center; gap: 8px; text-decoration: none; }
+  .ipad-topbar-logo {
+    width: 34px; height: 34px; border-radius: 9px; background: var(--yellow);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px; font-weight: 900; color: #000; flex-shrink: 0;
+  }
+  .ipad-topbar-sitename { font-size: 13px; font-weight: 700; color: var(--yellow); }
+  .ipad-topbar-sep { width: 1px; height: 22px; background: var(--border2); margin: 0 4px; }
+  .ipad-topbar-title { font-size: 18px; font-weight: 700; color: var(--text); flex: 1; }
+  /* Bottom Nav */
+  .ipad-bottom-nav {
+    position: fixed; bottom: 0; left: 0; right: 0;
+    height: calc(var(--bottom-h) + var(--safe-bottom));
+    padding-bottom: var(--safe-bottom);
+    background: var(--bg2); border-top: 1px solid var(--border);
+    display: flex; align-items: stretch; z-index: 9999;
+  }
+  .ipad-nav-item {
+    flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 3px; cursor: pointer; text-decoration: none; color: var(--text3);
+    font-size: 10px; font-weight: 600; letter-spacing: 0.02em; transition: color 0.12s;
+    padding: 0 2px; border: none; background: none;
+  }
+  .ipad-nav-item:active { background: #ffffff08; }
+  .ipad-nav-item.active { color: var(--yellow); }
+  .ipad-nav-icon { font-size: 22px; line-height: 1; }
+  /* Bigger buttons */
+  .btn-primary { padding: 11px 18px !important; border-radius: 10px !important; font-size: 14px !important; font-weight: 700 !important; min-height: 44px !important; cursor: pointer !important; }
+  .btn-ghost   { padding: 11px 14px !important; border-radius: 10px !important; font-size: 14px !important; min-height: 44px !important; cursor: pointer !important; }
+  .btn-danger  { padding: 11px 14px !important; border-radius: 10px !important; font-size: 14px !important; min-height: 44px !important; cursor: pointer !important; }
+  .btn-nav     { padding: 10px 14px !important; min-height: 44px !important; border-radius: 9px !important; font-size: 16px !important; }
+  /* Mode toggle */
+  .mode-toggle { border-radius: 10px !important; padding: 4px !important; }
+  .mode-btn    { padding: 9px 14px !important; border-radius: 7px !important; font-size: 13px !important; min-height: 38px !important; }
+  /* Prevent iOS input zoom */
+  input, select, textarea { font-size: 16px !important; }
+  /* Content scroll */
+  .content { flex: 1 !important; overflow-y: auto !important; -webkit-overflow-scrolling: touch !important; padding: 16px 18px !important; }
+  /* Touch targets */
+  .seance-card, .cycle-header, .semaine-header { min-height: 54px !important; }
+  /* Modal */
+  .modal { width: min(580px, 94vw) !important; max-width: 94vw !important; }
+  .modal-box { width: min(500px, 94vw) !important; }
+  </style>
+
+</head>
+<body>
+  <!-- iPad TopBar -->
+  <div class="ipad-topbar">
+    <a class="ipad-topbar-home" href="index.html">
+      <div class="ipad-topbar-logo">SC</div>
+      <span class="ipad-topbar-sitename">SCA Albi</span>
+    </a>
+    <div class="ipad-topbar-sep"></div>
+    <div class="ipad-topbar-title">Planning</div>
+  </div>
+  <!-- Bottom Nav -->
+  <nav class="ipad-bottom-nav">
+  <a class="ipad-nav-item active" href="planning.html">
+    <span class="ipad-nav-icon">📅</span>
+    <span>Planning</span>
+  </a>
+  <a class="ipad-nav-item" href="seances.html">
+    <span class="ipad-nav-icon">🏉</span>
+    <span>Séances</span>
+  </a>
+  <a class="ipad-nav-item" href="equipes.html?mode=entrainement">
+    <span class="ipad-nav-icon">👥</span>
+    <span>Équipes</span>
+  </a>
+  <a class="ipad-nav-item" href="gps-planif.html">
+    <span class="ipad-nav-icon">📡</span>
+    <span>GPS</span>
+  </a>
+  <a class="ipad-nav-item" href="planification-muscu.html">
+    <span class="ipad-nav-icon">🏋️</span>
+    <span>Muscu</span>
+  </a>
+  </nav>
+
+  <div class="sidebar">
+    <div class="sidebar-logo">
+      <img src="https://www.sca-albi.fr/wp-content/uploads/2023/10/cropped-SCA-bis.png">
+      <span>SCA Albi</span>
+    </div>
+    <div class="nav-section">Effectif</div>
+    <div class="nav-item" onclick="location.href='index.html'">
+      <div class="nav-dot"></div> Roster
+    </div>
+    <div class="nav-section">Entraînement</div>
+    <div class="nav-item" onclick="location.href='seances.html'">
+  <div class="nav-dot"></div> Séances
+    </div>
+    <div class="nav-item" onclick="location.href='exercices.html'"><div class="nav-dot"></div> Exercices</div>
+    <div class="nav-item" onclick="location.href='planification-muscu.html'"><div class="nav-dot"></div> Planification muscu</div>
+    <div class="nav-section">Suivi</div>
+    <div class="nav-item" onclick="location.href='wellness.html'">
+      <div class="nav-dot"></div> Wellness
+    </div>
+    <div class="nav-item" onclick="location.href='performances.html'">
+      <div class="nav-dot"></div> Performances
+    </div>
+    <div class="nav-item" onclick="location.href='medical.html'">
+      <div class="nav-dot"></div> Médical
+    </div>
+    <div class="nav-item" onclick="location.href='absences.html'">
+      <div class="nav-dot"></div> Absences
+    </div>
+    <div class="nav-item" onclick="location.href='suivi-poids.html'">
+      <div class="nav-dot"></div> Suivi Poids
+    </div>
+    <div class="nav-section">Planning</div>
+    <div class="nav-item" onclick="location.href='planning.html'">
+      <div class="nav-dot"></div> Planning club
+    </div>
+    <div class="nav-item" onclick="location.href='planning-blesses.html'">
+      <div class="nav-dot"></div> Planning Blessés
+    </div>
+    <div class="nav-section">Équipes</div>
+    <div class="nav-item" onclick="location.href='equipes.html'">
+  <div class="nav-dot"></div> Composition équipes
+    </div>
+    <div class="nav-section">GPS</div>
+    <div class="nav-item" onclick="location.href='gps.html'">
+  <div class="nav-dot"></div> Données GPS
+    </div>
+    <div class="nav-item" onclick="location.href='gps-match.html'">
+  <div class="nav-dot"></div> Rapport de match
+    </div>
+    <div class="nav-item" onclick="location.href='gps-planif.html'">
+  <div class="nav-dot"></div> Planif. charge
+    </div>
+    <div class="nav-item" onclick="location.href='profil-force-vitesse.html'"><div class="nav-dot"></div> Profil F-V</div>
+    <div class="sidebar-bottom">
+      <div class="user-info" id="user-email"></div>
+      <button class="logout-btn" onclick="handleLogout()">Se déconnecter</button>
+    </div>
+  </div>
+
+  <div class="main">
+    <div class="topbar">
+      <div class="topbar-title">Planning</div>
+      <button class="btn-nav" onclick="semainePrecedente()">‹</button>
+      <div class="semaine-label" id="semaine-label"></div>
+      <button class="btn-nav" onclick="semaineSuivante()">›</button>
+      <button class="btn-ghost" onclick="allerAujourdhui()">Aujourd'hui</button>
+      <div style="flex:1"></div>
+      <button class="btn-ghost" id="btn-hide-week" onclick="toggleHideWeekFromPlayers()">Masquer aux joueurs</button>
+      <button class="btn-ghost" onclick="toggleMultiSelectMode()">📋 Sélection multiple</button>
+      <button class="btn-ghost" onclick="dupliquerSemaine()">Dupliquer semaine</button>
+      <button class="btn-primary" onclick="showStatsModal()">📊 Stats</button>
+      <button class="btn-primary" onclick="ouvrirModal()">+ Événement</button>
+    </div>
+
+    <!-- MULTI-SELECTION CONTROLS -->
+    <div class="multi-select-mode" id="multi-select-mode">
+      <div class="multi-select-info">Mode sélection multiple - Cliquez sur les événements à sélectionner. Si même jour → duplique vers date. Si plusieurs jours → duplique vers semaine.</div>
+      <div class="multi-select-actions">
+        <button class="multi-select-btn" onclick="selectAllEvents()">Tout sélectionner</button>
+        <button class="multi-select-btn" onclick="clearSelection()">Tout désélectionner</button>
+        <button class="multi-select-btn" onclick="duplicateSelectedUnified()">Dupliquer vers calendrier</button>
+        <button class="multi-select-btn danger" onclick="deleteSelected()">Supprimer la sélection</button>
+        <button class="multi-select-btn" onclick="toggleMultiSelectMode()">Quitter le mode</button>
+      </div>
+    </div>
+
+    <!-- SELECTION COUNTER -->
+    <div class="selection-counter" id="selection-counter">0 sélectionné(s)</div>
+
+    <div class="planning-wrap" id="planning-wrap">
+      <div class="planning-grid" id="planning-grid"></div>
+    </div>
+
+    <!-- MODAL STATISTIQUES -->
+  <div class="modal-overlay" id="modal-stats">
+    <div class="modal" style="width: 800px; max-height: 90vh;">
+      <div class="modal-title">📊 Statistiques des créneaux</div>
+      
+      <!-- SÉLECTEUR DE PÉRIODE -->
+      <div style="display: flex; gap: 12px; margin-bottom: 20px; padding: 16px; background: #1a1a1a; border-radius: 8px; border: 1px solid #2a2a2a;">
+        <div style="flex: 1;">
+          <label style="display: block; font-size: 11px; color: #555; margin-bottom: 4px;">Date de début</label>
+          <input type="date" id="stats-date-debut" style="width: 100%; padding: 8px 10px; border-radius: 6px; border: 1px solid #2a2a2a; background: #0f0f0f; color: #fff; font-size: 13px;">
+        </div>
+        <div style="flex: 1;">
+          <label style="display: block; font-size: 11px; color: #555; margin-bottom: 4px;">Date de fin</label>
+          <input type="date" id="stats-date-fin" style="width: 100%; padding: 8px 10px; border-radius: 6px; border: 1px solid #2a2a2a; background: #0f0f0f; color: #fff; font-size: 13px;">
+        </div>
+        <div style="display: flex; align-items: flex-end; gap: 8px;">
+          <button class="btn-ghost" onclick="setStatsPeriod('week')">Semaine</button>
+          <button class="btn-ghost" onclick="setStatsPeriod('month')">Mois</button>
+          <button class="btn-ghost" onclick="setStatsPeriod('season')">Saison</button>
+          <button class="btn-primary" onclick="updateStats()">Actualiser</button>
+        </div>
+      </div>
+      
+      <!-- RÉSUMÉ -->
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin-bottom: 20px;">
+        <div class="stat-summary-card">
+          <div class="stat-summary-label">Total créneaux</div>
+          <div class="stat-summary-value" id="stat-total-creneaux">0</div>
+        </div>
+        <div class="stat-summary-card">
+          <div class="stat-summary-label">Total heures</div>
+          <div class="stat-summary-value" id="stat-total-heures">0h</div>
+        </div>
+        <div class="stat-summary-card">
+          <div class="stat-summary-label">Moyenne/créneau</div>
+          <div class="stat-summary-value" id="stat-moyenne-creneau">0h</div>
+        </div>
+        <div class="stat-summary-card">
+          <div class="stat-summary-label">Période</div>
+          <div class="stat-summary-value" id="stat-periode">-</div>
+        </div>
+        <div class="stat-summary-card">
+          <div class="stat-summary-label">Dispo collective<br><span style="font-size: 10px; color: #888;">moyenne quotidienne</span></div>
+          <div class="stat-summary-value" id="stat-dispo-collective">-</div>
+        </div>
+      </div>
+      
+      <!-- DÉTAIL PAR TYPE -->
+      <div style="margin-bottom: 20px;">
+        <h3 style="font-size: 14px; font-weight: 600; margin-bottom: 12px; color: #fff;">Détail par type de créneau</h3>
+        <div id="stats-detail-content" style="display: grid; gap: 8px; max-height: 300px; overflow-y: auto;">
+          <!-- Stats details will be rendered here -->
+        </div>
+      </div>
+
+      <!-- STATISTIQUES INDIVIDUELLES -->
+      <div style="margin-bottom: 20px;">
+        <h3 style="font-size: 14px; font-weight: 600; margin-bottom: 12px; color: #fff;">Statistiques individuelles</h3>
+        <div id="stats-individuelles-content" style="display: grid; gap: 8px; max-height: 300px; overflow-y: auto;">
+          <!-- Individual stats will be rendered here -->
+        </div>
+      </div>
+      
+      <div class="modal-actions">
+        <button class="btn-ghost" onclick="closeStatsModal()">Fermer</button>
+      </div>
+    </div>
+  </div>
+
+    <div style="display:flex; align-items:center; justify-content:space-between; padding: 8px 16px; border-top: 1px solid #2a2a2a;">
+      <div class="legende" id="legende-container">
+        <!-- Legend items will be dynamically rendered -->
+      </div>
+      <button class="btn-ghost" style="font-size: 11px; white-space:nowrap; margin-left: 10px;" onclick="ouvrirModalTypes()">⚙️ Types</button>
+    </div>
+  </div>
+
+  <!-- MODAL ÉVÉNEMENT -->
+  <div class="modal-overlay" id="modal-event">
+    <div class="modal">
+      <div class="modal-title" id="modal-event-title">Nouvel événement</div>
+      <div class="form-grid">
+        <div class="form-field form-full">
+          <label>Titre *</label>
+          <input type="text" id="ev-titre" placeholder="Ex: Entraînement terrain" />
+        </div>
+        <div class="form-field">
+          <label>Type</label>
+          <select id="ev-type" onchange="toggleIntensitySelector()">
+            <option value="">— Sélectionner un type —</option>
+            <option value="entrainement">Entraînement terrain</option>
+            <option value="muscu">Muscu / Prépa physique</option>
+            <option value="match">Match</option>
+            <option value="reunion">Réunion</option>
+            <option value="medical">Médical / Kiné</option>
+            <option value="deplacement">Déplacement</option>
+            <option value="autre">Autre</option>
+          </select>
+        </div>
+        <div class="form-field" id="intensity-field" style="display:none;">
+          <label>Intensité</label>
+          <div style="display:flex; gap:5px;">
+            <button type="button" id="int-1" class="intensity-btn" style="flex:1; padding:8px; border:1px solid #333; background:#1a1a1a; color:#888; border-radius:6px; cursor:pointer; font-size:12px;" onclick="selectIntensity(1)">Légère</button>
+            <button type="button" id="int-2" class="intensity-btn" style="flex:1; padding:8px; border:1px solid #FECC00; background:#FECC00; color:#0f0f0f; border-radius:6px; cursor:pointer; font-size:12px; font-weight:600;" onclick="selectIntensity(2)">Normale</button>
+            <button type="button" id="int-3" class="intensity-btn" style="flex:1; padding:8px; border:1px solid #333; background:#1a1a1a; color:#888; border-radius:6px; cursor:pointer; font-size:12px;" onclick="selectIntensity(3)">Intense</button>
+          </div>
+          <input type="hidden" id="ev-intensity" value="2">
+        </div>
+        <div class="form-field" id="opponent-field" style="display:none;">
+          <label>Adversaire</label>
+          <select id="ev-opponent" onchange="onOpponentChange()">
+            <option value="">— Sélectionner un adversaire —</option>
+          </select>
+        </div>
+        <div class="form-field" id="match-location-field" style="display:none;">
+          <label>Lieu du match</label>
+          <select id="ev-match-location" onchange="onMatchLocationChange()">
+            <option value="domicile">Domicile</option>
+            <option value="exterieur">Extérieur</option>
+          </select>
+        </div>
+        <div class="form-field">
+          <label>Lieu</label>
+          <input type="text" id="ev-lieu" placeholder="Terrain 1, Salle muscu..." />
+        </div>
+        <div class="form-field">
+          <label>Date *</label>
+          <input type="date" id="ev-date" />
+        </div>
+        <div class="form-field">
+          <label>Heure début *</label>
+          <input type="time" id="ev-debut" />
+        </div>
+        <div class="form-field">
+          <label>Heure fin *</label>
+          <input type="time" id="ev-fin" />
+        </div>
+        <div class="form-field">
+          <label>Importance notif</label>
+          <select id="ev-notif">
+            <option value="normale">Normale</option>
+            <option value="urgente">Urgente (push)</option>
+            <option value="aucune">Aucune</option>
+          </select>
+        </div>
+        <div class="form-field form-full">
+          <label>Visibilité</label>
+          <select id="ev-visible" onchange="togglePlayerSelection()">
+            <option value="all">Tous les joueurs</option>
+            <option value="staff">Staff uniquement (masqué aux joueurs)</option>
+            <option value="selected">Joueurs sélectionnés uniquement</option>
+          </select>
+        </div>
+        <div class="form-field form-full" id="player-selection-area" style="display:none;">
+          <label>Sélectionner les joueurs qui verront ce créneau :</label>
+          
+          <!-- Quick selection by position/line -->
+          <div style="display: flex; gap: 8px; margin-bottom: 10px; flex-wrap: wrap;">
+            <button type="button" onclick="selectByLine('avant')" style="font-size: 11px; background: #2a2a2a; border: 1px solid #444; color: #888; padding: 4px 8px; border-radius: 4px; cursor: pointer;">Avants</button>
+            <button type="button" onclick="selectByLine('arriere')" style="font-size: 11px; background: #2a2a2a; border: 1px solid #444; color: #888; padding: 4px 8px; border-radius: 4px; cursor: pointer;">Arrières</button>
+            <button type="button" onclick="selectByPosition('Pilier')" style="font-size: 11px; background: #2a2a2a; border: 1px solid #444; color: #888; padding: 4px 8px; border-radius: 4px; cursor: pointer;">Piliers</button>
+            <button type="button" onclick="selectByPosition('Talonneur')" style="font-size: 11px; background: #2a2a2a; border: 1px solid #444; color: #888; padding: 4px 8px; border-radius: 4px; cursor: pointer;">Talonneur</button>
+            <button type="button" onclick="selectByPosition('2e Ligne')" style="font-size: 11px; background: #2a2a2a; border: 1px solid #444; color: #888; padding: 4px 8px; border-radius: 4px; cursor: pointer;">2e Ligne</button>
+            <button type="button" onclick="selectByPosition('3e Ligne')" style="font-size: 11px; background: #2a2a2a; border: 1px solid #444; color: #888; padding: 4px 8px; border-radius: 4px; cursor: pointer;">3e Ligne</button>
+            <button type="button" onclick="selectByPosition('Demi de mêlée')" style="font-size: 11px; background: #2a2a2a; border: 1px solid #444; color: #888; padding: 4px 8px; border-radius: 4px; cursor: pointer;">Demi de mêlée</button>
+            <button type="button" onclick="selectByPosition('Demi d\'ouverture')" style="font-size: 11px; background: #2a2a2a; border: 1px solid #444; color: #888; padding: 4px 8px; border-radius: 4px; cursor: pointer;">Demi d'ouverture</button>
+            <button type="button" onclick="selectByPosition('Centre')" style="font-size: 11px; background: #2a2a2a; border: 1px solid #444; color: #888; padding: 4px 8px; border-radius: 4px; cursor: pointer;">Centre</button>
+            <button type="button" onclick="selectByPosition('Ailier')" style="font-size: 11px; background: #2a2a2a; border: 1px solid #444; color: #888; padding: 4px 8px; border-radius: 4px; cursor: pointer;">Ailier</button>
+            <button type="button" onclick="selectByPosition('Arrière')" style="font-size: 11px; background: #2a2a2a; border: 1px solid #444; color: #888; padding: 4px 8px; border-radius: 4px; cursor: pointer;">Arrière</button>
+          </div>
+          
+          <div id="player-list" style="max-height: 150px; overflow-y: auto; background: #1a1a1a; border: 1px solid #333; border-radius: 8px; padding: 10px;">
+            <!-- Player checkboxes will be loaded here -->
+          </div>
+          <div style="margin-top: 8px; display: flex; gap: 8px;">
+            <button type="button" onclick="selectAllPlayers()" style="font-size: 11px; background: #2a2a2a; border: 1px solid #444; color: #888; padding: 4px 8px; border-radius: 4px; cursor: pointer;">Tout sélectionner</button>
+            <button type="button" onclick="deselectAllPlayers()" style="font-size: 11px; background: #2a2a2a; border: 1px solid #444; color: #888; padding: 4px 8px; border-radius: 4px; cursor: pointer;">Tout désélectionner</button>
+          </div>
+        </div>
+        <div class="form-field form-full">
+          <label style="display:flex; align-items:center; gap:8px;">
+            <input type="checkbox" id="ev-avec-blesses" onchange="toggleBlessesSelection()" style="accent-color:#E24B4A;" />
+            🏥 Ajouter au planning blessés
+          </label>
+        </div>
+        <div class="form-field form-full" id="blesses-selection-area" style="display:none;">
+          <label>Sélectionner les blessés concernés :</label>
+          
+          <!-- Quick selection buttons -->
+          <div style="display: flex; gap: 8px; margin-bottom: 10px; flex-wrap: wrap;">
+            <button type="button" onclick="selectAllBlesses()" style="font-size: 11px; background: #E24B4A22; border: 1px solid #E24B4A44; color: #E24B4A; padding: 4px 8px; border-radius: 4px; cursor: pointer;">Tous les blessés</button>
+            <button type="button" onclick="deselectAllBlesses()" style="font-size: 11px; background: #2a2a2a; border: 1px solid #444; color: #888; padding: 4px 8px; border-radius: 4px; cursor: pointer;">Tout désélectionner</button>
+          </div>
+          
+          <div id="blesses-list" style="max-height: 150px; overflow-y: auto; background: #1a1a1a; border: 1px solid #E24B4A44; border-radius: 8px; padding: 10px;">
+            <!-- Blessés checkboxes will be loaded here -->
+          </div>
+        </div>
+        <div class="form-field form-full">
+          <label>Description</label>
+          <textarea id="ev-desc" placeholder="Détails, convocations..."></textarea>
+        </div>
+      </div>
+      <div class="modal-actions">
+        <button class="btn-ghost" onclick="fermerModal()">Annuler</button>
+        <button class="btn-danger" id="btn-del-event" style="display:none" onclick="supprimerEvent()">Supprimer</button>
+        <button class="btn-primary" onclick="sauvegarderEvent()">Enregistrer</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- CUSTOM PROMPT MODAL -->
+  <div class="custom-prompt-overlay" id="custom-prompt">
+    <div class="custom-prompt">
+      <div class="custom-prompt-title" id="prompt-title">Titre</div>
+      <input type="text" class="custom-prompt-input" id="prompt-input" placeholder="Entrez une valeur">
+      <div class="custom-prompt-buttons">
+        <button class="btn-ghost" onclick="closeCustomPrompt()">Annuler</button>
+        <button class="btn-primary" onclick="confirmCustomPrompt()">OK</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- DATE PICKER MODAL -->
+  <div class="date-picker-overlay" id="date-picker">
+    <div class="date-picker">
+      <div class="date-picker-title">Sélectionnez un lundi</div>
+      <div class="calendar-nav">
+        <button onclick="changeMonth(-1)">‹</button>
+        <div class="calendar-month-year" id="calendar-month-year"></div>
+        <button onclick="changeMonth(1)">›</button>
+      </div>
+      <div class="calendar-grid" id="calendar-grid"></div>
+      <div class="custom-prompt-buttons">
+        <button class="btn-ghost" onclick="closeDatePicker()">Annuler</button>
+        <button class="btn-primary" onclick="confirmDatePicker()">Sélectionner</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOOLTIP CRÉNEAU -->
+  <div class="event-tooltip" id="event-tooltip"></div>
+
+  <!-- MODAL GESTION DES TYPES -->
+  <div class="modal-overlay" id="modal-types">
+    <div class="modal" style="width: 500px;">
+      <div class="modal-title">Gérer les types de créneaux</div>
+      <div id="types-list" style="max-height: 300px; overflow-y: auto; margin-bottom: 15px;">
+        <!-- Types will be rendered here -->
+      </div>
+      <div style="border-top: 1px solid #2a2a2a; padding-top: 15px; margin-bottom: 15px;">
+        <div style="font-size: 12px; color: #888; margin-bottom: 10px;">Ajouter un nouveau type :</div>
+        <div class="form-grid">
+          <div class="form-field">
+            <label>Nom *</label>
+            <input type="text" id="new-type-name" placeholder="ex: Réunion">
+          </div>
+          <div class="form-field">
+            <label>Couleur *</label>
+            <input type="color" id="new-type-color" value="#4CAF50">
+          </div>
+        </div>
+        <label style="display:flex; align-items:center; gap:8px; font-size:12px; color:#888; cursor:pointer; margin-top:10px;">
+          <input type="checkbox" id="new-type-intensity">
+          Activer l'échelle d'intensité (3 niveaux de couleur)
+        </label>
+        <button class="btn-ghost" style="margin-top: 10px;" onclick="ajouterType()">+ Ajouter ce type</button>
+      </div>
+      <div class="modal-actions">
+        <button class="btn-ghost" onclick="fermerModalTypes()">Fermer</button>
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js'
+import { getAuth, onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js'
+import { getFirestore, collection, doc, setDoc, deleteDoc, onSnapshot, serverTimestamp, getDoc, getDocs, query, where } from 'https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js'
+
+const firebaseConfig = {
+  apiKey: "AIzaSyCvMs-5LX9Ivk3OkzUR3iz9Kk1E5b9_7Vk",
+  authDomain: "delta-rugby-app.firebaseapp.com",
+  projectId: "delta-rugby-app",
+  storageBucket: "delta-rugby-app.firebasestorage.app",
+  messagingSenderId: "61187079762",
+  appId: "1:61187079762:web:56cd1eaa8beb9e1a2ee98b"
+}
+
+const fbApp = initializeApp(firebaseConfig)
+const auth = getAuth(fbApp)
+const db = getFirestore(fbApp)
+
+const JOURS = ['Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi','Dimanche']
+const HEURE_DEBUT = 6
+const HEURE_FIN = 22
+const PX_PAR_HEURE = 60
+const COULEURS_POSTE = { 'Pilier':'#8B3A3A','Talonneur':'#6B3A8B','2e Ligne':'#3A6B8B','3e Ligne':'#3A8B6B','Demi de mêlée':'#8B6B3A',"Demi d'ouverture":'#6B8B3A','Centre':'#3A4A8B','Ailier':'#8B3A6B','Arrière':'#2A6B5B' }
+
+// Default event types - can be customized
+// hasIntensity: true = allows 3 intensity levels (1=light, 2=normal, 3=intense)
+// includeInStats: true = include this type in statistics calculations
+let TYPE_STYLES = {
+  match:        { bg: '#E24B4A33', border: '#E24B4A', text: '#F09595', name: 'Match', hasIntensity: true, includeInStats: true },
+  entrainement: { bg: '#378ADD33', border: '#378ADD', text: '#85B7EB', name: 'Entraînement', hasIntensity: true, includeInStats: true },
+  muscu:        { bg: '#FECC0033', border: '#FECC00', text: '#FECC00', name: 'Muscu', hasIntensity: true, includeInStats: true },
+  vitesse:      { bg: '#FF572233', border: '#FF5722', text: '#FF8A65', name: 'Vitesse', hasIntensity: true, includeInStats: true },
+  reunion:      { bg: '#88878033', border: '#888',    text: '#B4B2A9', name: 'Réunion', hasIntensity: false, includeInStats: false },
+  medical:      { bg: '#1D9E7533', border: '#1D9E75', text: '#5DCAA5', name: 'Médical', hasIntensity: false, includeInStats: false },
+  deplacement:  { bg: '#7F77DD33', border: '#7F77DD', text: '#AFA9EC', name: 'Déplacement', hasIntensity: false, includeInStats: false },
+  club:         { bg: '#9C27B033', border: '#9C27B0', text: '#CE93D8', name: 'Club', hasIntensity: false, includeInStats: false },
+  cohesion:     { bg: '#FF980033', border: '#FF9800', text: '#FFCC80', name: 'Cohésion', hasIntensity: true, includeInStats: true },
+  autre:        { bg: '#2a2a2a',   border: '#444',    text: '#888',    name: 'Autre', hasIntensity: false, includeInStats: false }
+}
+
+// Intensity multipliers for color calculation
+// 1 = light 30%, 2 = normal 60%, 3 = intense 100%
+const INTENSITY_ALPHA = { 1: '4D', 2: '99', 3: 'FF' }
+
+let lundi = getLundi(new Date())
+let events = []
+let editingEventId = null
+
+// Custom prompt functions
+let customPromptResolve = null
+
+function showCustomPrompt(title, defaultValue = '') {
+  return new Promise((resolve) => {
+    customPromptResolve = resolve
+    document.getElementById('prompt-title').textContent = title
+    document.getElementById('prompt-input').value = defaultValue
+    document.getElementById('custom-prompt').classList.add('open')
+    document.getElementById('prompt-input').focus()
+  })
+}
+
+function closeCustomPrompt() {
+  document.getElementById('custom-prompt').classList.remove('open')
+  if (customPromptResolve) {
+    customPromptResolve(null)
+    customPromptResolve = null
+  }
+}
+
+function confirmCustomPrompt() {
+  const value = document.getElementById('prompt-input').value
+  document.getElementById('custom-prompt').classList.remove('open')
+  if (customPromptResolve) {
+    customPromptResolve(value)
+    customPromptResolve = null
+  }
+}
+
+// Custom confirm function
+function showCustomConfirm(message) {
+  return new Promise((resolve) => {
+    if (confirm(message)) {
+      resolve(true)
+    } else {
+      resolve(false)
+    }
+  })
+}
+
+// Date picker functions
+let datePickerResolve = null
+let currentMonth = new Date()
+let selectedDate = null
+let activePickerMode = 'monday' // 'monday' or 'anyday'
+
+function showDaySelector() {
+  return new Promise((resolve) => {
+    // Create a simple day selector for current week
+    const daysOfWeek = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi', 'Dimanche']
+    const currentWeekDays = []
+    
+    for (let i = 0; i < 7; i++) {
+      const date = new Date(lundi)
+      date.setDate(lundi.getDate() + i)
+      currentWeekDays.push({
+        dateStr: dateStr(date),
+        dayName: daysOfWeek[i],
+        date: date
+      })
+    }
+    
+    // Create modal content
+    const modalHtml = `
+      <div class="custom-prompt-overlay" style="display:flex;">
+        <div class="custom-prompt-modal">
+          <div class="custom-prompt-title">Sélectionner la journée à dupliquer</div>
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 8px; margin: 20px 0;">
+            ${currentWeekDays.map(day => `
+              <button onclick="selectDayForDuplication('${day.dateStr}')" style="padding: 12px; background: #2a2a2a; border: 1px solid #444; color: #fff; border-radius: 8px; cursor: pointer; text-align: center;">
+                <div style="font-weight: 700; margin-bottom: 4px;">${day.dayName}</div>
+                <div style="font-size: 12px; opacity: 0.8;">${day.date}</div>
+              </button>
+            `).join('')}
+          </div>
+          <div style="display: flex; gap: 8px; justify-content: flex-end;">
+            <button onclick="closeDaySelector()" style="padding: 8px 16px; background: #444; border: none; color: #fff; border-radius: 6px; cursor: pointer;">Annuler</button>
+          </div>
+        </div>
+      </div>
+    `
+    
+    // Add to body
+    const tempDiv = document.createElement('div')
+    tempDiv.innerHTML = modalHtml
+    document.body.appendChild(tempDiv.firstElementChild)
+    
+    // Store resolve function
+    window.daySelectorResolve = resolve
+  })
+}
+
+window.selectDayForDuplication = function(dateStr) {
+  closeDaySelector()
+  if (window.daySelectorResolve) {
+    window.daySelectorResolve(dateStr)
+    window.daySelectorResolve = null
+  }
+}
+
+window.closeDaySelector = function() {
+  const overlay = document.querySelector('.custom-prompt-overlay')
+  if (overlay) {
+    overlay.remove()
+  }
+  if (window.daySelectorResolve) {
+    window.daySelectorResolve(null)
+    window.daySelectorResolve = null
+  }
+}
+
+function showDatePicker(mondayOnly = false) {
+  return new Promise((resolve) => {
+    activePickerMode = mondayOnly ? 'monday' : 'anyday'
+    window.datePickerMondayOnly = mondayOnly
+    console.log('Opening date picker, mondayOnly:', mondayOnly, 'activePickerMode:', activePickerMode)
+    datePickerResolve = resolve
+    selectedDate = null
+    currentMonth = new Date()
+    renderCalendar()
+    document.getElementById('date-picker').classList.add('open')
+  })
+}
+
+function closeDatePicker() {
+  document.getElementById('date-picker').classList.remove('open')
+  window.datePickerMondayOnly = false
+  console.log('Date picker closed, mondayOnly reset to false')
+  if (datePickerResolve) {
+    datePickerResolve(null)
+    datePickerResolve = null
+  }
+}
+
+function confirmDatePicker() {
+  document.getElementById('date-picker').classList.remove('open')
+  if (activePickerMode === 'anyday') {
+    window.datePickerMondayOnly = false
+    console.log('Date picker confirmed (anyday mode), mondayOnly reset to false')
+    if (datePickerResolve) {
+      datePickerResolve(selectedDate)
+      datePickerResolve = null
+    }
+  } else {
+    window.datePickerMondayOnly = false
+    console.log('Date picker confirmed, mondayOnly reset to false')
+    if (datePickerResolve) {
+      datePickerResolve(selectedDate)
+      datePickerResolve = null
+    }
+  }
+}
+
+function changeMonth(direction) {
+  currentMonth.setMonth(currentMonth.getMonth() + direction)
+  renderCalendar()
+}
+
+// Flag to force Monday-only selection - must be global for renderCalendar access
+window.datePickerMondayOnly = false
+
+function renderCalendar() {
+  const year = currentMonth.getFullYear()
+  const month = currentMonth.getMonth()
+  
+  // Update month/year display
+  const monthNames = ['Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin', 
+                     'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre']
+  document.getElementById('calendar-month-year').textContent = `${monthNames[month]} ${year}`
+  
+  // Clear calendar
+  const grid = document.getElementById('calendar-grid')
+  grid.innerHTML = ''
+  
+  // Add day headers
+  const dayHeaders = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim']
+  dayHeaders.forEach(day => {
+    const header = document.createElement('div')
+    header.className = 'calendar-header'
+    header.textContent = day
+    grid.appendChild(header)
+  })
+  
+  // Get first day of month
+  const firstDay = new Date(year, month, 1)
+  const lastDay = new Date(year, month + 1, 0)
+  const daysInMonth = lastDay.getDate()
+  
+  // Find the first Monday on or before the 1st
+  let firstMonday = new Date(firstDay)
+  while (firstMonday.getDay() !== 1) {
+    firstMonday.setDate(firstMonday.getDate() - 1)
+  }
+  
+  // Generate 6 weeks (42 days) starting from the first Monday
+  for (let week = 0; week < 6; week++) {
+    for (let day = 0; day < 7; day++) {
+      const currentDate = new Date(firstMonday)
+      currentDate.setDate(firstMonday.getDate() + (week * 7) + day)
+      
+      const dayElement = document.createElement('div')
+      dayElement.className = 'calendar-day'
+      dayElement.textContent = currentDate.getDate()
+      
+      // Check if this day is in the current month
+      const isCurrentMonth = currentDate.getMonth() === month
+      
+      // Check if it's a Monday and in current/future
+      const isMonday = currentDate.getDay() === 1
+      const isFuture = currentDate >= new Date(new Date().setHours(0, 0, 0, 0))
+      
+      // Calendar logic - check Monday-only mode first
+      const mondayOnly = window.datePickerMondayOnly === true
+      
+      if (mondayOnly && !isMonday) {
+        // FORCE Monday-only: disable all non-Monday days
+        dayElement.style.cursor = 'not-allowed'
+        dayElement.style.opacity = '0.05'
+        dayElement.style.pointerEvents = 'none'
+        dayElement.title = 'Lundi uniquement'
+        dayElement.style.background = 'transparent'
+        dayElement.style.color = '#333'
+      } else if (isCurrentMonth && isFuture) {
+        // Clickable days (all days when not monday-only, or Mondays when monday-only)
+        if (mondayOnly) {
+          dayElement.classList.add('monday')
+        }
+        dayElement.style.cursor = 'pointer'
+        dayElement.style.opacity = '1'
+        dayElement.onclick = () => selectDate(new Date(currentDate))
+        dayElement.title = `${dateStr(currentDate)} - Cliquez pour sélectionner`
+      } else {
+        // Other non-clickable days (past days or other months)
+        dayElement.style.cursor = 'not-allowed'
+        dayElement.style.opacity = isCurrentMonth && isFuture ? '0.3' : '0.1'
+        if (!isCurrentMonth || !isFuture) {
+          dayElement.title = dateStr(currentDate)
+        }
+      }
+      
+      // Highlight selected date
+      if (selectedDate && currentDate.toDateString() === selectedDate.toDateString()) {
+        dayElement.classList.add('selected')
+      }
+      
+      grid.appendChild(dayElement)
+    }
+  }
+}
+
+function selectDate(date) {
+  selectedDate = date
+  renderCalendar()
+}
+
+// Multi-selection variables and functions - GLOBAL for access in event creation
+window.multiSelectMode = false
+let selectedEvents = new Set()
+
+// Hide week from players - GLOBAL
+window.hideWeekFromPlayers = false
+
+window.toggleHideWeekFromPlayers = function() {
+  window.hideWeekFromPlayers = !window.hideWeekFromPlayers
+  const btn = document.getElementById('btn-hide-week')
+  
+  if (window.hideWeekFromPlayers) {
+    btn.style.background = '#E24B4A33'
+    btn.style.color = '#E24B4A'
+    btn.style.borderColor = '#E24B4A'
+    btn.textContent = 'Semaine masquée'
+  } else {
+    btn.style.background = ''
+    btn.style.color = ''
+    btn.style.borderColor = ''
+    btn.textContent = 'Masquer aux joueurs'
+  }
+}
+
+function toggleMultiSelectMode() {
+  window.multiSelectMode = !window.multiSelectMode
+  const modePanel = document.getElementById('multi-select-mode')
+  const counter = document.getElementById('selection-counter')
+  
+  if (window.multiSelectMode) {
+    modePanel.classList.add('active')
+    counter.classList.add('active')
+    clearSelection()
+    // Re-render to update event click handlers
+    renderPlanning()
+  } else {
+    modePanel.classList.remove('active')
+    counter.classList.remove('active')
+    clearSelection()
+    renderPlanning()
+  }
+}
+
+function updateSelectionCounter() {
+  const counter = document.getElementById('selection-counter')
+  counter.textContent = `${selectedEvents.size} sélectionné(s)`
+}
+
+function selectAllEvents() {
+  selectedEvents.clear()
+  document.querySelectorAll('.event-block').forEach(el => {
+    const eventId = el.dataset.evId
+    if (eventId) {
+      selectedEvents.add(eventId)
+      el.classList.add('selected')
+    }
+  })
+  updateSelectionCounter()
+}
+
+function clearSelection() {
+  selectedEvents.clear()
+  document.querySelectorAll('.event-block.selected').forEach(el => {
+    el.classList.remove('selected')
+  })
+  updateSelectionCounter()
+}
+
+function toggleEventSelection(eventId) {
+  if (!multiSelectMode) return
+  
+  const eventEl = document.querySelector(`[data-ev-id="${eventId}"]`)
+  if (!eventEl) return
+  
+  if (selectedEvents.has(eventId)) {
+    selectedEvents.delete(eventId)
+    eventEl.classList.remove('selected')
+  } else {
+    selectedEvents.add(eventId)
+    eventEl.classList.add('selected')
+  }
+  updateSelectionCounter()
+}
+
+async function deleteSelected() {
+  if (selectedEvents.size === 0) {
+    alert('Aucun événement sélectionné')
+    return
+  }
+  
+  if (!confirm(`Supprimer ${selectedEvents.size} événement(s) ?`)) return
+  
+  try {
+    for (const eventId of selectedEvents) {
+      await deleteDoc(doc(db, 'planning', eventId))
+    }
+    clearSelection()
+    alert(`${selectedEvents.size} événement(s) supprimés !`)
+  } catch (error) {
+    console.error('Erreur lors de la suppression:', error)
+    alert('Erreur lors de la suppression')
+  }
+}
+
+async function duplicateSelectedUnified() {
+  if (selectedEvents.size === 0) {
+    alert('Aucun événement sélectionné')
+    return
+  }
+  
+  // Vérifier si tous les événements sont sur la même journée
+  const selectedEventObjects = []
+  const dates = new Set()
+  
+  for (const eventId of selectedEvents) {
+    const ev = events.find(e => e.id === eventId)
+    if (ev) {
+      selectedEventObjects.push(ev)
+      dates.add(ev.date)
+    }
+  }
+  
+  const sameDay = dates.size === 1
+  
+  if (sameDay) {
+    // Tous sur le même jour → permettre duplication vers n'importe quelle date
+    const selectedDate = await showAnyDayPicker()
+    if (!selectedDate) return
+    
+    try {
+      let successCount = 0
+      for (let i = 0; i < selectedEventObjects.length; i++) {
+        const ev = selectedEventObjects[i]
+        const { id, ...evData } = ev
+        const timestamp = Date.now()
+        const randomPart = Math.random().toString(36).slice(2, 10)
+        const newId = `ev_${timestamp}_${i}_${randomPart}`
+        
+        const newEventData = { 
+          ...evData, 
+          date: dateStr(selectedDate), 
+          updatedAt: serverTimestamp(),
+          createdAt: serverTimestamp()
+        }
+        
+        await setDoc(doc(db, 'planning', newId), newEventData)
+        successCount++
+        
+        // Small delay to prevent timestamp collisions
+        await new Promise(r => setTimeout(r, 10))
+      }
+      
+      alert(`${successCount} événement(s) dupliqués vers ${dateStr(selectedDate)} !`)
+      clearSelection()
+    } catch (error) {
+      console.error('Erreur lors de la duplication:', error)
+      alert('Erreur lors de la duplication: ' + error.message)
+    }
+  } else {
+    // Sur plusieurs jours → OBLIGATOIREMENT duplication vers une semaine complète à partir du lundi
+    alert(`Créneaux sur ${dates.size} jours différents. Sélectionnez un lundi de destination.`)
+    
+    const selectedLundi = await showDatePicker(true) // true = Monday only
+    if (!selectedLundi) return
+    
+    try {
+      // Calculer le décalage en semaines
+      const diff = Math.round((selectedLundi - lundi) / (7 * 24 * 60 * 60 * 1000))
+      
+      let successCount = 0
+      for (let i = 0; i < selectedEventObjects.length; i++) {
+        const ev = selectedEventObjects[i]
+        
+        // Calculer le nouveau jour en préservant la position relative dans la semaine
+        const originalDate = new Date(ev.date + 'T12:00:00')
+        const newDate = new Date(originalDate)
+        newDate.setDate(originalDate.getDate() + (diff * 7))
+        
+        const { id, ...evData } = ev
+        const timestamp = Date.now()
+        const randomPart = Math.random().toString(36).slice(2, 10)
+        const newId = `ev_${timestamp}_${i}_${randomPart}`
+        
+        const newEventData = { 
+          ...evData, 
+          date: dateStr(newDate), 
+          updatedAt: serverTimestamp(),
+          createdAt: serverTimestamp()
+        }
+        
+        await setDoc(doc(db, 'planning', newId), newEventData)
+        successCount++
+        
+        // Small delay to prevent timestamp collisions
+        await new Promise(r => setTimeout(r, 10))
+      }
+      
+      alert(`${successCount} événement(s) dupliqués vers la semaine du ${dateStr(selectedLundi)} !`)
+      lundi = selectedLundi
+      renderPlanning()
+      clearSelection()
+    } catch (error) {
+      console.error('Erreur lors de la duplication:', error)
+      alert('Erreur lors de la duplication: ' + error.message)
+    }
+  }
+}
+
+// Any day picker (not just Mondays)
+let anyDayPickerResolve = null
+let anyDaySelectedDate = null
+let anyDayOriginalMondayOnly = false
+
+function showAnyDayPicker() {
+  return new Promise((resolve) => {
+    activePickerMode = 'anyday'
+    anyDayPickerResolve = resolve
+    anyDaySelectedDate = null
+    // Save and reset Monday-only mode
+    anyDayOriginalMondayOnly = window.datePickerMondayOnly
+    window.datePickerMondayOnly = false
+    
+    currentMonth = new Date()
+    renderAnyDayCalendar()
+    document.getElementById('date-picker').classList.add('open')
+  })
+}
+
+function renderAnyDayCalendar() {
+  const year = currentMonth.getFullYear()
+  const month = currentMonth.getMonth()
+  
+  const monthNames = ['Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin', 
+                     'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre']
+  document.getElementById('calendar-month-year').textContent = `${monthNames[month]} ${year}`
+  
+  const grid = document.getElementById('calendar-grid')
+  grid.innerHTML = ''
+  
+  const dayHeaders = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim']
+  dayHeaders.forEach(day => {
+    const header = document.createElement('div')
+    header.className = 'calendar-header'
+    header.textContent = day
+    grid.appendChild(header)
+  })
+  
+  const firstDay = new Date(year, month, 1)
+  let firstMonday = new Date(firstDay)
+  while (firstMonday.getDay() !== 1) {
+    firstMonday.setDate(firstMonday.getDate() - 1)
+  }
+  
+  for (let week = 0; week < 6; week++) {
+    for (let day = 0; day < 7; day++) {
+      const currentDate = new Date(firstMonday)
+      currentDate.setDate(firstMonday.getDate() + (week * 7) + day)
+      
+      const dayElement = document.createElement('div')
+      dayElement.className = 'calendar-day'
+      dayElement.textContent = currentDate.getDate()
+      
+      const isCurrentMonth = currentDate.getMonth() === month
+      const isFuture = currentDate >= new Date(new Date().setHours(0, 0, 0, 0))
+      
+      if (isCurrentMonth && isFuture) {
+        dayElement.style.cursor = 'pointer'
+        dayElement.style.opacity = '1'
+        dayElement.onclick = () => {
+          anyDaySelectedDate = currentDate
+          renderAnyDayCalendar()
+        }
+      } else {
+        dayElement.style.opacity = '0.2'
+        dayElement.style.cursor = 'not-allowed'
+      }
+      
+      if (anyDaySelectedDate && currentDate.toDateString() === anyDaySelectedDate.toDateString()) {
+        dayElement.classList.add('selected')
+      }
+      
+      dayElement.title = dateStr(currentDate)
+      grid.appendChild(dayElement)
+    }
+  }
+}
+
+function closeAnyDayPicker() {
+  document.getElementById('date-picker').classList.remove('open')
+  window.datePickerMondayOnly = anyDayOriginalMondayOnly
+  if (anyDayPickerResolve) {
+    anyDayPickerResolve(null)
+    anyDayPickerResolve = null
+  }
+}
+
+function confirmAnyDayPicker() {
+  document.getElementById('date-picker').classList.remove('open')
+  window.datePickerMondayOnly = anyDayOriginalMondayOnly
+  if (anyDayPickerResolve) {
+    anyDayPickerResolve(anyDaySelectedDate)
+    anyDayPickerResolve = null
+  }
+}
+
+// Rendre les fonctions globales pour les onclick
+window.changeMonth = changeMonth
+window.closeDatePicker = closeDatePicker
+window.confirmDatePicker = confirmDatePicker
+window.selectDate = selectDate
+window.toggleMultiSelectMode = toggleMultiSelectMode
+window.selectAllEvents = selectAllEvents
+window.clearSelection = clearSelection
+window.duplicateSelectedUnified = duplicateSelectedUnified
+window.deleteSelected = deleteSelected
+
+// ==================== GESTION DES TYPES ====================
+
+// Render legend dynamically
+function renderLegend() {
+  const container = document.getElementById('legende-container')
+  if (!container) return
+  
+  container.innerHTML = ''
+  Object.entries(TYPE_STYLES).forEach(([key, style]) => {
+    if (key === 'autre') return // Skip 'autre' in legend
+    
+    const item = document.createElement('div')
+    item.className = 'legende-item'
+    item.innerHTML = `<div class="legende-dot" style="background:${style.border}"></div>${style.name || key}`
+    container.appendChild(item)
+  })
+}
+
+// Open types management modal
+window.ouvrirModalTypes = function() {
+  renderTypesList()
+  document.getElementById('modal-types').classList.add('open')
+}
+
+// Close types management modal
+window.fermerModalTypes = function() {
+  document.getElementById('modal-types').classList.remove('open')
+}
+
+// Render types list in modal
+function renderTypesList() {
+  const container = document.getElementById('types-list')
+  if (!container) return
+  
+  container.innerHTML = ''
+  
+  Object.entries(TYPE_STYLES).forEach(([key, style]) => {
+    if (key === 'autre') return // Cannot edit/delete 'autre'
+    
+    const row = document.createElement('div')
+    row.style.cssText = 'display:flex; flex-direction:column; gap:8px; padding:10px; border-bottom:1px solid #2a2a2a;'
+    
+    row.innerHTML = `
+      <div style="display:flex; align-items:center; gap:10px;">
+        <input type="color" value="${style.border}" style="width:40px; height:30px; border:none; cursor:pointer;" onchange="modifierCouleurType('${key}', this.value)">
+        <input type="text" value="${style.name || key}" style="flex:1; background:#1a1a1a; border:1px solid #333; color:#fff; padding:6px 10px; border-radius:6px; font-size:13px;" onchange="modifierNomType('${key}', this.value)">
+        <button class="btn-danger" style="padding:6px 12px; font-size:11px;" onclick="supprimerType('${key}')">Supprimer</button>
+      </div>
+      <div style="display:flex; flex-direction:column; gap:6px; padding-left:50px;">
+        <label style="display:flex; align-items:center; gap:8px; font-size:12px; color:#888; cursor:pointer;">
+          <input type="checkbox" ${style.hasIntensity ? 'checked' : ''} onchange="toggleIntensityType('${key}', this.checked)">
+          Activer l'échelle d'intensité (3 niveaux de couleur)
+        </label>
+        <label style="display:flex; align-items:center; gap:8px; font-size:12px; color:#888; cursor:pointer;">
+          <input type="checkbox" ${style.includeInStats !== false ? 'checked' : ''} onchange="toggleIncludeInStats('${key}', this.checked)">
+          Inclure dans les statistiques de participation
+        </label>
+      </div>
+    `
+    container.appendChild(row)
+  })
+}
+
+// Toggle include in stats
+window.toggleIncludeInStats = function(key, include) {
+  if (!TYPE_STYLES[key]) return
+  TYPE_STYLES[key].includeInStats = include
+  saveEventTypesToFirebase()
+}
+
+// Add new type
+window.ajouterType = function() {
+  const nameInput = document.getElementById('new-type-name')
+  const colorInput = document.getElementById('new-type-color')
+  const intensityCheckbox = document.getElementById('new-type-intensity')
+  
+  const name = nameInput.value.trim()
+  const color = colorInput.value
+  const hasIntensity = intensityCheckbox?.checked || false
+  
+  if (!name) {
+    alert('Veuillez entrer un nom pour le type')
+    return
+  }
+  
+  // Generate key from name (lowercase, no spaces, no accents)
+  const key = name.toLowerCase()
+    .normalize('NFD').replace(/[\u0300-\u036f]/g, '') // Remove accents
+    .replace(/[^a-z0-9]/g, '') // Keep only alphanumeric
+  
+  if (!key) {
+    alert('Le nom doit contenir des lettres ou chiffres')
+    return
+  }
+  
+  if (TYPE_STYLES[key]) {
+    alert('Un type avec ce nom existe déjà')
+    return
+  }
+  
+  // Add color with transparency for background
+  const bgColor = color + '33' // Add 20% transparency
+  
+  TYPE_STYLES[key] = {
+    bg: bgColor,
+    border: color,
+    text: color,
+    name: name,
+    hasIntensity: hasIntensity,
+    includeInStats: true // Include in stats by default for new types
+  }
+  
+  // Clear inputs
+  nameInput.value = ''
+  colorInput.value = '#4CAF50'
+  intensityCheckbox.checked = false
+  
+  // Refresh displays
+  renderTypesList()
+  renderLegend()
+  
+  // Update event type dropdown
+  updateTypeDropdown()
+  
+  // Save to Firebase
+  saveEventTypesToFirebase()
+  
+  alert('Type "' + name + '" ajouté avec succès !')
+}
+
+// Modify type color
+window.modifierCouleurType = function(key, newColor) {
+  if (!TYPE_STYLES[key]) return
+  
+  TYPE_STYLES[key].border = newColor
+  TYPE_STYLES[key].text = newColor
+  TYPE_STYLES[key].bg = newColor + '33'
+  
+  renderLegend()
+  renderPlanning()
+  saveEventTypesToFirebase()
+}
+
+// Modify type name
+window.modifierNomType = function modifierNomType(key, newName) {
+  if (!TYPE_STYLES[key]) return
+  
+  TYPE_STYLES[key].name = newName.trim() || key
+  
+  renderLegend()
+  updateTypeDropdown()
+  saveEventTypesToFirebase()
+}
+
+// Toggle intensity scale for a type
+window.toggleIntensityType = function(key, hasIntensity) {
+  if (!TYPE_STYLES[key]) return
+  
+  TYPE_STYLES[key].hasIntensity = hasIntensity
+  
+  renderPlanning()
+  saveEventTypesToFirebase()
+}
+
+// Delete type
+window.supprimerType = function(key) {
+  if (!TYPE_STYLES[key]) return
+  
+  // Check if any events use this type
+  const eventsWithType = events.filter(e => e.type === key)
+  if (eventsWithType.length > 0) {
+    if (!confirm(`Attention : ${eventsWithType.length} événement(s) utilisent ce type. Ils seront changés en "Autre". Continuer ?`)) {
+      return
+    }
+    
+    // Update events in Firestore
+    eventsWithType.forEach(async (ev) => {
+      await setDoc(doc(db, 'planning', ev.id), {
+        ...ev,
+        type: 'autre',
+        updatedAt: serverTimestamp()
+      })
+    })
+  }
+  
+  delete TYPE_STYLES[key]
+  
+  renderTypesList()
+  renderLegend()
+  updateTypeDropdown()
+  renderPlanning()
+  saveEventTypesToFirebase()
+}
+
+// Update type dropdown in event modal
+function updateTypeDropdown() {
+  const select = document.getElementById('ev-type')
+  if (!select) return
+  
+  const currentValue = select.value
+  
+  select.innerHTML = ''
+  Object.entries(TYPE_STYLES).forEach(([key, style]) => {
+    const option = document.createElement('option')
+    option.value = key
+    option.textContent = style.name || key
+    select.appendChild(option)
+  })
+  
+  // Restore selection if it still exists
+  if (TYPE_STYLES[currentValue]) {
+    select.value = currentValue
+  }
+}
+
+onAuthStateChanged(auth, user => {
+  if (!user) { window.location.href = 'login.html'; return }
+  document.getElementById('user-email').textContent = user.email
+
+  // Load saved event types from Firebase
+  loadEventTypesFromFirebase().then(() => {
+    // Initial render of legend
+    renderLegend()
+    updateTypeDropdown()
+  })
+  
+  // Load adversaires for match logos - CRITICAL: must be loaded early
+  loadAdversaires()
+
+  onSnapshot(collection(db, 'planning'), snap => {
+    events = snap.docs.map(d => ({ id: d.id, ...d.data() }))
+    renderPlanning()
+  })
+})
+
+// ==================== FIREBASE PERSISTENCE FOR TYPES ====================
+
+// Load event types from Firebase
+async function loadEventTypesFromFirebase() {
+  try {
+    const docRef = doc(db, 'config', 'eventTypes')
+    const docSnap = await getDoc(docRef)
+    if (docSnap.exists() && docSnap.data().types) {
+      // Merge loaded types with defaults (to ensure new fields are present)
+      const loadedTypes = docSnap.data().types
+      Object.keys(loadedTypes).forEach(key => {
+        if (TYPE_STYLES[key]) {
+          TYPE_STYLES[key] = { ...TYPE_STYLES[key], ...loadedTypes[key] }
+        } else {
+          // For custom types, ensure includeInStats has a default value
+          TYPE_STYLES[key] = {
+            includeInStats: true, // Default to true for stats
+            hasIntensity: false,  // Default to false
+            ...loadedTypes[key]
+          }
+        }
+      })
+    }
+  } catch (error) {
+    console.log('No saved types found, using defaults')
+  }
+}
+
+// Save event types to Firebase
+async function saveEventTypesToFirebase() {
+  try {
+    await setDoc(doc(db, 'config', 'eventTypes'), {
+      types: TYPE_STYLES,
+      updatedAt: serverTimestamp()
+    })
+  } catch (error) {
+    console.error('Error saving event types:', error)
+    alert('Erreur lors de la sauvegarde des types')
+  }
+}
+
+function getLundi(date) {
+  const d = new Date(date)
+  // Travailler en heure locale uniquement
+  d.setHours(12, 0, 0, 0) // midi pour éviter les changements d'heure DST
+  const jour = d.getDay()
+  const diff = jour === 0 ? -6 : 1 - jour
+  d.setDate(d.getDate() + diff)
+  d.setHours(12, 0, 0, 0)
+  return d
+}
+
+function dateStr(d) {
+  // Utiliser la date locale pour éviter le décalage UTC
+  const year = d.getFullYear()
+  const month = String(d.getMonth() + 1).padStart(2, '0')
+  const day   = String(d.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
+}
+
+function majLabelSemaine() {
+  const dimanche = new Date(lundi)
+  dimanche.setDate(lundi.getDate() + 6)
+  document.getElementById('semaine-label').textContent =
+    lundi.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' }) + ' — ' +
+    dimanche.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' })
+}
+
+window.semainePrecedente = function() {
+  if (window.multiSelectMode && selectedEvents.size > 0) {
+    if (!confirm('Vous avez des événements sélectionnés. Voulez-vous quitter le mode sélection multiple ?')) {
+      return
+    }
+    toggleMultiSelectMode()
+  }
+  lundi.setDate(lundi.getDate() - 7)
+  renderPlanning()
+}
+window.semaineSuivante = function() {
+  if (window.multiSelectMode && selectedEvents.size > 0) {
+    if (!confirm('Vous avez des événements sélectionnés. Voulez-vous quitter le mode sélection multiple ?')) {
+      return
+    }
+    toggleMultiSelectMode()
+  }
+  lundi.setDate(lundi.getDate() + 7)
+  renderPlanning()
+}
+window.allerAujourdhui = function() {
+  if (window.multiSelectMode && selectedEvents.size > 0) {
+    if (!confirm('Vous avez des événements sélectionnés. Voulez-vous quitter le mode sélection multiple ?')) {
+      return
+    }
+    toggleMultiSelectMode()
+  }
+  lundi = getLundi(new Date())
+  renderPlanning()
+}
+
+// ==================== RENDU ====================
+function renderPlanning() {
+  majLabelSemaine()
+  const wrap = document.getElementById('planning-wrap')
+  wrap.innerHTML = ''
+
+  const nbHeures = HEURE_FIN - HEURE_DEBUT
+  const totalH = nbHeures * PX_PAR_HEURE
+  const aujourdhuiStr = dateStr(new Date())
+
+  // Conteneur principal avec position relative
+  const outer = document.createElement('div')
+  outer.style.cssText = 'display:flex; min-width:700px;'
+
+  // Colonne heures
+  const colHeures = document.createElement('div')
+  colHeures.style.cssText = 'width:56px; min-width:56px; flex-shrink:0; position:sticky; left:0; z-index:2; background:#0f0f0f;'
+
+  // Header coin
+  const coinEl = document.createElement('div')
+  coinEl.style.cssText = 'height:44px; border-right:1px solid #2a2a2a; border-bottom:1px solid #2a2a2a; background:#0f0f0f;'
+  colHeures.appendChild(coinEl)
+
+  // Labels heures
+  for (let h = 0; h < nbHeures; h++) {
+    const heure = HEURE_DEBUT + h
+    const lbl = document.createElement('div')
+    lbl.style.cssText = `height:${PX_PAR_HEURE}px; border-right:1px solid #2a2a2a; border-bottom:1px solid #141414; display:flex; align-items:flex-start; padding:4px 6px; font-size:10px; color:#333;`
+    lbl.textContent = heure + ':00'
+    colHeures.appendChild(lbl)
+  }
+  outer.appendChild(colHeures)
+
+  // 7 colonnes jours
+  for (let j = 0; j < 7; j++) {
+    const jour = new Date(lundi)
+    jour.setDate(lundi.getDate() + j)
+    const ds = dateStr(jour)
+    const isToday = ds === aujourdhuiStr
+    const style = TYPE_STYLES
+
+    const colJour = document.createElement('div')
+    colJour.style.cssText = 'flex:1; min-width:100px; display:flex; flex-direction:column; position:relative;'
+
+    // Header jour
+    const hdrJour = document.createElement('div')
+    hdrJour.style.cssText = `height:44px; text-align:center; padding:6px 8px 6px 4px; border-right:1px solid #1a1a1a; border-bottom:${isToday ? '2px solid #FECC00' : '1px solid #2a2a2a'}; background:#1a1a1a; cursor:pointer; position:sticky; top:0; z-index:1; display:flex; align-items:center; justify-content:space-between;`
+    
+    // Day info container
+    const dayInfoContainer = document.createElement('div')
+    dayInfoContainer.style.cssText = 'flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; min-width:0;'
+    
+    // Day info
+    const dayInfo = document.createElement('div')
+    dayInfo.style.cssText = 'text-align:center; width:100%;'
+    dayInfo.innerHTML = `<div style="font-size:10px; font-weight:700; color:#555; text-transform:uppercase;">${JOURS[j]}</div><div style="font-size:16px; font-weight:700; color:${isToday ? '#FECC00' : '#fff'};">${jour.getDate()}</div>`
+    
+    // Duplicate button container
+    const dupBtnContainer = document.createElement('div')
+    dupBtnContainer.style.cssText = 'display:flex; align-items:center; justify-content:center; width:20px; flex-shrink:0;'
+    
+    // Duplicate button
+    const dupBtn = document.createElement('button')
+    dupBtn.innerHTML = '⧉'
+    dupBtn.title = `Dupliquer la journée du ${JOURS[j]} ${jour.getDate()}`
+    dupBtn.style.cssText = 'background:transparent; border:none; color:#888; font-size:14px; cursor:pointer; padding:2px; opacity:0; transition:opacity 0.2s; line-height:1;'
+    dupBtn.onclick = (e) => {
+      e.stopPropagation()
+      dupliquerJourSpecifique(ds, JOURS[j])
+    }
+    
+    // Show button on hover
+    hdrJour.addEventListener('mouseenter', () => {
+      dupBtn.style.opacity = '1'
+    })
+    hdrJour.addEventListener('mouseleave', () => {
+      dupBtn.style.opacity = '0'
+    })
+    
+    // Assemble elements
+    dayInfoContainer.appendChild(dayInfo)
+    dupBtnContainer.appendChild(dupBtn)
+    hdrJour.appendChild(dayInfoContainer)
+    hdrJour.appendChild(dupBtnContainer)
+    
+    hdrJour.ondblclick = () => {
+      document.getElementById('ev-date').value = ds
+      document.getElementById('ev-debut').value = '09:00'
+      document.getElementById('ev-fin').value = '10:30'
+      ouvrirModal()
+    }
+    colJour.appendChild(hdrJour)
+
+    // Zone horaire (cellules)
+    const zoneHoraire = document.createElement('div')
+    zoneHoraire.style.cssText = `position:relative; height:${totalH}px; border-right:1px solid #1a1a1a;`
+    zoneHoraire.dataset.jourCol = ds
+    
+    
+    // Cellules fond + demi-heures
+    for (let h = 0; h < nbHeures; h++) {
+      const heure = HEURE_DEBUT + h
+      const cell = document.createElement('div')
+      cell.style.cssText = `position:absolute; top:${h * PX_PAR_HEURE}px; left:0; right:0; height:${PX_PAR_HEURE}px; border-bottom:1px solid #141414; cursor:pointer;`
+
+      // Demi-heure
+      const demi = document.createElement('div')
+      demi.style.cssText = 'position:absolute; top:50%; left:0; right:0; border-top:1px dashed #111; pointer-events:none;'
+      cell.appendChild(demi)
+
+      cell.onclick = (e) => {
+        if (e.target.closest('.ev-block')) return
+        const rect = cell.getBoundingClientRect()
+        const y = e.clientY - rect.top
+        const minsRaw = Math.round((y / PX_PAR_HEURE) * 60 / 15) * 15
+        const totalMins = heure * 60 + minsRaw
+        const hh = String(Math.floor(totalMins / 60)).padStart(2, '0')
+        const mm = String(totalMins % 60).padStart(2, '0')
+        const hFin = totalMins + 90
+        const hhF = String(Math.floor(hFin / 60)).padStart(2, '0')
+        const mmF = String(hFin % 60).padStart(2, '0')
+        document.getElementById('ev-date').value = ds
+        document.getElementById('ev-debut').value = hh + ':' + mm
+        document.getElementById('ev-fin').value = hhF + ':' + mmF
+        ouvrirModal()
+      }
+      zoneHoraire.appendChild(cell)
+    }
+
+    // Placer les événements du jour PAR-DESSUS les cellules
+    const eventsJour = events.filter(e => e.date === ds)
+    placerEventsJour(zoneHoraire, eventsJour)
+
+    colJour.appendChild(zoneHoraire)
+    outer.appendChild(colJour)
+  }
+
+  wrap.appendChild(outer)
+}
+
+function heureEnMinutes(str) {
+  if (!str) return null
+  const [h, m] = str.split(':').map(Number)
+  return h * 60 + (m || 0)
+}
+
+function minutesEnHeure(mins) {
+  const h = String(Math.floor(mins / 60)).padStart(2, '0')
+  const m = String(mins % 60).padStart(2, '0')
+  return h + ':' + m
+}
+
+function placerEventsJour(container, eventsJour) {
+  if (!eventsJour.length) return
+
+  // Sort events by start time for better grouping
+  const sortedEvents = [...eventsJour].sort((a, b) => {
+    const aStart = heureEnMinutes(a.heureDebut)
+    const bStart = heureEnMinutes(b.heureDebut)
+    return aStart - bStart
+  })
+
+  const groupes = []
+  sortedEvents.forEach(ev => {
+    const debut = heureEnMinutes(ev.heureDebut)
+    const fin = heureEnMinutes(ev.heureFin)
+    if (debut === null || fin === null) return
+    let placed = false
+    for (const grp of groupes) {
+      const overlap = grp.some(e => {
+        const d2 = heureEnMinutes(e.heureDebut)
+        const f2 = heureEnMinutes(e.heureFin)
+        return debut < f2 && fin > d2
+      })
+      if (!overlap) { grp.push(ev); placed = true; break }
+    }
+    if (!placed) groupes.push([ev])
+  })
+
+  const nbCols = groupes.length
+
+  eventsJour.forEach(ev => {
+    const debut = heureEnMinutes(ev.heureDebut)
+    const fin = heureEnMinutes(ev.heureFin)
+    if (debut === null || fin === null) return
+
+    const top = (debut / 60 - HEURE_DEBUT) * PX_PAR_HEURE
+    const height = Math.max(((fin - debut) / 60) * PX_PAR_HEURE - 2, 18)
+
+    let colIdx = 0
+    groupes.forEach((grp, gi) => { if (grp.find(e => e.id === ev.id)) colIdx = gi })
+
+    // Check if this event has any overlaps at its time slot
+    const hasOverlap = eventsJour.some(other => {
+      if (other.id === ev.id) return false
+      const otherDebut = heureEnMinutes(other.heureDebut)
+      const otherFin = heureEnMinutes(other.heureFin)
+      return debut < otherFin && fin > otherDebut
+    })
+
+    const st = getEventStyleWithIntensity(ev)
+
+    // If no overlap, take full width. Otherwise use column layout.
+    let leftPct, widthPct
+    if (!hasOverlap) {
+      leftPct = 0
+      widthPct = 100
+    } else {
+      leftPct = (colIdx / nbCols) * 100
+      widthPct = (1 / nbCols) * 100
+    }
+
+    const el = document.createElement('div')
+    el.className = 'ev-block'
+    el.dataset.evId = ev.id
+    el.style.cssText = `
+      position:absolute;
+      top:${top}px;
+      left:calc(${leftPct}% + 2px);
+      width:calc(${widthPct}% - 4px);
+      height:${height}px;
+      background:${st.bg};
+      border-left:3px solid ${st.border};
+      border-radius:4px;
+      padding:3px 6px;
+      cursor:grab;
+      overflow:hidden;
+      z-index:10;
+      user-select:none;
+    `
+    const isSelected = window.multiSelectMode && selectedEvents.has(ev.id)
+    
+    // Add opponent logo for match events
+    let logoUrl = ev.opponentLogo
+    // Fallback: try to load from adversairesList if not in event data
+    if (!logoUrl && ev.opponent && adversairesList.length > 0) {
+      const adv = adversairesList.find(a => String(a.id) === String(ev.opponent))
+      if (adv && adv.logo) logoUrl = adv.logo
+    }
+    const opponentLogoHtml = (ev.type === 'match' && logoUrl) 
+      ? `<img src="${logoUrl}" style="position:absolute;top:3px;right:60px;width:22px;height:22px;object-fit:contain;background:#fff;border-radius:4px;padding:2px;z-index:11;box-shadow:0 1px 3px rgba(0,0,0,0.3);" onerror="this.style.display='none'">` 
+      : ''
+    
+    // Create match logos display for match events
+    let matchLogosHtml = ''
+    if (ev.type === 'match' && logoUrl) {
+      const isHome = ev.matchLocation === 'domicile'
+      const albiLogo = 'https://www.sca-albi.fr/wp-content/uploads/2023/10/cropped-SCA-bis.png'
+      matchLogosHtml = `
+        <div style="display:flex;align-items:center;justify-content:center;gap:8px;height:40px;margin-bottom:4px;">
+          <img src="${isHome ? albiLogo : logoUrl}" style="width:32px;height:32px;object-fit:contain;background:#fff;border-radius:4px;padding:2px;flex-shrink:0;box-shadow:0 1px 3px rgba(0,0,0,0.2);" onerror="this.style.display='none'">
+          <span style="color:${st.text};font-weight:700;font-size:12px;">VS</span>
+          <img src="${isHome ? logoUrl : albiLogo}" style="width:32px;height:32px;object-fit:contain;background:#fff;border-radius:4px;padding:2px;flex-shrink:0;box-shadow:0 1px 3px rgba(0,0,0,0.2);" onerror="this.style.display='none'">
+        </div>
+      `
+    }
+    
+    el.innerHTML = `
+      <div style="display:flex;flex-direction:column;align-items:center;gap:4px;">
+        ${matchLogosHtml}
+        <div style="text-align:center;width:100%;">
+          <div style="font-size:11px;font-weight:700;color:${st.text};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${ev.titre || '—'}</div>
+          <div style="font-size:10px;color:${st.text};opacity:.8;">${ev.heureDebut || ''} - ${ev.heureFin || ''}</div>
+          ${ev.lieu ? `<div style="font-size:9px;color:${st.text};opacity:.6;">${ev.lieu}</div>` : ''}
+        </div>
+      </div>
+      <div class="ev-resize-handle" style="position:absolute;bottom:0;left:0;right:0;height:8px;cursor:ns-resize;background:rgba(255,255,255,0.12);border-radius:0 0 3px 3px;"></div>
+      ${!window.multiSelectMode ? `
+        <div class="ev-edit-btn" style="position:absolute;top:3px;right:46px;font-size:9px;color:${st.text};opacity:0;cursor:pointer;background:rgba(0,0,0,0.4);border-radius:3px;padding:1px 5px;">✏️</div>
+        <div class="ev-dup-btn" style="position:absolute;top:3px;right:25px;font-size:9px;color:${st.text};opacity:0;cursor:pointer;background:rgba(0,0,0,0.4);border-radius:3px;padding:1px 5px;">⧉</div>
+        <div class="ev-del-btn" style="position:absolute;top:3px;right:4px;font-size:9px;color:#FFFFFF;opacity:0;cursor:pointer;background:rgba(0,0,0,0.6);border-radius:3px;padding:1px 5px;">×</div>
+      ` : ''}
+      ${window.multiSelectMode ? `
+        <input type="checkbox" class="ev-select-checkbox" style="position:absolute;top:3px;right:4px;width:14px;height:14px;cursor:pointer;" ${isSelected ? 'checked' : ''}>
+      ` : ''}
+    `
+
+    // Checkbox pour mode multi-sélection
+    if (window.multiSelectMode) {
+      const checkbox = el.querySelector('.ev-select-checkbox')
+      if (checkbox) {
+        checkbox.onclick = e => {
+          e.stopPropagation()
+          toggleEventSelection(ev.id)
+        }
+      }
+    } else {
+      // Afficher boutons au hover (hors mode sélection)
+      el.addEventListener('mouseenter', () => {
+        const editBtn = el.querySelector('.ev-edit-btn')
+        const dupBtn = el.querySelector('.ev-dup-btn')
+        const delBtn = el.querySelector('.ev-del-btn')
+        if (editBtn) editBtn.style.opacity = '1'
+        if (dupBtn) dupBtn.style.opacity = '1'
+        if (delBtn) delBtn.style.opacity = '1'
+        // Afficher le tooltip avec les détails
+        showEventTooltip(ev, el)
+      })
+      el.addEventListener('mouseleave', () => {
+        const editBtn = el.querySelector('.ev-edit-btn')
+        const dupBtn = el.querySelector('.ev-dup-btn')
+        const delBtn = el.querySelector('.ev-del-btn')
+        if (editBtn) editBtn.style.opacity = '0'
+        if (dupBtn) dupBtn.style.opacity = '0'
+        if (delBtn) delBtn.style.opacity = '0'
+        // Cacher le tooltip
+        hideEventTooltip()
+      })
+
+      // Clic bouton modifier
+      const editBtn = el.querySelector('.ev-edit-btn')
+      if (editBtn) {
+        editBtn.addEventListener('click', (e) => {
+          e.stopPropagation()
+          ouvrirModal(ev)
+        })
+      }
+
+      // Clic bouton dupliquer
+      const dupBtn = el.querySelector('.ev-dup-btn')
+      if (dupBtn) {
+        dupBtn.addEventListener('click', (e) => {
+          e.stopPropagation()
+          startDuplicationMode(ev)
+        })
+      }
+
+      // Clic bouton supprimer
+      const delBtn = el.querySelector('.ev-del-btn')
+      if (delBtn) {
+        delBtn.addEventListener('click', (e) => {
+          e.stopPropagation()
+          if (confirm('Supprimer cet événement ?')) {
+            deleteDoc(doc(db, 'planning', ev.id))
+          }
+        })
+      }
+    }
+
+    // Clic simple → modifier ou sélectionner
+    el.addEventListener('click', (e) => {
+      if (e.target.classList.contains('ev-resize-handle')) return
+      if (e.target.classList.contains('ev-edit-btn')) return
+      if (e.target.classList.contains('ev-dup-btn')) return
+      if (e.target.classList.contains('ev-del-btn')) return
+      if (e.target.classList.contains('ev-select-checkbox')) return
+      if (el.dataset.isDragging === 'true') return // Ne pas ouvrir si en drag
+      
+      // Mode sélection multiple sans checkbox (pour compatibilité)
+      if (window.multiSelectMode) {
+        toggleEventSelection(ev.id)
+        return
+      }
+      
+      ouvrirModal(ev)
+    })
+
+    // Clic droit → dupliquer
+    el.addEventListener('contextmenu', (e) => {
+      e.preventDefault()
+      e.stopPropagation()
+      dupliquerEvent(ev)
+    })
+
+    // ===== DRAG & DROP =====
+    el.addEventListener('mousedown', (e) => {
+      if (e.target.classList.contains('ev-resize-handle')) return
+      if (e.target.classList.contains('ev-dup-btn')) return
+      e.preventDefault()
+
+      const startY = e.clientY
+      const startX = e.clientX
+      const startTop = parseFloat(el.style.top)
+      
+      // Extraire la position left correctement (gérer le calc())
+      let startLeft = 0
+      const leftStyle = el.style.left
+      if (leftStyle.includes('calc')) {
+        // Extraire le pourcentage depuis calc()
+        const match = leftStyle.match(/calc\(([\d.]+)%\s*\+\s*(\d+)px\)/)
+        if (match) {
+          const pct = parseFloat(match[1])
+          const px = parseFloat(match[2])
+          const containerWidth = container.parentElement.offsetWidth
+          startLeft = (pct / 100) * containerWidth + px
+        }
+      } else {
+        startLeft = parseFloat(leftStyle) || 0
+      }
+      
+      const containerRect = container.getBoundingClientRect()
+
+      let hasMoved = false
+      let ghostTop = startTop
+      let ghostLeft = startLeft
+      let targetDate = ev.date
+
+      el.style.cursor = 'grabbing'
+      el.style.opacity = '0.7'
+      el.style.zIndex = '100'
+      
+      // Marquer l'élément comme étant en drag pour éviter le clic
+      el.dataset.isDragging = 'true'
+
+      // Créer l'indicateur de temps
+      const timeIndicator = document.createElement('div')
+      timeIndicator.className = 'drag-time-indicator'
+      document.body.appendChild(timeIndicator)
+
+      const onMove = (e2) => {
+        const dy = e2.clientY - startY
+        const dx = e2.clientX - startX
+        if (Math.abs(dy) > 5 || Math.abs(dx) > 5) hasMoved = true
+        if (!hasMoved) return
+
+        // Déplacement vertical
+        ghostTop = Math.max(0, startTop + dy)
+        el.style.top = ghostTop + 'px'
+
+        // Déplacement horizontal visuel
+        ghostLeft = startLeft + dx
+        el.style.left = ghostLeft + 'px'
+
+        // Calculer et afficher l'heure
+        const minsOffset = (ghostTop / PX_PAR_HEURE) * 60
+        const currentMins = Math.round((HEURE_DEBUT * 60 + minsOffset) / 15) * 15
+        const endTime = Math.min(currentMins + (heureEnMinutes(ev.heureFin) - heureEnMinutes(ev.heureDebut)), HEURE_FIN * 60)
+        
+        timeIndicator.textContent = `${minutesEnHeure(currentMins)} - ${minutesEnHeure(endTime)}`
+        timeIndicator.style.left = (e2.clientX + 15) + 'px'
+        timeIndicator.style.top = (e2.clientY - 30) + 'px'
+
+        // Détection colonne jour (déplacement horizontal)
+        const allCols = document.querySelectorAll('[data-jour-col]')
+        allCols.forEach(col => {
+          const r = col.getBoundingClientRect()
+          if (e2.clientX >= r.left && e2.clientX <= r.right) {
+            targetDate = col.dataset.jourCol
+          }
+        })
+      }
+
+      const onUp = async () => {
+        document.removeEventListener('mousemove', onMove)
+        document.removeEventListener('mouseup', onUp)
+        el.style.cursor = 'grab'
+        el.style.opacity = '1'
+        el.style.zIndex = '10'
+        
+        // Supprimer l'indicateur de temps
+        if (timeIndicator && timeIndicator.parentNode) {
+          timeIndicator.parentNode.removeChild(timeIndicator)
+        }
+        
+        // Retirer le flag de drag après un délai pour éviter le clic
+        setTimeout(() => {
+          delete el.dataset.isDragging
+        }, 100)
+
+        if (!hasMoved) return
+
+        // Convertir position en heure
+        const minsOffset = (ghostTop / PX_PAR_HEURE) * 60
+        const newDebutTotal = Math.round((HEURE_DEBUT * 60 + minsOffset) / 15) * 15
+        const duree = heureEnMinutes(ev.heureFin) - heureEnMinutes(ev.heureDebut)
+        const newFin = newDebutTotal + duree
+
+        await setDoc(doc(db, 'planning', ev.id), {
+          ...ev,
+          date: targetDate,
+          heureDebut: minutesEnHeure(newDebutTotal),
+          heureFin: minutesEnHeure(Math.min(newFin, HEURE_FIN * 60)),
+          updatedAt: serverTimestamp()
+        })
+      }
+
+      document.addEventListener('mousemove', onMove)
+      document.addEventListener('mouseup', onUp)
+    })
+
+    // ===== RESIZE =====
+    el.querySelector('.ev-resize-handle').addEventListener('mousedown', (e) => {
+      e.stopPropagation()
+      e.preventDefault()
+      const startY = e.clientY
+      const startH = parseFloat(el.style.height)
+
+      const onMove = (e2) => {
+        const dy = e2.clientY - startY
+        const newH = Math.max(20, startH + dy)
+        el.style.height = newH + 'px'
+        // Mettre à jour le label heure
+        const newFinMins = heureEnMinutes(ev.heureDebut) + Math.round((newH / PX_PAR_HEURE) * 60 / 15) * 15
+        const heureLabel = el.querySelector('div:nth-child(2)')
+        if (heureLabel) heureLabel.textContent = ev.heureDebut + ' - ' + minutesEnHeure(Math.min(newFinMins, HEURE_FIN * 60))
+      }
+
+      const onUp = async (e2) => {
+        document.removeEventListener('mousemove', onMove)
+        document.removeEventListener('mouseup', onUp)
+        const newH = parseFloat(el.style.height)
+        const newFinMins = heureEnMinutes(ev.heureDebut) + Math.round((newH / PX_PAR_HEURE) * 60 / 15) * 15
+        await setDoc(doc(db, 'planning', ev.id), {
+          ...ev,
+          heureFin: minutesEnHeure(Math.min(newFinMins, HEURE_FIN * 60)),
+          updatedAt: serverTimestamp()
+        })
+      }
+
+      document.addEventListener('mousemove', onMove)
+      document.addEventListener('mouseup', onUp)
+    })
+
+    container.appendChild(el)
+  })
+}
+
+async function dupliquerEvent(ev) {
+  const newDate = prompt('Date pour la copie (YYYY-MM-DD) :', ev.date)
+  if (!newDate) return
+  
+  // Create completely new event data without any references
+  const newEventData = {
+    titre: ev.titre || '',
+    type: ev.type || '',
+    lieu: ev.lieu || '',
+    date: newDate,
+    heureDebut: ev.heureDebut || '',
+    heureFin: ev.heureFin || '',
+    notif: ev.notif || 'normale',
+    description: ev.description || '',
+    intensity: ev.intensity || 2,
+    visible: ev.visible !== undefined ? ev.visible : true,
+    visiblePlayers: ev.visiblePlayers ? [...ev.visiblePlayers] : [],
+    selectedLines: ev.selectedLines ? [...ev.selectedLines] : [],
+    selectedPositions: ev.selectedPositions ? [...ev.selectedPositions] : [],
+    opponent: ev.opponent || '',
+    opponentName: ev.opponentName || '',
+    opponentLogo: ev.opponentLogo || '',
+    matchLocation: ev.matchLocation || 'domicile',
+    createdAt: serverTimestamp(),
+    updatedAt: serverTimestamp()
+  }
+  
+  await setDoc(doc(db, 'planning', `ev_${Date.now()}`), newEventData)
+}
+
+// Mode de duplication interactif
+function startDuplicationMode(sourceEvent) {
+  // Empêcher tout autre événement
+  const stopAllEvents = (e) => {
+    e.preventDefault()
+    e.stopPropagation()
+  }
+
+  // Créer un curseur de duplication fantôme
+  const ghostEl = document.createElement('div')
+  const st = getEventStyleWithIntensity(sourceEvent)
+  ghostEl.style.cssText = `
+    position: fixed;
+    width: 150px;
+    height: 40px;
+    background: ${st.bg};
+    border: 2px dashed ${st.border};
+    border-radius: 4px;
+    padding: 3px 6px;
+    cursor: copy;
+    z-index: 10000;
+    pointer-events: none;
+    opacity: 0.8;
+  `
+  ghostEl.innerHTML = `
+    <div style="font-size:11px;font-weight:700;color:${st.text};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${sourceEvent.titre || '—'}</div>
+    <div style="font-size:10px;color:${st.text};opacity:.8;">Copie</div>
+  `
+  document.body.appendChild(ghostEl)
+
+  // Créer l'indicateur de temps
+  const timeIndicator = document.createElement('div')
+  timeIndicator.className = 'drag-time-indicator'
+  timeIndicator.textContent = 'Cliquez pour placer'
+  timeIndicator.style.zIndex = '10001'
+  document.body.appendChild(timeIndicator)
+
+  let isPlacing = false
+  let currentTarget = null
+
+  // Fonction pour trouver la cible précise
+  const findTarget = (x, y) => {
+    const containers = document.querySelectorAll('[data-jour-col]')
+    for (const container of containers) {
+      const rect = container.getBoundingClientRect()
+      if (x >= rect.left && x <= rect.right && y >= rect.top && y <= rect.bottom) {
+        // Calculer l'heure précise
+        const relativeY = y - rect.top
+        const minsOffset = (relativeY / PX_PAR_HEURE) * 60
+        const startMins = Math.round((HEURE_DEBUT * 60 + minsOffset) / 15) * 15
+        const duration = heureEnMinutes(sourceEvent.heureFin) - heureEnMinutes(sourceEvent.heureDebut)
+        const endMins = Math.min(startMins + duration, HEURE_FIN * 60)
+        
+        return {
+          date: container.dataset.jourCol,
+          startMins: startMins,
+          endMins: endMins,
+          valid: true
+        }
+      }
+    }
+    return null
+  }
+
+  const onMove = (e) => {
+    // Positionner le fantôme
+    ghostEl.style.left = (e.clientX - 75) + 'px'
+    ghostEl.style.top = (e.clientY - 20) + 'px'
+    
+    // Positionner l'indicateur de temps
+    timeIndicator.style.left = (e.clientX + 15) + 'px'
+    timeIndicator.style.top = (e.clientY - 30) + 'px'
+
+    // Trouver la cible
+    currentTarget = findTarget(e.clientX, e.clientY)
+    
+    if (currentTarget && currentTarget.valid) {
+      timeIndicator.textContent = `${minutesEnHeure(currentTarget.startMins)} - ${minutesEnHeure(currentTarget.endMins)}`
+      timeIndicator.style.background = '#FECC00'
+    } else {
+      timeIndicator.textContent = 'Cliquez pour placer'
+      timeIndicator.style.background = '#888'
+    }
+  }
+
+  const onClick = async (e) => {
+    if (isPlacing) return
+    isPlacing = true
+
+    const target = findTarget(e.clientX, e.clientY)
+    
+    if (target && target.valid) {
+      try {
+        // Créer la copie
+        const { id, ...eventData } = sourceEvent
+        await setDoc(doc(db, 'planning', `ev_${Date.now()}`), {
+          ...eventData,
+          date: target.date,
+          heureDebut: minutesEnHeure(target.startMins),
+          heureFin: minutesEnHeure(target.endMins),
+          updatedAt: serverTimestamp()
+        })
+      } catch (error) {
+        console.error('Erreur lors de la duplication:', error)
+        alert('Erreur lors de la duplication')
+      }
+    }
+
+    cleanup()
+  }
+
+  const onEsc = (e) => {
+    if (e.key === 'Escape') {
+      cleanup()
+    }
+  }
+
+  const cleanup = () => {
+    // Retirer tous les écouteurs
+    document.removeEventListener('mousemove', onMove)
+    document.removeEventListener('click', onClick, true)
+    document.removeEventListener('keydown', onEsc)
+    
+    // Nettoyer les éléments
+    if (ghostEl.parentNode) ghostEl.parentNode.removeChild(ghostEl)
+    if (timeIndicator.parentNode) timeIndicator.parentNode.removeChild(timeIndicator)
+    document.body.style.cursor = ''
+    
+    // Réactiver les événements normaux après un court délai
+    setTimeout(() => {
+      document.body.style.pointerEvents = ''
+    }, 100)
+  }
+
+  // Désactiver temporairement les autres événements
+  document.body.style.pointerEvents = 'none'
+  ghostEl.style.pointerEvents = 'none'
+  timeIndicator.style.pointerEvents = 'none'
+
+  // Démarrer le mode
+  document.addEventListener('mousemove', onMove)
+  document.addEventListener('click', onClick, true)
+  document.addEventListener('keydown', onEsc)
+  document.body.style.cursor = 'copy'
+}
+
+// ==================== INTENSITY SELECTOR FUNCTIONS ====================
+
+// Toggle intensity selector and opponent field visibility based on selected type
+window.toggleIntensitySelector = function() {
+  const type = document.getElementById('ev-type').value
+  const intensityField = document.getElementById('intensity-field')
+  const opponentField = document.getElementById('opponent-field')
+  const typeStyle = TYPE_STYLES[type]
+  
+  // Handle intensity selector
+  if (typeStyle && typeStyle.hasIntensity) {
+    intensityField.style.display = 'block'
+    // Update button colors based on type
+    updateIntensityButtons(typeStyle.border)
+  } else {
+    intensityField.style.display = 'none'
+    document.getElementById('ev-intensity').value = '2' // Reset to default
+  }
+  
+  // Handle opponent field for match type
+  if (type === 'match') {
+    opponentField.style.display = 'block'
+    document.getElementById('match-location-field').style.display = 'block'
+    // Only load if dropdown is empty (user manually changed type, not opening modal)
+    if (document.getElementById('ev-opponent').options.length <= 1) {
+      loadAdversaires()
+    }
+  } else {
+    opponentField.style.display = 'none'
+    document.getElementById('match-location-field').style.display = 'none'
+    document.getElementById('ev-opponent').value = ''
+    document.getElementById('ev-match-location').value = 'domicile'
+  }
+}
+
+// Load adversaires from localStorage (shared with equipes.html)
+let adversairesList = []
+
+function loadAdversaires(valueToSelect = null) {
+  try {
+    adversairesList = JSON.parse(localStorage.getItem('sca_adversaires') || '[]')
+    const select = document.getElementById('ev-opponent')
+    
+    console.log('Loading adversaires, list:', adversairesList, 'looking for:', valueToSelect)
+    
+    // Keep the first option (placeholder)
+    select.innerHTML = '<option value="">— Sélectionner un adversaire —</option>'
+    
+    adversairesList.forEach((adv) => {
+      const option = document.createElement('option')
+      option.value = adv.id
+      option.textContent = adv.nom
+      select.appendChild(option)
+    })
+    
+    // Restore selection if a specific value is provided and exists in list
+    if (valueToSelect && adversairesList.find(a => String(a.id) === String(valueToSelect))) {
+      select.value = valueToSelect
+      console.log('Selection restored:', valueToSelect)
+    }
+  } catch (error) {
+    console.error('Error loading adversaires:', error)
+  }
+}
+
+// Handle opponent change - don't auto-update title
+window.onOpponentChange = function() {
+  // Title remains as entered by user
+}
+
+// Handle match location change - don't auto-update title
+window.onMatchLocationChange = function() {
+  // Title remains as entered by user
+}
+
+// Update intensity button colors based on selected type
+function updateIntensityButtons(baseColor) {
+  const btn1 = document.getElementById('int-1')
+  const btn2 = document.getElementById('int-2')
+  const btn3 = document.getElementById('int-3')
+  const currentIntensity = document.getElementById('ev-intensity').value
+  
+  // Light intensity (niveau 1) - 10% opacity
+  btn1.style.background = baseColor + '1A'
+  btn1.style.borderColor = baseColor + '44'
+  btn1.style.color = baseColor
+  
+  // Normal intensity (niveau 2) - 65% opacity
+  btn2.style.background = baseColor + 'A6'
+  btn2.style.borderColor = baseColor
+  btn2.style.color = '#0f0f0f'
+  
+  // Intense intensity (niveau 3) - 85% opacity
+  btn3.style.background = baseColor + 'D9'
+  btn3.style.borderColor = baseColor
+  btn3.style.color = '#fff'
+  btn3.style.fontWeight = '700'
+  
+  // Reset all borders
+  btn1.style.boxShadow = 'none'
+  btn2.style.boxShadow = 'none'
+  btn3.style.boxShadow = 'none'
+  
+  // Highlight selected
+  const selectedBtn = document.getElementById('int-' + currentIntensity)
+  if (selectedBtn) {
+    selectedBtn.style.boxShadow = '0 0 0 3px #fff'
+  }
+}
+
+// Select intensity level
+window.selectIntensity = function(level) {
+  document.getElementById('ev-intensity').value = level
+  const type = document.getElementById('ev-type').value
+  const typeStyle = TYPE_STYLES[type]
+  if (typeStyle) {
+    updateIntensityButtons(typeStyle.border)
+  }
+}
+
+// ==================== PLAYER SELECTION FUNCTIONS ====================
+
+let availablePlayers = []
+let selectedPlayers = new Set()
+let selectedLines = [] // 'avant' ou 'arriere'
+let selectedPositions = [] // 'Pilier', 'Talonneur', etc.
+
+// Toggle player selection area visibility
+window.togglePlayerSelection = function() {
+  const visibility = document.getElementById('ev-visible').value
+  const playerArea = document.getElementById('player-selection-area')
+
+  if (visibility === 'selected') {
+    playerArea.style.display = 'block'
+    loadPlayersForSelection()
+    // Mettre à jour l'état visuel des boutons
+    setTimeout(updateQuickSelectButtons, 50)
+  } else {
+    playerArea.style.display = 'none'
+  }
+}
+
+// Load players from Firebase for selection
+async function loadPlayersForSelection() {
+  const playerList = document.getElementById('player-list')
+  if (!playerList) return
+  
+  // Show loading state
+  playerList.innerHTML = '<div style="color:#888;font-size:12px;">Chargement des joueurs...</div>'
+  
+  try {
+    const snap = await getDocs(collection(db, 'joueurs'))
+    availablePlayers = snap.docs.map(d => ({ id: d.id, ...d.data() }))
+    renderPlayerSelection()
+  } catch (error) {
+    console.error('Error loading players:', error)
+    playerList.innerHTML = '<div style="color:#E24B4A;font-size:12px;">Erreur de chargement</div>'
+  }
+}
+
+// Render player checkboxes
+function renderPlayerSelection() {
+  const playerList = document.getElementById('player-list')
+  if (!playerList) return
+  
+  if (availablePlayers.length === 0) {
+    playerList.innerHTML = '<div style="color:#888;font-size:12px;">Aucun joueur trouvé</div>'
+    return
+  }
+  
+  playerList.innerHTML = availablePlayers.map(player => {
+    const isChecked = selectedPlayers.has(player.id)
+    return `
+      <label style="display:flex;align-items:center;gap:8px;padding:6px 0;cursor:pointer;font-size:13px;color:#fff;">
+        <input type="checkbox" value="${player.id}" ${isChecked ? 'checked' : ''} 
+               onchange="togglePlayer('${player.id}', this.checked)"
+               style="width:16px;height:16px;cursor:pointer;">
+        ${player.prenom || ''} ${player.nom || ''}
+      </label>
+    `
+  }).join('')
+}
+
+// Toggle individual player selection
+window.togglePlayer = function(playerId, isChecked) {
+  if (isChecked) {
+    selectedPlayers.add(playerId)
+  } else {
+    selectedPlayers.delete(playerId)
+  }
+}
+
+// Select all players
+window.selectAllPlayers = function() {
+  availablePlayers.forEach(p => selectedPlayers.add(p.id))
+  // Réinitialiser les critères quand on sélectionne tous les joueurs manuellement
+  selectedLines = []
+  selectedPositions = []
+  updateQuickSelectButtons()
+  renderPlayerSelection()
+}
+
+// Deselect all players
+window.deselectAllPlayers = function() {
+  selectedPlayers.clear()
+  selectedLines = []
+  selectedPositions = []
+  updateQuickSelectButtons()
+  renderPlayerSelection()
+}
+
+// Select players by line (avant/arriere) - toggle mode
+window.selectByLine = function(line) {
+  // Toggle: si déjà présent, on enlève, sinon on ajoute
+  if (selectedLines.includes(line)) {
+    selectedLines = selectedLines.filter(l => l !== line)
+  } else {
+    selectedLines.push(line)
+    // Réinitialiser les positions car on passe en mode ligne
+    selectedPositions = []
+  }
+
+  // Recalculer les joueurs sélectionnés
+  selectedPlayers.clear()
+  if (selectedLines.length > 0) {
+    availablePlayers.forEach(p => {
+      const poste = (p.poste || '').toLowerCase()
+      selectedLines.forEach(ln => {
+        if (ln === 'avant') {
+          if (['pilier', 'talonneur', '2e ligne', '3e ligne'].some(pos => poste.includes(pos))) {
+            selectedPlayers.add(p.id)
+          }
+        } else if (ln === 'arriere') {
+          if (['demi de mêlée', "demi d'ouverture", 'centre', 'ailier', 'arrière'].some(pos => poste.includes(pos))) {
+            selectedPlayers.add(p.id)
+          }
+        }
+      })
+    })
+  }
+  updateQuickSelectButtons()
+  renderPlayerSelection()
+}
+
+// Select players by specific position - toggle mode
+window.selectByPosition = function(position) {
+  // Toggle: si déjà présent, on enlève, sinon on ajoute
+  if (selectedPositions.includes(position)) {
+    selectedPositions = selectedPositions.filter(p => p !== position)
+  } else {
+    selectedPositions.push(position)
+    // Réinitialiser les lignes car on passe en mode position
+    selectedLines = []
+  }
+
+  // Recalculer les joueurs sélectionnés
+  selectedPlayers.clear()
+  if (selectedPositions.length > 0) {
+    availablePlayers.forEach(p => {
+      const poste = (p.poste || '').toLowerCase()
+      selectedPositions.forEach(pos => {
+        const targetPos = pos.toLowerCase()
+        if (poste.includes(targetPos)) {
+          selectedPlayers.add(p.id)
+        }
+      })
+    })
+  }
+  updateQuickSelectButtons()
+  renderPlayerSelection()
+}
+
+// Get selected player IDs and criteria for saving
+function getSelectedPlayerIds() {
+  return Array.from(selectedPlayers)
+}
+
+function getSelectedCriteria() {
+  return {
+    lines: [...selectedLines],
+    positions: [...selectedPositions]
+  }
+}
+
+// Mettre à jour le style des boutons de sélection rapide
+function updateQuickSelectButtons() {
+  // Style pour boutons actifs (jaune)
+  const activeStyle = 'background: #FECC00; border-color: #FECC00; color: #0f0f0f; font-weight: 600;'
+  const inactiveStyle = 'background: #2a2a2a; border-color: #444; color: #888;'
+
+  // Avants
+  const btnAvant = document.querySelector('button[onclick="selectByLine(\'avant\')"]')
+  if (btnAvant) btnAvant.style.cssText = selectedLines.includes('avant') ? activeStyle : inactiveStyle
+
+  // Arrières
+  const btnArriere = document.querySelector('button[onclick="selectByLine(\'arriere\')"]')
+  if (btnArriere) btnArriere.style.cssText = selectedLines.includes('arriere') ? activeStyle : inactiveStyle
+
+  // Postes
+  const postes = ['Pilier', 'Talonneur', '2e Ligne', '3e Ligne', 'Demi de mêlée', "Demi d'ouverture", 'Centre', 'Ailier', 'Arrière']
+  postes.forEach(pos => {
+    const btn = document.querySelector(`button[onclick="selectByPosition(\'${pos}\')"]`)
+    if (btn) btn.style.cssText = selectedPositions.includes(pos) ? activeStyle : inactiveStyle
+  })
+}
+
+// ==================== BLESSÉS SELECTION FUNCTIONS ====================
+
+let availableBlesses = []
+let selectedBlesses = new Set()
+
+// Toggle blessés selection area visibility
+window.toggleBlessesSelection = function() {
+  const avecBlesses = document.getElementById('ev-avec-blesses').checked
+  const blessesArea = document.getElementById('blesses-selection-area')
+  
+  if (avecBlesses) {
+    blessesArea.style.display = 'block'
+    loadBlessesForSelection()
+  } else {
+    blessesArea.style.display = 'none'
+    selectedBlesses.clear()
+  }
+}
+
+// Load blessés from Firebase for selection
+async function loadBlessesForSelection() {
+  const blessesList = document.getElementById('blesses-list')
+  if (!blessesList) return
+  
+  // Show loading state
+  blessesList.innerHTML = '<div style="color:#E24B4A;font-size:12px;">Chargement des blessés...</div>'
+  
+  try {
+    // Charger les blessures actives
+    const bSnap = await getDocs(collection(db, 'blessures'))
+    const blessures = bSnap.docs.map(d => ({ id: d.id, ...d.data() }))
+    
+    // Charger les joueurs pour avoir leurs infos
+    const jSnap = await getDocs(collection(db, 'joueurs'))
+    const joueurs = jSnap.docs.map(d => ({ id: d.id, ...d.data() }))
+    
+    // Filtrer les blessés actifs (blesse ou reprise)
+    availableBlesses = blessures
+      .filter(b => b.statut === 'blesse' || b.statut === 'reprise')
+      .map(b => {
+        const joueur = joueurs.find(j => j.id === b.joueurId)
+        return {
+          ...b,
+          joueurNom: joueur ? `${joueur.prenom} ${joueur.nom}` : 'Joueur inconnu',
+          joueurPoste: joueur?.poste || ''
+        }
+      })
+    
+    renderBlessesSelection()
+  } catch (error) {
+    console.error('Error loading blessés:', error)
+    blessesList.innerHTML = '<div style="color:#E24B4A;font-size:12px;">Erreur de chargement</div>'
+  }
+}
+
+// Render blessés checkboxes
+function renderBlessesSelection() {
+  const blessesList = document.getElementById('blesses-list')
+  if (!blessesList) return
+  
+  if (availableBlesses.length === 0) {
+    blessesList.innerHTML = '<div style="color:#E24B4A;font-size:12px;">Aucun blessé actif</div>'
+    return
+  }
+  
+  blessesList.innerHTML = availableBlesses.map(blesse => {
+    const isChecked = selectedBlesses.has(blesse.joueurId)
+    return `
+      <label style="display:flex;align-items:center;gap:8px;padding:6px 0;cursor:pointer;font-size:13px;color:#fff;border-bottom:1px solid #2a2a2a;">
+        <input type="checkbox" value="${blesse.joueurId}" ${isChecked ? 'checked' : ''} 
+               onchange="toggleBlesse('${blesse.joueurId}', this.checked)"
+               style="width:16px;height:16px;cursor:pointer;accent-color:#E24B4A;">
+        <div style="flex:1;">
+          <div style="font-weight:600;">${blesse.joueurNom}</div>
+          <div style="font-size:11px;color:#E24B4A;">${blesse.patho || 'Blessure'} - ${blesse.zone || ''}</div>
+        </div>
+      </label>
+    `
+  }).join('')
+}
+
+// Toggle individual blesse selection
+window.toggleBlesse = function(joueurId, isChecked) {
+  if (isChecked) {
+    selectedBlesses.add(joueurId)
+  } else {
+    selectedBlesses.delete(joueurId)
+  }
+}
+
+// Select all blessés
+window.selectAllBlesses = function() {
+  availableBlesses.forEach(b => selectedBlesses.add(b.joueurId))
+  renderBlessesSelection()
+}
+
+// Deselect all blessés
+window.deselectAllBlesses = function() {
+  selectedBlesses.clear()
+  renderBlessesSelection()
+}
+
+// Get selected blessés IDs for saving
+function getSelectedBlessesIds() {
+  return Array.from(selectedBlesses)
+}
+
+// Get event style considering intensity
+function getEventStyle(ev) {
+  const key = ev.type || 'autre'
+  return TYPE_STYLES[key] || TYPE_STYLES.autre
+}
+
+// ==================== TOOLTIP ====================
+function showEventTooltip(ev, element) {
+  const tooltip = document.getElementById('event-tooltip')
+  if (!tooltip) return
+
+  const st = getEventStyle(ev)
+  const typeName = st.name || ev.type || 'Autre'
+
+  // Build tooltip content
+  let html = `<div class="event-tooltip-header">${ev.titre || '—'}</div>`
+
+  html += `<div class="event-tooltip-row"><span class="event-tooltip-label">Type</span><span class="event-tooltip-value">${typeName}</span></div>`
+
+  if (ev.heureDebut && ev.heureFin) {
+    html += `<div class="event-tooltip-row"><span class="event-tooltip-label">Horaire</span><span class="event-tooltip-value">${ev.heureDebut} - ${ev.heureFin}</span></div>`
+  }
+
+  if (ev.lieu) {
+    html += `<div class="event-tooltip-row"><span class="event-tooltip-label">Lieu</span><span class="event-tooltip-value">${ev.lieu}</span></div>`
+  }
+
+  if (ev.opponentName) {
+    html += `<div class="event-tooltip-row"><span class="event-tooltip-label">Adversaire</span><span class="event-tooltip-value">${ev.opponentName}</span></div>`
+  }
+
+  if (ev.matchLocation) {
+    const loc = ev.matchLocation === 'domicile' ? 'Domicile' : 'Extérieur'
+    html += `<div class="event-tooltip-row"><span class="event-tooltip-label">Match</span><span class="event-tooltip-value">${loc}</span></div>`
+  }
+
+  if (ev.notif && ev.notif !== 'normale') {
+    const notifLabels = { 'urgente': 'Urgente', 'aucune': 'Aucune' }
+    html += `<div class="event-tooltip-row"><span class="event-tooltip-label">Notif</span><span class="event-tooltip-value">${notifLabels[ev.notif] || ev.notif}</span></div>`
+  }
+
+  // Visibilité et groupes de joueurs
+  if (ev.visible === 'staff') {
+    html += `<div class="event-tooltip-row"><span class="event-tooltip-label">Visibilité</span><span class="event-tooltip-value">Staff uniquement</span></div>`
+  } else if (ev.visible === 'selected' && ev.visiblePlayers && ev.visiblePlayers.length > 0) {
+    // Afficher les critères de sélection (lignes ou postes)
+    if (ev.selectedLines && ev.selectedLines.length > 0) {
+      const lineLabels = { 'avant': 'Avants', 'arriere': 'Arrières' }
+      const lines = ev.selectedLines.map(l => lineLabels[l] || l).join(', ')
+      html += `<div class="event-tooltip-row"><span class="event-tooltip-label">Groupe</span><span class="event-tooltip-value" style="color:#FECC00;">${lines}</span></div>`
+    }
+    if (ev.selectedPositions && ev.selectedPositions.length > 0) {
+      html += `<div class="event-tooltip-row"><span class="event-tooltip-label">Postes</span><span class="event-tooltip-value" style="color:#FECC00;">${ev.selectedPositions.join(', ')}</span></div>`
+    }
+
+    // Afficher la liste des joueurs si availablePlayers est chargé
+    if (availablePlayers && availablePlayers.length > 0) {
+      const playerNames = ev.visiblePlayers.map(pid => {
+        const p = availablePlayers.find(pl => pl.id === pid)
+        return p ? `${p.prenom || ''} ${p.nom || ''}`.trim() : null
+      }).filter(Boolean)
+
+      if (playerNames.length > 0) {
+        html += `<div class="event-tooltip-row" style="margin-top:6px;align-items:flex-start;"><span class="event-tooltip-label">Joueurs</span><span class="event-tooltip-value" style="font-size:10px;line-height:1.4;">${playerNames.join(', ')}</span></div>`
+      }
+    }
+  }
+
+  if (ev.description) {
+    const desc = ev.description.length > 100 ? ev.description.substring(0, 100) + '...' : ev.description
+    html += `<div class="event-tooltip-row" style="margin-top:8px;padding-top:6px;border-top:1px solid #333;"><span class="event-tooltip-label" style="color:#888;">Description</span><span class="event-tooltip-value" style="color:#aaa;font-style:italic;">${desc}</span></div>`
+  }
+
+  // Badge type
+  html += `<div class="event-tooltip-badge" style="background:${st.bg};color:${st.text};border:1px solid ${st.border}">${typeName}</div>`
+
+  tooltip.innerHTML = html
+
+  // Position tooltip
+  const rect = element.getBoundingClientRect()
+  const tooltipRect = tooltip.getBoundingClientRect()
+
+  let left = rect.right + 10
+  let top = rect.top
+
+  // Check if tooltip goes off screen
+  if (left + tooltipRect.width > window.innerWidth) {
+    left = rect.left - tooltipRect.width - 10
+  }
+  if (top + tooltipRect.height > window.innerHeight) {
+    top = window.innerHeight - tooltipRect.height - 10
+  }
+  if (top < 0) top = 10
+
+  tooltip.style.left = left + 'px'
+  tooltip.style.top = top + 'px'
+  tooltip.classList.add('visible')
+}
+
+function hideEventTooltip() {
+  const tooltip = document.getElementById('event-tooltip')
+  if (tooltip) {
+    tooltip.classList.remove('visible')
+  }
+}
+
+function getEventStyleWithIntensity(ev) {
+  const baseStyle = getEventStyle(ev)
+  
+  // Force 60% opacity for non-intensity events
+  if (!baseStyle.hasIntensity) {
+    return {
+      bg: baseStyle.border + '99', // 60% opacity (hex 99)
+      border: baseStyle.border,
+      text: '#FFFFFF', // White text for better visibility
+      name: baseStyle.name,
+      hasIntensity: baseStyle.hasIntensity
+    }
+  }
+  
+  // Normal intensity handling for other types
+  const intensity = ev.intensity || 2
+  if (intensity === 2) {
+    // Force 60% opacity for normal intensity
+    return {
+      bg: baseStyle.border + '99', // 60% opacity (hex 99)
+      border: baseStyle.border,
+      text: '#FFFFFF', // White text for better visibility
+      name: baseStyle.name,
+      hasIntensity: baseStyle.hasIntensity
+    }
+  }
+  
+  const baseColor = baseStyle.border
+  const alpha = INTENSITY_ALPHA[intensity] || '55'
+  
+  // Adjust text color based on intensity for better readability
+  let textColor = baseStyle.text
+  if (intensity === 3) {
+    // Intense: always use white text for readability on dark background
+    textColor = '#FFFFFF'
+  } else if (intensity === 1) {
+    // Light (40%): use white text for better visibility
+    textColor = '#FFFFFF'
+  }
+  
+  return {
+    bg: baseColor + alpha,
+    border: baseColor,
+    text: textColor,
+    name: baseStyle.name,
+    hasIntensity: baseStyle.hasIntensity
+  }
+}
+
+// ==================== MODAL ====================
+window.ouvrirModal = function(ev = null) {
+  editingEventId = ev?.id || null
+  document.getElementById('modal-event-title').textContent = ev ? "Modifier l'événement" : 'Nouvel événement'
+  document.getElementById('btn-del-event').style.display = ev ? 'block' : 'none'
+  
+  // Reset player and blessés selection
+  selectedPlayers.clear()
+  selectedBlesses.clear()
+  selectedLines = []
+  selectedPositions = []
+
+  if (ev) {
+    document.getElementById('ev-titre').value = ev.titre || ''
+    document.getElementById('ev-type').value = ev.type || 'entrainement'
+    document.getElementById('ev-intensity').value = ev.intensity || '2'
+    document.getElementById('ev-lieu').value = ev.lieu || ''
+    document.getElementById('ev-date').value = ev.date || ''
+    document.getElementById('ev-debut').value = ev.heureDebut || ''
+    document.getElementById('ev-fin').value = ev.heureFin || ''
+    document.getElementById('ev-notif').value = ev.notif || 'normale'
+    
+    // Handle visibility options
+    if (ev.visiblePlayers && ev.visiblePlayers.length > 0) {
+      // Selected players only
+      document.getElementById('ev-visible').value = 'selected'
+      ev.visiblePlayers.forEach(id => selectedPlayers.add(id))
+      // Restaurer les critères de sélection
+      if (ev.selectedLines) selectedLines = [...ev.selectedLines]
+      if (ev.selectedPositions) selectedPositions = [...ev.selectedPositions]
+    } else if (ev.visible === false) {
+      // Staff only (hidden from players)
+      document.getElementById('ev-visible').value = 'staff'
+    } else {
+      // All players (default)
+      document.getElementById('ev-visible').value = 'all'
+    }
+    
+    document.getElementById('ev-desc').value = ev.description || ''
+    
+    // Handle blessés selection
+    if (ev.blessesIds && ev.blessesIds.length > 0) {
+      document.getElementById('ev-avec-blesses').checked = true
+      ev.blessesIds.forEach(id => selectedBlesses.add(id))
+    } else {
+      document.getElementById('ev-avec-blesses').checked = false
+    }
+    
+    // Handle opponent for match type
+    if (ev.type === 'match' && ev.opponent) {
+      document.getElementById('ev-opponent').value = ev.opponent
+    }
+    
+    // Handle match location
+    if (ev.type === 'match' && ev.matchLocation) {
+      document.getElementById('ev-match-location').value = ev.matchLocation
+    }
+  } else {
+    if (!document.getElementById('ev-date').value)
+      document.getElementById('ev-date').value = dateStr(new Date())
+    document.getElementById('ev-titre').value = ''
+    document.getElementById('ev-desc').value = ''
+    document.getElementById('ev-lieu').value = ''
+    document.getElementById('ev-type').value = ''
+    document.getElementById('ev-intensity').value = '2'
+    document.getElementById('ev-visible').value = 'all'
+    document.getElementById('ev-opponent').value = ''
+    document.getElementById('ev-match-location').value = 'domicile'
+    document.getElementById('ev-avec-blesses').checked = false
+  }
+  
+  // Show/hide intensity selector and opponent field based on type
+  toggleIntensitySelector()
+  
+  // Load adversaires list if this is a match (for both new and edit)
+  const currentType = document.getElementById('ev-type').value
+  if (currentType === 'match') {
+    const opponentToSelect = ev?.opponent || null
+    console.log('Loading match event, opponent to select:', opponentToSelect, 'Event data:', ev)
+    loadAdversaires(opponentToSelect)
+  }
+  
+  // Show/hide player selection based on visibility
+  togglePlayerSelection()
+  
+  // Show/hide blessés selection based on checkbox
+  toggleBlessesSelection()
+  
+  document.getElementById('modal-event').classList.add('open')
+}
+
+window.fermerModal = function() {
+  document.getElementById('modal-event').classList.remove('open')
+  editingEventId = null
+}
+
+window.sauvegarderEvent = async function() {
+  const titre = document.getElementById('ev-titre').value.trim()
+  const type = document.getElementById('ev-type').value
+  const date  = document.getElementById('ev-date').value
+  const debut = document.getElementById('ev-debut').value
+  const fin   = document.getElementById('ev-fin').value
+  if (!titre || !type || !date || !debut || !fin) { alert('Type, titre, date et horaires obligatoires.'); return }
+
+  const typeStyle = TYPE_STYLES[type]
+  const intensityField = document.getElementById('intensity-field')
+  const visibility = document.getElementById('ev-visible').value
+  
+  const eventData = {
+    titre,
+    type:        type,
+    lieu:        document.getElementById('ev-lieu').value,
+    date,
+    heureDebut:  debut,
+    heureFin:    fin,
+    notif:       document.getElementById('ev-notif').value,
+    description: document.getElementById('ev-desc').value,
+    updatedAt:   serverTimestamp()
+  }
+  
+  // Handle visibility settings
+  if (visibility === 'staff') {
+    eventData.visible = false
+    eventData.visiblePlayers = []
+  } else if (visibility === 'selected') {
+    eventData.visible = 'selected'
+    eventData.visiblePlayers = getSelectedPlayerIds()
+    // Sauvegarder les critères de sélection pour les nouveaux joueurs
+    const criteria = getSelectedCriteria()
+    eventData.selectedLines = criteria.lines
+    eventData.selectedPositions = criteria.positions
+    if (eventData.visiblePlayers.length === 0) {
+      alert('Veuillez sélectionner au moins un joueur ou changer le type de visibilité.')
+      return
+    }
+  } else {
+    // 'all' - default, visible to everyone
+    eventData.visible = true
+    eventData.visiblePlayers = []
+  }
+  
+  // Only save intensity if the type supports it
+  if (typeStyle && typeStyle.hasIntensity && intensityField.style.display !== 'none') {
+    eventData.intensity = parseInt(document.getElementById('ev-intensity').value) || 2
+  }
+  
+  // Save opponent and match location for match type
+  if (type === 'match') {
+    const opponentId = document.getElementById('ev-opponent').value
+    const matchLocation = document.getElementById('ev-match-location').value
+    console.log('Match type detected, opponentId:', opponentId, 'location:', matchLocation, 'adversairesList length:', adversairesList.length)
+    
+    // Always save the ID and location
+    eventData.opponent = opponentId
+    eventData.matchLocation = matchLocation
+    
+    if (opponentId) {
+      // Try to get name and logo from adversairesList
+      const adv = adversairesList.find(a => String(a.id) === String(opponentId))
+      console.log('Found opponent:', adv)
+      if (adv) {
+        eventData.opponentName = adv.nom
+        eventData.opponentLogo = adv.logo || ''
+      }
+    }
+  }
+
+  // Handle blessés selection
+  const avecBlesses = document.getElementById('ev-avec-blesses').checked
+  if (avecBlesses) {
+    eventData.blessesIds = getSelectedBlessesIds()
+    if (eventData.blessesIds.length === 0) {
+      alert('Veuillez sélectionner au moins un blessé ou décocher l\'option "Ajouter au planning blessés".')
+      return
+    }
+  } else {
+    eventData.blessesIds = []
+  }
+
+  const id = editingEventId || `ev_${Date.now()}`
+  console.log('Saving event data:', eventData)
+  await setDoc(doc(db, 'planning', id), eventData)
+  
+  // Si l'événement inclut des blessés, créer automatiquement les créneaux dans planning-blesses.html
+  console.log('Vérification blessés:', { avecBlesses, blessesIds: eventData.blessesIds, eventData })
+  if (avecBlesses && eventData.blessesIds && eventData.blessesIds.length > 0) {
+    console.log('Appel de createCreneauxBlessesFromEvent avec:', eventData.blessesIds)
+    await createCreneauxBlessesFromEvent(eventData, eventData.blessesIds, id)
+  } else {
+    console.log('Pas de blessés à traiter ou case non cochée')
+  }
+  
+  fermerModal()
+}
+
+// Créer automatiquement les créneaux dans planning-blesses.html à partir d'un événement
+async function createCreneauxBlessesFromEvent(eventData, blessesIds, eventId) {
+  try {
+    // Supprimer d'abord les anciens créneaux liés à cet événement (évite les doublons en édition)
+    const existingQuery = query(collection(db, 'creneauxBlesses'), where('sourceEventId', '==', eventId))
+    const existingSnapshot = await getDocs(existingQuery)
+    const deletePromises = existingSnapshot.docs.map(doc => deleteDoc(doc.ref))
+    await Promise.all(deletePromises)
+    console.log(`Supprimé ${existingSnapshot.docs.length} anciens créneaux liés à ${eventId}`)
+
+    // Mapper le type d'événement vers un type de créneau blessé
+    const typeMapping = {
+      'entrainement': 'terrain',
+      'muscu': 'muscu',
+      'match': 'terrain',
+      'medical': 'medical',
+      'reunion': 'autre',
+      'deplacement': 'autre',
+      'autre': 'autre',
+      // Types personnalisés possibles
+      'video': 'autre',
+      'vidéo': 'autre',
+      'analyse': 'autre',
+      'theorique': 'autre',
+      'pedagogie': 'autre',
+      'piscine': 'piscine',
+      'velo': 'piscine',
+      'kine': 'kine',
+      'kiné': 'kine',
+      'kinésithérapie': 'kine',
+      'repos': 'repos',
+      'recuperation': 'repos',
+      'récupération': 'repos'
+    }
+    
+    // Mapping intelligent basé sur des mots-clés
+    const typeLower = (eventData.type || '').toLowerCase()
+    let creneauType = typeMapping[typeLower]
+    
+    // Si le type n'est pas dans le mapping, essayer de deviner
+    if (!creneauType) {
+      if (typeLower.includes('video') || typeLower.includes('vidéo') || typeLower.includes('analyse') || typeLower.includes('theorique') || typeLower.includes('pédagogie')) {
+        creneauType = 'autre'
+      } else if (typeLower.includes('piscine') || typeLower.includes('velo') || typeLower.includes('vélo') || typeLower.includes('bike')) {
+        creneauType = 'piscine'
+      } else if (typeLower.includes('kine') || typeLower.includes('kiné') || typeLower.includes('kinésithérapie')) {
+        creneauType = 'kine'
+      } else if (typeLower.includes('repos') || typeLower.includes('récupération') || typeLower.includes('recuperation')) {
+        creneauType = 'repos'
+      } else if (typeLower.includes('muscu') || typeLower.includes('musculation') || typeLower.includes('salle')) {
+        creneauType = 'muscu'
+      } else if (typeLower.includes('terrain') || typeLower.includes('entrainement') || typeLower.includes('entraînement')) {
+        creneauType = 'terrain'
+      } else if (typeLower.includes('medical') || typeLower.includes('médical') || typeLower.includes('bilan')) {
+        creneauType = 'medical'
+      } else {
+        creneauType = 'autre' // Valeur par défaut
+      }
+    }
+    
+    // Logging pour le débogage
+    console.log(`Mapping type: "${eventData.type}" -> "${creneauType}"`)
+    
+    // Créer un créneau pour chaque blessé sélectionné
+    for (const joueurId of blessesIds) {
+      const creneauData = {
+        titre: eventData.titre,
+        type: creneauType,
+        joueurIds: [joueurId], // Un créneau par blessé
+        joueurId: joueurId, // Compatibilité avec planning-blesses.html
+        date: eventData.date,
+        heureDebut: eventData.heureDebut,
+        heureFin: eventData.heureFin,
+        notes: eventData.description || '',
+        avecGroupe: false, // Par défaut, pas avec le groupe
+        commun: false, // Par défaut, individuel
+        important: eventData.type === 'medical', // Marquer comme important si c'est médical
+        sourceEventId: eventId, // Lien vers l'événement d'origine
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp()
+      }
+      
+      const creneauId = `cb_${joueurId}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+      await setDoc(doc(db, 'creneauxBlesses', creneauId), creneauData)
+    }
+    
+    console.log(`Créé ${blessesIds.length} créneaux dans le planning blessés`)
+  } catch (error) {
+    console.error('Erreur lors de la création des créneaux blessés:', error)
+  }
+}
+
+window.supprimerEvent = async function() {
+  if (!editingEventId || !confirm('Supprimer cet événement ?')) return
+  await deleteDoc(doc(db, 'planning', editingEventId))
+  fermerModal()
+}
+
+window.dupliquerSemaine = async function() {
+  const selectedLundi = await showDatePicker(true) // true = Monday only
+  if (!selectedLundi) return
+  
+  try {
+    // Dupliquer toute la semaine directement
+    const diff = Math.round((selectedLundi - lundi) / (7 * 24 * 60 * 60 * 1000)) // différence en semaines
+    const evsSemaine = events.filter(ev => {
+      const d = new Date(ev.date + 'T12:00:00')
+      const cl = getLundi(d)
+      return dateStr(cl) === dateStr(lundi)
+    })
+    
+    if (evsSemaine.length === 0) {
+      alert('Aucun événement à dupliquer cette semaine')
+      return
+    }
+    
+    for (const ev of evsSemaine) {
+      const newDate = new Date(ev.date + 'T12:00:00')
+      newDate.setDate(newDate.getDate() + (diff * 7))
+      const { id, ...evData } = ev
+      await setDoc(doc(db, 'planning', `ev_${Date.now()}_${Math.random().toString(36).slice(2)}`),
+        { ...evData, date: dateStr(newDate), updatedAt: serverTimestamp() })
+    }
+    
+    alert(`${evsSemaine.length} événement(s) de la semaine dupliqués !`)
+    lundi = selectedLundi
+    renderPlanning()
+    
+  } catch (error) {
+    console.error('Error duplicating week:', error)
+    alert('Erreur lors de la duplication de la semaine')
+  }
+}
+
+window.dupliquerJourSpecifique = async function(sourceDateStr, dayName) {
+  console.log('Starting duplication for:', sourceDateStr, dayName)
+  
+  // Show date picker for target date (allow any day)
+  const targetDate = await showDatePicker(false) // false = any day allowed
+  if (!targetDate) {
+    console.log('No target date selected')
+    return
+  }
+  
+  console.log('Target date selected:', targetDate)
+  
+  try {
+    // Get events for the selected day
+    const evsJour = events.filter(ev => ev.date === sourceDateStr)
+    console.log('Found events to duplicate:', evsJour.length, evsJour)
+    
+    if (evsJour.length === 0) {
+      alert(`Aucun événement à dupliquer pour ${dayName}`)
+      return
+    }
+    
+    // Create new events for target date
+    for (const ev of evsJour) {
+      const newEventData = {
+        titre: ev.titre || '',
+        type: ev.type || '',
+        lieu: ev.lieu || '',
+        date: targetDate.getFullYear() + '-' + String(targetDate.getMonth() + 1).padStart(2, '0') + '-' + String(targetDate.getDate()).padStart(2, '0'),
+        heureDebut: ev.heureDebut || '',
+        heureFin: ev.heureFin || '',
+        notif: ev.notif || 'normale',
+        description: ev.description || '',
+        intensity: ev.intensity || 2,
+        visible: ev.visible !== undefined ? ev.visible : true,
+        visiblePlayers: ev.visiblePlayers ? [...ev.visiblePlayers] : [],
+        selectedLines: ev.selectedLines ? [...ev.selectedLines] : [],
+        selectedPositions: ev.selectedPositions ? [...ev.selectedPositions] : [],
+        opponent: ev.opponent || '',
+        opponentName: ev.opponentName || '',
+        opponentLogo: ev.opponentLogo || '',
+        matchLocation: ev.matchLocation || 'domicile',
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp()
+      }
+      
+      const newId = `ev_${Date.now()}_${Math.random().toString(36).slice(2)}`
+      console.log('Creating event with ID:', newId, 'Data:', newEventData)
+      
+      await setDoc(doc(db, 'planning', newId), newEventData)
+      console.log('Event successfully saved to Firebase')
+    }
+    
+    const targetDateStr = targetDate.getFullYear() + '-' + String(targetDate.getMonth() + 1).padStart(2, '0') + '-' + String(targetDate.getDate()).padStart(2, '0')
+    alert(`${evsJour.length} événement(s) de ${dayName} dupliqués vers ${targetDateStr} !`)
+    
+    // Wait a bit for Firebase to sync, then re-render
+    setTimeout(() => {
+      console.log('Re-rendering planning after duplication')
+      renderPlanning()
+    }, 500)
+    
+  } catch (error) {
+    console.error('Error duplicating day:', error)
+    alert('Erreur lors de la duplication de la journée: ' + error.message)
+  }
+}
+
+window.handleLogout = async function() {
+  await signOut(auth)
+  window.location.href = 'login.html'
+}
+
+// ==================== STATS FUNCTIONS ====================
+
+// Show stats modal
+window.showStatsModal = function() {
+  // Initialize with current week
+  setStatsPeriod('week')
+  updateStats()
+  document.getElementById('modal-stats').classList.add('open')
+}
+
+// Close stats modal
+window.closeStatsModal = function() {
+  document.getElementById('modal-stats').classList.remove('open')
+}
+
+// Set period for stats (week, month or season)
+window.setStatsPeriod = function(period) {
+  const debutInput = document.getElementById('stats-date-debut')
+  const finInput = document.getElementById('stats-date-fin')
+  
+  if (period === 'week') {
+    debutInput.value = dateStr(lundi)
+    const dimanche = new Date(lundi)
+    dimanche.setDate(lundi.getDate() + 6)
+    finInput.value = dateStr(dimanche)
+  } else if (period === 'month') {
+    const now = new Date()
+    const firstDay = new Date(now.getFullYear(), now.getMonth(), 1)
+    const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0)
+    debutInput.value = dateStr(firstDay)
+    finInput.value = dateStr(lastDay)
+  } else if (period === 'season') {
+    const now = new Date()
+    let seasonStart, seasonEnd
+    
+    // Si on est entre le 15 juin et le 31 décembre, la saison a commencé cette année
+    if (now.getMonth() > 5 || (now.getMonth() === 5 && now.getDate() >= 15)) {
+      seasonStart = new Date(now.getFullYear(), 5, 15) // 15 juin de cette année
+      seasonEnd = new Date(now.getFullYear() + 1, 5, 14) // 14 juin de l'année suivante
+    } else {
+      // Sinon, la saison a commencé l'année précédente
+      seasonStart = new Date(now.getFullYear() - 1, 5, 15) // 15 juin de l'année précédente
+      seasonEnd = new Date(now.getFullYear(), 5, 14) // 14 juin de cette année
+    }
+    
+    debutInput.value = dateStr(seasonStart)
+    finInput.value = dateStr(seasonEnd)
+  }
+  
+  // Auto-update stats after setting period
+  updateStats()
+}
+
+// Update statistics based on selected period
+window.updateStats = async function() {
+  const debutStr = document.getElementById('stats-date-debut').value
+  const finStr = document.getElementById('stats-date-fin').value
+  
+  if (!debutStr || !finStr) {
+    alert('Veuillez sélectionner une période valide')
+    return
+  }
+  
+  const debut = new Date(debutStr + 'T00:00:00')
+  const fin = new Date(finStr + 'T23:59:59')
+  
+  // Show loading state
+  document.getElementById('stats-individuelles-content').innerHTML = '<div style="text-align: center; color: #888; padding: 20px;">Chargement des statistiques individuelles...</div>'
+  
+  try {
+    // Load players, absences, blessures médicales and blessés créneaux
+    const [joueursSnap, absencesSnap, blessuresSnap, creneauxBlessesSnap] = await Promise.all([
+      getDocs(collection(db, 'joueurs')),
+      getDocs(collection(db, 'absences')),
+      getDocs(collection(db, 'blessures')),
+      getDocs(collection(db, 'creneauxBlesses'))
+    ])
+    
+    const joueursData = joueursSnap.docs.map(d => ({ id: d.id, ...d.data() }))
+    const absences = absencesSnap.docs.map(d => ({ id: d.id, ...d.data() }))
+    const blessures = blessuresSnap.docs.map(d => ({ id: d.id, ...d.data() }))
+    const creneauxBlesses = creneauxBlessesSnap.docs.map(d => ({ id: d.id, ...d.data() }))
+    
+    // Filter events in the selected period
+    const periodEvents = events.filter(ev => {
+      if (!ev.date) return false
+      const evDate = new Date(ev.date + 'T12:00:00')
+      return evDate >= debut && evDate <= fin
+    })
+    
+    // Filter absences in the selected period
+    const periodAbsences = absences.filter(abs => {
+      if (!abs.debut || !abs.fin) return false
+      const absDebut = new Date(abs.debut + 'T00:00:00')
+      const absFin = new Date(abs.fin + 'T23:59:59')
+      return absDebut <= fin && absFin >= debut // Overlap with period
+    })
+    
+    // Filter creneaux blessés in the selected period
+    const periodCreneauxBlesses = creneauxBlesses.filter(cr => {
+      if (!cr.date) return false
+      const crDate = new Date(cr.date + 'T12:00:00')
+      return crDate >= debut && crDate <= fin
+    })
+    
+    // Remove duplicates (same joueur, date, heureDebut, heureFin)
+    const uniqueCreneaux = []
+    const seen = new Set()
+    
+    periodCreneauxBlesses.forEach(cr => {
+      const key = `${cr.joueurId || (cr.joueurIds?.sort().join(','))}_${cr.date}_${cr.heureDebut}_${cr.heureFin}_${cr.titre}`
+      if (!seen.has(key)) {
+        seen.add(key)
+        uniqueCreneaux.push(cr)
+      } else {
+        console.log(`Créneau en double ignoré: ${cr.titre} pour ${cr.joueurId || cr.joueurIds?.join(',')} le ${cr.date}`)
+      }
+    })
+    
+    console.log(`Créneaux uniques après déduplication: ${uniqueCreneaux.length} (avant: ${periodCreneauxBlesses.length})`)
+    
+    // Calculate statistics - simple planning stats (all events with their hours)
+    const { totalCreneaux, totalHours } = calculateStatsForPeriod(periodEvents, debut, fin)
+    
+    // Debug: Afficher les créneaux blessés pour la période
+    console.log('=== DEBUG CRÉNEAUX BLESSÉS PÉRIODE ===')
+    console.log('Période:', debutStr, '->', finStr)
+    console.log('TOUS les créneaux blessés:', creneauxBlesses.length)
+    creneauxBlesses.forEach(cr => {
+      console.log(`TOUS: ${cr.titre} pour ${cr.joueurIds?.join(',') || cr.joueurId} le ${cr.date} ${cr.heureDebut}-${cr.heureFin}`)
+    })
+    console.log('Créneaux blessés filtrés pour période:', uniqueCreneaux.length)
+    uniqueCreneaux.forEach(cr => {
+      console.log(`FILTRÉ: ${cr.titre} pour ${cr.joueurIds?.join(',') || cr.joueurId} le ${cr.date} ${cr.heureDebut}-${cr.heureFin}`)
+    })
+    
+    // Debug: Afficher les blessés actifs
+    console.log('=== DEBUG BLESSÉS ACTIFS ===')
+    const blessesActifs = blessures.filter(b => b.statut === 'blesse' || b.statut === 'reprise')
+    console.log('Blessés actifs trouvés:', blessesActifs.length)
+    blessesActifs.forEach(b => {
+      console.log(`Blessé: ${b.joueurId} - ${b.patho} - statut: ${b.statut}`)
+    })
+    
+    const { playerStats, collectiveAvailabilityRate } = calculateIndividualStats(periodEvents, periodAbsences, blessures, uniqueCreneaux, debut, fin, joueursData)
+    
+    // Update summary cards with planning totals (simple count of events and hours)
+    updateSummaryCards(totalCreneaux, totalHours, debut, fin, collectiveAvailabilityRate)
+    
+  } catch (error) {
+    console.error('Erreur lors du chargement des données:', error)
+    document.getElementById('stats-individuelles-content').innerHTML = '<div style="text-align: center; color: #E24B4A; padding: 20px;">Erreur de chargement des données</div>'
+  }
+}
+
+// Calculate statistics for a given period
+function calculateStatsForPeriod(periodEvents, debut, fin) {
+  const statsByType = {}
+  let totalHours = 0
+  let totalCreneaux = 0
+  
+  periodEvents.forEach(ev => {
+    if (!ev.heureDebut || !ev.heureFin) return
+    
+    const type = ev.type || 'autre'
+    const typeStyle = TYPE_STYLES[type] || TYPE_STYLES.autre
+    
+    // Skip if this type should not be included in stats
+    if (typeStyle.includeInStats === false) return
+    
+    // Skip if event is not visible to players
+    if (ev.visible === false || ev.visible === 'staff') return
+    
+    // Count ALL events in the planning (simple count)
+    const debutMinutes = heureEnMinutes(ev.heureDebut)
+    const finMinutes = heureEnMinutes(ev.heureFin)
+    const durationHours = (finMinutes - debutMinutes) / 60
+    
+    if (!statsByType[type]) {
+      statsByType[type] = {
+        hours: 0,
+        count: 0,
+        typeStyle: typeStyle
+      }
+    }
+    
+    // Simple count: each event counts as 1 with its duration
+    statsByType[type].hours += durationHours
+    statsByType[type].count += 1
+    totalHours += durationHours
+    totalCreneaux += 1
+  })
+  
+  // Update detail rows
+  updateDetailRows(statsByType, totalHours)
+  
+  // Return totals for summary cards
+  return { totalCreneaux, totalHours }
+}
+
+// Update summary cards
+function updateSummaryCards(totalEvents, totalHours, debut, fin, collectiveAvailabilityRate = 0) {
+  document.getElementById('stat-total-creneaux').textContent = totalEvents
+  
+  // Format hours as decimal and time
+  const decimalHours = totalHours.toFixed(1)
+  const timeHours = formatHoursToTime(totalHours)
+  document.getElementById('stat-total-heures').innerHTML = `${decimalHours}h<br><span style="font-size: 12px; color: #888;">${timeHours}</span>`
+  
+  // Average per event
+  const avgHours = totalEvents > 0 ? totalHours / totalEvents : 0
+  const avgDecimal = avgHours.toFixed(1)
+  const avgTime = formatHoursToTime(avgHours)
+  document.getElementById('stat-moyenne-creneau').innerHTML = `${avgDecimal}h<br><span style="font-size: 12px; color: #888;">${avgTime}</span>`
+  
+  // Period
+  const periodText = getPeriodText(debut, fin)
+  document.getElementById('stat-periode').textContent = periodText
+  
+  // Collective availability rate (moyenne quotidienne)
+  const collectiveRate = collectiveAvailabilityRate.toFixed(0)
+  const color = collectiveAvailabilityRate >= 80 ? '#1D9E75' : collectiveAvailabilityRate >= 60 ? '#FECC00' : '#E24B4A'
+  document.getElementById('stat-dispo-collective').innerHTML = `<span style="color: ${color};">${collectiveRate}%</span>`
+}
+
+// Update detail rows
+function updateDetailRows(statsByType, totalHours) {
+  const container = document.getElementById('stats-detail-content')
+  if (!container) return
+  
+  let html = ''
+  
+  // Sort by hours descending
+  const sortedTypes = Object.entries(statsByType)
+    .filter(([_, stats]) => stats.hours > 0)
+    .sort(([_, a], [__, b]) => b.hours - a.hours)
+  
+  sortedTypes.forEach(([type, stats]) => {
+    const percentage = totalHours > 0 ? (stats.hours / totalHours * 100).toFixed(1) : 0
+    const avgHours = stats.count > 0 ? stats.hours / stats.count : 0
+    const decimalHours = stats.hours.toFixed(1)
+    const timeHours = formatHoursToTime(stats.hours)
+    
+    html += `
+      <div class="stat-detail-row">
+        <div class="stat-detail-color" style="background: ${stats.typeStyle.border}"></div>
+        <div class="stat-detail-info">
+          <div style="flex: 1;">
+            <div class="stat-detail-type">${stats.typeStyle.name || type}</div>
+            <div class="stat-detail-count">${stats.count} créneau(s) • Moy: ${avgHours.toFixed(1)}h • ${percentage}%</div>
+          </div>
+          <div class="stat-detail-hours">
+            <div class="stat-detail-decimal">${decimalHours}h</div>
+            <div class="stat-detail-time">${timeHours}</div>
+          </div>
+        </div>
+      </div>
+    `
+  })
+  
+  if (sortedTypes.length === 0) {
+    html = '<div style="text-align: center; color: #888; padding: 20px;">Aucun créneau trouvé pour cette période</div>'
+  }
+  
+  container.innerHTML = html
+}
+
+// Calculate individual statistics
+function calculateIndividualStats(periodEvents, periodAbsences, blessures, periodCreneauxBlesses, debut, fin, joueursData) {
+  const container = document.getElementById('stats-individuelles-content')
+  if (!container) return []
+  
+  // Get all players
+  const allPlayers = joueursData || []
+  
+  // Calculate stats for each player
+  const playerStats = []
+  
+  allPlayers.forEach(player => {
+    const playerId = player.id
+    const playerName = `${player.prenom} ${player.nom}`
+    
+    // Initialize stats dynamically for all types in TYPE_STYLES
+    let stats = {
+      playerId,
+      playerName,
+      poste: player.poste || '',
+      totalHours: 0,
+      totalSessions: 0,
+      absenceDays: 0,
+      blessesSessions: 0,
+      blessesHours: 0,
+      participationRate: 0,
+      typeStats: {} // Dynamic stats per type
+    }
+    
+    // Initialize counters for all types defined in TYPE_STYLES
+    Object.keys(TYPE_STYLES).forEach(typeKey => {
+      stats.typeStats[typeKey] = {
+        hours: 0,
+        sessions: 0
+      }
+    })
+    
+    // Check if player is injured (follows Phoenix planning only)
+    const isPlayerInjured = blessures.some(b => 
+      b.joueurId === playerId && 
+      (b.statut === 'blesse' || b.statut === 'reprise')
+    )
+    
+    // For injured players: ONLY count blessés créneaux (Phoenix planning)
+    if (isPlayerInjured) {
+      // Reset all stats to 0 (injured players don't follow regular planning)
+      stats.totalHours = 0
+      stats.totalSessions = 0
+      stats.muscuHours = 0
+      stats.muscuSessions = 0
+      stats.terrainHours = 0
+      stats.terrainSessions = 0
+      stats.vitesseHours = 0
+      stats.vitesseSessions = 0
+      
+      // Only count blessés créneaux
+      periodCreneauxBlesses.forEach(cr => {
+        // Check if this créneau is for this player
+        const isForPlayer = (cr.joueurIds && cr.joueurIds.includes(playerId)) || cr.joueurId === playerId
+        
+        if (!isForPlayer) return
+        if (!cr.heureDebut || !cr.heureFin) return
+        
+        // Check if player is absent on this créneau's date
+        const crDate = cr.date
+        const isAbsentOnDate = periodAbsences.some(abs => 
+          abs.joueurId === playerId && 
+          abs.debut <= crDate && 
+          abs.fin >= crDate
+        )
+        
+        if (isAbsentOnDate) {
+          console.log(`-> Joueur ${playerId} ABSENT le ${crDate}, créneau blessé ignoré`)
+          return
+        }
+        
+        const debutMinutes = heureEnMinutes(cr.heureDebut)
+        const finMinutes = heureEnMinutes(cr.heureFin)
+        
+        // Validation pour éviter les durées négatives ou invalides
+        if (debutMinutes === null || finMinutes === null || finMinutes <= debutMinutes) {
+          console.warn('Créneau blessé invalide:', cr)
+          return
+        }
+        
+        const durationHours = (finMinutes - debutMinutes) / 60
+        
+        stats.blessesHours += durationHours
+        stats.blessesSessions += 1
+        stats.totalHours += durationHours
+        stats.totalSessions += 1
+        
+        // Categorize by type (pour les blessés, on ajoute les heures mais PAS les séances)
+        const type = cr.type || 'autre'
+        console.log(`Créneau blessé ${cr.titre}: type="${type}" pour joueur ${playerId}`)
+        
+        // Dynamic categorization - works with any type
+        if (stats.typeStats[type]) {
+          stats.typeStats[type].hours += durationHours
+          // PAS de sessions += 1 pour les blessés !
+          console.log(`-> Ajouté à ${type}: +${durationHours}h (heures seulement)`)
+        } else {
+          console.log(`-> Type non catégorisé: "${type}"`)
+        }
+      })
+    } else {
+      // For non-injured players: regular planning + additional blessés créneaux
+      
+      // Calculate regular events participation
+      periodEvents.forEach(ev => {
+        if (!ev.heureDebut || !ev.heureFin) return
+        
+        // Check if this type should be included in stats
+        const type = ev.type || 'autre'
+        const typeStyle = TYPE_STYLES[type] || TYPE_STYLES.autre
+        if (typeStyle.includeInStats === false) return
+        
+        // Check if player is absent on this event's date
+        const eventDate = ev.date
+        const isAbsentOnDate = periodAbsences.some(abs => 
+          abs.joueurId === playerId && 
+          abs.debut <= eventDate && 
+          abs.fin >= eventDate
+        )
+        
+        if (isAbsentOnDate) {
+          console.log(`-> Joueur ${playerId} ABSENT le ${eventDate}, créneau ignoré`)
+          return
+        }
+        
+        // Simple logic: only check visibility and joueurIds
+        const visiblePlayers = ev.visiblePlayers || ev.joueurIds
+        console.log(`DEBUG: Événement "${ev.titre}" - type: ${type} - visible: ${ev.visible} - visiblePlayers: ${visiblePlayers?.join(',') || 'none'}`)
+        
+        // Check if player should participate in this event
+        let shouldParticipate = true
+        let reason = ''
+        
+        if (ev.visible === false) {
+          shouldParticipate = false
+          reason = 'visible=false'
+        } else if (ev.visible === 'staff') {
+          shouldParticipate = false
+          reason = 'visible=staff'
+        } else if ((ev.visible === 'selected' || (ev.visible === true && visiblePlayers && visiblePlayers.length > 0))) {
+          // Event with selected players
+          shouldParticipate = visiblePlayers.includes(playerId)
+          reason = `event selectif, visiblePlayers.includes(${playerId})=${shouldParticipate}`
+        }
+        // If ev.visible is 'all', undefined, or true without visiblePlayers, player participates
+        else if (!ev.visible || ev.visible === 'all' || (ev.visible === true && (!visiblePlayers || visiblePlayers.length === 0))) {
+          shouldParticipate = true
+          reason = 'global event'
+        }
+
+        console.log(`-> Joueur ${playerId} participe? ${shouldParticipate} (${reason})`)
+
+        
+        if (!shouldParticipate) return
+        
+        const debutMinutes = heureEnMinutes(ev.heureDebut)
+        const finMinutes = heureEnMinutes(ev.heureFin)
+        const durationHours = (finMinutes - debutMinutes) / 60
+        
+        stats.totalHours += durationHours
+        stats.totalSessions += 1
+        
+        // Dynamic categorization - works with any type defined in TYPE_STYLES
+        if (stats.typeStats[type]) {
+          stats.typeStats[type].hours += durationHours
+          stats.typeStats[type].sessions += 1
+        }
+      })
+      
+      // Add additional blessés créneaux (supplementary)
+      periodCreneauxBlesses.forEach(cr => {
+        // Check if this créneau is for this player
+        const isForPlayer = (cr.joueurIds && cr.joueurIds.includes(playerId)) || cr.joueurId === playerId
+        
+        if (!isForPlayer) return
+        if (!cr.heureDebut || !cr.heureFin) return
+        
+        // Check if player is absent on this créneau's date
+        const crDate = cr.date
+        const isAbsentOnDate = periodAbsences.some(abs => 
+          abs.joueurId === playerId && 
+          abs.debut <= crDate && 
+          abs.fin >= crDate
+        )
+        
+        if (isAbsentOnDate) {
+          console.log(`-> Joueur ${playerId} ABSENT le ${crDate}, créneau blessé ignoré`)
+          return
+        }
+        
+        const debutMinutes = heureEnMinutes(cr.heureDebut)
+        const finMinutes = heureEnMinutes(cr.heureFin)
+        
+        // Validation pour éviter les durées négatives ou invalides
+        if (debutMinutes === null || finMinutes === null || finMinutes <= debutMinutes) {
+          console.warn('Créneau supp invalide:', cr)
+          return
+        }
+        
+        const durationHours = (finMinutes - debutMinutes) / 60
+        
+        stats.blessesHours += durationHours
+        stats.blessesSessions += 1
+        stats.totalHours += durationHours
+        stats.totalSessions += 1
+        
+        // Dynamic categorization - works with any type defined in TYPE_STYLES
+        const type = cr.type || 'autre'
+        if (stats.typeStats[type]) {
+          stats.typeStats[type].hours += durationHours
+          stats.typeStats[type].sessions += 1
+        }
+      })
+    }
+    
+    // Calculate absences
+    periodAbsences.forEach(abs => {
+      if (abs.joueurId !== playerId) return
+      
+      // Calculate overlap days with the period
+      const absDebut = new Date(abs.debut + 'T00:00:00')
+      const absFin = new Date(abs.fin + 'T23:59:59')
+      
+      const overlapStart = new Date(Math.max(absDebut.getTime(), debut.getTime()))
+      const overlapEnd = new Date(Math.min(absFin.getTime(), fin.getTime()))
+      
+      if (overlapStart <= overlapEnd) {
+        const absenceDays = Math.round((overlapEnd - overlapStart) / (24 * 60 * 60 * 1000)) + 1
+        stats.absenceDays += absenceDays
+      }
+    })
+    
+    // Calculate blessés créneaux
+    periodCreneauxBlesses.forEach(cr => {
+      // Check if this créneau is for this player
+      const isForPlayer = (cr.joueurIds && cr.joueurIds.includes(playerId)) || cr.joueurId === playerId
+      
+      if (!isForPlayer) return
+      
+      // Check if player is absent on this créneau's date
+      const crDate = cr.date
+      const isAbsentOnDate = periodAbsences.some(abs => 
+        abs.joueurId === playerId && 
+        abs.debut <= crDate && 
+        abs.fin >= crDate
+      )
+      
+      if (isAbsentOnDate) {
+        console.log(`-> Joueur ${playerId} ABSENT le ${crDate}, créneau blessé ignoré`)
+        return
+      }
+      
+      if (!cr.heureDebut || !cr.heureFin) return
+      
+      const debutMinutes = heureEnMinutes(cr.heureDebut)
+      const finMinutes = heureEnMinutes(cr.heureFin)
+      const durationHours = (finMinutes - debutMinutes) / 60
+      
+      stats.blessesHours += durationHours
+      stats.blessesSessions += 1
+      
+      // Dynamic categorization - works with any type defined in TYPE_STYLES
+      const type = cr.type || 'autre'
+      if (stats.typeStats[type]) {
+        stats.typeStats[type].hours += durationHours
+        stats.typeStats[type].sessions += 1
+      }
+    })
+    
+    // Add injury status
+    stats.isInjured = isPlayerInjured
+    
+    // Calculate participation rate and availability rate
+    const totalPeriodDays = Math.round((fin - debut) / (24 * 60 * 60 * 1000)) + 1
+    
+    // Calculate injury days
+    let injuryDays = 0
+    if (isPlayerInjured) {
+      const injury = blessures.find(b => b.joueurId === playerId && (b.statut === 'blesse' || b.statut === 'reprise'))
+      if (injury && injury.debut) {
+        const injuryStart = new Date(injury.debut + 'T00:00:00')
+        const injuryEnd = injury.retourEffectif ? new Date(injury.retourEffectif + 'T23:59:59') : fin
+        
+        const overlapStart = new Date(Math.max(injuryStart.getTime(), debut.getTime()))
+        const overlapEnd = new Date(Math.min(injuryEnd.getTime(), fin.getTime()))
+        
+        if (overlapStart <= overlapEnd) {
+          injuryDays = Math.round((overlapEnd - overlapStart) / (24 * 60 * 60 * 1000)) + 1
+        }
+      }
+    }
+    
+    // Participation rate = 100% - absence days only
+    stats.participationRate = totalPeriodDays > 0 ? Math.max(0, ((totalPeriodDays - stats.absenceDays) / totalPeriodDays) * 100) : 0
+    
+    // Availability rate = 100% - absence days - injury days
+    const totalUnavailableDays = stats.absenceDays + injuryDays
+    stats.availabilityRate = totalPeriodDays > 0 ? Math.max(0, ((totalPeriodDays - totalUnavailableDays) / totalPeriodDays) * 100) : 0
+    
+    playerStats.push(stats)
+  })
+  
+  // Sort by total hours descending
+  playerStats.sort((a, b) => b.totalHours - a.totalHours)
+  
+  // Calculate collective availability rate (moyenne quotidienne)
+  const totalPlayers = playerStats.length
+  const totalPeriodDays = Math.round((fin - debut) / (24 * 60 * 60 * 1000)) + 1
+  
+  let totalAvailabilitySum = 0
+  
+  // Pour chaque jour de la période, calculer le taux de dispo
+  for (let i = 0; i < totalPeriodDays; i++) {
+    const currentDate = new Date(debut.getTime() + i * 24 * 60 * 60 * 1000)
+    const dateStr = currentDate.toISOString().split('T')[0]
+    
+    let availablePlayersCount = 0
+    
+    playerStats.forEach(stats => {
+      const playerId = stats.playerId
+      
+      // Vérifier si le joueur est absent ce jour
+      const isAbsent = periodAbsences.some(abs => 
+        abs.joueurId === playerId && 
+        abs.debut <= dateStr && 
+        abs.fin >= dateStr
+      )
+      
+      // Vérifier si le joueur est blessé ce jour
+      const isInjured = blessures.some(b => 
+        b.joueurId === playerId && 
+        (b.statut === 'blesse' || b.statut === 'reprise') &&
+        b.debut <= dateStr &&
+        (!b.retourEffectif || b.retourEffectif >= dateStr)
+      )
+      
+      // Le joueur est disponible s'il n'est ni absent ni blessé
+      if (!isAbsent && !isInjured) {
+        availablePlayersCount++
+      }
+    })
+    
+    const dailyAvailabilityRate = totalPlayers > 0 ? (availablePlayersCount / totalPlayers) * 100 : 0
+    totalAvailabilitySum += dailyAvailabilityRate
+  }
+  
+  // Moyenne sur tous les jours
+  const collectiveAvailabilityRate = totalPeriodDays > 0 ? totalAvailabilitySum / totalPeriodDays : 0
+  
+  // Render individual stats
+  renderIndividualStats(playerStats)
+  
+  // Return playerStats with collective rate for summary calculations
+  return { playerStats, collectiveAvailabilityRate }
+}
+
+// Render individual statistics
+function renderIndividualStats(playerStats) {
+  const container = document.getElementById('stats-individuelles-content')
+  if (!container) return
+  
+  if (playerStats.length === 0) {
+    container.innerHTML = '<div style="text-align: center; color: #888; padding: 20px;">Aucun joueur trouvé</div>'
+    return
+  }
+  
+  let html = ''
+    playerStats.forEach(stats => {
+    const participationColor = stats.participationRate >= 80 ? '#1D9E75' : stats.participationRate >= 60 ? '#FECC00' : '#E24B4A'
+    const absenceColor = stats.absenceDays > 0 ? '#E24B4A' : '#1D9E75'
+    
+    // Build dynamic type counts string - show all types with sessions > 0
+    let typeCountsHtml = ''
+    if (stats.typeStats) {
+      Object.entries(stats.typeStats).forEach(([typeKey, typeStat]) => {
+        if (typeStat.sessions > 0) {
+          const typeName = TYPE_STYLES[typeKey]?.name || typeKey
+          typeCountsHtml += `• ${typeStat.sessions} ${typeName.toLowerCase()} `
+        }
+      })
+    }
+    
+    html += `
+      <div class="stat-detail-row" style="cursor: pointer;" onclick="showPlayerDetail('${stats.playerId}', '${stats.playerName.replace(/'/g, "\\'")}', ${JSON.stringify(stats).replace(/"/g, '&quot;')})">
+        <div class="stat-detail-color" style="background: ${COULEURS_POSTE[stats.poste] || '#333'}">
+          ${stats.isInjured ? '<div style="position: absolute; top: -2px; right: -2px; width: 8px; height: 8px; background: #E24B4A; border-radius: 50%; border: 1px solid #fff;"></div>' : ''}
+        </div>
+        <div class="stat-detail-info">
+          <div style="flex: 1;">
+            <div class="stat-detail-type">${stats.playerName} ${stats.isInjured ? '🏥' : ''}</div>
+            <div class="stat-detail-count">
+              ${stats.poste} • 
+              ${stats.totalSessions} séances 
+              ${typeCountsHtml}
+              ${stats.blessesSessions > 0 ? `• ${stats.blessesSessions} créneaux blessés` : ''}
+              ${stats.isInjured ? '• Planning Phoenix' : ''}
+            </div>
+          </div>
+          <div class="stat-detail-hours">
+            <div class="stat-detail-decimal">${stats.totalHours.toFixed(1)}h</div>
+            <div class="stat-detail-time" style="color: ${participationColor};">
+              ${stats.availabilityRate.toFixed(0)}% dispo
+            </div>
+          </div>
+        </div>
+      </div>
+    `
+  })
+  
+  container.innerHTML = html
+}
+
+// Show player detail modal
+window.showPlayerDetail = function(playerId, playerName, stats) {
+  // Create modal if it doesn't exist
+  let modal = document.getElementById('player-detail-modal')
+  if (!modal) {
+    modal = document.createElement('div')
+    modal.id = 'player-detail-modal'
+    modal.className = 'modal-overlay'
+    modal.innerHTML = `
+      <div class="modal" style="width: 600px; max-height: 85vh;">
+        <div class="modal-title" id="player-detail-title">Détail du joueur</div>
+        <div id="player-detail-content">
+          <!-- Content will be rendered here -->
+        </div>
+        <div class="modal-actions">
+          <button class="btn-ghost" onclick="closePlayerDetail()">Fermer</button>
+        </div>
+      </div>
+    `
+    document.body.appendChild(modal)
+  }
+  
+  // Update title
+  document.getElementById('player-detail-title').textContent = `Détail - ${playerName}`
+  
+  // Render content
+  const content = document.getElementById('player-detail-content')
+  
+  // Build dynamic type cards for all types with sessions > 0
+  let typeCardsHtml = ''
+  let typeBarsHtml = ''
+  
+  if (stats.typeStats) {
+    Object.entries(stats.typeStats).forEach(([typeKey, typeStat]) => {
+      if (typeStat.sessions > 0) {
+        const typeStyle = TYPE_STYLES[typeKey] || TYPE_STYLES.autre
+        const typeName = typeStyle.name || typeKey
+        const typeColor = typeStyle.border || '#888'
+        
+        typeCardsHtml += `
+          <div class="stat-summary-card">
+            <div class="stat-summary-label">Séances ${typeName.toLowerCase()}</div>
+            <div class="stat-summary-value">${typeStat.sessions}</div>
+          </div>
+        `
+        
+        typeBarsHtml += `
+          <div style="margin-bottom: 8px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+              <span style="color: ${typeColor}; font-weight: 600;">${typeName}</span>
+              <span style="color: #fff;">${typeStat.sessions} séances • ${typeStat.hours.toFixed(1)}h</span>
+            </div>
+            <div style="height: 8px; background: #2a2a2a; border-radius: 4px; overflow: hidden;">
+              <div style="height: 100%; background: ${typeColor}; width: ${(typeStat.hours / stats.totalHours * 100).toFixed(1)}%;"></div>
+            </div>
+          </div>
+        `
+      }
+    })
+  }
+  
+  content.innerHTML = `
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px;">
+      <div class="stat-summary-card">
+        <div class="stat-summary-label">Total séances</div>
+        <div class="stat-summary-value">${stats.totalSessions}</div>
+      </div>
+      <div class="stat-summary-card">
+        <div class="stat-summary-label">Total heures</div>
+        <div class="stat-summary-value">${stats.totalHours.toFixed(1)}h</div>
+      </div>
+      ${typeCardsHtml}
+    </div>
+    
+    <div style="margin-bottom: 20px;">
+      <h3 style="font-size: 14px; font-weight: 600; margin-bottom: 12px; color: #fff;">Répartition des créneaux</h3>
+      <div style="background: #1a1a1a; border: 1px solid #2a2a2a; border-radius: 8px; padding: 12px;">
+        ${typeBarsHtml}
+        ${stats.blessesSessions > 0 ? `
+        <div>
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+            <span style="color: #E24B4A; font-weight: 600;">Créneaux blessés</span>
+            <span style="color: #fff;">${stats.blessesSessions} séances • ${stats.blessesHours.toFixed(1)}h</span>
+          </div>
+          <div style="height: 8px; background: #2a2a2a; border-radius: 4px; overflow: hidden;">
+            <div style="height: 100%; background: #E24B4A; width: ${(stats.blessesHours / stats.totalHours * 100).toFixed(1)}%;"></div>
+          </div>
+        </div>
+        ` : ''}
+      </div>
+    </div>
+    
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+      <div class="stat-summary-card">
+        <div class="stat-summary-label">Taux de participation<br><span style="font-size: 10px; color: #888;">(100% - absences)</span></div>
+        <div class="stat-summary-value" style="color: ${stats.participationRate >= 80 ? '#1D9E75' : stats.participationRate >= 60 ? '#FECC00' : '#E24B4A'};">
+          ${stats.participationRate.toFixed(0)}%
+        </div>
+      </div>
+      <div class="stat-summary-card">
+        <div class="stat-summary-label">Taux de disponibilité<br><span style="font-size: 10px; color: #888;">(100% - absences - blessures)</span></div>
+        <div class="stat-summary-value" style="color: ${stats.availabilityRate >= 80 ? '#1D9E75' : stats.availabilityRate >= 60 ? '#FECC00' : '#E24B4A'};">
+          ${stats.availabilityRate.toFixed(0)}%
+        </div>
+      </div>
+    </div>
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 12px;">
+      <div class="stat-summary-card">
+        <div class="stat-summary-label">Jours d'absence</div>
+        <div class="stat-summary-value" style="color: ${stats.absenceDays > 0 ? '#E24B4A' : '#1D9E75'};">
+          ${stats.absenceDays}j
+        </div>
+      </div>
+      <div class="stat-summary-card">
+        <div class="stat-summary-label">Jours de blessure<br><span style="font-size: 10px; color: #888;">Différence entre les 2 taux</span></div>
+        <div class="stat-summary-value" style="color: #E24B4A;">
+          ${Math.round((stats.participationRate - stats.availabilityRate) * 7 / 100)}j
+        </div>
+      </div>
+    </div>
+    
+    ${stats.isInjured ? `
+    <div style="margin-top: 16px; padding: 12px; background: #E24B4A11; border: 1px solid #E24B4A33; border-radius: 8px;">
+      <div style="color: #E24B4A; font-weight: 600; margin-bottom: 4px;">🏥 Statut : Blessé</div>
+      <div style="color: #E24B4A; font-size: 12px;">Ce joueur suit actuellement le planning Phoenix (rééducation individualisée)</div>
+    </div>
+    ` : ''}
+  `
+  
+  modal.classList.add('open')
+}
+
+// Close player detail modal
+window.closePlayerDetail = function() {
+  const modal = document.getElementById('player-detail-modal')
+  if (modal) {
+    modal.classList.remove('open')
+  }
+}
+
+// Format hours to time format (2.5h -> 2h30)
+function formatHoursToTime(decimalHours) {
+  const hours = Math.floor(decimalHours)
+  const minutes = Math.round((decimalHours - hours) * 60)
+  
+  if (minutes === 0) {
+    return `${hours}h00`
+  } else if (minutes === 30) {
+    return `${hours}h30`
+  } else {
+    return `${hours}h${minutes.toString().padStart(2, '0')}`
+  }
+}
+
+// Get period text for display
+function getPeriodText(debut, fin) {
+  const debutStr = dateStr(debut)
+  const finStr = dateStr(fin)
+  
+  // Check if it's a week
+  const diffDays = Math.round((fin - debut) / (24 * 60 * 60 * 1000))
+  
+  if (diffDays === 6) {
+    return `Semaine du ${debutStr}`
+  } else if (diffDays >= 27 && diffDays <= 31) {
+    // Check if it's a month
+    if (debut.getMonth() === fin.getMonth() && debut.getFullYear() === fin.getFullYear()) {
+      const monthNames = ['janvier', 'février', 'mars', 'avril', 'mai', 'juin', 
+                         'juillet', 'août', 'septembre', 'octobre', 'novembre', 'décembre']
+      return `${monthNames[debut.getMonth()]} ${debut.getFullYear()}`
+    }
+  } else if (diffDays >= 350 && diffDays <= 370) {
+    // Check if it's a season (15 juin to 14 juin next year)
+    if (debut.getMonth() === 5 && debut.getDate() === 15 && fin.getMonth() === 5 && fin.getDate() === 14) {
+      return `Saison ${debut.getFullYear()}-${fin.getFullYear()}`
+    }
+  }
+  
+  return `Du ${debutStr} au ${finStr}`
+}
+  </script>
+</body>
+</html>
