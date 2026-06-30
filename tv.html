@@ -340,6 +340,7 @@
   }
   </style>
 
+  <link rel="manifest" href="../manifest.json">
 </head>
 <body>
 
@@ -378,6 +379,7 @@
     
     <div class="tv-date" id="tv-date"></div>
         <a class="tv-home-btn" href="index.html">⌂ Accueil</a>
+    <button class="tv-btn" onclick="logout()">Déconnexion</button>
     <div class="tv-clock" id="tv-clock"></div>
   </div>
 
@@ -420,7 +422,7 @@
 
   <script type="module">
     import { initializeApp } from './firebase-bundle.js'
-    import { getAuth, onAuthStateChanged } from './firebase-bundle.js'
+    import { getAuth, onAuthStateChanged, signOut, setPersistence, browserLocalPersistence } from './firebase-bundle.js'
     import { getFirestore, collection, doc, setDoc, getDoc, getDocs, onSnapshot, serverTimestamp } from './firebase-bundle.js'
 
     // Fonctions inline de seances-charges.js pour éviter les erreurs CORS
@@ -545,6 +547,16 @@
     const fbApp = initializeApp(firebaseConfig)
     const auth = getAuth(fbApp)
     const db = getFirestore(fbApp)
+
+    // Auth persistant pour fonctionner hors connexion
+    try { setPersistence(auth, browserLocalPersistence).catch(() => {}) } catch(e) {}
+
+    // Redirection si non authentifié
+    onAuthStateChanged(auth, user => {
+      if (!user) {
+        window.location.href = 'login.html'
+      }
+    })
 
     let joueurs = []
     let seances = []
@@ -1385,6 +1397,12 @@
         }
       }
     }
-  </script>
+  
+
+    window.logout = async function() {
+      try { await signOut(auth) } catch(e) {}
+      window.location.href = 'login.html'
+    }
+</script>
 </body>
 </html>
