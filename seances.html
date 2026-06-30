@@ -435,6 +435,7 @@
   .modal-box { width: min(500px, 94vw) !important; }
   </style>
 
+  <link rel="manifest" href="../manifest.json">
 </head>
 <body>
   <!-- iPad TopBar -->
@@ -445,6 +446,7 @@
     </a>
     <div class="ipad-topbar-sep"></div>
     <div class="ipad-topbar-title">Séances</div>
+    <button class="btn-ghost" onclick="logout()" style="margin-left:auto;min-height:36px;font-size:12px;">Déconnexion</button>
   </div>
   <!-- Bottom Nav -->
   <nav class="ipad-bottom-nav">
@@ -456,7 +458,7 @@
       <span class="ipad-nav-icon">🏉</span>
       <span>Séances</span>
     </a>
-    <a class="ipad-nav-item" href="equipes.html?mode=entrainement">
+    <a class="ipad-nav-item" href="equipes.html">
       <span class="ipad-nav-icon">👥</span>
       <span>Équipes</span>
     </a>
@@ -488,23 +490,14 @@
     <div class="nav-section">Musculation</div>
     <div class="nav-item active" onclick="location.href='seances.html'"><div class="nav-dot"></div> Séances</div>
     <div class="nav-item" onclick="location.href='fiches-seances.html'"><div class="nav-dot"></div> Fiches Séances</div>
-    <div class="nav-item" onclick="location.href='exercices.html'"><div class="nav-dot"></div> Exercices</div>
     <div class="nav-item" onclick="location.href='suivi-poids.html'"><div class="nav-dot"></div> Suivi Poids</div>
     <div class="nav-section">Suivi</div>
-    <div class="nav-item" onclick="location.href='wellness.html'"><div class="nav-dot"></div> Wellness</div>
-    <div class="nav-item" onclick="location.href='performances.html'"><div class="nav-dot"></div> Performances</div>
-    <div class="nav-item" onclick="location.href='medical.html'"><div class="nav-dot"></div> Médical</div>
-    <div class="nav-item" onclick="location.href='absences.html'"><div class="nav-dot"></div> Absences</div>
     <div class="nav-section">Planning</div>
     <div class="nav-item" onclick="location.href='planning.html'"><div class="nav-dot"></div> Planning club</div>
-    <div class="nav-item" onclick="location.href='planning-blesses.html'"><div class="nav-dot"></div> Blessés</div>
     <div class="nav-section">Équipes</div>
     <div class="nav-item" onclick="location.href='equipes.html'"><div class="nav-dot"></div> Composition équipes</div>
     <div class="nav-section">GPS</div>
-    <div class="nav-item" onclick="location.href='gps.html'"><div class="nav-dot"></div> Données GPS</div>
-    <div class="nav-item" onclick="location.href='gps-match.html'"><div class="nav-dot"></div> Rapport de match</div>
     <div class="nav-item" onclick="location.href='gps-planif.html'"><div class="nav-dot"></div> Planification charge</div>
-    <div class="nav-item" onclick="location.href='profil-force-vitesse.html'"><div class="nav-dot"></div> Profil F-V</div>
     <div class="sidebar-bottom">
       <div class="user-info" id="user-email"></div>
       <button class="logout-btn" onclick="handleLogout()">Se déconnecter</button>
@@ -519,7 +512,6 @@
         <button class="mode-btn active" id="btn-view-planif" onclick="setVueListe('planif')">📊 Planification</button>
         <button class="mode-btn" id="btn-view-liste" onclick="setVueListe('liste')">📋 Liste</button>
       </div>
-      <button class="btn-ghost" onclick="location.href='exercices.html'">Gérer les exercices</button>
       <button class="btn-ghost" onclick="ouvrirGroupesParDefaut()">📂 Groupes par défaut</button>
       <button class="btn-ghost" onclick="ouvrirModalCycle()">+ Nouveau cycle</button>
       <button class="btn-primary" onclick="nouvelleSeance()">+ Nouvelle séance</button>
@@ -765,7 +757,7 @@
 
   <script type="module">
     import { initializeApp } from './firebase-bundle.js'
-    import { getAuth, onAuthStateChanged, signOut } from './firebase-bundle.js'
+    import { getAuth, onAuthStateChanged, signOut, setPersistence, browserLocalPersistence } from './firebase-bundle.js'
     import { getFirestore, collection, doc, setDoc, getDoc, getDocs, onSnapshot, deleteDoc, serverTimestamp } from './firebase-bundle.js'
 
     const firebaseConfig = { apiKey:"AIzaSyCvMs-5LX9Ivk3OkzUR3iz9Kk1E5b9_7Vk",authDomain:"delta-rugby-app.firebaseapp.com",projectId:"delta-rugby-app",storageBucket:"delta-rugby-app.firebasestorage.app",messagingSenderId:"61187079762",appId:"1:61187079762:web:56cd1eaa8beb9e1a2ee98b" }
