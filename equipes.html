@@ -518,9 +518,26 @@
   /* Modal */
   .modal { width: min(580px, 94vw) !important; max-width: 94vw !important; }
   .modal-box { width: min(500px, 94vw) !important; }
+  /* Bigger training touch targets for iPad/iPhone */
+  .picker-item { padding: 12px 10px !important; min-height: 46px !important; }
+  .picker-nom { font-size: 14px !important; }
+  .slot-entr { min-width: 72px !important; max-width: 86px !important; }
+  .entr-cercle { width: 54px !important; height: 54px !important; }
+  .entr-nom { font-size: 10px !important; }
+  .seq-chip { font-size: 9px !important; padding: 2px 4px !important; }
+  .entr-stats { font-size: 9px !important; }
+  .entr-empty { padding: 20px !important; font-size: 13px !important; }
+  .slot-rempl-entr { min-width: 56px !important; }
+  .rempl-cercle { width: 42px !important; height: 42px !important; }
+  .equipe-card-header { padding: 13px 16px !important; }
+  .equipe-nom-input { font-size: 15px !important; }
   /* Responsive training grid for phones */
   @media (max-width: 640px) {
     .equipes-grid { grid-template-columns: 1fr !important; }
+    .slot-entr { min-width: 78px !important; max-width: 92px !important; }
+    .entr-cercle { width: 58px !important; height: 58px !important; }
+    .entr-nom { font-size: 11px !important; }
+    .entr-stats { font-size: 10px !important; }
   }
   </style>
 
@@ -828,6 +845,22 @@
     }
 
     // ==================== ENTRAÎNEMENT ====================
+    function getTeamTextColor(couleur) {
+      const c = couleur.toLowerCase()
+      if (c === '#fecc00') return '#000'
+      return '#fff'
+    }
+    function getTeamUiColor(couleur) {
+      const c = couleur.toLowerCase()
+      if (c === '#000' || c === '#000000') return '#fff'
+      if (c === '#fecc00') return '#000'
+      return couleur
+    }
+    function getTeamSlotBg(couleur) {
+      const c = couleur.toLowerCase()
+      if (c === '#000' || c === '#000000') return '#ffffff20'
+      return `${couleur}18`
+    }
     window.renderEntrainement = function() {
       const c = document.getElementById('equipes-grid')
       c.innerHTML = ''
@@ -843,17 +876,17 @@
         // Header - couleur de fond selon l'équipe
         const isYellow = equipe.couleur === '#FECC00' || equipe.couleur.toLowerCase() === '#fecc00'
         const isBlack = equipe.couleur === '#000' || equipe.couleur === '#000000'
-        const textColor = isYellow ? '#000' : '#fff'
-        const borderColor = isBlack ? '#444' : equipe.couleur
+        const textColor = getTeamTextColor(equipe.couleur)
+        const borderColor = isBlack ? '#fff' : equipe.couleur
         const hdr = document.createElement('div')
         hdr.className = 'equipe-card-header'
         hdr.style.borderBottomColor = borderColor
         hdr.style.background = equipe.couleur
         hdr.innerHTML = `
           <input class="equipe-nom-input" style="color:${textColor};" value="${equipe.nom}" onchange="equipes[${ei}].nom=this.value" />
-          <button onclick="ajouterJoueurEquipe(${ei},'titu')" style="padding:3px 8px;border-radius:6px;border:1px solid ${isBlack ? '#666' : equipe.couleur + '44'};background:none;color:${isBlack ? '#aaa' : equipe.couleur};font-size:10px;cursor:pointer;">+ Titu</button>
-          <button onclick="ajouterJoueurEquipe(${ei},'rempl')" style="padding:3px 8px;border-radius:6px;border:1px solid ${isBlack ? '#555' : equipe.couleur + '33'};background:none;color:${isBlack ? '#888' : equipe.couleur};font-size:10px;cursor:pointer;opacity:.7;">+ Rempl</button>
-          <button onclick="retirerEquipe(${ei})" style="padding:3px 8px;border-radius:6px;border:none;background:none;color:${isBlack ? '#666' : '#333'};font-size:10px;cursor:pointer;">✕</button>
+          <button onclick="ajouterJoueurEquipe(${ei},'titu')" style="padding:7px 12px;border-radius:8px;border:1px solid ${isBlack ? '#666' : equipe.couleur + '44'};background:none;color:${isBlack ? '#aaa' : equipe.couleur};font-size:12px;cursor:pointer;min-height:36px;">+ Titu</button>
+          <button onclick="ajouterJoueurEquipe(${ei},'rempl')" style="padding:7px 12px;border-radius:8px;border:1px solid ${isBlack ? '#555' : equipe.couleur + '33'};background:none;color:${isBlack ? '#888' : equipe.couleur};font-size:12px;cursor:pointer;opacity:.7;min-height:36px;">+ Rempl</button>
+          <button onclick="retirerEquipe(${ei})" style="padding:7px 12px;border-radius:8px;border:none;background:none;color:${isBlack ? '#666' : '#333'};font-size:12px;cursor:pointer;min-height:36px;">✕</button>
         `
         card.appendChild(hdr)
 
@@ -909,7 +942,7 @@
             row.onmouseout = () => row.style.background = ''
             row.onclick = () => ouvrirPosteModal(ei, pi)
             const posteLabel = document.createElement('span')
-            posteLabel.style.cssText = `font-size:9px;font-weight:700;min-width:28px;color:${equipe.couleur};`
+            posteLabel.style.cssText = `font-size:10px;font-weight:700;min-width:28px;color:${getTeamUiColor(equipe.couleur)};`
             posteLabel.textContent = `P${pi+1}`
             row.appendChild(posteLabel)
             const arrowEl = document.createElement('span')
@@ -926,7 +959,7 @@
               const rdiff = rhiJ - rhiDone
               const rrepsComp = rdiff > 0 ? Math.ceil(rdiff / distRep) : 0
               const badge = document.createElement('span')
-              badge.style.cssText = `font-size:9px;padding:2px 6px;border-radius:4px;background:${equipe.couleur}22;color:${equipe.couleur};border:1px solid ${equipe.couleur}44;display:flex;align-items:center;gap:4px;`
+              badge.style.cssText = `font-size:10px;padding:3px 8px;border-radius:4px;background:${equipe.couleur}22;color:${getTeamUiColor(equipe.couleur)};border:1px solid ${equipe.couleur}44;display:flex;align-items:center;gap:4px;`
               const compText = rrepsComp > 0 ? `<span style="color:#E24B4A;font-weight:700;">${rrepsComp}rep</span>` : '<span style="color:#1D9E75;">✓</span>'
               badge.innerHTML = `${rj.nom}${rseqs?.length ? ' ['+rseqs.join(',')+']' : ''} ${compText}`
               row.appendChild(badge)
@@ -956,7 +989,7 @@
         footer.className = 'entr-footer'
         footer.innerHTML = `
           <span>${allJoueurs.length} joueurs</span>
-          <span style="color:${equipe.couleur};" class="fv">${equipe.nom}</span>
+          <span style="color:${getTeamUiColor(equipe.couleur)};" class="fv">${equipe.nom}</span>
           <span style="color:#E24B4A;">${repsTotal} rep. comp. total</span>
         `
         card.appendChild(footer)
@@ -986,7 +1019,7 @@
 
       const cercle = document.createElement('div')
       cercle.className = small ? 'rempl-cercle' : 'entr-cercle'
-      cercle.style.cssText = `border-color:${equipe.couleur}; background:${equipe.couleur}15; position:relative;`
+      cercle.style.cssText = `border-color:${getTeamUiColor(equipe.couleur)}; background:${getTeamSlotBg(equipe.couleur)}; position:relative;`
       if (!j) {
         cercle.style.borderStyle = 'dashed'
         cercle.style.borderColor = '#2a2a2a'
@@ -1006,11 +1039,11 @@
           }
         }
       } else {
-        cercle.innerHTML = `<div style="font-size:${small?'9px':'11px'};font-weight:700;color:${equipe.couleur};">${j.prenom[0]}${j.nom[0]}</div>`
+        cercle.innerHTML = `<div style="font-size:${small?'9px':'11px'};font-weight:700;color:${getTeamUiColor(equipe.couleur)};">${j.prenom[0]}${j.nom[0]}</div>`
         // Badge remplaçants
         if (type === 'titu' && remplsPoste.length > 0) {
           const badge = document.createElement('div')
-          badge.style.cssText = `position:absolute;top:-4px;right:-4px;background:${equipe.couleur};color:#000;font-size:8px;font-weight:700;width:16px;height:16px;border-radius:50%;display:flex;align-items:center;justify-content:center;`
+          badge.style.cssText = `position:absolute;top:-4px;right:-4px;background:${getTeamUiColor(equipe.couleur)};color:${getTeamTextColor(equipe.couleur)};font-size:8px;font-weight:700;width:16px;height:16px;border-radius:50%;display:flex;align-items:center;justify-content:center;`
           badge.textContent = remplsPoste.length
           cercle.appendChild(badge)
         }
@@ -1045,7 +1078,7 @@
             chip.className = 'seq-chip'
             const isOn = seqActives.includes(n)
             chip.style.cssText = isOn
-              ? `background:${equipe.couleur}33;border-color:${equipe.couleur};color:${equipe.couleur};`
+              ? `background:${getTeamUiColor(equipe.couleur)}33;border-color:${getTeamUiColor(equipe.couleur)};color:${getTeamUiColor(equipe.couleur)};`
               : `border-color:#2a2a2a;color:#333;`
             chip.textContent = n
             chip.onclick = () => {
@@ -1247,7 +1280,7 @@
       // Header
       const titleEl = document.getElementById('poste-modal-title')
       titleEl.textContent = `Poste ${posteIdx+1} — ${titu ? titu.nom + ' ' + titu.prenom : 'Vide'}`
-      titleEl.style.color = couleur
+      titleEl.style.color = getTeamUiColor(couleur)
 
       // Corps : titulaire d'abord
       const body = document.getElementById('poste-modal-body')
@@ -1265,7 +1298,7 @@
       const tituRow = document.createElement('div')
       tituRow.style.cssText = 'display:flex;align-items:center;gap:10px;padding:10px;background:#0f0f0f;border-radius:8px;margin-bottom:4px;'
       const tituCircle = document.createElement('div')
-      tituCircle.style.cssText = `width:38px;height:38px;border-radius:50%;border:2px solid ${couleur};background:${couleur}20;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:${couleur};cursor:pointer;`
+      tituCircle.style.cssText = `width:42px;height:42px;border-radius:50%;border:2px solid ${getTeamUiColor(couleur)};background:${getTeamSlotBg(couleur)};display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:${getTeamUiColor(couleur)};cursor:pointer;`
       if (titu) {
         tituCircle.textContent = titu.prenom[0] + titu.nom[0]
       } else {
@@ -1326,9 +1359,9 @@
         const updateToutBtnStyle = () => {
           const currentAllSelected = seqNums.every(n => (sequencesMap[seqKey] || []).includes(n))
           if (currentAllSelected) {
-            toutCocherBtn.style.cssText = `font-size:10px;padding:3px 6px;border-radius:4px;border:1px solid ${couleur};background:${couleur};color:#000;cursor:pointer;margin-right:6px;`
+            toutCocherBtn.style.cssText = `font-size:11px;padding:5px 8px;border-radius:5px;border:1px solid ${getTeamUiColor(couleur)};background:${getTeamUiColor(couleur)};color:${getTeamTextColor(couleur)};cursor:pointer;margin-right:6px;`
           } else {
-            toutCocherBtn.style.cssText = `font-size:10px;padding:3px 6px;border-radius:4px;border:1px solid #555;background:transparent;color:#888;cursor:pointer;margin-right:6px;`
+            toutCocherBtn.style.cssText = `font-size:11px;padding:5px 8px;border-radius:5px;border:1px solid #555;background:transparent;color:#888;cursor:pointer;margin-right:6px;`
           }
         }
         updateToutBtnStyle()
@@ -1426,7 +1459,7 @@
               chip.className = 'seq-chip'
               const isOn = assign.seqs.includes(n)
               chip.style.cssText = isOn
-                ? `background:${assign.couleur}33;border-color:${assign.couleur};color:${assign.couleur};`
+                ? `background:${getTeamUiColor(assign.couleur)}33;border-color:${getTeamUiColor(assign.couleur)};color:${getTeamUiColor(assign.couleur)};`
                 : `border-color:#0a0a0a;color:#0a0a0a;` // Même couleur que le fond
               chip.textContent = n
               assignSeqContainer.appendChild(chip)
@@ -1471,7 +1504,7 @@
         rRow.style.cssText = 'display:flex;align-items:center;gap:10px;padding:10px;background:#0f0f0f;border-radius:8px;margin-bottom:8px;'
 
         const rCircle = document.createElement('div')
-        rCircle.style.cssText = `width:34px;height:34px;border-radius:50%;border:1px solid ${couleur}88;background:${couleur}15;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:${couleur};flex-shrink:0;`
+        rCircle.style.cssText = `width:38px;height:38px;border-radius:50%;border:1px solid ${getTeamUiColor(couleur)}88;background:${getTeamSlotBg(couleur)};display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:${getTeamUiColor(couleur)};flex-shrink:0;`
         rCircle.textContent = rj.prenom[0] + rj.nom[0]
         rRow.appendChild(rCircle)
 
@@ -1496,9 +1529,9 @@
         const updateToutBtnStyle = () => {
           const currentAllSelected = seqNums.every(n => rempl.seqs.includes(n))
           if (currentAllSelected) {
-            toutBtn.style.cssText = `font-size:10px;padding:3px 6px;border-radius:4px;border:1px solid ${couleur};background:${couleur};color:#000;cursor:pointer;margin-right:6px;`
+            toutBtn.style.cssText = `font-size:11px;padding:5px 8px;border-radius:5px;border:1px solid ${getTeamUiColor(couleur)};background:${getTeamUiColor(couleur)};color:${getTeamTextColor(couleur)};cursor:pointer;margin-right:6px;`
           } else {
-            toutBtn.style.cssText = `font-size:10px;padding:3px 6px;border-radius:4px;border:1px solid #555;background:transparent;color:#888;cursor:pointer;margin-right:6px;`
+            toutBtn.style.cssText = `font-size:11px;padding:5px 8px;border-radius:5px;border:1px solid #555;background:transparent;color:#888;cursor:pointer;margin-right:6px;`
           }
         }
         updateToutBtnStyle()
@@ -1542,7 +1575,7 @@
           chip.className = 'seq-chip'
           const isOn = remplSeqs.includes(n)
           chip.style.cssText = isOn
-            ? `background:${couleur}33;border-color:${couleur};color:${couleur};cursor:pointer;`
+            ? `background:${getTeamUiColor(couleur)}33;border-color:${getTeamUiColor(couleur)};color:${getTeamUiColor(couleur)};cursor:pointer;`
             : `border-color:#2a2a2a;color:#333;cursor:pointer;`
           chip.textContent = n
           chip.title = isOn ? `Séquence ${n} assignée à ce remplaçant` : `Assigner séquence ${n}`
@@ -1620,7 +1653,7 @@
               chip.className = 'seq-chip'
               const isOn = assign.seqs.includes(n)
               chip.style.cssText = isOn
-                ? `background:${assign.couleur}33;border-color:${assign.couleur};color:${assign.couleur};`
+                ? `background:${getTeamUiColor(assign.couleur)}33;border-color:${getTeamUiColor(assign.couleur)};color:${getTeamUiColor(assign.couleur)};`
                 : `border-color:#0a0a0a;color:#0a0a0a;` // Même couleur que le fond
               chip.textContent = n
               assignSeqContainer.appendChild(chip)
@@ -1944,8 +1977,9 @@
       }
 
       equipes.forEach((eq, ei) => {
-        const headerTextColor = eq.couleur === '#FECC00' || eq.couleur.toLowerCase() === '#fecc00' ? '#000' : '#fff'
-        html += `<div class="team"><div class="team-header" style="border-color:${eq.couleur};background:${eq.couleur};color:${headerTextColor}">${eq.nom}</div><div class="terrain-print">`
+        const headerTextColor = getTeamTextColor(eq.couleur)
+        const headerBgColor = getTeamUiColor(eq.couleur)
+        html += `<div class="team"><div class="team-header" style="border-color:${headerBgColor};background:${headerBgColor};color:${headerTextColor}">${eq.nom}</div><div class="terrain-print">`
 
         // 1ère ligne
         html += `<div class="sous-label-print">1ère Ligne</div>`
@@ -2010,10 +2044,10 @@
                 const compText = rrepsComp > 0 ? `<span style="color:#c00;font-weight:700;font-size:6px">${rrepsComp}rep</span>` : '<span style="color:#1D9E75;font-size:6px">✓</span>'
 
                 html += `<div class="slot-rempl-print">`
-                html += `<div class="rempl-cercle-print" style="border-color:${eq.couleur}66">${posteIdx + 1}</div>`
+                html += `<div class="rempl-cercle-print" style="border-color:${getTeamUiColor(eq.couleur)}66">${posteIdx + 1}</div>`
                 html += `<div class="rempl-nom-print">${rj.nom}</div>`
                 if (r.seqs && r.seqs.length > 0) {
-                  html += `<div class="slot-seqs-print">${r.seqs.map(s => `<span class="seq-chip-print" style="background:${eq.couleur}22;border-color:${eq.couleur};color:#000">${s}</span>`).join('')}</div>`
+                  html += `<div class="slot-seqs-print">${r.seqs.map(s => `<span class="seq-chip-print" style="background:${getTeamUiColor(eq.couleur)}22;border-color:${getTeamUiColor(eq.couleur)};color:${getTeamTextColor(eq.couleur)}">${s}</span>`).join('')}</div>`
                 }
                 html += `<div style="margin-top:1px">${compText}</div>`
                 html += `</div>`
@@ -2056,21 +2090,21 @@
         const photoHtml = j.photo ? `<img src="${j.photo}" style="width:44px;height:44px;border-radius:50%;object-fit:cover;position:absolute;top:0;left:0;" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">` : ''
 
         let html = `<div class="slot-print" style="position:relative;">
-          <span class="slot-num-print" style="background:${equipe.couleur};color:#000;position:absolute;left:-8px;top:50%;transform:translateY(-50%);z-index:10;">${posteIdx + 1}</span>
-          <div class="slot-cercle-print filled" style="border-color:${equipe.couleur};display:flex;align-items:center;justify-content:center;overflow:hidden;position:relative;">
+          <span class="slot-num-print" style="background:${getTeamUiColor(equipe.couleur)};color:${getTeamTextColor(equipe.couleur)};position:absolute;left:-8px;top:50%;transform:translateY(-50%);z-index:10;">${posteIdx + 1}</span>
+          <div class="slot-cercle-print filled" style="border-color:${getTeamUiColor(equipe.couleur)};display:flex;align-items:center;justify-content:center;overflow:hidden;position:relative;">
             ${photoHtml}
-            <span style="font-size:11px;font-weight:700;color:${equipe.couleur};display:${j.photo ? 'none' : 'flex'};z-index:5;">${initiales}</span>
+            <span style="font-size:11px;font-weight:700;color:${getTeamUiColor(equipe.couleur)};display:${j.photo ? 'none' : 'flex'};z-index:5;">${initiales}</span>
           </div>
           <div class="slot-nom-print">${j.nom}</div>`
 
         if (seqs.length > 0) {
-          html += `<div class="slot-seqs-print">${seqs.map(s => `<span class="seq-chip-print" style="background:${equipe.couleur}22;border-color:${equipe.couleur};color:#000">${s}</span>`).join('')}</div>`
+          html += `<div class="slot-seqs-print">${seqs.map(s => `<span class="seq-chip-print" style="background:${getTeamUiColor(equipe.couleur)}22;border-color:${getTeamUiColor(equipe.couleur)};color:${getTeamTextColor(equipe.couleur)}">${s}</span>`).join('')}</div>`
         }
 
         if (showComp) {
-          html += `<div class="slot-stats-print"><span style="color:${equipe.couleur};font-weight:700">${pct}%</span> ${repsComp > 0 ? `<span class="comp">${repsComp}rep</span>` : '<span style="color:#1D9E75">✓</span>'}</div>`
+          html += `<div class="slot-stats-print"><span style="color:${getTeamUiColor(equipe.couleur)};font-weight:700">${pct}%</span> ${repsComp > 0 ? `<span class="comp">${repsComp}rep</span>` : '<span style="color:#1D9E75">✓</span>'}</div>`
         } else {
-          html += `<div class="slot-stats-print"><span style="color:${equipe.couleur};font-weight:700">${pct}%</span></div>`
+          html += `<div class="slot-stats-print"><span style="color:${getTeamUiColor(equipe.couleur)};font-weight:700">${pct}%</span></div>`
         }
 
         html += `</div>`
@@ -2729,8 +2763,8 @@ window.setPickerSort = function(mode) {
         
         const header = document.createElement('div')
         header.className = 'vision-seq-equipe-header'
-        header.style.background = equipe.couleur + '22'
-        header.style.color = equipe.couleur
+        header.style.background = getTeamUiColor(equipe.couleur) + '22'
+        header.style.color = getTeamUiColor(equipe.couleur)
         header.textContent = equipe.nom + ' — Rotations séquence ' + seqNum
         equipeDiv.appendChild(header)
         
@@ -2783,7 +2817,7 @@ window.setPickerSort = function(mode) {
           const tr = document.createElement('tr')
           if (isChange) tr.style.background = '#1D9E7508'
           tr.innerHTML = `
-            <td style="font-weight:700;color:${equipe.couleur}">${posteIdx+1}</td>
+            <td style="font-weight:700;color:${getTeamUiColor(equipe.couleur)}">${posteIdx+1}</td>
             <td style="font-weight:600;">${j ? j.nom + ' ' + j.prenom : '?'}${isChange ? ' <span class="vision-nouveau">↑</span>' : ''}</td>
             <td>${statut}</td>
             <td style="font-size:10px;">${info}</td>
@@ -2813,8 +2847,8 @@ window.setPickerSort = function(mode) {
 
         const header = document.createElement('div')
         header.className = 'vision-seq-equipe-header'
-        header.style.background = equipe.couleur + '22'
-        header.style.color = equipe.couleur
+        header.style.background = getTeamUiColor(equipe.couleur) + '22'
+        header.style.color = getTeamUiColor(equipe.couleur)
         header.textContent = `${equipe.nom} — Équipe séquence ${seqNum}`
         equipeDiv.appendChild(header)
 
@@ -2836,10 +2870,10 @@ window.setPickerSort = function(mode) {
           const isRemplacement = remplActif != null
 
           const cell = document.createElement('div')
-          cell.style.cssText = `padding:8px 10px;border-radius:8px;background:${joueurJid ? (isRemplacement ? equipe.couleur+'18' : '#111') : '#0a0a0a'};border:1px solid ${isRemplacement ? equipe.couleur+'44' : '#1a1a1a'};`
+          cell.style.cssText = `padding:8px 10px;border-radius:8px;background:${joueurJid ? (isRemplacement ? getTeamUiColor(equipe.couleur)+'18' : '#111') : '#0a0a0a'};border:1px solid ${isRemplacement ? getTeamUiColor(equipe.couleur)+'44' : '#1a1a1a'};`
 
           const numLabel = document.createElement('div')
-          numLabel.style.cssText = `font-size:9px;font-weight:700;color:${equipe.couleur};margin-bottom:2px;`
+          numLabel.style.cssText = `font-size:9px;font-weight:700;color:${getTeamUiColor(equipe.couleur)};margin-bottom:2px;`
           numLabel.textContent = `${posteIdx+1} · ${POSTES_NOM[posteIdx] || ''}`
           cell.appendChild(numLabel)
 
