@@ -4,25 +4,61 @@
   <meta charset="UTF-8">
   <title>SCA Albi — Vue TV</title>
   <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+    :root {
+      --bg: #0f0f0f;
+      --bg1: #111;
+      --bg2: #1a1a1a;
+      --border: #2a2a2a;
+      --text: #fff;
+      --text2: #888;
+      --text3: #555;
+      --yellow: #FECC00;
+      --green: #1D9E75;
+    }
     body {
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-      background: #0f0f0f; color: #fff;
-      height: 100vh; overflow: hidden;
-      display: flex; flex-direction: column;
+      background: var(--bg); color: var(--text);
+      display: flex; height: 100vh; overflow: hidden;
     }
 
-    /* TOPBAR TV */
-    .tv-topbar {
-      height: 60px; background: #1a1a1a;
-      border-bottom: 2px solid #FECC00;
-      display: flex; align-items: center;
-      padding: 0 28px; gap: 16px; flex-shrink: 0;
-    }
-    .tv-logo { width: 36px; }
-    .tv-title { font-size: 18px; font-weight: 700; color: #FECC00; flex: 1; }
-    .tv-date { font-size: 13px; color: #555; }
-    .tv-clock { font-size: 18px; font-weight: 600; color: #fff; min-width: 60px; text-align: right; }
+    /* SIDEBAR */
+    .sidebar { width: 220px; min-width: 220px; background: var(--bg2); border-right: 1px solid var(--border); display: flex; flex-direction: column; padding: 20px 0; overflow-y: auto; }
+    .sidebar-logo { display: flex; align-items: center; gap: 10px; padding: 0 20px 24px; border-bottom: 1px solid var(--border); }
+    .sidebar-logo img { width: 36px; height: 36px; object-fit: contain; border-radius: 6px; }
+    .sidebar-logo span { font-size: 15px; font-weight: 700; color: var(--yellow); }
+    .nav-section { padding: 16px 12px 8px; font-size: 10px; font-weight: 600; color: #444; letter-spacing: .08em; text-transform: uppercase; }
+    .nav-item { display: flex; align-items: center; gap: 10px; padding: 9px 20px; font-size: 13px; color: var(--text2); cursor: pointer; border-left: 2px solid transparent; transition: all .15s; text-decoration: none; }
+    .nav-item:hover { color: var(--text); background: #222; }
+    .nav-item.active { color: var(--yellow); border-left-color: var(--yellow); background: #222; }
+    .nav-dot { width: 7px; height: 7px; border-radius: 50%; background: currentColor; opacity: 0.6; }
+    .sidebar-bottom { margin-top: auto; padding: 16px 20px; border-top: 1px solid var(--border); }
+    .user-info { font-size: 12px; color: var(--text3); margin-bottom: 8px; }
+    .logout-btn { font-size: 12px; color: var(--text3); cursor: pointer; background: none; border: none; }
+    .logout-btn:hover { color: #E24B4A; }
+
+    /* BOTTOM NAV */
+    .ipad-bottom-nav { display: none; position: fixed; bottom: 0; left: 0; right: 0; height: 64px; background: var(--bg1); border-top: 1px solid var(--border); justify-content: space-around; align-items: center; padding-bottom: env(safe-area-inset-bottom, 0); z-index: 50; }
+    .ipad-nav-item { display: flex; flex-direction: column; align-items: center; gap: 4px; text-decoration: none; color: #666; font-size: 10px; padding: 8px 10px; }
+    .ipad-nav-item.active { color: var(--yellow); }
+    .ipad-nav-icon { font-size: 22px; line-height: 1; }
+
+    /* MAIN */
+    .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+    .topbar { height: 56px; border-bottom: 1px solid var(--border); display: flex; align-items: center; padding: 0 20px; gap: 10px; flex-shrink: 0; flex-wrap: wrap; background: var(--bg); }
+    .topbar-title { font-size: 15px; font-weight: 600; flex: 1; display: flex; align-items: center; gap: 10px; }
+    .topbar-title .tv-clock { font-size: 15px; color: var(--text2); font-weight: 600; }
+    .topbar-controls { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    .content { flex: 1; overflow: hidden; display: flex; flex-direction: column; }
+
+    /* TV TOOLBAR */
+    .tv-toolbar { padding: 12px 20px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 10px; flex-wrap: wrap; background: var(--bg1); flex-shrink: 0; }
+    .tv-toolbar-group { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    .tv-toolbar-sep { width: 1px; height: 24px; background: var(--border); margin: 0 4px; }
+
+    /* TV TOPBAR LEGACY OVERRIDES */
+    .tv-date { font-size: 13px; color: var(--text3); }
+    .tv-clock { font-size: 15px; font-weight: 600; color: var(--text2); }
     .tv-btn {
       padding: 7px 16px; border-radius: 8px;
       border: 1px solid #2a2a2a; background: none;
@@ -79,6 +115,10 @@
       padding: 7px 12px; border-radius: 8px;
       border: 1px solid #2a2a2a; background: #1a1a1a;
       color: #fff; font-size: 13px; outline: none; max-width: 280px;
+    }
+    .tv-filter-select {
+      padding: 6px 10px; border-radius: 7px; border: 1px solid #2a2a2a;
+      background: #111; color: #fff; font-size: 12px; outline: none;
     }
 
     /* ZONE PRINCIPALE */
@@ -320,8 +360,7 @@
   <style>
   * { -webkit-tap-highlight-color: transparent; }
   input, select { font-size: 16px !important; }
-  .tv-btn { min-height: 44px !important; padding: 8px 16px !important; }
-  .bloc-nav-btn { min-height: 44px !important; padding: 8px 14px !important; }
+  .tv-btn, .bloc-nav-btn, .joueurs-filter-btn, .tv-home-btn, .btn-ghost { min-height: 44px !important; }
   .tv-home-btn {
     display: flex; align-items: center; gap: 6px;
     padding: 7px 12px; border-radius: 9px;
@@ -330,7 +369,7 @@
     text-decoration: none; white-space: nowrap;
   }
   .tv-home-btn:hover { color: #fff; border-color: #444; }
-  
+
   @keyframes spin {
     to { transform: rotate(360deg); }
   }
@@ -338,52 +377,123 @@
     animation: spin 1s linear infinite;
     color: #FECC00 !important;
   }
+
+  /* Responsive : mobile / iPad portrait */
+  @media (max-width: 768px) {
+    .sidebar { display: none; }
+    .main { margin-bottom: 64px; }
+    .ipad-bottom-nav { display: flex; }
+    .topbar { padding: 0 12px; height: auto; min-height: 56px; }
+    .tv-toolbar { padding: 10px 12px; }
+    .tv-content { padding: 12px; }
+  }
   </style>
 
   <link rel="manifest" href="../manifest.json">
 </head>
 <body>
 
-  <div class="tv-topbar">
-    <img class="tv-logo" src="https://www.sca-albi.fr/wp-content/uploads/2023/10/cropped-SCA-bis.png" alt="SCA Logo">
-    <div style="color: #FECC00; font-weight: 700; font-size: 18px; display: flex; align-items: center; gap: 8px; margin-right: 12px; white-space: nowrap;">
-      SCA Albi
-      <button onclick="synchroniserGlobale()" id="tv-global-sync" style="background:none; border:none; color:#555; font-size:20px; cursor:pointer; padding:4px; display:inline-flex; align-items:center; justify-content:center; border-radius:50%; transition:all 0.2s; outline:none;" onmouseover="this.style.color='#fff'; this.style.background='#222'" onmouseout="this.style.color='#555'; this.style.background='none'" title="Synchroniser">↻</button>
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <img src="https://www.sca-albi.fr/wp-content/uploads/2023/10/cropped-SCA-bis.png" alt="SCA Logo">
+      <span>SCA Albi</span>
     </div>
-    <select class="tv-select" id="tv-seance-select" onchange="chargerSeance()">
-      <option value="">Sélectionner une séance...</option>
-    </select>
-    <button class="tv-btn active" id="btn-col" onclick="setVue('collective')">Collectif</button>
-    <button class="tv-btn" id="btn-ind" onclick="setVue('individuelle')">Individuel</button>
-    <div style="border-left:1px solid #2a2a2a;margin:0 8px;height:24px;"></div>
-    <select id="tv-filter-blesses" onchange="renderCollectif()" style="padding:5px 10px;border-radius:7px;border:1px solid #2a2a2a;background:#111;color:#fff;font-size:12px;outline:none;">
-      <option value="all">Tous les joueurs</option>
-      <option value="blesses">Uniquement blessés</option>
-      <option value="non-blesses">Exclure blessés</option>
-    </select>
-    <select id="tv-filter-ligne" onchange="onLigneFilterChange()" style="padding:5px 10px;border-radius:7px;border:1px solid #2a2a2a;background:#111;color:#fff;font-size:12px;outline:none;">
-      <option value="all">Toutes les lignes</option>
-      <option value="avants">Avants</option>
-      <option value="3/4">3/4</option>
-      <option value="arriere">Arrière</option>
-    </select>
-    <button class="joueurs-filter-btn" id="btn-filtre-joueurs" onclick="ouvrirModalJoueurs()">Joueurs ▼</button>
-    
-    <!-- Navigation blocs -->
-    <div class="bloc-nav" id="bloc-nav-container" style="display:none;">
-      <button class="bloc-nav-btn" id="btn-bloc-prev" onclick="changeBloc(-1)">◀ Préc</button>
-      <span class="bloc-counter" id="bloc-counter">Bloc 1/4</span>
-      <button class="bloc-nav-btn" id="btn-bloc-next" onclick="changeBloc(1)">Suiv ▶</button>
-      <button class="bloc-nav-btn primary" id="btn-voir-tous" onclick="toggleVoirTousBlocs()" style="margin-left:8px;">Voir tous</button>
+    <div class="nav-section">Musculation</div>
+    <a class="nav-item" href="seances.html"><span class="nav-dot"></span> Séances</a>
+    <a class="nav-item" href="fiches-seances.html"><span class="nav-dot"></span> Fiches Séances</a>
+    <a class="nav-item" href="suivi-poids.html"><span class="nav-dot"></span> Suivi Poids</a>
+    <div class="nav-section">Planning</div>
+    <a class="nav-item" href="planning.html"><span class="nav-dot"></span> Planning club</a>
+    <div class="nav-section">Équipes</div>
+    <a class="nav-item" href="equipes.html"><span class="nav-dot"></span> Composition équipes</a>
+    <div class="nav-section">GPS</div>
+    <a class="nav-item" href="gps-planif.html"><span class="nav-dot"></span> Planification charge</a>
+    <div class="nav-section">Affichage</div>
+    <a class="nav-item active" href="tv.html"><span class="nav-dot"></span> Vue TV</a>
+    <div class="sidebar-bottom">
+      <div class="user-info" id="user-info"></div>
+      <button class="logout-btn" onclick="logout()">Se déconnecter</button>
     </div>
-    
-    <div class="tv-date" id="tv-date"></div>
-        <a class="tv-home-btn" href="index.html">⌂ Accueil</a>
-    <button class="tv-btn" onclick="logout()">Déconnexion</button>
-    <div class="tv-clock" id="tv-clock"></div>
-  </div>
+  </aside>
 
-  <div class="tv-content">
+  <nav class="ipad-bottom-nav">
+    <a class="ipad-nav-item" href="planning.html">
+      <span class="ipad-nav-icon">📅</span>
+      <span>Planning</span>
+    </a>
+    <a class="ipad-nav-item" href="fiches-seances.html">
+      <span class="ipad-nav-icon">🏉</span>
+      <span>Séances</span>
+    </a>
+    <a class="ipad-nav-item" href="equipes.html">
+      <span class="ipad-nav-icon">👥</span>
+      <span>Équipes</span>
+    </a>
+    <a class="ipad-nav-item" href="gps-planif.html">
+      <span class="ipad-nav-icon">📡</span>
+      <span>GPS</span>
+    </a>
+    <a class="ipad-nav-item" href="seances.html">
+      <span class="ipad-nav-icon">🏋️</span>
+      <span>Muscu</span>
+    </a>
+    <a class="ipad-nav-item" href="suivi-poids.html">
+      <span class="ipad-nav-icon">⚖️</span>
+      <span>Poids</span>
+    </a>
+    <a class="ipad-nav-item active" href="tv.html">
+      <span class="ipad-nav-icon">📺</span>
+      <span>TV</span>
+    </a>
+  </nav>
+
+  <div class="main">
+    <div class="topbar">
+      <div class="topbar-title">
+        <span id="tv-title">SCA Albi — Vue TV</span>
+        <span class="tv-clock" id="tv-clock"></span>
+      </div>
+      <div class="topbar-controls">
+        <select class="tv-select" id="tv-seance-select" onchange="chargerSeance()">
+          <option value="">Sélectionner une séance...</option>
+        </select>
+        <button class="tv-btn active" id="btn-col" onclick="setVue('collective')">Collectif</button>
+        <button class="tv-btn" id="btn-ind" onclick="setVue('individuelle')">Individuel</button>
+        <button onclick="synchroniserGlobale()" id="tv-global-sync" class="btn-ghost" title="Synchroniser">↻</button>
+        <a class="tv-home-btn" href="index.html">⌂ Accueil</a>
+        <button class="btn-ghost" onclick="logout()">Déconnexion</button>
+      </div>
+    </div>
+
+    <div class="tv-toolbar">
+      <div class="tv-toolbar-group">
+        <select class="tv-filter-select" id="tv-filter-blesses" onchange="renderCollectif()">
+          <option value="all">Tous les joueurs</option>
+          <option value="blesses">Uniquement blessés</option>
+          <option value="non-blesses">Exclure blessés</option>
+        </select>
+        <select class="tv-filter-select" id="tv-filter-ligne" onchange="onLigneFilterChange()">
+          <option value="all">Toutes les lignes</option>
+          <option value="avants">Avants</option>
+          <option value="3/4">3/4</option>
+          <option value="arriere">Arrière</option>
+        </select>
+        <button class="joueurs-filter-btn" id="btn-filtre-joueurs" onclick="ouvrirModalJoueurs()">Joueurs ▼</button>
+      </div>
+      <div class="tv-toolbar-sep"></div>
+      <div class="bloc-nav" id="bloc-nav-container" style="display:none;">
+        <button class="bloc-nav-btn" id="btn-bloc-prev" onclick="changeBloc(-1)">◀ Préc</button>
+        <span class="bloc-counter" id="bloc-counter">Bloc 1/4</span>
+        <button class="bloc-nav-btn" id="btn-bloc-next" onclick="changeBloc(1)">Suiv ▶</button>
+        <button class="bloc-nav-btn primary" id="btn-voir-tous" onclick="toggleVoirTousBlocs()" style="margin-left:8px;">Voir tous</button>
+      </div>
+      <div class="tv-toolbar-group" style="margin-left:auto;">
+        <span class="tv-date" id="tv-date"></span>
+      </div>
+    </div>
+
+    <div class="content">
+      <div class="tv-content">
     <div class="vue-collective" id="vue-collective">
       <div class="blocs-scroll" id="blocs-scroll">
         <div class="empty-state">Sélectionne une séance ci-dessus</div>
@@ -405,6 +515,8 @@
       </div>
       <div class="indiv-header" id="indiv-header"></div>
       <div class="indiv-blocs" id="indiv-blocs"></div>
+    </div>
+      </div>
     </div>
   </div>
   
@@ -556,6 +668,8 @@
       if (!user) {
         window.location.href = 'login.html'
       }
+      const userInfo = document.getElementById('user-info')
+      if (userInfo && user) userInfo.textContent = user.email || 'Connecté'
     })
 
     let joueurs = []
@@ -712,8 +826,10 @@
         } catch(e) {}
       }))
 
-      document.getElementById('tv-title').textContent =
-        'SCA Albi — ' + formatDate(seanceActive.date) + ' · ' + (seanceActive.theme || '')
+      const tvTitle = document.getElementById('tv-title')
+      if (tvTitle) {
+        tvTitle.textContent = 'SCA Albi — ' + formatDate(seanceActive.date) + ' · ' + (seanceActive.theme || '')
+      }
 
       renderCollectif()
     }
