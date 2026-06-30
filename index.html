@@ -203,6 +203,8 @@
       .card.wide { grid-column: 1 / -1; }
     }
   </style>
+  <link rel="manifest" href="../manifest.json">
+  <script type="module" src="auth.js"></script>
 </head>
 <body>
 
@@ -217,6 +219,7 @@
       <div class="day" id="date-day"></div>
       <div class="month" id="date-month"></div>
     </div>
+    <button onclick="logout()" style="background:none;border:1px solid #333;color:#888;border-radius:8px;padding:8px 12px;font-size:12px;cursor:pointer;margin-left:8px;">Déconnexion</button>
   </div>
 </header>
 
@@ -241,7 +244,7 @@
   </a>
 
   <!-- Équipes entraînement -->
-  <a class="card card-equipes" href="equipes.html?mode=entrainement">
+  <a class="card card-equipes" href="equipes.html">
     <div class="card-icon">👥</div>
     <div class="card-body">
       <div class="card-title"><span class="card-title-dot"></span>Équipes</div>
