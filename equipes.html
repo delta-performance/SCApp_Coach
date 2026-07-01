@@ -1030,6 +1030,7 @@
       const cercle = document.createElement('div')
       cercle.className = small ? 'rempl-cercle' : 'entr-cercle'
       cercle.style.cssText = `border-color:${getTeamUiColor(equipe.couleur)}; background:${getTeamSlotBg(equipe.couleur)}; position:relative;`
+
       if (!j) {
         cercle.style.borderStyle = 'dashed'
         cercle.style.borderColor = '#2a2a2a'
@@ -1069,6 +1070,13 @@
             }, jid)
           }
         }
+      }
+      // Numéro de poste visible (ajouté après innerHTML pour ne pas être écrasé)
+      if (!small) {
+        const numBadge = document.createElement('div')
+        numBadge.style.cssText = `position:absolute;top:-8px;left:-8px;background:${getTeamUiColor(equipe.couleur)};color:${getTeamTextColor(equipe.couleur)};font-size:9px;font-weight:700;width:18px;height:18px;border-radius:50%;display:flex;align-items:center;justify-content:center;z-index:5;`
+        numBadge.textContent = num
+        cercle.appendChild(numBadge)
       }
       slot.appendChild(cercle)
 
@@ -2719,6 +2727,7 @@ window.setPickerSort = function(mode) {
 
     // ==================== VISION SEQUENCES ====================
     let visionSeqMode = 'rotations'
+    const DISPLAY_ORDER = [0,1,2, 3,4, 5,7,6, 8,9, 10,11,12,13, 14]
 
     window.setVisionMode = function(mode) {
       visionSeqMode = mode
@@ -2785,7 +2794,8 @@ window.setPickerSort = function(mode) {
         table.appendChild(thead)
         const tbody = document.createElement('tbody')
 
-        equipe.titulaires.forEach((tituJid, posteIdx) => {
+        DISPLAY_ORDER.forEach(posteIdx => {
+          const tituJid = equipe.titulaires[posteIdx]
           if (!tituJid) return
           const tituSeqKey = ei + '_' + tituJid
           const tituSeqs = sequencesMap[tituSeqKey] || []
@@ -2957,46 +2967,84 @@ window.setPickerSort = function(mode) {
         header.textContent = `${equipe.nom} — Équipe séquence ${seqNum}`
         equipeDiv.appendChild(header)
 
-        // Construire l'équipe pour cette séquence
-        const POSTES_NOM = ['Pilier G','Talonneur','Pilier D','2e Ligne G','2e Ligne D','3L Aile G','3L Centre','3L Aile D','Demi mêlée','Demi ouv.','Ailier G','Centre G','Centre D','Ailier D','Arrière']
+        // Terrain layout identique à la création d'équipe (sans edit/séquences)
         const prEq = posteRemplacants[ei] || {}
+        const teamColor = getTeamUiColor(equipe.couleur)
+        const teamTextColor = getTeamTextColor(equipe.couleur)
 
-        const terrain = document.createElement('div')
-        terrain.style.cssText = 'display:grid;grid-template-columns:repeat(3,1fr);gap:6px;padding:8px;'
-
-        equipe.titulaires.forEach((tituJid, posteIdx) => {
+        function makeVisionCell(posteIdx) {
+          const tituJid = equipe.titulaires[posteIdx]
           const remplsPoste = prEq[posteIdx] || []
           const remplActif = remplsPoste.find(r => r.seqs && r.seqs.includes(seqNum))
           const tituSeqs = tituJid ? (sequencesMap[ei + '_' + tituJid] || []) : []
           const tituActif = tituJid && (tituSeqs.length === 0 || tituSeqs.includes(seqNum)) && !remplActif
-
           const joueurJid = remplActif ? remplActif.jid : (tituActif ? tituJid : null)
           const j = getJ(joueurJid)
           const isRemplacement = remplActif != null
 
           const cell = document.createElement('div')
-          cell.style.cssText = `padding:8px 10px;border-radius:8px;background:${joueurJid ? (isRemplacement ? getTeamUiColor(equipe.couleur)+'18' : '#111') : '#0a0a0a'};border:1px solid ${isRemplacement ? getTeamUiColor(equipe.couleur)+'44' : '#1a1a1a'};`
+          cell.style.cssText = 'display:flex;flex-direction:column;align-items:center;gap:2px;min-width:60px;max-width:75px;'
 
-          const numLabel = document.createElement('div')
-          numLabel.style.cssText = `font-size:9px;font-weight:700;color:${getTeamUiColor(equipe.couleur)};margin-bottom:2px;`
-          numLabel.textContent = `${posteIdx+1} · ${POSTES_NOM[posteIdx] || ''}`
-          cell.appendChild(numLabel)
+          const cercle = document.createElement('div')
+          cercle.style.cssText = `width:44px;height:44px;border-radius:50%;border:2px solid ${joueurJid ? teamColor : '#2a2a2a'};background:${joueurJid ? (isRemplacement ? teamColor+'18' : getTeamSlotBg(equipe.couleur)) : 'transparent'};display:flex;align-items:center;justify-content:center;position:relative;${!joueurJid ? 'border-style:dashed;' : ''}`
 
-          const nomLabel = document.createElement('div')
-          nomLabel.style.cssText = `font-size:12px;font-weight:600;color:${joueurJid ? '#fff' : '#333'};`
-          nomLabel.textContent = j ? j.nom + ' ' + j.prenom : '—'
-          cell.appendChild(nomLabel)
+          const numBadge = document.createElement('div')
+          numBadge.style.cssText = `position:absolute;top:-8px;left:-8px;background:${teamColor};color:${teamTextColor};font-size:9px;font-weight:700;width:18px;height:18px;border-radius:50%;display:flex;align-items:center;justify-content:center;z-index:5;`
+          numBadge.textContent = posteIdx + 1
+          cercle.appendChild(numBadge)
+
+          if (j) {
+            if (j.photo) {
+              const img = document.createElement('img')
+              img.src = j.photo
+              img.style.cssText = 'width:100%;height:100%;border-radius:50%;object-fit:cover;'
+              img.onerror = () => { img.style.display = 'none'; cercle.querySelector('.init-span').style.display = 'flex' }
+              cercle.appendChild(img)
+            }
+            const init = document.createElement('span')
+            init.className = 'init-span'
+            init.style.cssText = `font-size:11px;font-weight:700;color:${teamColor};display:${j.photo ? 'none' : 'flex'};`
+            init.textContent = j.prenom[0] + j.nom[0]
+            cercle.appendChild(init)
+          } else {
+            const dash = document.createElement('span')
+            dash.style.cssText = 'color:#333;font-size:14px;'
+            dash.textContent = '—'
+            cercle.appendChild(dash)
+          }
+          cell.appendChild(cercle)
+
+          const nomEl = document.createElement('div')
+          nomEl.style.cssText = 'font-size:9px;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;width:100%;color:#fff;'
+          nomEl.textContent = j ? j.nom : '—'
+          cell.appendChild(nomEl)
 
           if (isRemplacement && tituJid) {
             const tituJ = getJ(tituJid)
-            const replLabel = document.createElement('div')
-            replLabel.style.cssText = 'font-size:9px;color:#E24B4A;margin-top:2px;'
-            replLabel.textContent = `↩ ${tituJ ? tituJ.nom : '?'}`
-            cell.appendChild(replLabel)
+            const replEl = document.createElement('div')
+            replEl.style.cssText = 'font-size:8px;color:#E24B4A;text-align:center;'
+            replEl.textContent = `↩ ${tituJ ? tituJ.nom : '?'}`
+            cell.appendChild(replEl)
           }
 
-          terrain.appendChild(cell)
-        })
+          return cell
+        }
+
+        function makeLigneEl(posteIdxs) {
+          const ligne = document.createElement('div')
+          ligne.className = 'ligne-entr'
+          posteIdxs.forEach(p => ligne.appendChild(makeVisionCell(p)))
+          return ligne
+        }
+
+        const terrain = document.createElement('div')
+        terrain.className = 'terrain-entr'
+        terrain.appendChild(makeLigneEl([0,1,2]))
+        terrain.appendChild(makeLigneEl([3,4]))
+        terrain.appendChild(makeLigneEl([5,7,6]))
+        terrain.appendChild(makeLigneEl([8,9]))
+        terrain.appendChild(makeLigneEl([10,11,12,13]))
+        terrain.appendChild(makeLigneEl([14]))
 
         equipeDiv.appendChild(terrain)
         content.appendChild(equipeDiv)
