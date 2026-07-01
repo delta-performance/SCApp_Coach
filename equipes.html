@@ -542,6 +542,8 @@
   </style>
 
   <link rel="manifest" href="../manifest.json">
+  <link rel="stylesheet" href="theme.css">
+  <script src="theme.js"></script>
 </head>
 <body>
   <!-- iPad TopBar -->
@@ -552,6 +554,7 @@
     </a>
     <div class="ipad-topbar-sep"></div>
     <div class="ipad-topbar-title">Équipes — Entraînement</div>
+    <button class="theme-toggle-btn" onclick="toggleTheme()"><span class="theme-icon">☀️</span></button>
     <button class="btn-ghost" onclick="logout()" style="margin-left:auto;min-height:36px;font-size:12px;">Déconnexion</button>
   </div>
   <!-- Bottom Nav -->
@@ -2816,7 +2819,14 @@ window.setPickerSort = function(mode) {
           else statut = prevActive ? 'En jeu' : '<span class="vision-nouveau">ENTRANT</span>'
 
           let info = ''
-          if (remplActif) {
+          if (isChange && prevJoueur) {
+            const prevJ = getJ(prevJoueur)
+            if (joueurSurTerrain === tituJid) {
+              info = `<span style="color:#E24B4A;font-size:9px;">↓ ${prevJ ? prevJ.nom : '?'} sort</span>`
+            } else if (remplActif) {
+              info = `<span style="color:#888;font-size:9px;">↩ remplace ${prevJ ? prevJ.nom : '?'}</span>`
+            }
+          } else if (remplActif) {
             const tituJ = getJ(tituJid)
             info = `<span style="color:#888;font-size:9px;">↩ remplace ${tituJ ? tituJ.nom : '?'}</span>`
           }
