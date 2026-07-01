@@ -909,7 +909,7 @@
         const rangees = [
           titus.filter(t => [1,2,3].includes(t.num)),
           titus.filter(t => [4,5].includes(t.num)),
-          titus.filter(t => [6,7,8].includes(t.num)),
+          titus.filter(t => [6,7,8].includes(t.num)).sort((a,b) => [6,8,7].indexOf(a.num) - [6,8,7].indexOf(b.num)),
           titus.filter(t => [9,10].includes(t.num)),
           titus.filter(t => [11,12,13,14].includes(t.num)),
           titus.filter(t => [15].includes(t.num)),
@@ -2007,12 +2007,12 @@
         }
         html += `</div>`
 
-        // 3ème ligne
+        // 3ème ligne (ordre rugby: 6-8-7)
         html += `<div class="sous-label-print">3ème Ligne</div>`
         html += `<div class="ligne-print">`
-        for (let i = 5; i < 8; i++) {
+        [5, 7, 6].forEach(i => {
           html += renderSlotPrint(ei, i, eq, nbSeq, distRep, showComp)
-        }
+        })
         html += `</div>`
 
         html += `<div class="sep-print"></div>`
@@ -2822,7 +2822,14 @@ window.setPickerSort = function(mode) {
           if (isChange && prevJoueur) {
             const prevJ = getJ(prevJoueur)
             if (joueurSurTerrain === tituJid) {
-              info = `<span style="color:#E24B4A;font-size:9px;">↓ ${prevJ ? prevJ.nom : '?'} sort</span>`
+              const dest = findJoueurInSeq(prevJoueur, seqNum, ei, posteIdx)
+              if (dest) {
+                const destEq = equipes[dest.ei]
+                const destColor = getTeamUiColor(destEq.couleur)
+                info = `<span style="color:${destColor};font-size:9px;">→ ${prevJ ? prevJ.nom : '?'} change en ${dest.posteIdx+1} ${destEq.nom}</span>`
+              } else {
+                info = `<span style="color:#E24B4A;font-size:9px;">↓ ${prevJ ? prevJ.nom : '?'} sort</span>`
+              }
             } else if (remplActif) {
               info = `<span style="color:#888;font-size:9px;">↩ remplace ${prevJ ? prevJ.nom : '?'}</span>`
             }
@@ -2849,9 +2856,90 @@ window.setPickerSort = function(mode) {
         }
 
         table.appendChild(tbody)
+
+        // Section Sortants / Changements
+        if (prevSeq) {
+          const sortants = collecterSortants(ei, prevSeq, seqNum)
+          if (sortants.length > 0) {
+            const sortDiv = document.createElement('div')
+            sortDiv.style.cssText = 'margin-top:10px;padding:8px 10px;background:#111;border:1px solid #2a2a2a;border-radius:8px;'
+            const sortTitle = document.createElement('div')
+            sortTitle.style.cssText = 'font-size:10px;font-weight:700;color:#E24B4A;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.05em;'
+            sortTitle.textContent = `Sortants / Changements (seq ${prevSeq} → ${seqNum})`
+            sortDiv.appendChild(sortTitle)
+
+            sortants.forEach(s => {
+              const row = document.createElement('div')
+              row.style.cssText = 'display:flex;align-items:center;gap:8px;padding:4px 0;font-size:11px;'
+              const j = getJ(s.jid)
+              if (s.dest) {
+                const destEq = equipes[s.dest.ei]
+                const destColor = getTeamUiColor(destEq.couleur)
+                row.innerHTML = `<span style="color:#888;min-width:80px;">${s.fromPoste+1} →</span><span style="font-weight:600;flex:1;">${j ? j.nom + ' ' + j.prenom : '?'}</span><span style="color:${destColor};font-size:10px;">→ ${s.dest.posteIdx+1} ${destEq.nom}</span>`
+              } else {
+                row.innerHTML = `<span style="color:#888;min-width:80px;">${s.fromPoste+1} →</span><span style="font-weight:600;flex:1;">${j ? j.nom + ' ' + j.prenom : '?'}</span><span style="color:#E24B4A;font-size:10px;">sort</span>`
+              }
+              sortDiv.appendChild(row)
+            })
+            equipeDiv.appendChild(sortDiv)
+          }
+        }
+
         equipeDiv.appendChild(table)
         content.appendChild(equipeDiv)
       })
+    }
+
+    function findJoueurInSeq(jid, seqNum, excludeEi, excludePosteIdx) {
+      for (let e = 0; e < equipes.length; e++) {
+        const eq = equipes[e]
+        const prEq = posteRemplacants[e] || {}
+        for (let p = 0; p < eq.titulaires.length; p++) {
+          if (e === excludeEi && p === excludePosteIdx) continue
+          const tituJid = eq.titulaires[p]
+          if (!tituJid) continue
+          const tituSeqs = sequencesMap[e + '_' + tituJid] || []
+          const remplsPoste = prEq[p] || []
+          const remplActif = remplsPoste.find(r => r.seqs && r.seqs.includes(seqNum))
+          if (remplActif && remplActif.jid === jid) return { ei: e, posteIdx: p, type: 'rempl' }
+          if (!remplActif && (tituSeqs.length === 0 || tituSeqs.includes(seqNum)) && tituJid === jid) return { ei: e, posteIdx: p, type: 'titu' }
+        }
+      }
+      return null
+    }
+
+    function collecterSortants(ei, prevSeq, seqNum) {
+      const equipe = equipes[ei]
+      const prEq = posteRemplacants[ei] || {}
+      const sortants = []
+      const seen = new Set()
+
+      for (let p = 0; p < equipe.titulaires.length; p++) {
+        const tituJid = equipe.titulaires[p]
+        if (!tituJid) continue
+
+        // Who was on the field at this position in prevSeq?
+        const prevRempl = (prEq[p] || []).find(r => r.seqs && r.seqs.includes(prevSeq))
+        const prevJoueur = prevRempl ? prevRempl.jid : null
+        const tituSeqs = sequencesMap[ei + '_' + tituJid] || []
+        const tituWasActive = !prevRempl && (tituSeqs.length === 0 || tituSeqs.includes(prevSeq))
+        const prevOnField = prevJoueur || (tituWasActive ? tituJid : null)
+
+        if (!prevOnField || seen.has(prevOnField)) continue
+
+        // Who is on the field at this position in seqNum?
+        const currRempl = (prEq[p] || []).find(r => r.seqs && r.seqs.includes(seqNum))
+        const currTituActive = !currRempl && (tituSeqs.length === 0 || tituSeqs.includes(seqNum))
+        const currOnField = currRempl ? currRempl.jid : (currTituActive ? tituJid : null)
+
+        // If the previous player is no longer at this position
+        if (prevOnField !== currOnField) {
+          seen.add(prevOnField)
+          const dest = findJoueurInSeq(prevOnField, seqNum, ei, p)
+          sortants.push({ jid: prevOnField, fromPoste: p, dest })
+        }
+      }
+      return sortants
     }
 
     function afficherVisionEquipe(seqNum) {
@@ -2870,7 +2958,7 @@ window.setPickerSort = function(mode) {
         equipeDiv.appendChild(header)
 
         // Construire l'équipe pour cette séquence
-        const POSTES_NOM = ['Pilier G','Talonneur','Pilier D','2e Ligne G','2e Ligne D','3L Aile G','3L Aile D','3L Centre','Demi mêlée','Demi ouv.','Ailier G','Centre G','Centre D','Ailier D','Arrière']
+        const POSTES_NOM = ['Pilier G','Talonneur','Pilier D','2e Ligne G','2e Ligne D','3L Aile G','3L Centre','3L Aile D','Demi mêlée','Demi ouv.','Ailier G','Centre G','Centre D','Ailier D','Arrière']
         const prEq = posteRemplacants[ei] || {}
 
         const terrain = document.createElement('div')
