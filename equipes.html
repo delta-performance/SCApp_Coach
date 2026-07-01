@@ -869,6 +869,11 @@
       const nbSeq = parseInt(document.getElementById('entr-nb-seq').value) || 10
       const distRep = parseFloat(document.getElementById('entr-dist-rep').value) || 35
       const seqNums = Array.from({ length: nbSeq }, (_, i) => i + 1)
+      // Nettoyer les séquences obsolètes qui dépassent nbSeq courant
+      Object.keys(sequencesMap).forEach(key => {
+        sequencesMap[key] = sequencesMap[key].filter(s => s <= nbSeq)
+        if (sequencesMap[key].length === 0) delete sequencesMap[key]
+      })
       // Note: les objectifs HI individuels sont maintenant dans planifObjectifs (chargés depuis Firebase)
 
       equipes.forEach((equipe, ei) => {
@@ -980,7 +985,7 @@
         const allRemplJids = Object.values(prEq).flat().map(r=>r.jid).filter(Boolean)
         const allJoueurs = [...new Set([...allTitus, ...allRemplJids])]
         const repsTotal = allTitus.reduce((a, jid) => {
-          const seqs = (sequencesMap[ei + '_' + jid] || []).length
+          const seqs = (sequencesMap[ei + '_' + jid] || []).filter(s => s <= nbSeq).length
           const hiJ = getObjectifHI(jid) || 500
           const hiDone = (seqs / nbSeq) * hiJ
           const diff = hiJ - hiDone
@@ -1005,7 +1010,7 @@
 
       const j = getJ(jid)
       const seqKey = ei + '_' + jid
-      const seqActives = jid ? (sequencesMap[seqKey] || []) : []
+      const seqActives = jid ? (sequencesMap[seqKey] || []).filter(s => s <= nbSeq) : []
       const nbF = seqActives.length
       // Utiliser l'objectif HI individuel du joueur pour aujourd'hui depuis gps-planif
       const hiJ = jid ? (getObjectifHI(jid) || 500) : 500
@@ -2079,7 +2084,7 @@
         }
 
         const seqKey = ei + '_' + jid
-        const seqs = sequencesMap[seqKey] || []
+        const seqs = (sequencesMap[seqKey] || []).filter(s => s <= nbSeq)
         const nbF = seqs.length
         const hiJ = getObjectifHI(jid) || 500
         const hiDone = nbSeq > 0 ? (nbF / nbSeq) * hiJ : 0
