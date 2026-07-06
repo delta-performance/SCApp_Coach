@@ -1079,12 +1079,69 @@
           return a + (diff > 0 ? Math.ceil(diff / distRep) : 0)
         }, 0)
 
+        // Séquences vides par poste
+        const seqVidesPostes = []
+        for (let pi = 0; pi < 15; pi++) {
+          const tituJidF = equipe.titulaires[pi]
+          const remplsPosteF = (prEq[pi] || []).filter(r => r.jid)
+          if (!tituJidF && remplsPosteF.length === 0) continue
+          const tituSeqsF = tituJidF ? (sequencesMap[ei + '_' + tituJidF] || []).filter(s => s <= nbSeq) : []
+          const covered = new Set()
+          if (tituSeqsF.length === 0 && tituJidF) {
+            seqNums.forEach(n => covered.add(n))
+          } else {
+            tituSeqsF.forEach(n => covered.add(n))
+          }
+          remplsPosteF.forEach(r => {
+            (r.seqs || []).forEach(n => { if (n <= nbSeq) covered.add(n) })
+          })
+          const vides = seqNums.filter(n => !covered.has(n))
+          if (vides.length > 0) {
+            seqVidesPostes.push({ poste: pi + 1, vides })
+          }
+        }
+
+        let videsHtml = ''
+        if (seqVidesPostes.length === 0) {
+          videsHtml = '<span style="color:#1D9E75;">Séq: toutes couvertes ✓</span>'
+        } else {
+          const videsStr = seqVidesPostes.map(p => `P${p.poste}[${p.vides.join(',')}]`).join(' ')
+          videsHtml = `<span style="color:#E24B4A;font-size:10px;" title="Séquences non couvertes par poste">Séq vides: ${videsStr}</span>`
+        }
+
+        // Doublons
+        const doublonsEq = detecterDoublonsSequences(nbSeq, ei)
+        let doublonsHtml = ''
+        if (doublonsEq.length > 0) {
+          const tooltip = doublonsEq.map(d => d.text).join('\n')
+          doublonsHtml = `<span style="color:#E24B4A;font-size:10px;cursor:help;" title="${tooltip.replace(/"/g, '&quot;')}">⚠ ${doublonsEq.length} doublon(s)</span>`
+        }
+
+        // Détection joueurs blessés/absents dans l'équipe
+        const blessesAbsents = []
+        allJoueurs.forEach(jid => {
+          const j = getJ(jid)
+          if (!j) return
+          const st = getEffectiveStatut(j)
+          if (st === 'blesse' || st === 'absent') {
+            blessesAbsents.push({ j, statut: st })
+          }
+        })
+        let alertHtml = ''
+        if (blessesAbsents.length > 0) {
+          const tooltip = blessesAbsents.map(a => `${a.j.nom} ${a.j.prenom} — ${a.statut === 'blesse' ? 'Blessé' : 'Absent'}`).join('\n')
+          alertHtml = `<span style="color:#E24B4A;font-size:10px;cursor:help;" title="${tooltip.replace(/"/g, '&quot;')}">⚠ ${blessesAbsents.length} blessé(s)/absent(s)</span>`
+        }
+
         const footer = document.createElement('div')
         footer.className = 'entr-footer'
         footer.innerHTML = `
           <span>${allJoueurs.length} joueurs</span>
           <span style="color:${getTeamUiColor(equipe.couleur)};" class="fv">${equipe.nom}</span>
           <span style="color:#E24B4A;">${repsTotal} rep. comp. total</span>
+          ${videsHtml}
+          ${doublonsHtml}
+          ${alertHtml}
         `
         card.appendChild(footer)
         c.appendChild(card)
@@ -2827,6 +2884,51 @@ window.setPickerSort = function(mode) {
     window.handleLogout = async function() {
       await signOut(auth)
       window.location.href = 'login.html'
+    }
+
+    // Détecter les doublons de séquences (même joueur, même séquence, plusieurs postes)
+    function detecterDoublonsSequences(nbSeq, filterEi) {
+      const doublons = []
+      const playerSeqs = {}
+      equipes.forEach((eq, ei) => {
+        eq.titulaires.forEach((jid, pi) => {
+          if (!jid) return
+          const seqs = (sequencesMap[ei + '_' + jid] || []).filter(s => s <= nbSeq)
+          seqs.forEach(n => {
+            if (!playerSeqs[jid]) playerSeqs[jid] = []
+            playerSeqs[jid].push({ seq: n, ei, posteIdx: pi, type: 'titu', equipe: eq.nom })
+          })
+        })
+        const prEqD = posteRemplacants[ei] || {}
+        Object.entries(prEqD).forEach(([pi, remplList]) => {
+          remplList.forEach(r => {
+            if (!r.jid || !r.seqs) return
+            r.seqs.filter(s => s <= nbSeq).forEach(n => {
+              if (!playerSeqs[r.jid]) playerSeqs[r.jid] = []
+              playerSeqs[r.jid].push({ seq: n, ei, posteIdx: parseInt(pi), type: 'rempl', equipe: eq.nom })
+            })
+          })
+        })
+      })
+      Object.entries(playerSeqs).forEach(([jid, assignments]) => {
+        const bySeq = {}
+        assignments.forEach(a => {
+          if (!bySeq[a.seq]) bySeq[a.seq] = []
+          bySeq[a.seq].push(a)
+        })
+        Object.entries(bySeq).forEach(([seq, locs]) => {
+          if (locs.length > 1) {
+            const filteredLocs = filterEi !== undefined ? locs.filter(l => l.ei === filterEi) : locs
+            if (filteredLocs.length > 1 || (filterEi !== undefined && locs.length > 1)) {
+              const j = getJ(jid)
+              const nom = j ? j.nom + ' ' + j.prenom : jid
+              const locsStr = locs.map(l => `${l.equipe} P${l.posteIdx + 1}(${l.type})`).join(', ')
+              doublons.push({ jid, nom, seq: parseInt(seq), locs, text: `${nom} — séquence ${seq}: ${locsStr}` })
+            }
+          }
+        })
+      })
+      return doublons
     }
 
     // ==================== VISION SEQUENCES ====================
