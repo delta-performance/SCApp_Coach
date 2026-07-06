@@ -440,6 +440,45 @@
       .pg-titre { color: #fff !important; }
       .pg-date { color: #aaa !important; }
     }
+
+    /* ============================================================
+       EQUIPES FG (Fitness Game)
+    ============================================================ */
+    .fg-setup { background: #1a1a1a; border: 1px solid #2a2a2a; border-radius: 12px; padding: 20px; margin-bottom: 16px; }
+    .fg-setup-title { font-size: 14px; font-weight: 700; color: #FECC00; margin-bottom: 16px; text-transform: uppercase; letter-spacing: .06em; }
+    .fg-setup-row { display: flex; align-items: flex-end; gap: 14px; flex-wrap: wrap; margin-bottom: 14px; }
+    .fg-setup-field { display: flex; flex-direction: column; gap: 4px; }
+    .fg-setup-field label { font-size: 10px; color: #555; text-transform: uppercase; letter-spacing: .06em; }
+    .fg-setup-field input, .fg-setup-field select { padding: 8px 12px; border-radius: 8px; border: 1px solid #2a2a2a; background: #0f0f0f; color: #fff; font-size: 14px; outline: none; width: 90px; }
+    .fg-setup-field input:focus { border-color: #FECC00; }
+    .fg-teams-config { display: flex; flex-direction: column; gap: 8px; margin-top: 12px; }
+    .fg-team-config-row { display: flex; align-items: center; gap: 10px; padding: 8px 12px; background: #0f0f0f; border: 1px solid #2a2a2a; border-radius: 8px; }
+    .fg-team-config-row .fg-tc-color { width: 14px; height: 14px; border-radius: 50%; flex-shrink: 0; }
+    .fg-team-config-row .fg-tc-label { font-size: 12px; font-weight: 600; color: #888; min-width: 70px; }
+    .fg-team-config-row input { padding: 5px 10px; border-radius: 6px; border: 1px solid #2a2a2a; background: #0f0f0f; color: #fff; font-size: 13px; outline: none; }
+    .fg-team-config-row input:focus { border-color: #FECC00; }
+    .fg-grid { display: grid; gap: 16px; }
+    .fg-card { background: #1a1a1a; border: 1px solid #2a2a2a; border-radius: 12px; overflow: hidden; }
+    .fg-card-header { padding: 10px 14px; display: flex; align-items: center; gap: 8px; border-bottom: 2px solid; }
+    .fg-card-header input { background: none; border: none; font-size: 14px; font-weight: 700; outline: none; flex: 1; color: #fff; }
+    .fg-card-count { font-size: 11px; color: #555; white-space: nowrap; }
+    .fg-card-body { padding: 10px; }
+    .fg-slot { display: flex; align-items: center; gap: 8px; padding: 10px 12px; border-radius: 8px; margin-bottom: 4px; cursor: pointer; transition: all .12s; border: 1px solid #2a2a2a; background: #0f0f0f; min-height: 44px; }
+    .fg-slot:hover { border-color: #FECC00; background: #FECC0008; }
+    .fg-slot.filled { border-color: #333; }
+    .fg-slot-num { font-size: 11px; font-weight: 700; color: #555; min-width: 20px; text-align: center; }
+    .fg-slot-name { flex: 1; font-size: 13px; color: #ccc; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .fg-slot.empty .fg-slot-name { color: #333; font-style: italic; }
+    .fg-slot-badge { font-size: 8px; font-weight: 700; padding: 2px 5px; border-radius: 3px; background: #FECC00; color: #000; white-space: nowrap; }
+    .fg-slot-badge.trial { background: #378ADD; color: #fff; }
+    .fg-slot-remove { font-size: 16px; color: #444; cursor: pointer; flex-shrink: 0; line-height: 1; }
+    .fg-slot-remove:hover { color: #E24B4A; }
+    .fg-confirm-modal { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8); display: none; align-items: center; justify-content: center; z-index: 200; }
+    .fg-confirm-modal.open { display: flex; }
+    .fg-confirm-box { background: #1a1a1a; border: 1px solid #2a2a2a; border-radius: 16px; padding: 24px; width: 400px; max-width: 90vw; }
+    .fg-confirm-title { font-size: 15px; font-weight: 700; margin-bottom: 10px; }
+    .fg-confirm-text { font-size: 13px; color: #aaa; margin-bottom: 18px; line-height: 1.5; white-space: pre-line; }
+    .fg-confirm-actions { display: flex; gap: 10px; justify-content: flex-end; }
   </style>
 
   <style>
@@ -539,6 +578,12 @@
     .entr-nom { font-size: 11px !important; }
     .entr-stats { font-size: 10px !important; }
   }
+  /* FG responsive */
+  @media (max-width: 640px) {
+    .fg-grid { grid-template-columns: 1fr !important; }
+    .fg-setup-row { flex-direction: column; align-items: stretch !important; }
+    .fg-setup-field input { width: 100% !important; }
+  }
   </style>
 
   <link rel="manifest" href="../manifest.json">
@@ -553,7 +598,11 @@
       <span class="ipad-topbar-sitename">SCA Albi</span>
     </a>
     <div class="ipad-topbar-sep"></div>
-    <div class="ipad-topbar-title">Équipes — Entraînement</div>
+    <div class="ipad-topbar-title">Équipes</div>
+    <div class="mode-toggle" style="margin-left:10px;">
+      <button class="mode-btn active" id="btn-entrainement" onclick="setMode('entrainement')">Entraînement</button>
+      <button class="mode-btn" id="btn-fg" onclick="setMode('fg')">Equipes FG</button>
+    </div>
     <button class="theme-toggle-btn" onclick="toggleTheme()"><span class="theme-icon">☀️</span></button>
     <button class="btn-ghost" onclick="logout()" style="margin-left:auto;min-height:36px;font-size:12px;">Déconnexion</button>
   </div>
@@ -651,6 +700,39 @@
         <div class="equipes-grid" id="equipes-grid"></div>
       </div>
 
+      <!-- ===== EQUIPES FG (Fitness Game) ===== -->
+      <div id="mode-fg" style="display:none">
+        <div class="fg-setup">
+          <div class="fg-setup-title">⚙️ Configuration des équipes Fitness Game</div>
+          <div class="fg-setup-row">
+            <div class="fg-setup-field">
+              <label>Nb d'équipes</label>
+              <input type="number" id="fg-nb-teams" value="2" min="1" max="12" onchange="onFGConfigChange()" />
+            </div>
+            <div class="fg-setup-field">
+              <label>Joueurs par défaut</label>
+              <input type="number" id="fg-default-size" value="5" min="1" max="20" onchange="onFGConfigChange()" />
+            </div>
+            <button class="btn-primary" onclick="fgGenerate()">Générer les équipes</button>
+            <button class="btn-ghost" onclick="fgClearAll()">Tout effacer</button>
+          </div>
+          <div class="fg-teams-config" id="fg-teams-config"></div>
+        </div>
+        <div class="fg-grid" id="fg-grid"></div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- FG CONFIRM MODAL -->
+  <div class="fg-confirm-modal" id="fg-confirm-modal">
+    <div class="fg-confirm-box">
+      <div class="fg-confirm-title" id="fg-confirm-title">Confirmer l'ajout</div>
+      <div class="fg-confirm-text" id="fg-confirm-text"></div>
+      <div class="fg-confirm-actions">
+        <button class="btn-ghost" onclick="fgCloseConfirm()">Annuler</button>
+        <button class="btn-primary" id="fg-confirm-btn">Forcer l'ajout</button>
+      </div>
     </div>
   </div>
 
@@ -731,6 +813,7 @@
     import { initializeApp } from './firebase-bundle.js'
     import { getAuth, onAuthStateChanged, signOut, setPersistence, browserLocalPersistence } from './firebase-bundle.js'
     import { getFirestore, collection, doc, setDoc, getDoc, getDocs } from './firebase-bundle.js'
+    import './update-check.js'
 
     const firebaseConfig = {
       apiKey: "AIzaSyCvMs-5LX9Ivk3OkzUR3iz9Kk1E5b9_7Vk",
@@ -782,6 +865,7 @@
     let pickerContext = null
     let pickerCurrentJid = null
     let pickerSortMode = 'alpha'
+    let currentMode = 'entrainement'
 
     // Modal gestion de poste
     let posteModalContext = null // { ei, posteIdx }
@@ -2578,10 +2662,30 @@ window.setPickerSort = function(mode) {
   customOpt.className = 'picker-item';
   customOpt.innerHTML = '<span style="color:#FECC00;font-style:italic;">+ Joueur personnalisé (sans nom)...</span>';
   customOpt.onclick = () => {
-    const customName = prompt('Nom du joueur personnalisé (laisser vide pour "Joueur personnalisé") :') || 'Joueur personnalisé';
-    const customId = 'custom_' + encodeURIComponent(customName);
-    if (pickerCallback) pickerCallback(customId);
-    fermerPicker();
+    customOpt.innerHTML = '';
+    customOpt.style.gap = '6px';
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.placeholder = 'Nom du joueur...';
+    input.style.cssText = 'flex:1;padding:6px 10px;border-radius:6px;border:1px solid #2a2a2a;background:#0f0f0f;color:#fff;font-size:16px;outline:none;';
+    input.onkeydown = (e) => {
+      if (e.key === 'Enter') { e.preventDefault(); confirmCustom(); }
+      if (e.key === 'Escape') { fermerPicker(); }
+    };
+    customOpt.appendChild(input);
+    const btn = document.createElement('button');
+    btn.textContent = '✓';
+    btn.className = 'btn-primary';
+    btn.style.cssText = 'padding:5px 10px;font-size:13px;';
+    const confirmCustom = () => {
+      const val = input.value.trim() || 'Joueur personnalisé';
+      const customId = 'custom_' + encodeURIComponent(val);
+      if (pickerCallback) pickerCallback(customId);
+      fermerPicker();
+    };
+    btn.onclick = confirmCustom;
+    customOpt.appendChild(btn);
+    input.focus();
   };
   c.appendChild(customOpt);
 
@@ -3069,6 +3173,339 @@ window.setPickerSort = function(mode) {
       try { await signOut(auth) } catch(e) {}
       window.location.href = 'login.html'
     }
+
+    // ==================== MODE TOGGLE ====================
+    window.setMode = function(mode) {
+      currentMode = mode
+      document.getElementById('mode-entrainement').style.display = mode === 'entrainement' ? 'block' : 'none'
+      document.getElementById('mode-fg').style.display = mode === 'fg' ? 'block' : 'none'
+      document.getElementById('btn-entrainement').classList.toggle('active', mode === 'entrainement')
+      document.getElementById('btn-fg').classList.toggle('active', mode === 'fg')
+      if (mode === 'fg') fgRender()
+    }
+
+    // ==================== EQUIPES FG (Fitness Game) ====================
+    const FG_COLORS = ['#FECC00','#E24B4A','#378ADD','#1D9E75','#7F77DD','#FF8C42','#00CED1','#FF69B4','#9ACD32','#FF6347','#40E0D0','#DA70D6']
+    let fgEquipes = []
+    let fgPickerCtx = null
+    let fgConfirmCb = null
+
+    function fgLoad() {
+      try {
+        const saved = JSON.parse(localStorage.getItem('sca_fg_equipes') || '[]')
+        if (saved.length) fgEquipes = saved
+      } catch(e) {}
+    }
+    function fgSave() {
+      localStorage.setItem('sca_fg_equipes', JSON.stringify(fgEquipes))
+    }
+
+    window.onFGConfigChange = function() {
+      const nb = parseInt(document.getElementById('fg-nb-teams').value) || 1
+      const defaultSize = parseInt(document.getElementById('fg-default-size').value) || 5
+      const cfg = document.getElementById('fg-teams-config')
+      cfg.innerHTML = ''
+      for (let i = 0; i < nb; i++) {
+        const row = document.createElement('div')
+        row.className = 'fg-team-config-row'
+        const color = FG_COLORS[i % FG_COLORS.length]
+        const existing = fgEquipes[i]
+        const teamName = existing?.nom || ('Équipe ' + (i + 1))
+        const teamSize = existing?.joueurs?.length || defaultSize
+        row.innerHTML = `
+          <div class="fg-tc-color" style="background:${color};"></div>
+          <span class="fg-tc-label">Équipe ${i + 1}</span>
+          <input type="text" value="${teamName}" placeholder="Nom" oninput="fgEquipes[${i}] ? (fgEquipes[${i}].nom=this.value, fgSave()) : null" style="width:140px;" />
+          <span style="font-size:10px;color:#555;">Nb joueurs:</span>
+          <input type="number" value="${teamSize}" min="1" max="20" onchange="fgUpdateTeamSize(${i}, this.value)" style="width:60px;" />
+        `
+        cfg.appendChild(row)
+      }
+    }
+
+    window.fgGenerate = function() {
+      const nb = parseInt(document.getElementById('fg-nb-teams').value) || 1
+      const defaultSize = parseInt(document.getElementById('fg-default-size').value) || 5
+      const oldEquipes = [...fgEquipes]
+      fgEquipes = []
+      for (let i = 0; i < nb; i++) {
+        const old = oldEquipes[i]
+        const size = old?.joueurs?.length || defaultSize
+        fgEquipes.push({
+          nom: old?.nom || ('Équipe ' + (i + 1)),
+          couleur: FG_COLORS[i % FG_COLORS.length],
+          joueurs: old?.joueurs || new Array(size).fill(null)
+        })
+      }
+      fgSave()
+      onFGConfigChange()
+      fgRender()
+    }
+
+    window.fgUpdateTeamSize = function(i, val) {
+      if (!fgEquipes[i]) return
+      const newSize = parseInt(val) || 1
+      const arr = fgEquipes[i].joueurs
+      if (newSize > arr.length) {
+        while (arr.length < newSize) arr.push(null)
+      } else {
+        arr.length = newSize
+      }
+      fgSave()
+      fgRender()
+    }
+
+    window.fgClearAll = function() {
+      if (!confirm('Effacer toutes les équipes FG ?')) return
+      fgEquipes = []
+      fgSave()
+      onFGConfigChange()
+      fgRender()
+    }
+
+    function fgGetUsedIds() {
+      const used = {}
+      fgEquipes.forEach((eq, ei) => {
+        (eq.joueurs || []).forEach(jid => {
+          if (jid) {
+            if (!used[jid]) used[jid] = []
+            used[jid].push(ei)
+          }
+        })
+      })
+      return used
+    }
+
+    function fgGetJ(jid) {
+      if (!jid) return null
+      if (typeof jid === 'string' && jid.startsWith('trial_')) {
+        const name = decodeURIComponent(jid.substring(6))
+        return { id: jid, nom: name, prenom: '', poste: '', trial: true }
+      }
+      return joueurs.find(j => j.id === jid) || null
+    }
+
+    window.fgRender = function() {
+      if (!fgEquipes.length) {
+        fgLoad()
+      }
+      if (!fgEquipes.length) {
+        onFGConfigChange()
+      }
+      const grid = document.getElementById('fg-grid')
+      grid.innerHTML = ''
+      if (!fgEquipes.length) {
+        grid.innerHTML = '<div style="text-align:center;padding:40px;color:#444;font-size:14px;">Configurez le nombre d\'équipes et cliquez sur "Générer les équipes"</div>'
+        return
+      }
+
+      const usedIds = fgGetUsedIds()
+      const nbTeams = fgEquipes.length
+      let cols = 2
+      if (nbTeams <= 2) cols = 2
+      else if (nbTeams <= 4) cols = 2
+      else if (nbTeams <= 6) cols = 3
+      else cols = 4
+      grid.style.gridTemplateColumns = `repeat(${cols}, 1fr)`
+
+      fgEquipes.forEach((eq, ei) => {
+        const card = document.createElement('div')
+        card.className = 'fg-card'
+        const header = document.createElement('div')
+        header.className = 'fg-card-header'
+        header.style.borderColor = eq.couleur
+        const filled = (eq.joueurs || []).filter(Boolean).length
+        header.innerHTML = `
+          <input type="text" value="${eq.nom}" oninput="fgEquipes[${ei}].nom=this.value; fgSave()" />
+          <span class="fg-card-count">${filled}/${eq.joueurs.length}</span>
+        `
+        card.appendChild(header)
+
+        const body = document.createElement('div')
+        body.className = 'fg-card-body'
+        ;(eq.joueurs || []).forEach((jid, pi) => {
+          const slot = document.createElement('div')
+          slot.className = 'fg-slot' + (jid ? ' filled' : ' empty')
+          const j = fgGetJ(jid)
+          const num = document.createElement('span')
+          num.className = 'fg-slot-num'
+          num.textContent = (pi + 1)
+          slot.appendChild(num)
+
+          const name = document.createElement('span')
+          name.className = 'fg-slot-name'
+          if (j) {
+            name.textContent = j.nom + (j.prenom ? ' ' + j.prenom : '')
+          } else {
+            name.textContent = '+ Ajouter un joueur'
+          }
+          slot.appendChild(name)
+
+          if (j && j.trial) {
+            const badge = document.createElement('span')
+            badge.className = 'fg-slot-badge trial'
+            badge.textContent = 'ESSAI'
+            slot.appendChild(badge)
+          } else if (jid && usedIds[jid] && usedIds[jid].length > 1) {
+            const badge = document.createElement('span')
+            badge.className = 'fg-slot-badge'
+            badge.textContent = '×' + usedIds[jid].length
+            slot.appendChild(badge)
+          }
+
+          if (jid) {
+            const rm = document.createElement('span')
+            rm.className = 'fg-slot-remove'
+            rm.textContent = '✕'
+            rm.onclick = (e) => { e.stopPropagation(); fgEquipes[ei].joueurs[pi] = null; fgSave(); fgRender() }
+            slot.appendChild(rm)
+          }
+
+          slot.onclick = () => {
+            fgPickerCtx = { ei, pi }
+            ouvrirPicker('Équipe ' + eq.nom + ' — Slot ' + (pi + 1), (pickedId) => {
+              if (pickedId === null) {
+                fgEquipes[ei].joueurs[pi] = null
+                fgSave()
+                fgRender()
+                return
+              }
+              const usedIn = usedIds[pickedId] || []
+              if (usedIn.length > 0) {
+                const jName = fgGetJ(pickedId)
+                const nameStr = jName ? (jName.nom + (jName.prenom ? ' ' + jName.prenom : '')) : pickedId
+                const teamNames = usedIn.map(t => fgEquipes[t].nom).join(', ')
+                fgShowConfirm(
+                  'Joueur déjà ajouté',
+                  `"${nameStr}" est déjà dans: ${teamNames}.\nVoulez-vous l'ajouter aussi à "${eq.nom}" ?`,
+                  () => {
+                    fgEquipes[ei].joueurs[pi] = pickedId
+                    fgSave()
+                    fgRender()
+                  }
+                )
+              } else {
+                fgEquipes[ei].joueurs[pi] = pickedId
+                fgSave()
+                fgRender()
+              }
+            }, jid)
+          }
+          body.appendChild(slot)
+        })
+        card.appendChild(body)
+        grid.appendChild(card)
+      })
+    }
+
+    window.fgShowConfirm = function(title, text, onConfirm) {
+      document.getElementById('fg-confirm-title').textContent = title
+      document.getElementById('fg-confirm-text').textContent = text
+      fgConfirmCb = onConfirm
+      const btn = document.getElementById('fg-confirm-btn')
+      btn.onclick = () => { if (fgConfirmCb) fgConfirmCb(); fgCloseConfirm() }
+      document.getElementById('fg-confirm-modal').classList.add('open')
+    }
+
+    window.fgCloseConfirm = function() {
+      document.getElementById('fg-confirm-modal').classList.remove('open')
+      fgConfirmCb = null
+    }
+
+    // Override filtrerPicker to support FG mode
+    const _origFiltrerPicker = window.filtrerPicker
+    window.filtrerPicker = function() {
+      if (currentMode !== 'fg') { _origFiltrerPicker(); return }
+      const q = (document.getElementById('picker-search').value || '').toLowerCase()
+      const c = document.getElementById('picker-list')
+      c.innerHTML = ''
+
+      const usedIds = fgGetUsedIds()
+
+      // Vider
+      const vide = document.createElement('div')
+      vide.className = 'picker-item'
+      vide.innerHTML = '<span style="color:#555;font-style:italic;">— Vider le slot —</span>'
+      vide.onclick = () => { if (pickerCallback) pickerCallback(null); fermerPicker() }
+      c.appendChild(vide)
+
+      // Joueur personnalisé (inline input)
+      const customOpt = document.createElement('div')
+      customOpt.className = 'picker-item'
+      customOpt.innerHTML = '<span style="color:#FECC00;font-style:italic;">+ Joueur personnalisé...</span>'
+      customOpt.onclick = () => {
+        customOpt.innerHTML = ''
+        customOpt.style.gap = '6px'
+        const input = document.createElement('input')
+        input.type = 'text'
+        input.placeholder = 'Nom du joueur...'
+        input.style.cssText = 'flex:1;padding:6px 10px;border-radius:6px;border:1px solid #2a2a2a;background:#0f0f0f;color:#fff;font-size:16px;outline:none;'
+        input.onkeydown = (e) => {
+          if (e.key === 'Enter') { e.preventDefault(); confirmCustom() }
+          if (e.key === 'Escape') { fermerPicker() }
+        }
+        customOpt.appendChild(input)
+        const btn = document.createElement('button')
+        btn.textContent = '✓'
+        btn.className = 'btn-primary'
+        btn.style.cssText = 'padding:5px 10px;font-size:13px;'
+        const confirmCustom = () => {
+          const val = input.value.trim() || 'Joueur personnalisé'
+          const customId = 'custom_' + encodeURIComponent(val)
+          if (pickerCallback) pickerCallback(customId)
+          fermerPicker()
+        }
+        btn.onclick = confirmCustom
+        customOpt.appendChild(btn)
+        input.focus()
+      }
+      c.appendChild(customOpt)
+
+      const filtered = joueurs.filter(j => (j.nom + ' ' + j.prenom).toLowerCase().includes(q))
+      const dejaAjoutes = filtered.filter(j => usedIds[j.id] && usedIds[j.id].length > 0)
+      const disponibles = filtered.filter(j => !usedIds[j.id])
+
+      const createCatHeader = (title, color) => {
+        const h = document.createElement('div')
+        h.style.cssText = `padding: 8px 10px; font-size: 11px; font-weight: 600; color: ${color}; text-transform: uppercase; letter-spacing: 0.08em; border-bottom: 1px solid #2a2a2a; margin-top: 4px;`
+        h.textContent = `-- ${title} --`
+        return h
+      }
+
+      const createItem = (j, isUsed) => {
+        const item = document.createElement('div')
+        item.className = 'picker-item'
+        const teamsIn = usedIds[j.id] || []
+        const usedBadge = isUsed ? `<span style="background:#FECC00;font-size:9px;padding:2px 5px;border-radius:3px;color:#000;margin-left:5px;font-weight:600;">${teamsIn.length > 1 ? '×' + teamsIn.length : 'DÉJÀ'}</span>` : ''
+        item.innerHTML = `
+          <div style="width:8px;height:8px;border-radius:50%;background:#1D9E75;flex-shrink:0;"></div>
+          <div class="picker-nom">${j.nom} ${j.prenom}${usedBadge}</div>
+          <div class="picker-poste">${j.poste||''}</div>
+        `
+        if (isUsed) { item.style.opacity = '0.7'; item.style.background = '#252518' }
+        item.onclick = () => { if (pickerCallback) pickerCallback(j.id); fermerPicker() }
+        return item
+      }
+
+      const sortFn = (arr) => {
+        if (pickerSortMode === 'poste') {
+          return arr.sort((a,b) => { const d = getPosteIndex(a.poste) - getPosteIndex(b.poste); return d !== 0 ? d : a.nom.localeCompare(b.nom) })
+        }
+        return arr.sort((a,b) => a.nom.localeCompare(b.nom))
+      }
+
+      if (disponibles.length > 0) {
+        c.appendChild(createCatHeader('dispo', '#1D9E75'))
+        sortFn(disponibles).forEach(j => c.appendChild(createItem(j, false)))
+      }
+      if (dejaAjoutes.length > 0) {
+        c.appendChild(createCatHeader('déjà ajouté', '#FECC00'))
+        sortFn(dejaAjoutes).forEach(j => c.appendChild(createItem(j, true)))
+      }
+    }
+
+    // Init FG on load
+    fgLoad()
   </script>
 </body>
 </html>
