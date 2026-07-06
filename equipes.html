@@ -775,6 +775,7 @@
       </div>
       <div class="vision-seq-container">
         <div class="vision-seq-header" id="vision-seq-buttons"></div>
+        <div id="vision-seq-alert"></div>
         <div class="vision-seq-content" id="vision-seq-content"></div>
       </div>
       <div class="modal-actions">
@@ -2863,10 +2864,58 @@ window.setPickerSort = function(mode) {
       document.getElementById('modal-vision-seq').classList.remove('open')
     }
 
+    function renderVisionSeqAlert(seqNum) {
+      const alertEl = document.getElementById('vision-seq-alert')
+      if (!alertEl) return
+      const prevSeq = seqNum > 1 ? seqNum - 1 : null
+      const alerts = []
+      equipes.forEach((equipe, ei) => {
+        const prEq = (posteRemplacants[ei] || {})
+        DISPLAY_ORDER.forEach(posteIdx => {
+          const tituJid = equipe.titulaires[posteIdx]
+          if (!tituJid) return
+          const tituSeqs = sequencesMap[ei + '_' + tituJid] || []
+          const tituActif = tituSeqs.length === 0 || tituSeqs.includes(seqNum)
+          const remplsPoste = prEq[posteIdx] || []
+          const remplActif = remplsPoste.find(r => r.seqs && r.seqs.includes(seqNum))
+          const joueurSurTerrain = remplActif ? remplActif.jid : (tituActif ? tituJid : null)
+          if (!joueurSurTerrain) return
+          const prevJoueur = getPrevJoueurPosteNew(ei, posteIdx, prevSeq)
+          const isEntrant = !prevSeq || !prevJoueur || prevJoueur !== joueurSurTerrain
+          if (!isEntrant) return
+          const j = getJ(joueurSurTerrain)
+          if (!j) return
+          const effectiveStatut = getEffectiveStatut(j)
+          if (effectiveStatut === 'blesse' || effectiveStatut === 'absent') {
+            alerts.push({ j, equipe, posteIdx, effectiveStatut, isRempl: !!remplActif })
+          }
+        })
+      })
+      if (alerts.length === 0) {
+        alertEl.innerHTML = ''
+        return
+      }
+      alertEl.innerHTML = `<div style="margin-bottom:12px;padding:10px 14px;background:#E24B4A18;border:1px solid #E24B4A44;border-radius:10px;">
+        <div style="font-size:11px;font-weight:700;color:#E24B4A;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.05em;">⚠ Joueurs blessés / absents sur le terrain (seq ${seqNum})</div>
+        ${alerts.map(a => {
+          const teamColor = getTeamUiColor(a.equipe.couleur)
+          const statusColor = a.effectiveStatut === 'blesse' ? '#E24B4A' : '#888'
+          const statusLabel = a.effectiveStatut === 'blesse' ? 'BLESSÉ' : 'ABSENT'
+          return `<div style="display:flex;align-items:center;gap:8px;padding:3px 0;font-size:11px;">
+            <span style="font-weight:700;color:${teamColor};min-width:20px;">${a.posteIdx+1}</span>
+            <span style="font-weight:600;flex:1;">${a.j.nom} ${a.j.prenom}</span>
+            <span style="color:${teamColor};font-size:10px;">${a.equipe.nom}${a.isRempl ? ' (rempl)' : ''}</span>
+            <span style="background:${statusColor}22;color:${statusColor};font-size:9px;font-weight:700;padding:2px 6px;border-radius:4px;border:1px solid ${statusColor}44;">${statusLabel}</span>
+          </div>`
+        }).join('')}
+      </div>`
+    }
+
     function afficherVisionSeq(seqNum) {
       document.querySelectorAll('.vision-seq-btn').forEach((btn, idx) => {
         btn.classList.toggle('active', idx + 1 === seqNum)
       })
+      renderVisionSeqAlert(seqNum)
       if (visionSeqMode === 'equipe') {
         afficherVisionEquipe(seqNum)
       } else {
@@ -2934,17 +2983,13 @@ window.setPickerSort = function(mode) {
           let info = ''
           if (isChange && prevJoueur) {
             const prevJ = getJ(prevJoueur)
-            if (joueurSurTerrain === tituJid) {
-              const dest = findJoueurInSeq(prevJoueur, seqNum, ei, posteIdx)
-              if (dest) {
-                const destEq = equipes[dest.ei]
-                const destColor = getTeamUiColor(destEq.couleur)
-                info = `<span style="color:${destColor};font-size:9px;">→ ${prevJ ? prevJ.nom : '?'} change en ${dest.posteIdx+1} ${destEq.nom}</span>`
-              } else {
-                info = `<span style="color:#E24B4A;font-size:9px;">↓ ${prevJ ? prevJ.nom : '?'} sort</span>`
-              }
-            } else if (remplActif) {
-              info = `<span style="color:#888;font-size:9px;">↩ remplace ${prevJ ? prevJ.nom : '?'}</span>`
+            const dest = findJoueurInSeq(prevJoueur, seqNum, ei, posteIdx)
+            if (dest) {
+              const destEq = equipes[dest.ei]
+              const destColor = getTeamUiColor(destEq.couleur)
+              info = `<span style="color:${destColor};font-size:9px;">→ ${prevJ ? prevJ.nom : '?'} change en ${dest.posteIdx+1} ${destEq.nom}</span>`
+            } else {
+              info = `<span style="color:#E24B4A;font-size:9px;">↓ ${prevJ ? prevJ.nom : '?'} sort</span>`
             }
           } else if (remplActif) {
             const tituJ = getJ(tituJid)
@@ -2985,12 +3030,14 @@ window.setPickerSort = function(mode) {
               const row = document.createElement('div')
               row.style.cssText = 'display:flex;align-items:center;gap:8px;padding:4px 0;font-size:11px;'
               const j = getJ(s.jid)
+              const replJ = getJ(s.replacedBy)
+              const replName = replJ ? replJ.nom + ' ' + replJ.prenom : null
               if (s.dest) {
                 const destEq = equipes[s.dest.ei]
                 const destColor = getTeamUiColor(destEq.couleur)
-                row.innerHTML = `<span style="color:#888;min-width:80px;">${s.fromPoste+1} →</span><span style="font-weight:600;flex:1;">${j ? j.nom + ' ' + j.prenom : '?'}</span><span style="color:${destColor};font-size:10px;">→ ${s.dest.posteIdx+1} ${destEq.nom}</span>`
+                row.innerHTML = `<span style="color:#888;min-width:80px;">${s.fromPoste+1} →</span><span style="font-weight:600;flex:1;">${j ? j.nom + ' ' + j.prenom : '?'}</span><span style="color:${destColor};font-size:10px;">→ ${s.dest.posteIdx+1} ${destEq.nom}${replName ? `<span style="color:#888;"> (pour ${replName})</span>` : ''}</span>`
               } else {
-                row.innerHTML = `<span style="color:#888;min-width:80px;">${s.fromPoste+1} →</span><span style="font-weight:600;flex:1;">${j ? j.nom + ' ' + j.prenom : '?'}</span><span style="color:#E24B4A;font-size:10px;">sort</span>`
+                row.innerHTML = `<span style="color:#888;min-width:80px;">${s.fromPoste+1} →</span><span style="font-weight:600;flex:1;">${j ? j.nom + ' ' + j.prenom : '?'}</span><span style="color:#E24B4A;font-size:10px;">sort${replName ? ` pour ${replName}` : ''}</span>`
               }
               sortDiv.appendChild(row)
             })
@@ -3049,7 +3096,7 @@ window.setPickerSort = function(mode) {
         if (prevOnField !== currOnField) {
           seen.add(prevOnField)
           const dest = findJoueurInSeq(prevOnField, seqNum, ei, p)
-          sortants.push({ jid: prevOnField, fromPoste: p, dest })
+          sortants.push({ jid: prevOnField, fromPoste: p, dest, replacedBy: currOnField })
         }
       }
       return sortants
