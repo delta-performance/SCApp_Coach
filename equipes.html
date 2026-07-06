@@ -586,7 +586,6 @@
   }
   </style>
 
-  <link rel="manifest" href="../manifest.json">
   <link rel="stylesheet" href="theme.css">
   <script src="theme.js"></script>
 </head>
@@ -813,7 +812,7 @@
     import { initializeApp } from './firebase-bundle.js'
     import { getAuth, onAuthStateChanged, signOut, setPersistence, browserLocalPersistence } from './firebase-bundle.js'
     import { getFirestore, collection, doc, setDoc, getDoc, getDocs } from './firebase-bundle.js'
-    import './update-check.js'
+    import('./update-check.js').catch(() => {})
 
     const firebaseConfig = {
       apiKey: "AIzaSyCvMs-5LX9Ivk3OkzUR3iz9Kk1E5b9_7Vk",
