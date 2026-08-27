@@ -244,7 +244,7 @@
   // Génération dynamique des vignettes depuis pages.json
   try {
     const res = await fetch('pages.json')
-    const pages = await res.json()
+    const pages = (await res.json()).sort((a, b) => (a.order || 0) - (b.order || 0))
     await waitForPermissions()
 
     const grid = document.getElementById('grid')

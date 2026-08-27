@@ -80,11 +80,12 @@ function titleCase(str) {
 }
 
 // 1. Scanner automatiquement le renderer
-const files = fs.readdirSync(RENDERER)
+const sourceFiles = fs.readdirSync(RENDERER)
   .filter(f => f.endsWith('.html') && !BLACKLIST.includes(f) && !f.includes('.bak') && !f.includes('.backup') && !f.includes(' '))
   .sort()
 
-const pages = files.map((file, index) => {
+const sourceMeta = {}
+const discovered = sourceFiles.map((file, index) => {
   const src = path.join(RENDERER, file)
   const html = fs.readFileSync(src, 'utf8')
 
@@ -105,12 +106,24 @@ const pages = files.map((file, index) => {
 
   const sub = metaValue(html, 'ipad-sub') || ''
 
-  return { file, title: escapeHtmlTitle(title), icon, color, group, sub }
+  const p = { file, title: escapeHtmlTitle(title), icon, color, group, sub }
+  sourceMeta[file] = p
+  return p
 })
 
-// 2. Écrire le manifeste automatique
+// 2. Respecter la config existante (publiée) ou tout publier si c'est le premier build
+let existing = []
+if (fs.existsSync(MANIFEST)) {
+  try { existing = JSON.parse(fs.readFileSync(MANIFEST, 'utf8')) } catch(e) { existing = [] }
+}
+
+const sourceFileSet = new Set(sourceFiles)
+const pages = existing.length
+  ? existing.filter(e => sourceFileSet.has(e.file)).map(e => ({ ...(sourceMeta[e.file] || {}), ...e }))
+  : discovered
+
 fs.writeFileSync(MANIFEST, JSON.stringify(pages, null, 2))
-console.log(`[build] ${pages.length} pages découvertes → ${MANIFEST}`)
+console.log(`[build] ${pages.length} pages publiées → ${MANIFEST} (parmi ${discovered.length} découvertes)`)
 
 // 3. Copier / filtrer chaque page
 for (const page of pages) {
@@ -192,7 +205,7 @@ for (const page of pages) {
 // 4. Nettoyer les pages qui n'existent plus dans le renderer
 const builtFiles = fs.readdirSync(PAGES_DIR)
 for (const f of builtFiles) {
-  if (f.endsWith('.html') && !files.includes(f)) {
+  if (f.endsWith('.html') && !pages.some(p => p.file === f)) {
     fs.unlinkSync(path.join(PAGES_DIR, f))
     console.log(`[build] supprimé: pages/${f}`)
   }

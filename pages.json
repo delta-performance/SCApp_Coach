@@ -1,19 +1,12 @@
 [
   {
-    "file": "absences.html",
-    "title": "SCA Albi — Absences",
-    "icon": "🚫",
-    "color": "#FECC00",
-    "group": "planning",
-    "sub": ""
-  },
-  {
-    "file": "energetique.html",
-    "title": "SCA Albi — Énergétique",
-    "icon": "🏃",
-    "color": "#4CAF8F",
-    "group": null,
-    "sub": ""
+    "file": "index.html",
+    "title": "SCA Albi — Roster",
+    "icon": "👤",
+    "color": "#FF8A65",
+    "group": "roster",
+    "sub": "",
+    "order": 0
   },
   {
     "file": "equipes.html",
@@ -21,7 +14,17 @@
     "icon": "👥",
     "color": "#5B9CF6",
     "group": "equipes",
-    "sub": ""
+    "sub": "",
+    "order": 1
+  },
+  {
+    "file": "energetique.html",
+    "title": "SCA Albi — Énergétique",
+    "icon": "🏃",
+    "color": "#4CAF8F",
+    "group": null,
+    "sub": "",
+    "order": 2
   },
   {
     "file": "exercices.html",
@@ -29,7 +32,8 @@
     "icon": "📝",
     "color": "#F08055",
     "group": "muscu",
-    "sub": ""
+    "sub": "",
+    "order": 3
   },
   {
     "file": "fiches-seances.html",
@@ -37,7 +41,8 @@
     "icon": "🏉",
     "color": "#C778DD",
     "group": "fiches",
-    "sub": ""
+    "sub": "",
+    "order": 4
   },
   {
     "file": "gps-match.html",
@@ -45,15 +50,8 @@
     "icon": "🏆",
     "color": "#378ADD",
     "group": "gps",
-    "sub": ""
-  },
-  {
-    "file": "gps-planif.html",
-    "title": "SCA Albi — Planification Charge GPS",
-    "icon": "📡",
-    "color": "#E24B4A",
-    "group": "gps",
-    "sub": ""
+    "sub": "",
+    "order": 5
   },
   {
     "file": "gps.html",
@@ -61,15 +59,17 @@
     "icon": "📊",
     "color": "#9CCC65",
     "group": "gps",
-    "sub": ""
+    "sub": "",
+    "order": 6
   },
   {
-    "file": "index.html",
-    "title": "SCA Albi — Performance",
-    "icon": "👤",
-    "color": "#FF8A65",
-    "group": "roster",
-    "sub": ""
+    "file": "gps-planif.html",
+    "title": "SCA Albi — Planification Charge GPS",
+    "icon": "📡",
+    "color": "#E24B4A",
+    "group": "gps",
+    "sub": "",
+    "order": 7
   },
   {
     "file": "jeux.html",
@@ -77,31 +77,8 @@
     "icon": "▶",
     "color": "#FECC00",
     "group": null,
-    "sub": ""
-  },
-  {
-    "file": "medical.html",
-    "title": "SCA Albi — Médical",
-    "icon": "🏥",
-    "color": "#4CAF8F",
-    "group": "medical",
-    "sub": ""
-  },
-  {
-    "file": "performances.html",
-    "title": "SCA Albi — Performances",
-    "icon": "⚡",
-    "color": "#5B9CF6",
-    "group": "muscu",
-    "sub": ""
-  },
-  {
-    "file": "planification-muscu.html",
-    "title": "SCA Albi — Planification Muscu",
-    "icon": "▶",
-    "color": "#F08055",
-    "group": null,
-    "sub": ""
+    "sub": "",
+    "order": 8
   },
   {
     "file": "planning-blesses.html",
@@ -109,7 +86,8 @@
     "icon": "🩺",
     "color": "#C778DD",
     "group": "medical",
-    "sub": ""
+    "sub": "",
+    "order": 9
   },
   {
     "file": "planning.html",
@@ -117,7 +95,8 @@
     "icon": "📅",
     "color": "#378ADD",
     "group": "planning",
-    "sub": ""
+    "sub": "",
+    "order": 10
   },
   {
     "file": "profil-force-vitesse.html",
@@ -125,15 +104,17 @@
     "icon": "📈",
     "color": "#E24B4A",
     "group": "muscu",
-    "sub": ""
+    "sub": "",
+    "order": 11
   },
   {
     "file": "seances.html",
-    "title": "SCA Albi — Séances",
+    "title": "SCA Albi — Muscu",
     "icon": "🏋️",
     "color": "#9CCC65",
     "group": "muscu",
-    "sub": ""
+    "sub": "",
+    "order": 12
   },
   {
     "file": "suivi-poids.html",
@@ -141,7 +122,8 @@
     "icon": "⚖️",
     "color": "#FF8A65",
     "group": "wellness",
-    "sub": ""
+    "sub": "",
+    "order": 13
   },
   {
     "file": "tv.html",
@@ -149,7 +131,8 @@
     "icon": "📺",
     "color": "#FECC00",
     "group": null,
-    "sub": ""
+    "sub": "",
+    "order": 14
   },
   {
     "file": "wellness.html",
@@ -157,6 +140,7 @@
     "icon": "💚",
     "color": "#4CAF8F",
     "group": "wellness",
-    "sub": ""
+    "sub": "",
+    "order": 15
   }
 ]
