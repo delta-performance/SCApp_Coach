@@ -216,3 +216,122 @@ input[type="text"], input[type="number"], input[type="email"], input[type="passw
   font-weight: 600;
   text-decoration: none;
 }
+
+/* ====== Spécifique page Séances / Énergétique ====== */
+
+.editor-split {
+  flex-direction: column !important;
+  overflow: visible !important;
+  height: auto !important;
+}
+
+.editor-main {
+  padding: 4px !important;
+  overflow: visible !important;
+}
+
+.editor-sidebar {
+  width: 100% !important;
+  min-width: unset !important;
+  max-width: 100% !important;
+  border: none !important;
+  border-top: 1px solid #2a2a2a !important;
+  padding: 8px 0 !important;
+  order: 2;
+  background: #0a0a0a !important;
+}
+
+.sidebar-attrib-header {
+  font-size: 13px;
+  padding: 8px;
+  margin: 0 0 8px;
+}
+
+.attrib-groupe-card {
+  padding: 6px;
+  margin-bottom: 6px;
+}
+
+.gdp-joueur-tag {
+  font-size: 10px !important;
+  padding: 2px 5px !important;
+  min-height: 22px;
+}
+
+.bloc-card, .bloc-hdr, .bloc-body, .exo-row, .exercice-card, .exercise-row {
+  width: 100% !important;
+  max-width: 100%;
+  margin-bottom: 6px;
+}
+
+.bloc-hdr {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  padding: 6px;
+}
+
+.bloc-hdr > * {
+  flex: 1 1 auto;
+  min-width: 60px;
+}
+
+.topbar select, .topbar input, .vue-toolbar select, .vue-toolbar input {
+  width: 100%;
+  min-width: 0;
+  padding: 6px 8px !important;
+  margin-bottom: 4px;
+}
+
+.topbar button, .vue-toolbar button, .editor-topbar button {
+  min-height: 34px;
+  padding: 6px 10px !important;
+}
+
+#mode-view .vue-toolbar, #mode-edit .topbar, #mode-bonus .topbar {
+  position: relative;
+  margin-bottom: 8px;
+}
+
+#blocs-container, #bloc-list, .blocs-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.exercice-name, .exercise-name, .exo-title, .exo-name {
+  font-size: 13px !important;
+  font-weight: 600;
+  word-break: break-word;
+}
+
+.exo-option-joueurs, .exo-options, .exercice-options {
+  padding: 4px 0 !important;
+  margin-left: 0 !important;
+}
+
+/* Empêche les tableaux / grilles de déborder */
+[data-list], .list, .joueurs-list, .exercices-list, .blocs-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 100%;
+}
+
+/* Réduire le bandeau d’attribution */
+#attrib-sidebar, .sidebar-attrib, .sidebar-attrib-header, .editor-sidebar {
+  margin: 0;
+  padding: 4px 0;
+}
+
+/* Inputs des filtres / barre d’outils */
+select, input[type="date"], input[type="number"], input[type="text"] {
+  width: 100%;
+  padding: 6px 8px;
+}
+
+/* Cache les gros espaces entre groupes */
+.groupe-title, .groupe-header, .bloc-title, .section-title {
+  font-size: 13px;
+  margin: 6px 0;
+}

@@ -21330,12 +21330,15 @@ async function setDoc(docRef, dataObj, options) {
   } else if (isMerge) {
     const updateData = { ...rowData };
     delete updateData.id;
-    const { error } = await supabase2.from(table).update(updateData).eq("id", id);
+    const { data: updated, error } = await supabase2.from(table).update(updateData).eq("id", id).select();
     if (error && error.code === "PGRST116") {
       const { error: insertError } = await supabase2.from(table).upsert(rowData);
       if (insertError) throw insertError;
     } else if (error) {
       throw error;
+    } else if (!updated || updated.length === 0) {
+      const { error: insertError } = await supabase2.from(table).upsert(rowData);
+      if (insertError) throw insertError;
     }
   } else {
     const { error } = await supabase2.from(table).upsert(rowData);
