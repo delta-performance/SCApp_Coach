@@ -31,6 +31,3 @@ window.logout = async function() {
 }
 
 export { auth, db }
-
-// Écoute des mises à jour de l'application
-import './update-check.js'

@@ -256,7 +256,7 @@
       const a = document.createElement('a')
       a.className = 'card'
       a.style.setProperty('--accent', p.color || '#FECC00')
-      a.href = `viewer.html?page=${encodeURIComponent(p.file)}`
+      a.href = `pages/${encodeURIComponent(p.file)}`
       a.innerHTML = `
         <div class="card-icon">${p.icon || '•'}</div>
         <div class="card-body">

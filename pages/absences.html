@@ -80,6 +80,8 @@
   </style>
   <link rel="manifest" href="../manifest.json">
   <script type="module" src="../auth-guard.js"></script>
+  <link rel="stylesheet" href="../ipad-app/mobile.css">
+  <script type="module" src="../ipad-app/mobile.js"></script>
 </head>
 <body>
   <div class="sidebar">
@@ -257,9 +259,9 @@
   </div>
 
   <script type="module">
-    import { initializeApp } from '../renderer/supabase-adapter.js'
-    import { getAuth, onAuthStateChanged, signOut } from '../renderer/supabase-adapter.js'
-    import { getFirestore, collection, doc, setDoc, deleteDoc, getDocs, serverTimestamp, query, where } from '../renderer/supabase-adapter.js'
+    import { getApp, initializeApp  } from '../supabase-adapter.js'
+    import { getApp, getAuth, onAuthStateChanged, signOut  } from '../supabase-adapter.js'
+    import { getApp, getFirestore, collection, doc, setDoc, deleteDoc, getDocs, serverTimestamp, query, where  } from '../supabase-adapter.js'
 
     const firebaseConfig = {
       apiKey: "AIzaSyCvMs-5LX9Ivk3OkzUR3iz9Kk1E5b9_7Vk",
@@ -272,7 +274,7 @@
 
     const COULEURS_POSTE = { 'Pilier':'#8B3A3A','Talonneur':'#6B3A8B','2e Ligne':'#3A6B8B','3e Ligne':'#3A8B6B','Demi de mêlée':'#8B6B3A',"Demi d'ouverture":'#6B8B3A','Centre':'#3A4A8B','Ailier':'#8B3A6B','Arrière':'#2A6B5B' }
 
-    const fbApp = initializeApp(firebaseConfig)
+    const fbApp = (() => { try { return getApp() } catch(e) { return initializeApp(firebaseConfig) } })()
     const auth = getAuth(fbApp)
     const db = getFirestore(fbApp)
 

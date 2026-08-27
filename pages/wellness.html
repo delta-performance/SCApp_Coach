@@ -119,6 +119,8 @@
   </style>
   <link rel="manifest" href="../manifest.json">
   <script type="module" src="../auth-guard.js"></script>
+  <link rel="stylesheet" href="../ipad-app/mobile.css">
+  <script type="module" src="../ipad-app/mobile.js"></script>
 </head>
 <body>
   <div class="sidebar">
@@ -289,9 +291,9 @@
   </div>
 
   <script type="module">
-    import { initializeApp } from '../renderer/supabase-adapter.js'
-    import { getAuth, onAuthStateChanged, signOut } from '../renderer/supabase-adapter.js'
-    import { getFirestore, collection, doc, getDocs, onSnapshot, query, where, orderBy, limit } from '../renderer/supabase-adapter.js'
+    import { getApp, initializeApp  } from '../supabase-adapter.js'
+    import { getApp, getAuth, onAuthStateChanged, signOut  } from '../supabase-adapter.js'
+    import { getApp, getFirestore, collection, doc, getDocs, onSnapshot, query, where, orderBy, limit  } from '../supabase-adapter.js'
     import { calcWellnessScore, detectVariation } from '../renderer/seances-charges.js'
 
     // RÉGLAGES PHOTO (zoom & placement)
@@ -316,7 +318,7 @@
       appId: "1:61187079762:web:56cd1eaa8beb9e1a2ee98b"
     }
 
-    const fbApp = initializeApp(firebaseConfig)
+    const fbApp = (() => { try { return getApp() } catch(e) { return initializeApp(firebaseConfig) } })()
     const auth = getAuth(fbApp)
     const db = getFirestore(fbApp)
 

@@ -328,6 +328,8 @@
   </style>
   <link rel="manifest" href="../manifest.json">
   <script type="module" src="../auth-guard.js"></script>
+  <link rel="stylesheet" href="../ipad-app/mobile.css">
+  <script type="module" src="../ipad-app/mobile.js"></script>
 </head>
 <body>
   <div class="sidebar">
@@ -602,9 +604,9 @@
   </div>
 
   <script type="module">
-    import { initializeApp } from '../renderer/supabase-adapter.js';
-    import { getFirestore, collection, addDoc, getDocs, updateDoc, deleteDoc, doc, query, orderBy, setDoc, where } from '../renderer/supabase-adapter.js';
-    import { getAuth, onAuthStateChanged, signOut } from '../renderer/supabase-adapter.js';
+    import { getApp, initializeApp  } from '../supabase-adapter.js';
+    import { getApp, getFirestore, collection, addDoc, getDocs, updateDoc, deleteDoc, doc, query, orderBy, setDoc, where  } from '../supabase-adapter.js';
+    import { getApp, getAuth, onAuthStateChanged, signOut  } from '../supabase-adapter.js';
 
     const firebaseConfig = {
       apiKey: "AIzaSyCvMs-5LX9Ivk3OkzUR3iz9Kk1E5b9_7Vk",
@@ -615,7 +617,7 @@
       appId: "1:61187079762:web:56cd1eaa8beb9e1a2ee98b"
     };
 
-    const app = initializeApp(firebaseConfig);
+    const app = (() => { try { return getApp() } catch(e) { return initializeApp(firebaseConfig) } })();
     const db = getFirestore(app);
     const auth = getAuth(app);
 

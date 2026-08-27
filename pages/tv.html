@@ -617,6 +617,8 @@
   <link rel="manifest" href="../manifest.json">
   <script src="error-toast.js"></script>
   <script type="module" src="../auth-guard.js"></script>
+  <link rel="stylesheet" href="../ipad-app/mobile.css">
+  <script type="module" src="../ipad-app/mobile.js"></script>
 </head>
 <body>
   <!-- LOADING SCREEN -->
@@ -1435,9 +1437,9 @@
   </script>
 
   <script type="module">
-    import { initializeApp } from '../renderer/supabase-adapter.js'
-    import { getAuth, onAuthStateChanged } from '../renderer/supabase-adapter.js'
-    import { getFirestore, collection, doc, setDoc, addDoc, updateDoc, getDoc, getDocs, onSnapshot, serverTimestamp, query, where, deleteDoc, deleteField } from '../renderer/supabase-adapter.js'
+    import { getApp, initializeApp  } from '../supabase-adapter.js'
+    import { getApp, getAuth, onAuthStateChanged  } from '../supabase-adapter.js'
+    import { getApp, getFirestore, collection, doc, setDoc, addDoc, updateDoc, getDoc, getDocs, onSnapshot, serverTimestamp, query, where, deleteDoc, deleteField  } from '../supabase-adapter.js'
     import { labelCharge, calcOneRM, chargePreviewAdvanced, calcChargeOptimalePmax } from '../renderer/seances-charges.js'
     // ==================== CACHE LOCAL (clés partagées avec le shell) ====================
     function loadCache(key) {
@@ -1469,7 +1471,7 @@
       appId: "1:61187079762:web:56cd1eaa8beb9e1a2ee98b"
     }
 
-    const fbApp = initializeApp(firebaseConfig)
+    const fbApp = (() => { try { return getApp() } catch(e) { return initializeApp(firebaseConfig) } })()
     const auth = getAuth(fbApp)
     const db = getFirestore(fbApp)
 

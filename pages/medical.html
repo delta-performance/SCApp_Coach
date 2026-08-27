@@ -158,6 +158,8 @@
   </style>
   <link rel="manifest" href="../manifest.json">
   <script type="module" src="../auth-guard.js"></script>
+  <link rel="stylesheet" href="../ipad-app/mobile.css">
+  <script type="module" src="../ipad-app/mobile.js"></script>
 </head>
 <body>
   <div class="sidebar">
@@ -644,9 +646,9 @@
   </div>
 
   <script type="module">
-    import { initializeApp } from '../renderer/supabase-adapter.js'
-    import { getAuth, onAuthStateChanged, signOut } from '../renderer/supabase-adapter.js'
-    import { getFirestore, collection, doc, setDoc, deleteDoc, getDocs, getDoc, serverTimestamp, query, where } from '../renderer/supabase-adapter.js'
+    import { getApp, initializeApp  } from '../supabase-adapter.js'
+    import { getApp, getAuth, onAuthStateChanged, signOut  } from '../supabase-adapter.js'
+    import { getApp, getFirestore, collection, doc, setDoc, deleteDoc, getDocs, getDoc, serverTimestamp, query, where  } from '../supabase-adapter.js'
 
     const firebaseConfig = {
       apiKey: "AIzaSyCvMs-5LX9Ivk3OkzUR3iz9Kk1E5b9_7Vk",
@@ -661,7 +663,7 @@
     const TYPE_LABELS = { lma:'LMA', ligament:'Ligamentaire', osseux:'Osseux/Fracture', tendon:'Tendineux', cartilage:'Cartilage/Ménisque', nerveux:'Neurologique', commotion:'Commotion', cutane:'Cutané', visceral:'Viscéral', autre:'Autre' }
     const TYPE_COLORS = { lma:'#E24B4A', ligament:'#EF9F27', osseux:'#FECC00', tendon:'#3B82F6', cartilage:'#A855F7', nerveux:'#10B981', commotion:'#F97316', cutane:'#6366F1', visceral:'#EC4899', autre:'#666' }
 
-    const fbApp = initializeApp(firebaseConfig)
+    const fbApp = (() => { try { return getApp() } catch(e) { return initializeApp(firebaseConfig) } })()
     const auth = getAuth(fbApp)
     const db = getFirestore(fbApp)
 

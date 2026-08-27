@@ -144,17 +144,32 @@ for (const page of pages) {
     html = html.replace(/<\/head>/i, '  <script type="module" src="../auth-guard.js"></script>\n</head>')
   }
 
-  // Réécriture des liens internes .html vers le viewer
-  html = html.replace(/href="([^"]+\.html(?:\?[^"]*)?)"/gi, (m, rawHref) => {
-    const [target, search] = rawHref.split('?')
-    if (target === page.file) return m
-    const qs = search ? '&' + search : ''
-    return `href="../viewer.html?page=${encodeURIComponent(target)}${qs}"`
+  // Filtre iPad / iPhone
+  if (!/mobile\.css/.test(html)) {
+    html = html.replace(/<\/head>/i, '  <link rel="stylesheet" href="../ipad-app/mobile.css">\n</head>')
+  }
+  if (!/mobile\.js/.test(html)) {
+    html = html.replace(/<\/head>/i, '  <script type="module" src="../ipad-app/mobile.js"></script>\n</head>')
+  }
+
+  // Les liens internes .html restent relatifs au dossier pages/
+  // (les pages copiées sont au même niveau, pas besoin de viewer intermédiaire)
+
+  // Réécriture des import ES modules : supabase-adapter passe par le bundle ipad-app,
+  // les autres modules restent dans renderer/
+  html = html.replace(/from\s+(['"])\.\/supabase-adapter\.js\1/g, 'from $1../supabase-adapter.js$1')
+  html = html.replace(/from\s+(['"])\.\/([^'"]*)\1/g, 'from $1../renderer/$2$1')
+  html = html.replace(/import\s*\(\s*(['"])\.\/supabase-adapter\.js\1\s*\)/g, 'import($1../supabase-adapter.js$1)')
+  html = html.replace(/import\s*\(\s*(['"])\.\/([^'"]*)\1\s*\)/g, 'import($1../renderer/$2$1)')
+
+  // Ajouter getApp dans les imports supabase-adapter si besoin
+  html = html.replace(/import\s*\{\s*([^}]*)\}\s*from\s+(['"])[^'"]*supabase-adapter[^'"]*\2/g, (m, items, quote) => {
+    if (/\bgetApp\b/.test(items)) return m
+    return `import { getApp, ${items} } from ${quote}${m.match(/from\s+['"]([^'"]+)['"]/)[1]}${quote}`
   })
 
-  // Réécriture des import ES modules relatifs au renderer
-  html = html.replace(/from\s+(['"])\.\/([^'"]*)\1/g, 'from $1../renderer/$2$1')
-  html = html.replace(/import\s*\(\s*(['"])\.\/([^'"]*)\1\s*\)/g, 'import($1../renderer/$2$1)')
+  // Empêcher le double init Firebase : initializeApp(firebaseConfig) devient idempotent
+  html = html.replace(/initializeApp\s*\(\s*firebaseConfig\s*\)/g, "(() => { try { return getApp() } catch(e) { return initializeApp(firebaseConfig) } })()")
 
   // Titre
   const escapedTitle = escapeHtmlTitle(page.title)
