@@ -144,12 +144,12 @@ for (const page of pages) {
     html = html.replace(/<\/head>/i, '  <script type="module" src="../auth-guard.js"></script>\n</head>')
   }
 
-  // Filtre iPad / iPhone
+  // Filtre iPad / iPhone (chemins relatifs à la racine SCApp_Coach)
   if (!/mobile\.css/.test(html)) {
-    html = html.replace(/<\/head>/i, '  <link rel="stylesheet" href="../ipad-app/mobile.css">\n</head>')
+    html = html.replace(/<\/head>/i, '  <link rel="stylesheet" href="../mobile.css">\n</head>')
   }
   if (!/mobile\.js/.test(html)) {
-    html = html.replace(/<\/head>/i, '  <script type="module" src="../ipad-app/mobile.js"></script>\n</head>')
+    html = html.replace(/<\/head>/i, '  <script type="module" src="../mobile.js"></script>\n</head>')
   }
 
   // Les liens internes .html restent relatifs au dossier pages/
@@ -162,10 +162,10 @@ for (const page of pages) {
   html = html.replace(/import\s*\(\s*(['"])\.\/supabase-adapter\.js\1\s*\)/g, 'import($1../supabase-adapter.js$1)')
   html = html.replace(/import\s*\(\s*(['"])\.\/([^'"]*)\1\s*\)/g, 'import($1../renderer/$2$1)')
 
-  // Ajouter getApp dans les imports supabase-adapter si besoin
-  html = html.replace(/import\s*\{\s*([^}]*)\}\s*from\s+(['"])[^'"]*supabase-adapter[^'"]*\2/g, (m, items, quote) => {
+  // Ajouter getApp uniquement dans l'import supabase-adapter qui contient initializeApp
+  html = html.replace(/import\s*\{\s*([^}]*initializeApp[^}]*)\}\s*from\s+(['"])([^'"]*supabase-adapter[^'"]*)\2/g, (m, items, quote, src) => {
     if (/\bgetApp\b/.test(items)) return m
-    return `import { getApp, ${items} } from ${quote}${m.match(/from\s+['"]([^'"]+)['"]/)[1]}${quote}`
+    return `import { getApp, ${items} } from ${quote}${src}${quote}`
   })
 
   // Empêcher le double init Firebase : initializeApp(firebaseConfig) devient idempotent
@@ -192,12 +192,32 @@ for (const f of builtFiles) {
   }
 }
 
-// 5. Copier le manifest.json à la racine de l'app iPad (nécessaire pour GitHub Pages)
-const rootManifest = path.join(ROOT, '..', 'manifest.json')
-const ipadManifest = path.join(ROOT, 'manifest.json')
-if (fs.existsSync(rootManifest)) {
-  fs.copyFileSync(rootManifest, ipadManifest)
-  console.log('[build] manifest.json copié')
+// 5. Générer un manifest.json adapté à SCApp_Coach (GitHub Pages racine)
+const ipadManifest = {
+  name: "SCA Albi Performance - iPad",
+  short_name: "SCA iPad",
+  description: "Application iPad pour le Sporting Club Albigeois",
+  start_url: "./index.html",
+  scope: "./",
+  display: "standalone",
+  orientation: "any",
+  background_color: "#0f0f0f",
+  theme_color: "#FECC00",
+  lang: "fr",
+  dir: "ltr",
+  icons: [
+    { src: "icon-192.png", sizes: "192x192", type: "image/png" },
+    { src: "icon-512.png", sizes: "512x512", type: "image/png" }
+  ]
 }
+fs.writeFileSync(path.join(ROOT, 'manifest.json'), JSON.stringify(ipadManifest, null, 2))
+console.log('[build] manifest.json généré')
+
+// 6. Copier les icônes du player-app à la racine de l'app iPad
+const icon192 = path.join(ROOT, '..', 'player-app', 'icon-192.png')
+const icon512 = path.join(ROOT, '..', 'player-app', 'icon-512.png')
+if (fs.existsSync(icon192)) fs.copyFileSync(icon192, path.join(ROOT, 'icon-192.png'))
+if (fs.existsSync(icon512)) fs.copyFileSync(icon512, path.join(ROOT, 'icon-512.png'))
+console.log('[build] icônes copiées')
 
 console.log('[build] terminé')

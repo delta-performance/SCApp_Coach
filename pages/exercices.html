@@ -82,8 +82,8 @@
   </style>
   <link rel="manifest" href="../manifest.json">
   <script type="module" src="../auth-guard.js"></script>
-  <link rel="stylesheet" href="../ipad-app/mobile.css">
-  <script type="module" src="../ipad-app/mobile.js"></script>
+  <link rel="stylesheet" href="../mobile.css">
+  <script type="module" src="../mobile.js"></script>
 </head>
 <body>
   <div class="sidebar">
@@ -271,8 +271,8 @@
 
   <script type="module">
     import { getApp, initializeApp  } from '../supabase-adapter.js'
-    import { getApp, getAuth, onAuthStateChanged, signOut  } from '../supabase-adapter.js'
-    import { getApp, getFirestore, doc, setDoc, getDoc  } from '../supabase-adapter.js'
+    import { getAuth, onAuthStateChanged, signOut } from '../supabase-adapter.js'
+    import { getFirestore, doc, setDoc, getDoc } from '../supabase-adapter.js'
 
     const firebaseConfig = {
       apiKey: "AIzaSyCvMs-5LX9Ivk3OkzUR3iz9Kk1E5b9_7Vk",

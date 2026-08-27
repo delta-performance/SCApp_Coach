@@ -1,8 +1,8 @@
 {
-  "name": "SCA Albi Performance",
-  "short_name": "SCA Albi",
-  "description": "Application de performance pour le Sporting Club Albigeois",
-  "start_url": "ipad-app/index.html",
+  "name": "SCA Albi Performance - iPad",
+  "short_name": "SCA iPad",
+  "description": "Application iPad pour le Sporting Club Albigeois",
+  "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
   "orientation": "any",
@@ -12,10 +12,14 @@
   "dir": "ltr",
   "icons": [
     {
-      "src": "build/icon.png",
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "icon-512.png",
       "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "any maskable"
+      "type": "image/png"
     }
   ]
 }

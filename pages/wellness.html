@@ -119,8 +119,8 @@
   </style>
   <link rel="manifest" href="../manifest.json">
   <script type="module" src="../auth-guard.js"></script>
-  <link rel="stylesheet" href="../ipad-app/mobile.css">
-  <script type="module" src="../ipad-app/mobile.js"></script>
+  <link rel="stylesheet" href="../mobile.css">
+  <script type="module" src="../mobile.js"></script>
 </head>
 <body>
   <div class="sidebar">
@@ -292,8 +292,8 @@
 
   <script type="module">
     import { getApp, initializeApp  } from '../supabase-adapter.js'
-    import { getApp, getAuth, onAuthStateChanged, signOut  } from '../supabase-adapter.js'
-    import { getApp, getFirestore, collection, doc, getDocs, onSnapshot, query, where, orderBy, limit  } from '../supabase-adapter.js'
+    import { getAuth, onAuthStateChanged, signOut } from '../supabase-adapter.js'
+    import { getFirestore, collection, doc, getDocs, onSnapshot, query, where, orderBy, limit } from '../supabase-adapter.js'
     import { calcWellnessScore, detectVariation } from '../renderer/seances-charges.js'
 
     // RÉGLAGES PHOTO (zoom & placement)

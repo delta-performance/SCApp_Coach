@@ -227,8 +227,8 @@
   </style>
   <link rel="manifest" href="../manifest.json">
   <script type="module" src="../auth-guard.js"></script>
-  <link rel="stylesheet" href="../ipad-app/mobile.css">
-  <script type="module" src="../ipad-app/mobile.js"></script>
+  <link rel="stylesheet" href="../mobile.css">
+  <script type="module" src="../mobile.js"></script>
 </head>
 <body>
   <div class="topbar">
@@ -592,8 +592,8 @@
 
   <script type="module">
     import { getApp, initializeApp  } from '../supabase-adapter.js'
-    import { getApp, getAuth, onAuthStateChanged  } from '../supabase-adapter.js'
-    import { getApp, getFirestore, collection, getDocs, addDoc, serverTimestamp  } from '../supabase-adapter.js'
+    import { getAuth, onAuthStateChanged } from '../supabase-adapter.js'
+    import { getFirestore, collection, getDocs, addDoc, serverTimestamp } from '../supabase-adapter.js'
 
     const firebaseConfig = {
       apiKey: "AIzaSyCvMs-5LX9Ivk3OkzUR3iz9Kk1E5b9_7Vk",

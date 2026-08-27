@@ -617,8 +617,8 @@
   <link rel="manifest" href="../manifest.json">
   <script src="error-toast.js"></script>
   <script type="module" src="../auth-guard.js"></script>
-  <link rel="stylesheet" href="../ipad-app/mobile.css">
-  <script type="module" src="../ipad-app/mobile.js"></script>
+  <link rel="stylesheet" href="../mobile.css">
+  <script type="module" src="../mobile.js"></script>
 </head>
 <body>
   <!-- LOADING SCREEN -->
@@ -1438,8 +1438,8 @@
 
   <script type="module">
     import { getApp, initializeApp  } from '../supabase-adapter.js'
-    import { getApp, getAuth, onAuthStateChanged  } from '../supabase-adapter.js'
-    import { getApp, getFirestore, collection, doc, setDoc, addDoc, updateDoc, getDoc, getDocs, onSnapshot, serverTimestamp, query, where, deleteDoc, deleteField  } from '../supabase-adapter.js'
+    import { getAuth, onAuthStateChanged } from '../supabase-adapter.js'
+    import { getFirestore, collection, doc, setDoc, addDoc, updateDoc, getDoc, getDocs, onSnapshot, serverTimestamp, query, where, deleteDoc, deleteField } from '../supabase-adapter.js'
     import { labelCharge, calcOneRM, chargePreviewAdvanced, calcChargeOptimalePmax } from '../renderer/seances-charges.js'
     // ==================== CACHE LOCAL (clés partagées avec le shell) ====================
     function loadCache(key) {
