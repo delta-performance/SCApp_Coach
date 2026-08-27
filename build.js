@@ -144,6 +144,12 @@ for (const page of pages) {
     html = html.replace(/<\/head>/i, '  <script type="module" src="../auth-guard.js"></script>\n</head>')
   }
 
+  // Différer onAuthStateChanged pour que les pages définissent leurs fonctions avant exécution
+  if (!/__deferredOnAuthStateChanged/.test(html)) {
+    html = html.replace(/<\/head>/i, '  <script type="module">import { onAuthStateChanged as __o } from \'../supabase-adapter.js\'; window.__deferredOnAuthStateChanged = (auth, cb) => __o(auth, (user) => setTimeout(() => cb(user), 0));</script>\n</head>')
+    html = html.replace(/\bonAuthStateChanged\s*\(/g, 'window.__deferredOnAuthStateChanged(')
+  }
+
   // Filtre iPad / iPhone (chemins relatifs à la racine SCApp_Coach)
   if (!/mobile\.css/.test(html)) {
     html = html.replace(/<\/head>/i, '  <link rel="stylesheet" href="../mobile.css">\n</head>')

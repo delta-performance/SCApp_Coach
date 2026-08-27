@@ -157,6 +157,7 @@
   </style>
   <link rel="manifest" href="../manifest.json">
   <script type="module" src="../auth-guard.js"></script>
+  <script type="module">import { onAuthStateChanged as __o } from '../supabase-adapter.js'; window.__deferredOnAuthStateChanged = (auth, cb) => __o(auth, (user) => setTimeout(() => cb(user), 0));</script>
   <link rel="stylesheet" href="../mobile.css">
   <script type="module" src="../mobile.js"></script>
 </head>
@@ -507,7 +508,7 @@ function _applySharedCacheData(){
   csvHeadersAvailable=c.csvHeaders||[]
 }
 
-onAuthStateChanged(auth,async u=>{if(!u){window.location.href='login.html';return}document.getElementById('user-email').textContent=u.email;showLoader();updateProgress(25,'Chargement du roster...');await Promise.all([chargerRoster(),chargerPlanificationsGPS()]);updateProgress(75,'Chargement du fichier GPS...')
+window.__deferredOnAuthStateChanged(auth,async u=>{if(!u){window.location.href='login.html';return}document.getElementById('user-email').textContent=u.email;showLoader();updateProgress(25,'Chargement du roster...');await Promise.all([chargerRoster(),chargerPlanificationsGPS()]);updateProgress(75,'Chargement du fichier GPS...')
   console.log('[GPS-Match] onAuthStateChanged — electronAPI:',!!window.electronAPI,'sharedData:',!!window.__gpsSharedData,'session:',!!window.sessionStorage.getItem('gps_csv_parsed'))
   // 1) Electron : charger le fichier local en priorité (comme l'ancienne version Firebase)
   if(window.electronAPI){

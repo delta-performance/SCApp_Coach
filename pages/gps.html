@@ -157,6 +157,7 @@
   </style>
   <link rel="manifest" href="../manifest.json">
   <script type="module" src="../auth-guard.js"></script>
+  <script type="module">import { onAuthStateChanged as __o } from '../supabase-adapter.js'; window.__deferredOnAuthStateChanged = (auth, cb) => __o(auth, (user) => setTimeout(() => cb(user), 0));</script>
   <link rel="stylesheet" href="../mobile.css">
   <script type="module" src="../mobile.js"></script>
 </head>
@@ -382,7 +383,7 @@ function _applySharedCacheData(){
   vmax6mCache.clear();seuilPosteCache.clear();clearSaisonCache()
 }
 
-onAuthStateChanged(auth,async u=>{if(!u){window.location.href='login.html';return}document.getElementById('user-email').textContent=u.email;showLoader();updateProgress(25,'Chargement du roster...')
+window.__deferredOnAuthStateChanged(auth,async u=>{if(!u){window.location.href='login.html';return}document.getElementById('user-email').textContent=u.email;showLoader();updateProgress(25,'Chargement du roster...')
   // 0) Charger le roster depuis le cache immédiatement (synchrone)
   const cj=localStorage.getItem('cache_joueurs'),cb=localStorage.getItem('cache_blessures')
   if(cj){try{rosterJoueurs=(JSON.parse(cj).data||[]).filter(j=>!j.archived)}catch(e){}}

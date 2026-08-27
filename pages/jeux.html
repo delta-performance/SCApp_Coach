@@ -227,6 +227,7 @@
   </style>
   <link rel="manifest" href="../manifest.json">
   <script type="module" src="../auth-guard.js"></script>
+  <script type="module">import { onAuthStateChanged as __o } from '../supabase-adapter.js'; window.__deferredOnAuthStateChanged = (auth, cb) => __o(auth, (user) => setTimeout(() => cb(user), 0));</script>
   <link rel="stylesheet" href="../mobile.css">
   <script type="module" src="../mobile.js"></script>
 </head>
@@ -854,7 +855,7 @@
       document.addEventListener('touchend', endDrag)
     })()
 
-    onAuthStateChanged(auth, async user => {
+    window.__deferredOnAuthStateChanged(auth, async user => {
       if (!user) return
       try {
         const snap = await getDocs(collection(db, 'joueurs'))
