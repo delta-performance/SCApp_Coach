@@ -38,10 +38,12 @@ html, body {
 }
 
 .topbar > *, .vue-toolbar > *, .editor-topbar > * {
-  flex: 1 1 120px;
+  flex: 1 1 calc(50% - 6px);
   min-width: 0;
+  max-width: 100%;
   font-size: 12px !important;
   padding: 8px 10px !important;
+  margin-bottom: 4px;
 }
 
 button, .btn, .btn-primary, .btn-ghost, .btn-secondary, .vue-btn, .bloc-hdr, .btn-add-bloc, .groupes-tabs button {
@@ -221,16 +223,21 @@ input[type="text"], input[type="number"], input[type="email"], input[type="passw
 
 .editor-split {
   flex-direction: column !important;
-  overflow: visible !important;
-  height: auto !important;
+  overflow: hidden !important;
+  height: calc(100vh - 100px) !important;
+  max-height: calc(100vh - 100px) !important;
 }
 
 .editor-main {
+  flex: 1 1 auto;
   padding: 4px !important;
-  overflow: visible !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  min-height: 0;
 }
 
 .editor-sidebar {
+  flex: 0 0 auto;
   width: 100% !important;
   min-width: unset !important;
   max-width: 100% !important;
@@ -239,6 +246,27 @@ input[type="text"], input[type="number"], input[type="email"], input[type="passw
   padding: 8px 0 !important;
   order: 2;
   background: #0a0a0a !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  min-height: 0;
+  max-height: 40vh;
+}
+
+.mode-toggle {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  gap: 6px;
+  width: 100%;
+}
+
+.mode-toggle .mode-btn {
+  flex: 1 1 calc(50% - 6px) !important;
+  min-width: 0 !important;
+  font-size: 12px !important;
+  padding: 7px 6px !important;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  white-space: nowrap;
 }
 
 .sidebar-attrib-header {

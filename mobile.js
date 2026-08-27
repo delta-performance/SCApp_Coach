@@ -35,4 +35,32 @@ window.addEventListener('DOMContentLoaded', () => {
     el.style.paddingTop = '44px'
     el.style.maxWidth = '100vw'
   })
+
+  // Toggle cliquable pour le panneau "Attribution joueurs"
+  document.querySelectorAll('.sidebar-attrib-header').forEach(header => {
+    const label = header.textContent.trim() || 'Attribution'
+    const panel = header.nextElementSibling ||
+                  (header.parentElement && header.parentElement.querySelector('#attrib-sidebar'))
+    if (!panel) return
+
+    header.style.cursor = 'pointer'
+    header.style.display = 'flex'
+    header.style.justifyContent = 'space-between'
+    header.style.alignItems = 'center'
+    header.style.padding = '10px 8px'
+    header.style.borderRadius = '8px'
+    header.style.background = '#151515'
+    header.style.border = '1px solid #222'
+    header.style.marginBottom = '6px'
+    header.innerHTML = `<span>${label}</span><span class="toggle-icon" style="font-weight:700;min-width:22px;text-align:center;">+</span>`
+
+    // Caché par défaut
+    panel.style.display = 'none'
+
+    header.addEventListener('click', () => {
+      const isHidden = panel.style.display === 'none'
+      panel.style.display = isHidden ? 'block' : 'none'
+      header.querySelector('.toggle-icon').textContent = isHidden ? '−' : '+'
+    })
+  })
 })
