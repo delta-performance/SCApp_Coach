@@ -1,0 +1,3531 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <base href="../renderer/">
+  <meta charset="UTF-8">
+  <title>SCA Albi — Planning Blessés</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #0f0f0f; color: #fff; display: flex; height: 100vh; overflow: hidden; }
+    .sidebar { width: 220px; min-width: 220px; background: #1a1a1a; border-right: 1px solid #2a2a2a; display: flex; flex-direction: column; padding: 20px 0; }
+    .sidebar-logo { display: flex; align-items: center; gap: 10px; padding: 0 20px 24px; border-bottom: 1px solid #2a2a2a; }
+    .sidebar-logo img { width: 36px; }
+    .sidebar-logo span { font-size: 15px; font-weight: 700; color: #FECC00; }
+    .nav-section { padding: 16px 12px 8px; font-size: 10px; font-weight: 600; color: #444; letter-spacing: .08em; text-transform: uppercase; }
+    .nav-item { display: flex; align-items: center; gap: 10px; padding: 9px 20px; font-size: 13px; color: #888; cursor: pointer; border-left: 2px solid transparent; transition: all .15s; }
+    .nav-item:hover { color: #fff; background: #222; }
+    .nav-item.active { color: #FECC00; border-left-color: #FECC00; background: #222; }
+    .nav-dot { width: 7px; height: 7px; border-radius: 50%; background: currentColor; opacity: 0.6; }
+    .sidebar-bottom { margin-top: auto; padding: 16px 20px; border-top: 1px solid #2a2a2a; }
+    .user-info { font-size: 12px; color: #555; margin-bottom: 8px; }
+    .logout-btn { font-size: 12px; color: #555; cursor: pointer; background: none; border: none; }
+    .logout-btn:hover { color: #E24B4A; }
+    .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+    .topbar { height: 56px; border-bottom: 1px solid #2a2a2a; display: flex; align-items: center; padding: 0 20px; gap: 10px; flex-shrink: 0; }
+    .topbar-title { font-size: 15px; font-weight: 600; flex: 1; }
+    .btn-primary { padding: 7px 14px; border-radius: 8px; border: none; background: #FECC00; color: #0f0f0f; font-size: 13px; font-weight: 600; cursor: pointer; }
+    .btn-primary:hover { opacity: .88; }
+    .btn-ghost { padding: 7px 12px; border-radius: 8px; border: 1px solid #2a2a2a; background: none; color: #888; font-size: 13px; cursor: pointer; }
+    .btn-ghost:hover { color: #fff; border-color: #444; }
+    .btn-nav { padding: 6px 10px; border-radius: 6px; border: 1px solid #2a2a2a; background: none; color: #888; font-size: 14px; cursor: pointer; }
+    .btn-nav:hover { color: #fff; border-color: #444; }
+
+    /* TOOLBAR */
+    .toolbar { display: flex; align-items: center; gap: 8px; padding: 10px 20px; border-bottom: 1px solid #2a2a2a; flex-shrink: 0; flex-wrap: wrap; }
+    .semaine-label { font-size: 13px; font-weight: 600; min-width: 180px; text-align: center; }
+    .joueur-chips { display: flex; gap: 6px; flex-wrap: wrap; flex: 1; }
+    .joueur-chip {
+      display: flex; align-items: center; gap: 6px;
+      padding: 4px 10px; border-radius: 16px;
+      border: 1px solid #2a2a2a; background: #1a1a1a;
+      font-size: 12px; cursor: pointer; transition: all .12s;
+    }
+    .joueur-chip.active { border-color: var(--color); background: var(--bg); }
+    .joueur-chip .chip-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--color); }
+    .joueur-chip .chip-remove { color: #555; font-size: 10px; cursor: pointer; }
+    .joueur-chip .chip-remove:hover { color: #E24B4A; }
+    .add-joueur-btn { padding: 4px 10px; border-radius: 16px; border: 1px dashed #2a2a2a; background: none; color: #555; font-size: 12px; cursor: pointer; }
+    .add-joueur-btn:hover { border-color: #FECC00; color: #FECC00; }
+
+    /* GRILLE PLANNING */
+    .planning-wrap { flex: 1; overflow: auto; }
+    .planning-grid { display: grid; min-width: 700px; }
+
+    .header-coin { background: #0f0f0f; border-right: 1px solid #2a2a2a; border-bottom: 1px solid #2a2a2a; position: sticky; top: 0; left: 0; z-index: 3; }
+    .header-jour { background: #1a1a1a; border-bottom: 1px solid #2a2a2a; border-right: 1px solid #1a1a1a; padding: 8px 6px; text-align: center; position: sticky; top: 0; z-index: 2; }
+    .header-jour.today { border-bottom: 2px solid #FECC00; }
+    .jour-nom { font-size: 11px; font-weight: 700; color: #555; text-transform: uppercase; }
+    .jour-num { font-size: 16px; font-weight: 700; }
+    .jour-num.today-num { color: #FECC00; }
+
+    .joueur-label-col { background: #0f0f0f; border-right: 1px solid #2a2a2a; position: sticky; left: 0; z-index: 1; display: flex; align-items: center; padding: 0 10px; gap: 8px; border-bottom: 1px solid #1a1a1a; }
+    .joueur-avatar { width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; color: #fff; flex-shrink: 0; }
+    .joueur-nom-label { font-size: 12px; font-weight: 600; white-space: nowrap; }
+    .joueur-patho { font-size: 10px; color: #E24B4A; }
+
+    .day-cell { border-right: 1px solid #1a1a1a; border-bottom: 1px solid #1a1a1a; min-height: 70px; padding: 4px; position: relative; cursor: pointer; background: #0a0a0a; }
+    .day-cell:hover { background: #FECC0006; }
+
+    /* CRÉNEAUX */
+    .creneau {
+      border-radius: 6px; padding: 5px 8px; margin-bottom: 4px;
+      font-size: 11px; cursor: pointer; position: relative;
+      border: 1px solid transparent; transition: opacity .12s;
+    }
+    .creneau:hover { opacity: .85; }
+    .creneau-titre { font-weight: 700; white-space: normal; word-break: break-word; overflow: hidden; }
+    .creneau-heure { font-size: 10px; opacity: .8; margin-top: 1px; }
+    .creneau-del { position: absolute; top: 3px; right: 5px; font-size: 10px; opacity: 0; cursor: pointer; }
+    .creneau:hover .creneau-del { opacity: 1; }
+    .creneau-del:hover { color: #E24B4A; }
+
+    /* TYPES CRÉNEAUX */
+    .t-muscu { background: #FECC0022; border-color: #FECC0044; color: #FECC00; }
+    .t-terrain { background: #1D9E7522; border-color: #1D9E7544; color: #5DCAA5; }
+    .t-kine { background: #378ADD22; border-color: #378ADD44; color: #85B7EB; }
+    .t-cardio { background: #E91E6322; border-color: #E91E6344; color: #F48FB1; }
+    .t-repos { background: #88878022; border-color: #88878044; color: #B4B2A9; }
+    .t-medical { background: #E24B4A22; border-color: #E24B4A44; color: #F09595; }
+    .t-autre { background: #2a2a2a; border-color: #444; color: #888; }
+
+    /* CRÉNEAU IMPORTANT - Visuel marquant pour les coachs */
+    .creneau.important {
+      animation: pulse-important 2s ease-in-out infinite;
+      box-shadow: 0 0 15px currentColor, inset 0 0 10px currentColor;
+      border-width: 2px;
+      font-weight: 700;
+    }
+    .creneau.important::before {
+      content: '★';
+      position: absolute;
+      top: -8px;
+      right: -5px;
+      background: #FECC00;
+      color: #0f0f0f;
+      font-size: 10px;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    @keyframes pulse-important {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.85; }
+    }
+
+    /* MENU CONTEXTUEL */
+    .context-menu {
+      position: fixed;
+      background: #1a1a1a;
+      border: 1px solid #2a2a2a;
+      border-radius: 8px;
+      padding: 4px 0;
+      min-width: 140px;
+      z-index: 1000;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+      display: none;
+    }
+    .context-menu-item {
+      padding: 8px 16px;
+      font-size: 12px;
+      color: #ccc;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .context-menu-item:hover {
+      background: #2a2a2a;
+      color: #fff;
+    }
+    .context-menu-item.delete:hover {
+      background: #E24B4A22;
+      color: #E24B4A;
+    }
+    .context-menu-separator {
+      height: 1px;
+      background: #2a2a2a;
+      margin: 4px 0;
+    }
+
+    /* MODE DÉPLACEMENT */
+    .day-cell.move-target {
+      background: #FECC0022 !important;
+      border: 2px dashed #FECC00 !important;
+      cursor: crosshair !important;
+    }
+    .day-cell.move-target:hover {
+      background: #FECC0044 !important;
+    }
+    .creneau.moving {
+      opacity: 0.5;
+      border: 2px dashed #FECC00;
+    }
+    .move-indicator {
+      position: fixed;
+      background: #FECC00;
+      color: #0f0f0f;
+      padding: 4px 12px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 600;
+      z-index: 9999;
+      pointer-events: none;
+      display: none;
+    }
+
+    /* MULTI-SÉLECTION */
+    .creneau.selected {
+      background: #FECC00 !important;
+      color: #0f0f0f !important;
+      border-color: #FECC00 !important;
+    }
+    .creneau.selected .creneau-titre,
+    .creneau.selected .creneau-heure {
+      color: #0f0f0f !important;
+    }
+    .creneau-select-checkbox {
+      position: absolute;
+      top: 4px;
+      right: 4px;
+      width: 16px;
+      height: 16px;
+      accent-color: #FECC00;
+      cursor: pointer;
+      z-index: 10;
+    }
+
+    /* BARRE D'ACTIONS FLOTTANTE */
+    .multi-select-bar {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #1a1a1a;
+      border: 1px solid #2a2a2a;
+      border-radius: 12px;
+      padding: 12px 20px;
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      z-index: 100;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+    }
+    .multi-select-drag-handle {
+      cursor: grab;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #666;
+      font-size: 16px;
+      padding: 0 8px;
+      user-select: none;
+      border-right: 1px solid #2a2a2a;
+      margin-right: 4px;
+    }
+    .multi-select-drag-handle:hover {
+      color: #FECC00;
+    }
+    .btn-dup-jour {
+      border: none !important;
+      background: transparent !important;
+    }
+    .btn-dup-jour:hover {
+      color: #FECC00 !important;
+      background: rgba(254, 204, 0, 0.1) !important;
+      border-radius: 4px;
+    }
+    .multi-select-count {
+      font-size: 13px;
+      color: #888;
+      font-weight: 500;
+    }
+    .multi-select-count strong {
+      color: #FECC00;
+    }
+    .multi-select-actions {
+      display: flex;
+      gap: 8px;
+    }
+
+    /* MODAL CRÉNEAU */
+    .modal-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.75); align-items: center; justify-content: center; z-index: 100; }
+    .modal-overlay.open { display: flex; }
+    .modal { background: #1a1a1a; border: 1px solid #2a2a2a; border-radius: 16px; padding: 28px; width: 460px; max-height: 85vh; overflow-y: auto; }
+    .modal-title { font-size: 15px; font-weight: 700; margin-bottom: 20px; }
+    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
+    .form-field label { display: block; font-size: 11px; color: #555; margin-bottom: 4px; }
+    .form-field input, .form-field select, .form-field textarea { width: 100%; padding: 8px 10px; border-radius: 8px; border: 1px solid #2a2a2a; background: #0f0f0f; color: #fff; font-size: 13px; outline: none; }
+    .form-field input:focus, .form-field select:focus { border-color: #FECC00; }
+    .form-field textarea { resize: vertical; min-height: 60px; grid-column: 1/-1; }
+    .form-full { grid-column: 1/-1; }
+    .modal-actions { display: flex; gap: 10px; margin-top: 20px; }
+    .btn-danger { padding: 8px 14px; border-radius: 8px; border: 1px solid #E24B4A33; background: none; color: #E24B4A; font-size: 13px; cursor: pointer; }
+
+    /* MODAL JOUEUR SELECT */
+    .joueur-select-list { max-height: 300px; overflow-y: auto; }
+    .joueur-select-item { display: flex; align-items: center; gap: 10px; padding: 8px 12px; border-radius: 8px; cursor: pointer; transition: background .12s; }
+    .joueur-select-item:hover { background: #222; }
+    .joueur-select-item.selected { background: #FECC0011; }
+    .joueur-select-check { width: 16px; height: 16px; border-radius: 4px; border: 1px solid #2a2a2a; background: #0f0f0f; display: flex; align-items: center; justify-content: center; font-size: 10px; color: #FECC00; }
+    .joueur-select-item.selected .joueur-select-check { background: #FECC00; color: #0f0f0f; border-color: #FECC00; }
+
+    /* MODAL DUPLICATION */
+    .dup-options { display: flex; flex-direction: column; gap: 12px; margin-bottom: 20px; }
+    .dup-option { display: flex; align-items: center; gap: 10px; padding: 12px; border-radius: 8px; border: 1px solid #2a2a2a; cursor: pointer; transition: all .12s; }
+    .dup-option:hover { border-color: #444; background: #222; }
+    .dup-option.selected { border-color: #FECC00; background: #FECC0011; }
+    .dup-option-radio { width: 18px; height: 18px; border-radius: 50%; border: 2px solid #555; display: flex; align-items: center; justify-content: center; }
+    .dup-option.selected .dup-option-radio { border-color: #FECC00; }
+    .dup-option-radio::after { content: ''; width: 8px; height: 8px; border-radius: 50%; background: #FECC00; opacity: 0; }
+    .dup-option.selected .dup-option-radio::after { opacity: 1; }
+    .dup-option-label { font-size: 13px; }
+    .dup-option-desc { font-size: 11px; color: #666; margin-top: 2px; }
+    .dup-joueurs-select { display: none; margin-top: 10px; padding: 10px; background: #111; border-radius: 6px; border: 1px solid #2a2a2a; }
+    .dup-joueurs-select.show { display: block; }
+
+    .empty-state { color: #333; font-size: 13px; text-align: center; padding: 60px 20px; }
+
+    /* OBJECTIF INDIVIDUEL PAR JOUEUR - Compact */
+    .objectif-joueur-row {
+      display: flex;
+      align-items: flex-start;
+      gap: 4px;
+      margin-top: 4px;
+      padding: 2px 4px;
+      background: #0d0d0d;
+      border-radius: 4px;
+      border: 1px solid #1a1a1a;
+    }
+    .objectif-joueur-label {
+      font-size: 8px;
+      font-weight: 600;
+      color: #FECC00;
+      text-transform: uppercase;
+      letter-spacing: .05em;
+      white-space: nowrap;
+    }
+    .objectif-joueur-input {
+      flex: 1;
+      background: transparent;
+      border: none;
+      border-bottom: 1px solid #2a2a2a;
+      padding: 1px 2px;
+      color: #888;
+      font-size: 10px;
+      outline: none;
+      min-width: 60px;
+      width: 100%;
+      resize: none;
+      font-family: inherit;
+      line-height: 1.2;
+      height: auto;
+      overflow-y: hidden;
+    }
+    .objectif-joueur-input:focus {
+      border-bottom-color: #FECC00;
+      color: #fff;
+    }
+    .objectif-joueur-input::placeholder {
+      color: #444;
+      font-size: 9px;
+    }
+
+    /* ===== PLANNING KINÉ ===== */
+    .kine-view { display: none; flex: 1; flex-direction: column; overflow: hidden; background: #0f0f0f; }
+    .kine-view.active { display: flex; }
+    .planning-view { display: flex; flex-direction: column; flex: 1; overflow: hidden; }
+    .planning-view.hidden { display: none; }
+
+    /* Toggle tabs */
+    .view-tabs { display: flex; gap: 4px; background: #111; border-radius: 8px; padding: 3px; }
+    .view-tab { padding: 5px 14px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; color: #555; border: none; background: none; transition: all .15s; }
+    .view-tab.active { background: #2a2a2a; color: #fff; }
+    .view-tab:hover:not(.active) { color: #bbb; }
+
+    /* Grille kiné jour-par-jour */
+    .kine-day-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 10px; padding: 16px; flex: 1; min-height: 0; overflow: hidden; }
+    .kine-day-col { background: #111; border-radius: 10px; border: 1px solid #1e1e1e; display: flex; flex-direction: column; min-height: 0; height: 100%; overflow: hidden; }
+    .kine-day-col.today-col { border-color: #FECC0055; }
+    .kine-day-header { padding: 8px 10px; border-bottom: 1px solid #1e1e1e; display: flex; flex-direction: column; gap: 2px; flex-shrink: 0; min-height: 64px; box-sizing: border-box; justify-content: center; }
+    .kine-day-name { font-size: 10px; font-weight: 700; color: #555; text-transform: uppercase; letter-spacing: .08em; }
+    .kine-day-num { font-size: 18px; font-weight: 700; line-height: 1; }
+    .kine-day-num.today-kine { color: #FECC00; }
+    .kine-day-body { flex: 1; min-height: 0; padding: 6px; display: flex; flex-direction: column; gap: 4px; position: relative; overflow-y: auto; }
+
+    .kine-creneau-item {
+      border-radius: 7px; padding: 6px 8px; position: relative; z-index: 1;
+      border: 1px solid transparent; cursor: default;
+    }
+    .kine-creneau-item.hors-dispo {
+      border-color: #E24B4A88 !important;
+      box-shadow: 0 0 0 2px #E24B4A33;
+    }
+    .kine-creneau-item.hors-dispo::after {
+      content: '⚠ hors dispo';
+      display: block; margin-top: 3px;
+      font-size: 9px; color: #E24B4A; font-weight: 700; letter-spacing: .04em;
+    }
+    .kine-creneau-item.conflit-kine {
+      border-color: #F5A62388 !important;
+      box-shadow: 0 0 0 2px #F5A62333;
+    }
+    .kine-creneau-item.conflit-kine::before {
+      content: '👥 Conflit horaire';
+      display: block; margin-bottom: 2px;
+      font-size: 9px; color: #F5A623; font-weight: 700; letter-spacing: .04em;
+    }
+    .kine-creneau-joueur { font-size: 12px; font-weight: 700; }
+    .kine-creneau-titre { font-size: 11px; opacity: .8; white-space: normal; word-break: break-word; overflow: hidden; }
+    .kine-creneau-heure { font-size: 10px; opacity: .65; margin-top: 1px; }
+    .kine-empty { font-size: 11px; color: #333; text-align: center; padding: 12px 6px; }
+
+    /* Dispo kiné sous le header du jour */
+    .dispo-badge { font-size: 9px; color: #1D9E75; margin-top: 2px; }
+    .dispo-badge.none { color: #555; }
+
+    /* Modal dispo kiné */
+    .dispo-day-row { display: flex; flex-direction: column; gap: 8px; padding: 12px 0; border-bottom: 1px solid #1e1e1e; }
+    .dispo-day-header { display: flex; align-items: center; gap: 10px; }
+    .dispo-day-label { font-size: 12px; font-weight: 600; width: 80px; color: #ccc; }
+    .dispo-toggle { display: flex; align-items: center; gap: 6px; }
+    .dispo-toggle input[type="checkbox"] { accent-color: #1D9E75; width: 15px; height: 15px; cursor: pointer; }
+    .dispo-plages-container { display: flex; flex-direction: column; gap: 6px; margin-left: 90px; }
+    .dispo-plage-row { display: flex; align-items: center; gap: 6px; }
+    .dispo-times { display: flex; align-items: center; gap: 6px; }
+    .dispo-times input[type="time"] { background: #0f0f0f; border: 1px solid #2a2a2a; border-radius: 6px; color: #fff; padding: 4px 7px; font-size: 12px; outline: none; width: 90px; }
+    .dispo-times input[type="time"]:focus { border-color: #1D9E75; }
+    .dispo-times span { color: #444; font-size: 11px; }
+    .btn-add-plage { padding: 4px 8px; border-radius: 6px; border: 1px dashed #1D9E75; background: none; color: #1D9E75; font-size: 11px; cursor: pointer; margin-left: 90px; }
+    .btn-add-plage:hover { background: #1D9E7511; }
+    .btn-remove-plage { padding: 4px 8px; border-radius: 6px; border: 1px solid #E24B4A44; background: none; color: #E24B4A; font-size: 10px; cursor: pointer; }
+    .btn-remove-plage:hover { background: #E24B4A22; }
+
+    /* Alerte dans le planning blessés */
+    .creneau.alerte-kine {
+      border-color: #E24B4A88 !important;
+      box-shadow: 0 0 0 2px #E24B4A22;
+    }
+    .creneau.alerte-kine::before {
+      content: '⚠';
+      position: absolute; top: 2px; left: 4px;
+      font-size: 9px; color: #E24B4A;
+      font-style: normal;
+    }
+    .creneau.alerte-kine .creneau-titre { padding-left: 12px; }
+    .creneau.alerte-kine-conflit {
+      border-color: #F5A62388 !important;
+      box-shadow: 0 0 0 2px #F5A62322;
+    }
+    .creneau.alerte-kine-conflit::after {
+      content: '👥';
+      position: absolute; top: 2px; right: 4px;
+      font-size: 9px;
+      font-style: normal;
+    }
+    /* Alerte de conflit de séances */
+    .creneau.alerte-conflit {
+      border-color: #E91E6388 !important;
+      box-shadow: 0 0 0 2px #E91E6322;
+      animation: pulse-conflit 2s ease-in-out infinite;
+    }
+    .creneau.alerte-conflit::before {
+      content: '⚠️';
+      position: absolute; top: 2px; left: 4px;
+      font-size: 9px; color: #E91E63;
+      font-style: normal;
+    }
+    .creneau.alerte-conflit .creneau-titre { padding-left: 12px; }
+    @keyframes pulse-conflit {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.85; }
+    }
+
+    /* ===== IMPRESSION ===== */
+    #print-root { display: none; }
+    .print-page {
+      background: #0f0f0f; color: #fff;
+      padding: 10px 12px; box-sizing: border-box;
+      page-break-after: always;
+      page-break-inside: avoid;
+      break-inside: avoid;
+      width: 100%;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+    .print-page:last-child { page-break-after: auto; }
+    .print-header { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; flex-shrink: 0; }
+    .print-header img { width: 36px; height: auto; }
+    .print-header-title { font-size: 16px; font-weight: 700; color: #FECC00; }
+    .print-header-sub { font-size: 11px; color: #888; margin-top: 1px; }
+    .print-header-week { margin-left: auto; text-align: right; }
+    .print-week-num { font-size: 20px; font-weight: 800; color: #FECC00; }
+    .print-week-label { font-size: 9px; color: #666; text-transform: uppercase; letter-spacing: .08em; }
+    .print-grid { display: grid; width: 100%; }
+    .print-coin { background: #0f0f0f; border-bottom: 2px solid #FECC00; }
+    .print-day-hdr {
+      background: #1a1a1a; border-bottom: 2px solid #FECC00;
+      text-align: center; padding: 4px 3px;
+    }
+    .print-day-name { font-size: 9px; font-weight: 700; color: #555; text-transform: uppercase; }
+    .print-day-num { font-size: 13px; font-weight: 700; color: #fff; }
+    .print-joueur-label {
+      background: #0f0f0f; border-right: 2px solid #FECC00; border-bottom: 1px solid #1a1a1a;
+      padding: 4px 6px; display: flex; flex-direction: column; gap: 1px;
+      page-break-inside: avoid; break-inside: avoid;
+    }
+    .print-joueur-nom { font-size: 10px; font-weight: 700; color: #fff; white-space: nowrap; }
+    .print-joueur-patho { font-size: 8px; color: #E24B4A; }
+    .print-joueur-semaine { font-size: 7px; color: #E24B4A; font-weight: 600; }
+    .print-cell {
+      border-right: 1px solid #1a1a1a; border-bottom: 1px solid #1a1a1a;
+      padding: 3px; background: #0a0a0a;
+      page-break-inside: avoid; break-inside: avoid;
+    }
+    .print-creneau {
+      border-radius: 3px; padding: 2px 4px; margin-bottom: 2px;
+      font-size: 8px; border: 1px solid transparent;
+    }
+    .print-creneau-titre { font-weight: 700; white-space: normal; word-break: break-word; }
+    .print-creneau-heure { font-size: 7px; opacity: .8; }
+    .print-creneau.important { font-weight: 800; border-width: 2px; }
+    .print-creneau.important::before { content: '★ '; }
+    .print-footer { margin-top: 6px; font-size: 8px; color: #444; text-align: center; flex-shrink: 0; }
+
+    @media print {
+      @page { margin: 0 !important; }
+      html, body { background: #0f0f0f !important; margin: 0 !important; padding: 0 !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+      body * { visibility: hidden !important; }
+      #print-root, #print-root * { visibility: visible !important; }
+      #print-root { display: block !important; position: absolute; left: 0; top: 0; width: 100%; }
+      .print-page { overflow: hidden; }
+      * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+    }
+  </style>
+  <link rel="manifest" href="../manifest.json">
+  <script type="module" src="../auth-guard.js"></script>
+</head>
+<body>
+  <div class="sidebar">
+    <div class="sidebar-logo">
+      <img src="https://www.sca-albi.fr/wp-content/uploads/2023/10/cropped-SCA-bis.png">
+      <span>SCA Albi</span>
+    </div>
+    <div class="nav-section">Effectif</div>
+    <div class="nav-item" onclick="location.href='index.html'">
+      <div class="nav-dot"></div> Roster
+    </div>
+    <div class="nav-section">Entraînement</div>
+    <div class="nav-item" onclick="location.href='seances.html'">
+  <div class="nav-dot"></div> Séances
+    </div>
+    <div class="nav-item" onclick="location.href='exercices.html'"><div class="nav-dot"></div> Exercices</div>
+    <div class="nav-section">Suivi</div>
+    <div class="nav-item" onclick="location.href='wellness.html'">
+      <div class="nav-dot"></div> Wellness
+    </div>
+    <div class="nav-item" onclick="location.href='performances.html'">
+      <div class="nav-dot"></div> Performances
+    </div>
+    <div class="nav-item" onclick="location.href='medical.html'">
+      <div class="nav-dot"></div> Médical
+    </div>
+    <div class="nav-item" onclick="location.href='absences.html'">
+      <div class="nav-dot"></div> Absences
+    </div>
+    <div class="nav-item" onclick="location.href='suivi-poids.html'">
+      <div class="nav-dot"></div> Suivi Poids
+    </div>
+    <div class="nav-section">Planning</div>
+    <div class="nav-item" onclick="location.href='planning.html'">
+      <div class="nav-dot"></div> Planning club
+    </div>
+    <div class="nav-item active" onclick="location.href='planning-blesses.html'">
+      <div class="nav-dot"></div> Planning Blessés
+    </div>
+    <div class="nav-item" onclick="location.href='fiches-seances.html'">
+      <div class="nav-dot"></div> Fiches Séances
+    </div>
+    <div class="nav-section">Équipes</div>
+    <div class="nav-item" onclick="location.href='equipes.html'">
+  <div class="nav-dot"></div> Composition équipes
+    </div>
+    <div class="nav-section">GPS</div>
+    <div class="nav-item" onclick="location.href='gps.html'">
+  <div class="nav-dot"></div> Données GPS
+    </div>
+    <div class="nav-item" onclick="location.href='gps-match.html'">
+  <div class="nav-dot"></div> Rapport de match
+    </div>
+    <div class="nav-item" onclick="location.href='gps-planif.html'">
+  <div class="nav-dot"></div> Planif. charge
+    </div>
+    <div class="nav-item" onclick="location.href='profil-force-vitesse.html'"><div class="nav-dot"></div> Profil F-V</div>
+    <div class="sidebar-bottom">
+      <div class="user-info" id="user-email"></div>
+      <button class="logout-btn" onclick="handleLogout()">Se déconnecter</button>
+    </div>
+  </div>
+
+  <div class="main" style="display:flex; flex-direction:column; flex:1; overflow:hidden;">
+    <div id="main-planning-view" style="display:flex; flex-direction:column; flex:1; overflow:hidden;">
+    <div class="topbar">
+      <div class="topbar-title">Planning blessés</div>
+      <div class="view-tabs">
+        <button class="view-tab active" id="tab-blesses" onclick="switchView('blesses')">Planning blessés</button>
+        <button class="view-tab" id="tab-kine" onclick="switchView('kine')">🩺 Planning kiné</button>
+      </div>
+      <button class="btn-nav" onclick="semainePrecedenteBlesses()">‹</button>
+      <div class="semaine-label" id="semaine-label"></div>
+      <button class="btn-nav" onclick="semaineSuivanteBlesses()">›</button>
+      <button class="btn-ghost" onclick="allerAujourdhuiBlesses()">Aujourd'hui</button>
+      <button class="btn-ghost" onclick="dupliquerSemaineBlesses()">Dupliquer semaine</button>
+      <button class="btn-ghost" id="btn-hide-weekend" onclick="toggleHideWeekend()">📅 Week-end</button>
+      <button class="btn-ghost" onclick="toggleMultiSelectModeBlesses()" id="btn-multi-select">☐ Sélection multiple</button>
+      <button class="btn-primary" onclick="ouvrirModalCreneau()">+ Créneau</button>
+      <button class="btn-ghost" onclick="ouvrirModalImpression()" title="Imprimer le planning">🖨️ Imprimer</button>
+    </div>
+
+    <div class="toolbar">
+      <div class="joueur-chips" id="joueur-chips"></div>
+      <button class="add-joueur-btn" onclick="ouvrirModalJoueurs()">+ Ajouter un blessé</button>
+    </div>
+
+    <div class="planning-wrap">
+      <div class="planning-grid" id="planning-grid"></div>
+    </div>
+    </div>
+
+    <!-- VUE PLANNING KINÉ -->
+    <div class="kine-view" id="kine-view">
+      <div class="topbar" style="border-bottom:1px solid #2a2a2a; flex-shrink:0;">
+        <button class="btn-ghost" onclick="switchView('blesses')">← Retour</button>
+        <div style="flex:1; font-size:13px; font-weight:600; color:#1D9E75;">🩺 Planning kiné — créneaux de la semaine</div>
+        <button class="btn-ghost" onclick="ouvrirModalDispoKine()" style="border-color:#1D9E7544; color:#1D9E75;">⏱ Gérer mes dispos</button>
+      </div>
+      <div class="kine-day-grid" id="kine-day-grid"></div>
+    </div>
+
+    <!-- BARRE D'ACTIONS MULTI-SÉLECTION -->
+    <div class="multi-select-bar" id="multi-select-bar" style="display: none;">
+      <div class="multi-select-drag-handle" title="Glisser pour déplacer">⠿</div>
+      <div class="multi-select-count"><strong id="multi-select-count">0</strong> créneau(x) sélectionné(s)</div>
+      <div class="multi-select-actions">
+        <button class="btn-ghost" onclick="dupliquerMultiSelect()">📋 Dupliquer</button>
+        <button class="btn-danger" onclick="supprimerMultiSelect()">🗑️ Supprimer</button>
+        <button class="btn-ghost" onclick="annulerMultiSelect()">Annuler</button>
+      </div>
+    </div>
+
+    <!-- MENU CONTEXTUEL -->
+    <div class="context-menu" id="context-menu">
+      <div class="context-menu-item" onclick="contextAction('edit')">
+        <span>✏️</span> Modifier
+      </div>
+      <div class="context-menu-item" onclick="contextAction('duplicate')">
+        <span>📋</span> Dupliquer
+      </div>
+      <div class="context-menu-item" onclick="contextAction('move')">
+        <span>📍</span> Déplacer
+      </div>
+      <div class="context-menu-separator"></div>
+      <div class="context-menu-item delete" onclick="contextAction('delete')">
+        <span>🗑️</span> Supprimer
+      </div>
+    </div>
+
+    <!-- INDICATEUR DE DÉPLACEMENT -->
+    <div class="move-indicator" id="move-indicator">Clique sur le jour cible pour déplacer</div>
+  </div>
+
+  <!-- MODAL DISPO KINÉ -->
+  <div class="modal-overlay" id="modal-dispo-kine">
+    <div class="modal" style="width:560px;">
+      <div class="modal-title" style="color:#1D9E75;">⏱ Plages horaires de disponibilité</div>
+      <div style="font-size:12px; color:#666; margin-bottom:16px;">
+        Définissez vos créneaux de disponibilité. Vous pouvez ajouter plusieurs plages par jour. Le prépa sera alerté si un créneau kiné est planifié en dehors de ces plages.
+      </div>
+      <div id="dispo-rows"></div>
+      <div class="modal-actions" style="margin-top:20px;">
+        <button class="btn-ghost" onclick="fermerModalDispoKine()">Annuler</button>
+        <button class="btn-ghost" onclick="dupliquerDispoSemaines()" style="border-color:#1D9E7544; color:#1D9E75;">📋 Dupliquer à toutes les semaines</button>
+        <button class="btn-primary" style="background:#1D9E75;" onclick="sauvegarderDispoKine()">Enregistrer</button>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- MODAL CRÉNEAU -->
+  <div class="modal-overlay" id="modal-creneau">
+    <div class="modal">
+      <div class="modal-title" id="modal-creneau-title">Nouveau créneau</div>
+      <div class="form-grid">
+        <div class="form-field form-full">
+          <label>Titre *</label>
+          <input type="text" id="cr-titre" placeholder="Ex: Kiné, Muscu adaptée, Cardio..." />
+        </div>
+        <div class="form-field">
+          <label>Type</label>
+          <select id="cr-type">
+            <option value="muscu">Muscu / Salle</option>
+            <option value="terrain">Terrain (adapté)</option>
+            <option value="kine">Kinésithérapie</option>
+            <option value="cardio">Cardio</option>
+            <option value="medical">Médical / Bilan</option>
+            <option value="repos">Repos</option>
+            <option value="autre">Autre</option>
+          </select>
+        </div>
+        <div class="form-field">
+          <label>Joueur(s)</label>
+          <select id="cr-joueur" multiple style="min-height:80px;"></select>
+        </div>
+        <div class="form-field">
+          <label>Date *</label>
+          <input type="date" id="cr-date" />
+        </div>
+        <div class="form-field">
+          <label>Heure début</label>
+          <input type="time" id="cr-debut" />
+        </div>
+        <div class="form-field">
+          <label>Heure fin</label>
+          <input type="time" id="cr-fin" />
+        </div>
+        <div class="form-field form-full">
+          <label>Notes</label>
+          <textarea id="cr-notes" placeholder="Exercices, consignes..."></textarea>
+        </div>
+        <div class="form-field form-full">
+          <label style="display:flex; align-items:center; gap:8px;">
+            <input type="checkbox" id="cr-avec-groupe" style="accent-color:#FECC00;" />
+            👥 Avec le groupe (joueurs valides)
+          </label>
+        </div>
+        <div class="form-field form-full">
+          <label style="display:flex; align-items:center; gap:8px;">
+            <input type="checkbox" id="cr-commun" style="accent-color:#FECC00;" />
+            👥 Commun (avec d'autres blessés)
+          </label>
+        </div>
+        <div class="form-field form-full">
+          <label style="display:flex; align-items:center; gap:8px;">
+            <input type="checkbox" id="cr-important" style="accent-color:#FECC00;" />
+            <span style="color:#FECC00; font-weight:600;">★ Marquer comme important</span>
+            <span style="font-size:11px; color:#666;">— Le créneau sera plus visible pour les coachs</span>
+          </label>
+        </div>
+      </div>
+      <div class="modal-actions">
+        <button class="btn-ghost" onclick="fermerModalCreneau()">Annuler</button>
+        <button class="btn-danger" id="btn-del-creneau" style="display:none" onclick="supprimerCreneau()">Supprimer</button>
+        <button class="btn-ghost" onclick="ouvrirModalDuplication()">Dupliquer</button>
+        <button class="btn-primary" onclick="sauvegarderCreneau()">Enregistrer</button>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- MODAL SCOPE DÉPLACEMENT -->
+  <div class="modal-overlay" id="modal-move-scope">
+    <div class="modal" style="width: 420px;">
+      <div class="modal-title">Déplacer le créneau</div>
+      
+      <div style="font-size:12px; color:#888; margin-bottom:15px;">
+        Créneau : <strong id="move-scope-titre" style="color:#FECC00;"></strong>
+      </div>
+      
+      <div style="font-size:11px; color:#666; margin-bottom:10px;">
+        Sélectionne les joueurs à déplacer :
+      </div>
+
+      <div id="move-joueurs-list" style="max-height: 200px; overflow-y: auto; margin-bottom: 15px;">
+        <!-- Liste des joueurs générée dynamiquement -->
+      </div>
+
+      <div class="dup-options" style="margin-top:10px;">
+        <div class="dup-option selected" data-mode="deplacer" onclick="selectMoveAction('deplacer')">
+          <div class="dup-option-radio"></div>
+          <div>
+            <div class="dup-option-label">Déplacer (changer date/joueur)</div>
+            <div class="dup-option-desc">Déplacer vers une nouvelle date et/ou un autre joueur</div>
+          </div>
+        </div>
+        <div class="dup-option" data-mode="retirer" onclick="selectMoveAction('retirer')">
+          <div class="dup-option-radio"></div>
+          <div>
+            <div class="dup-option-label">Retirer du créneau</div>
+            <div class="dup-option-desc">Retirer les joueurs sélectionnés du créneau actuel</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-actions" style="margin-top:20px;">
+        <button class="btn-ghost" onclick="fermerModalMoveScope()">Annuler</button>
+        <button class="btn-primary" onclick="confirmerMoveScope()">Continuer</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL SCOPE DUPLICATION -->
+  <div class="modal-overlay" id="modal-dup-scope">
+    <div class="modal" style="width: 420px;">
+      <div class="modal-title">Dupliquer le créneau</div>
+      
+      <div style="font-size:12px; color:#888; margin-bottom:15px;">
+        Créneau : <strong id="dup-scope-titre" style="color:#FECC00;"></strong>
+      </div>
+      
+      <div style="font-size:11px; color:#666; margin-bottom:10px;">
+        Sélectionne les joueurs à dupliquer :
+      </div>
+
+      <div id="dup-joueurs-list" style="max-height: 200px; overflow-y: auto; margin-bottom: 15px;">
+        <!-- Liste des joueurs générée dynamiquement -->
+      </div>
+
+      <div class="modal-actions" style="margin-top:20px;">
+        <button class="btn-ghost" onclick="fermerModalDupScope()">Annuler</button>
+        <button class="btn-primary" onclick="confirmerDupScope()">Continuer</button>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- MODAL DUPLICATION AVANCÉE -->
+  <div class="modal-overlay" id="modal-duplication">
+    <div class="modal" style="width: 520px;">
+      <div class="modal-title">Dupliquer le créneau</div>
+      
+      <div style="font-size:12px; color:#888; margin-bottom:15px;">
+        Créneau : <strong id="dup-creneau-titre" style="color:#FECC00;"></strong>
+      </div>
+
+      <div class="dup-options" id="dup-options">
+        <div class="dup-option selected" data-mode="meme-joueur" onclick="selectDupMode('meme-joueur')">
+          <div class="dup-option-radio"></div>
+          <div>
+            <div class="dup-option-label">Dupliquer pour le(s) même(s) joueur(s)</div>
+            <div class="dup-option-desc">Le créneau sera copié pour les joueurs actuellement sélectionnés</div>
+          </div>
+        </div>
+        <div class="dup-option" data-mode="autres-joueurs" onclick="selectDupMode('autres-joueurs')">
+          <div class="dup-option-radio"></div>
+          <div>
+            <div class="dup-option-label">Dupliquer pour d'autres joueurs</div>
+            <div class="dup-option-desc">Sélectionne les joueurs pour lesquels créer ce créneau</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="dup-joueurs-select" id="dup-joueurs-select">
+        <div style="font-size:11px; color:#555; margin-bottom:8px;">Sélectionne les joueurs :</div>
+        <div id="dup-joueurs-list" style="display:flex; flex-wrap:wrap; gap:6px; max-height:150px; overflow-y:auto;"></div>
+      </div>
+
+      <div class="form-field" style="margin-top:15px;">
+        <label>Date cible (jour de la copie)</label>
+        <input type="date" id="dup-date" />
+      </div>
+
+      <div class="modal-actions">
+        <button class="btn-ghost" onclick="fermerModalDuplication()">Annuler</button>
+        <button class="btn-primary" onclick="confirmerDuplication()">Dupliquer</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL DUPLIQUER SEMAINE -->
+  <div class="modal-overlay" id="modal-dup-semaine">
+    <div class="modal" style="width: 400px;">
+      <div class="modal-title">Dupliquer la semaine</div>
+      
+      <div style="margin-bottom:20px;">
+        <div style="font-size:12px; color:#888; margin-bottom:10px;">
+          Semaine actuelle : <strong id="dup-semaine-current" style="color:#FECC00;"></strong>
+        </div>
+        <div class="form-field">
+          <label>Lundi cible (date de début de la nouvelle semaine)</label>
+          <input type="hidden" id="dup-semaine-date" />
+          <button class="btn-ghost" style="width:100%; text-align:left; justify-content:flex-start;" onclick="ouvrirCalendrierBlesses(function(d){ if(d){ document.getElementById('dup-semaine-date').value=d; var lbl=document.getElementById('dup-semaine-date-label'); lbl.textContent=d.split('-').reverse().join('/'); lbl.style.color='#FECC00'; } }, true)">
+            📅 <span id="dup-semaine-date-label" style="color:#888;">Choisir un lundi...</span>
+          </button>
+        </div>
+      </div>
+      
+      <div style="font-size:11px; color:#666; margin-bottom:15px; padding:10px; background:#0f0f0f; border-radius:6px;">
+        Tous les créneaux de la semaine actuelle seront copiés vers la semaine sélectionnée.
+      </div>
+
+      <div class="modal-actions">
+        <button class="btn-ghost" onclick="fermerModalDupSemaine()">Annuler</button>
+        <button class="btn-primary" onclick="confirmerDupSemaine()">Dupliquer</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL DUPLIQUER JOURNÉE ENTIÈRE -->
+  <div class="modal-overlay" id="modal-dup-journee">
+    <div class="modal" style="width: 450px;">
+      <div class="modal-title">Dupliquer la journée entière</div>
+      
+      <div style="margin-bottom:20px;">
+        <div style="font-size:12px; color:#888; margin-bottom:10px;">
+          Journée source : <strong id="dup-journee-source-label" style="color:#FECC00;"></strong>
+        </div>
+        <div class="form-field" style="margin-bottom:15px;">
+          <label>Date cible (jour de destination)</label>
+          <input type="hidden" id="dup-journee-date" />
+          <button class="btn-ghost" style="width:100%; text-align:left; justify-content:flex-start;" onclick="ouvrirCalendrierBlesses(function(d){ if(d){ document.getElementById('dup-journee-date').value=d; var lbl=document.getElementById('dup-journee-date-label'); lbl.textContent=d.split('-').reverse().join('/'); lbl.style.color='#fff'; } }, false, window.dupJourneeData&&window.dupJourneeData.sourceDateStr)">
+            📅 <span id="dup-journee-date-label" style="color:#888;">Choisir une date...</span>
+          </button>
+        </div>
+        
+        <label style="display:block; font-size:12px; font-weight:600; margin-bottom:8px; color:#aaa;">Sélection des blessés à dupliquer :</label>
+        <div style="display:flex; gap:10px; margin-bottom:8px;">
+          <button class="btn-ghost" style="padding:4px 8px; font-size:11px;" onclick="selectJourneePlayers('all')">Tout cocher</button>
+          <button class="btn-ghost" style="padding:4px 8px; font-size:11px;" onclick="selectJourneePlayers('none')">Tout décocher</button>
+        </div>
+        <div id="dup-journee-players-list" style="max-height:180px; overflow-y:auto; border:1px solid #2a2a2a; border-radius:6px; padding:10px; background:#0f0f0f; display:flex; flex-direction:column; gap:8px;">
+          <!-- Rempli dynamiquement -->
+        </div>
+      </div>
+      
+      <div class="modal-actions">
+        <button class="btn-ghost" onclick="fermerModalDupJournee()">Annuler</button>
+        <button class="btn-primary" onclick="confirmerDupJournee()">Dupliquer la journée</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL SUPPRIMER JOURNÉE ENTIÈRE -->
+  <div class="modal-overlay" id="modal-del-journee">
+    <div class="modal" style="width: 450px;">
+      <div class="modal-title" style="color:#E24B4A;">🗑 Supprimer la journée</div>
+      
+      <div style="margin-bottom:20px;">
+        <div style="font-size:12px; color:#888; margin-bottom:10px;">
+          Journée : <strong id="del-journee-label" style="color:#E24B4A;"></strong>
+        </div>
+        
+        <label style="display:block; font-size:12px; font-weight:600; margin-bottom:8px; color:#aaa;">Sélection des blessés dont supprimer les créneaux :</label>
+        <div style="display:flex; gap:10px; margin-bottom:8px;">
+          <button class="btn-ghost" style="padding:4px 8px; font-size:11px;" onclick="selectDelJourneePlayers('all')">Tout cocher</button>
+          <button class="btn-ghost" style="padding:4px 8px; font-size:11px;" onclick="selectDelJourneePlayers('none')">Tout décocher</button>
+        </div>
+        <div id="del-journee-players-list" style="max-height:200px; overflow-y:auto; border:1px solid #2a2a2a; border-radius:6px; padding:10px; background:#0f0f0f; display:flex; flex-direction:column; gap:8px;"></div>
+      </div>
+      
+      <div style="font-size:11px; color:#E24B4A; padding:8px 12px; background:#E24B4A11; border-radius:6px; margin-bottom:15px;">
+        ⚠️ Cette action est irréversible. Les créneaux des blessés sélectionnés seront supprimés définitivement.
+      </div>
+
+      <div class="modal-actions">
+        <button class="btn-ghost" onclick="fermerModalDelJournee()">Annuler</button>
+        <button class="btn-danger" onclick="confirmerDelJournee()">Supprimer</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- CALENDRIER PICKER PARTAGÉ -->
+  <div class="modal-overlay" id="modal-cal-blesses" style="z-index:200;">
+    <div class="modal" style="width:340px; padding:20px;">
+      <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:16px;">
+        <button class="btn-ghost" style="padding:4px 10px; font-size:16px;" onclick="calBlessesPrevMonth()">‹</button>
+        <div id="cal-blesses-title" style="font-weight:700; font-size:14px;"></div>
+        <button class="btn-ghost" style="padding:4px 10px; font-size:16px;" onclick="calBlessesNextMonth()">›</button>
+      </div>
+      <div id="cal-blesses-grid" style="display:grid; grid-template-columns:repeat(7,1fr); gap:3px; text-align:center;"></div>
+      <div class="modal-actions" style="margin-top:16px;">
+        <button class="btn-ghost" onclick="fermerCalendrierBlesses()">Annuler</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL SÉLECTION JOUEURS -->
+  <div class="modal-overlay" id="modal-joueurs">
+    <div class="modal">
+      <div class="modal-title">Choisir les blessés à afficher</div>
+      <div class="joueur-select-list" id="joueur-select-list"></div>
+      <div class="modal-actions">
+        <button class="btn-ghost" onclick="fermerModalJoueurs()">Fermer</button>
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from '../renderer/supabase-adapter.js'
+    import { getAuth, onAuthStateChanged, signOut } from '../renderer/supabase-adapter.js'
+    import { getFirestore, collection, doc, setDoc, deleteDoc, getDocs, serverTimestamp, query, where } from '../renderer/supabase-adapter.js'
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyCvMs-5LX9Ivk3OkzUR3iz9Kk1E5b9_7Vk",
+      authDomain: "delta-rugby-app.firebaseapp.com",
+      projectId: "delta-rugby-app",
+      storageBucket: "delta-rugby-app.firebasestorage.app",
+      messagingSenderId: "61187079762",
+      appId: "1:61187079762:web:56cd1eaa8beb9e1a2ee98b"
+    }
+
+    const fbApp = initializeApp(firebaseConfig)
+    const auth = getAuth(fbApp)
+    const db = getFirestore(fbApp)
+
+    function getDataScopeStart() {
+      const scope = localStorage.getItem('delta-data-scope') || '30days'
+      if (scope === 'all') return null
+      if (window.__getDataScopeDates) {
+        return window.__getDataScopeDates(scope).start
+      }
+      const d = new Date()
+      d.setDate(d.getDate() - 30)
+      return d.toISOString().split('T')[0]
+    }
+
+    function scopedQuery(name, dateField = 'date') {
+      const start = getDataScopeStart()
+      if (!start) return collection(db, name)
+      return query(collection(db, name), where(dateField, '>=', start))
+    }
+
+    const JOURS = ['Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi','Dimanche']
+    const COULEURS = ['#E24B4A','#FECC00','#1D9E75','#378ADD','#7F77DD','#EF9F27','#ED93B1','#5DCAA5','#F09595','#AFA9EC']
+    const TYPE_CLASS = { muscu:'t-muscu', terrain:'t-terrain', kine:'t-kine', cardio:'t-cardio', medical:'t-medical', repos:'t-repos', autre:'t-autre' }
+
+    let lundi = getLundi(new Date())
+    let joueurs = []
+    let blessures = []
+    let creneaux = []
+    // ==================== CACHE LOCAL (clés partagées avec le shell) ====================
+    function loadCache(key) {
+      try {
+        const r = JSON.parse(localStorage.getItem('cache_' + key) || 'null')
+        return r ? (r.data !== undefined ? r.data : null) : null
+      } catch(e) { return null }
+    }
+    function saveCache(key, data) {
+      try { localStorage.setItem('cache_' + key, JSON.stringify({ ts: Date.now(), data })) } catch(e) {}
+    }
+
+    let joueursAffiches = [] // IDs des blessés visibles
+    let editingCreneauId = null
+    let clickDate = null
+    let clickJoueurId = null
+
+    let hideWeekend = localStorage.getItem('planifB_hideWeekend') === '1'
+    let objectifsParJoueur = {} // { joueurId: objectifText }
+    let dispoKine = {} // { 'Lundi': { actif: true, debut: '09:00', fin: '18:00' }, ... }
+    const JOURS_KINE = ['Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi','Dimanche']
+    let dupMode = 'meme-joueur'
+    let selectedDupJoueurs = []
+    
+    // Variables pour le menu contextuel et déplacement
+    let contextMenuCreneau = null
+    let moveMode = { active: false, creneau: null, sourceDate: null, sourceJoueurId: null, scope: 'tous', targetJoueurId: null, targetDate: null, pending: null, selectedJoueurs: [], action: 'deplacer' }
+    let dupScope = 'tous' // 'tous' ou 'un'
+    
+    // Variables pour stocker les données temporaires des modals scope
+    let dupScopeData = { creneau: null, joueurId: null, date: null, selectedJoueurs: [] }
+    let moveScopeData = { creneau: null, joueurId: null, date: null, selectedJoueurs: [], action: 'deplacer' }
+    
+    // Mode duplication rapide par clic sur jour
+    let dupModeClick = { active: false, creneau: null, selectedJoueurs: [] }
+    
+    // Mode multi-sélection de créneaux
+    let multiSelectMode = { active: false, selectedCreneaux: [] }
+
+    // Wrapper renderAll pour charger les objectifs avant chaque rendu
+    const originalRenderAll = renderAll
+    renderAll = async function() {
+      await chargerObjectifsJoueurs()
+      originalRenderAll()
+    }
+
+    ;(function() {
+      try {
+      requestAnimationFrame(function() { try {
+      const cachedJ = loadCache('planifB_joueurs')
+      const cachedB = loadCache('planifB_blessures')
+      const cachedC = loadCache('planifB_creneaux')
+      let hasData = false
+      if (cachedJ) { joueurs = cachedJ.filter(j => !j.archived); hasData = true }
+      if (cachedB) { blessures = cachedB; hasData = true }
+      if (cachedC) { creneaux = cachedC; hasData = true }
+      // Calculer joueursAffiches depuis le cache si disponible
+      if (cachedJ && cachedB) synchroniserJoueursSemaine()
+      // Rendre si on a des données en cache
+      if (hasData) {
+        updateHideWeekendBtn()
+        renderAll()
+        if (window.__shellContentReady) window.__shellContentReady()
+        if (window.__pageReady) window.__pageReady('planning-blesses.html')
+      }
+      } catch(e2) { console.warn('Cache render error:', e2) } });
+      } catch(e) { console.warn("Cache sync error:", e) }
+    })()
+
+    onAuthStateChanged(auth, async user => {
+      if (!user) { window.location.href = 'login.html'; return }
+      document.getElementById('user-email').textContent = user.email
+
+      const [jSnap, bSnap, snapCreneaux] = await Promise.all([
+        getDocs(collection(db, 'joueurs')),
+        getDocs(collection(db, 'blessures')),
+        getDocs(scopedQuery('creneauxBlesses'))
+      ])
+      joueurs = jSnap.docs.map(d => ({ id: d.id, ...d.data() })).filter(j => !j.archived)
+      saveCache('planifB_joueurs', joueurs)
+
+      blessures = bSnap.docs.map(d => ({ id: d.id, ...d.data() }))
+      saveCache('planifB_blessures', blessures)
+
+      creneaux = snapCreneaux.docs.map(d => ({ id: d.id, ...d.data() }))
+      saveCache('planifB_creneaux', creneaux)
+
+      synchroniserJoueursSemaine()
+      renderAll()
+      if (window.__shellContentReady) window.__shellContentReady()
+      if (window.__pageReady) window.__pageReady('planning-blesses.html')
+
+      // Charger les dispos kiné
+      await chargerDispoKine()
+
+      // Charger les objectifs individuels de la semaine
+      await chargerObjectifsJoueurs()
+    })
+
+    function getLundi(date) {
+      const d = new Date(date)
+      const jour = d.getDay()
+      const diff = jour === 0 ? -6 : 1 - jour
+      d.setDate(d.getDate() + diff)
+      d.setHours(0, 0, 0, 0)
+      return d
+    }
+
+    function dateStr(d) {
+      // Format local YYYY-MM-DD sans décalage UTC
+      const year = d.getFullYear()
+      const month = String(d.getMonth() + 1).padStart(2, '0')
+      const day = String(d.getDate()).padStart(2, '0')
+      return `${year}-${month}-${day}`
+    }
+
+    function couleurJoueur(joueurId) {
+      const idx = joueurs.findIndex(j => j.id === joueurId)
+      return COULEURS[idx % COULEURS.length] || '#555'
+    }
+
+    function semaineDates() {
+      return Array.from({ length: 7 }, (_, i) => {
+        const d = new Date(lundi)
+        d.setDate(lundi.getDate() + i)
+        return d
+      })
+    }
+
+    function getJoueurIdsPlanifiesSemaine(source = creneaux) {
+      const dates = new Set(semaineDates().map(dateStr))
+      return [...new Set(source
+        .filter(cr => dates.has(cr.date))
+        .flatMap(cr => cr.joueurIds || (cr.joueurId ? [cr.joueurId] : [])))].filter(Boolean)
+    }
+
+    function trierJoueurIds(ids) {
+      return ids.sort((aId, bId) => {
+        const a = joueurs.find(j => j.id === aId)
+        const b = joueurs.find(j => j.id === bId)
+        if (!a || !b) return 0
+        return (a.nom || '').localeCompare(b.nom || '') || (a.prenom || '').localeCompare(b.prenom || '')
+      })
+    }
+
+    function synchroniserJoueursSemaine() {
+      joueursAffiches = trierJoueurIds(getJoueurIdsPlanifiesSemaine())
+    }
+
+    function getVisibleDates() {
+      const all = semaineDates()
+      if (!hideWeekend) return all
+      return all.filter(d => { const day = d.getDay(); return day !== 6 && day !== 0 })
+    }
+
+    window.toggleHideWeekend = function() {
+      hideWeekend = !hideWeekend
+      localStorage.setItem('planifB_hideWeekend', hideWeekend ? '1' : '0')
+      updateHideWeekendBtn()
+      renderAll()
+      if (document.getElementById('kine-view')?.classList.contains('active')) renderKineView()
+    }
+
+    function updateHideWeekendBtn() {
+      const btn = document.getElementById('btn-hide-weekend')
+      if (!btn) return
+      if (hideWeekend) {
+        btn.textContent = '📅 Semaine (5j)'
+        btn.style.borderColor = '#FECC00'
+        btn.style.color = '#FECC00'
+      } else {
+        btn.textContent = '📅 Week-end'
+        btn.style.borderColor = ''
+        btn.style.color = ''
+      }
+    }
+
+    function majLabelSemaine() {
+      const dates = semaineDates()
+      const visible = getVisibleDates()
+      const lastDate = visible[visible.length - 1]
+      document.getElementById('semaine-label').textContent =
+        dates[0].toLocaleDateString('fr-FR', { day:'numeric', month:'short' }) + ' — ' +
+        lastDate.toLocaleDateString('fr-FR', { day:'numeric', month:'short', year:'numeric' })
+    }
+
+    window.semainePrecedenteBlesses = function() { lundi.setDate(lundi.getDate() - 7); synchroniserJoueursSemaine(); renderAll() }
+    window.semaineSuivanteBlesses = function() { lundi.setDate(lundi.getDate() + 7); synchroniserJoueursSemaine(); renderAll() }
+    window.allerAujourdhuiBlesses = function() { lundi = getLundi(new Date()); synchroniserJoueursSemaine(); renderAll() }
+
+    // ==================== RENDER ====================
+    function renderAll() {
+      majLabelSemaine()
+      renderChips()
+      renderGrid()
+    }
+
+    async function _reloadCreneaux() {
+      try {
+        const snap = await getDocs(scopedQuery('creneauxBlesses'))
+        creneaux = snap.docs.map(d => ({ id: d.id, ...d.data() }))
+        saveCache('planifB_creneaux', creneaux)
+        synchroniserJoueursSemaine()
+        renderAll()
+      } catch(e) { console.error('_reloadCreneaux:', e) }
+    }
+
+    function renderChips() {
+      const c = document.getElementById('joueur-chips')
+      c.innerHTML = ''
+      joueursAffiches.forEach(jid => {
+        const j = joueurs.find(x => x.id === jid)
+        if (!j) return
+        const couleur = couleurJoueur(jid)
+        const blessure = blessures.find(b => b.joueurId === jid && b.statut !== 'gueri')
+
+        const chip = document.createElement('div')
+        chip.className = 'joueur-chip active'
+        chip.style.cssText = `--color:${couleur}; --bg:${couleur}18; border-color:${couleur}44;`
+        chip.innerHTML = `
+          <div class="chip-dot" style="background:${couleur}"></div>
+          <span style="color:#fff;">${j.nom} ${j.prenom?.[0] || ''}.</span>
+          ${blessure ? `<span style="font-size:10px; color:${couleur};">${blessure.zone || ''}</span>` : ''}
+          <span class="chip-remove" onclick="retirerJoueur('${jid}')">✕</span>
+        `
+        c.appendChild(chip)
+      })
+    }
+
+    function renderGrid() {
+      const grid = document.getElementById('planning-grid')
+      grid.innerHTML = ''
+
+      if (!joueursAffiches.length) {
+        grid.innerHTML = '<div class="empty-state">Aucun blessé sélectionné.<br>Clique sur "+ Ajouter un blessé" pour commencer.</div>'
+        return
+      }
+
+      const dates = getVisibleDates()
+      const aujourdhuiStr = dateStr(new Date())
+      const nbJours = dates.length
+      const nbJoueurs = joueursAffiches.length
+
+      grid.style.gridTemplateColumns = `160px repeat(${nbJours}, 1fr)`
+
+      // Header coin
+      const coin = document.createElement('div')
+      coin.className = 'header-coin'
+      coin.style.cssText = `grid-column:1; grid-row:1; height:44px; border-right:1px solid #2a2a2a; border-bottom:1px solid #2a2a2a; position:sticky; top:0; left:0; z-index:3; background:#0f0f0f;`
+      grid.appendChild(coin)
+
+      // Headers jours
+      dates.forEach((d, i) => {
+        const ds = dateStr(d)
+        const isToday = ds === aujourdhuiStr
+        const dayIdx = d.getDay() === 0 ? 6 : d.getDay() - 1
+        const hdr = document.createElement('div')
+        hdr.className = 'header-jour' + (isToday ? ' today' : '')
+        hdr.style.cssText = `grid-column:${i+2}; grid-row:1; height:44px; text-align:center; padding:6px 4px; position:sticky; top:0; z-index:2; border-right:1px solid #1a1a1a; border-bottom:${isToday ? '2px solid #FECC00' : '1px solid #2a2a2a'}; background:#1a1a1a; cursor:default; position:relative;`
+        
+        hdr.innerHTML = `
+          <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; height:100%;">
+            <div class="jour-nom">${JOURS[dayIdx]}</div>
+            <div class="jour-num ${isToday ? 'today-num' : ''}">${d.getDate()}</div>
+          </div>
+          <button class="btn-dup-jour btn-hdr-action" title="Dupliquer toute la journée" style="position:absolute; right:4px; top:50%; transform:translateY(-50%); background:transparent; border:none; color:#888; cursor:pointer; padding:4px; font-size:14px; opacity:0; transition:opacity 0.2s;" onclick="event.stopPropagation(); ouvrirModalDupJournee('${ds}', '${JOURS[dayIdx]}')">⧉</button>
+          <button class="btn-del-jour btn-hdr-action" title="Supprimer toute la journée" style="position:absolute; left:4px; top:50%; transform:translateY(-50%); background:transparent; border:none; color:#E24B4A; cursor:pointer; padding:4px; font-size:13px; opacity:0; transition:opacity 0.2s;" onclick="event.stopPropagation(); ouvrirModalDelJournee('${ds}', '${JOURS[dayIdx]}')">🗑</button>
+        `
+        
+        hdr.addEventListener('mouseenter', () => {
+          hdr.querySelectorAll('.btn-hdr-action').forEach(btn => btn.style.opacity = '1')
+        })
+        hdr.addEventListener('mouseleave', () => {
+          hdr.querySelectorAll('.btn-hdr-action').forEach(btn => btn.style.opacity = '0')
+        })
+        
+        grid.appendChild(hdr)
+      })
+
+      // Lignes par joueur
+      joueursAffiches.forEach((jid, ji) => {
+        const j = joueurs.find(x => x.id === jid)
+        if (!j) return
+        const couleur = couleurJoueur(jid)
+        const blessure = blessures.find(b => b.joueurId === jid && b.statut !== 'gueri')
+
+        // Label joueur
+        const lbl = document.createElement('div')
+        lbl.className = 'joueur-label-col'
+        lbl.style.cssText = `grid-column:1; grid-row:${ji+2}; min-height:85px; background:#0f0f0f; border-right:1px solid #2a2a2a; border-bottom:1px solid #1a1a1a; display:flex; flex-direction:column; justify-content:flex-start; padding:6px 8px; gap:2px; position:sticky; left:0; z-index:1; border-left:3px solid ${couleur};`
+        
+        // Objectif individuel du joueur pour cette semaine
+        const objectifJoueur = objectifsParJoueur[jid] || ''
+        const semainesBlessure = blessure?.debut ? getSemainesEcoulees(blessure.debut) : null
+        
+        lbl.innerHTML = `
+          <div style="display:flex; align-items:center; gap:6px;">
+            <div class="joueur-avatar" style="background:${couleur}22; color:${couleur}; border:1px solid ${couleur}44; width:24px; height:24px; font-size:10px;">${j.prenom?.[0] || ''}${j.nom?.[0] || ''}</div>
+            <div style="overflow:hidden;">
+              <div class="joueur-nom-label" style="color:#fff; font-size:11px; line-height:1.2;">${j.nom} ${j.prenom?.[0] || ''}.</div>
+              <div class="joueur-patho" style="font-size:9px;">${blessure ? blessure.patho?.slice(0, 20) || '' : j.poste || ''}</div>
+            </div>
+          </div>
+          ${semainesBlessure !== null ? `<div style="font-size:9px; color:#E24B4A; font-weight:600; margin-top:2px;">Semaine ${semainesBlessure}</div>` : ''}
+          ${blessure?.retourEstime ? `<div style="font-size:9px; color:#EF9F27; margin-top:2px;">Retour: ${blessure.retourEstime}</div>` : ''}
+          <div class="objectif-joueur-row">
+            <div class="objectif-joueur-label" style="margin-top: 2px;">Obj:</div>
+            <textarea class="objectif-joueur-input" 
+                      id="obj-${jid}" 
+                      placeholder="+ objectif..."
+                      rows="1"
+                      oninput="this.style.height = 'auto'; this.style.height = this.scrollHeight + 'px';"
+                      onchange="sauvegarderObjectifJoueur('${jid}')"
+                      onblur="sauvegarderObjectifJoueur('${jid}')"
+                      onkeydown="if(event.key==='Enter' && !event.shiftKey){this.blur(); event.preventDefault();}">${objectifJoueur}</textarea>
+          </div>
+        `
+        grid.appendChild(lbl)
+
+        // Cellules jours
+        dates.forEach((d, di) => {
+          const ds = dateStr(d)
+          const isToday = ds === aujourdhuiStr
+
+          // Créneaux de ce joueur ce jour (inclut les créneaux de groupe)
+          const creneauxJour = creneaux.filter(cr =>
+            cr.date === ds && (cr.joueurIds?.includes(jid) || cr.joueurId === jid)
+          ).sort((a, b) => (a.heureDebut || '99:99').localeCompare(b.heureDebut || '99:99'))
+
+          const cell = document.createElement('div')
+          cell.className = 'day-cell'
+          cell.style.cssText = `grid-column:${di+2}; grid-row:${ji+2}; min-height:85px; padding:4px; background:${isToday ? '#FECC0006' : '#0a0a0a'}; border-right:1px solid #1a1a1a; border-bottom:1px solid #1a1a1a; position:relative; cursor:pointer;`
+
+          // Créneaux
+          creneauxJour.forEach(cr => {
+            const el = document.createElement('div')
+            const isMoving = moveMode.active && moveMode.creneau?.id === cr.id
+            const isSelected = multiSelectMode.active && multiSelectMode.selectedCreneaux.includes(cr.id)
+            const isAlerteKine = isHorsDispoKine(cr)
+            const isConflitKineFlag = isConflitKine(cr)
+            const isConflitSeanceFlag = isConflitSeance(cr)
+            el.className = 'creneau ' + (TYPE_CLASS[cr.type] || 't-autre') + (cr.important ? ' important' : '') + (isMoving ? ' moving' : '') + (isSelected ? ' selected' : '') + (isAlerteKine ? ' alerte-kine' : '') + (isConflitKineFlag ? ' alerte-kine-conflit' : '') + (isConflitSeanceFlag ? ' alerte-conflit' : '')
+            const nbJoueurs = cr.joueurIds?.length || 1
+            el.innerHTML = `
+              <div class="creneau-titre">${cr.titre || '—'}</div>
+              <div class="creneau-heure">${cr.heureDebut || ''} ${cr.heureFin ? '→ ' + cr.heureFin : ''}</div>
+              ${cr.avecGroupe ? '<div style="font-size:9px; opacity:.7;">👥 Avec le groupe</div>' : ''}
+              ${cr.commun ? `<div style="font-size:9px; opacity:.7;">👥 Commun (${nbJoueurs})</div>` : ''}
+              <span class="creneau-del" onclick="event.stopPropagation(); supprimerCreneauDirect('${cr.id}')">✕</span>
+            `
+            // Checkbox pour multi-sélection
+            if (multiSelectMode.active) {
+              const checkbox = document.createElement('input')
+              checkbox.type = 'checkbox'
+              checkbox.className = 'creneau-select-checkbox'
+              checkbox.checked = multiSelectMode.selectedCreneaux.includes(cr.id)
+              checkbox.onclick = e => {
+                e.stopPropagation()
+                toggleMultiSelectCreneau(cr.id)
+              }
+              el.appendChild(checkbox)
+            }
+            
+            el.onclick = e => { 
+              e.stopPropagation(); 
+              if (moveMode.active) {
+                // En mode déplacement, cliquer sur un créneau annule
+                annulerDeplacement()
+              } else if (dupModeClick.active) {
+                // En mode duplication, cliquer sur un créneau annule
+                annulerDupClick()
+              } else if (multiSelectMode.active) {
+                // En mode multi-sélection, toggle la sélection
+                toggleMultiSelectCreneau(cr.id)
+              } else {
+                ouvrirModalCreneau(cr, jid, ds) 
+              }
+            }
+            el.oncontextmenu = e => {
+              e.preventDefault()
+              e.stopPropagation()
+              if (!moveMode.active && !dupModeClick.active && !multiSelectMode.active) {
+                ouvrirContextMenu(e, cr, jid, ds)
+              }
+            }
+            cell.appendChild(el)
+          })
+
+          // En mode déplacement, rendre la cellule cliquable comme cible
+          if (moveMode.active) {
+            cell.classList.add('move-target')
+            cell.onclick = e => {
+              e.stopPropagation()
+              confirmerDeplacement(jid, ds)
+            }
+          } else if (dupModeClick.active) {
+            // En mode duplication par clic
+            cell.classList.add('move-target')
+            cell.onclick = e => {
+              e.stopPropagation()
+              confirmerDupParClic(ds, jid)
+            }
+          } else {
+            // Click normal pour ajouter
+            cell.onclick = () => ouvrirModalCreneau(null, jid, ds)
+          }
+          grid.appendChild(cell)
+        })
+      })
+
+      ajusterHauteurTextareas()
+    }
+
+    // ==================== MODAL CRÉNEAU ====================
+    window.ouvrirModalCreneau = function(cr = null, joueurId = null, date = null) {
+      editingCreneauId = cr?.id || null
+      clickJoueurId = joueurId
+      clickDate = date
+
+      document.getElementById('modal-creneau-title').textContent = cr ? 'Modifier le créneau' : 'Nouveau créneau'
+      document.getElementById('btn-del-creneau').style.display = cr ? 'block' : 'none'
+
+      // Remplir select joueurs
+      const sel = document.getElementById('cr-joueur')
+      sel.innerHTML = ''
+      joueursAffiches.forEach(jid => {
+        const j = joueurs.find(x => x.id === jid)
+        if (!j) return
+        const opt = new Option(j.nom + ' ' + j.prenom, jid)
+        opt.selected = cr ? (cr.joueurIds?.includes(jid) || cr.joueurId === jid) : jid === joueurId
+        sel.appendChild(opt)
+      })
+
+      // Pas besoin de remplir d'autres selects pour l'instant
+
+      if (cr) {
+        document.getElementById('cr-titre').value = cr.titre || ''
+        document.getElementById('cr-type').value = cr.type || 'kine'
+        document.getElementById('cr-date').value = cr.date || ''
+        document.getElementById('cr-debut').value = cr.heureDebut || ''
+        document.getElementById('cr-fin').value = cr.heureFin || ''
+        document.getElementById('cr-notes').value = cr.notes || ''
+        document.getElementById('cr-avec-groupe').checked = cr.avecGroupe || false
+        document.getElementById('cr-commun').checked = cr.commun || false
+        document.getElementById('cr-important').checked = cr.important || false
+      } else {
+        document.getElementById('cr-titre').value = ''
+        document.getElementById('cr-notes').value = ''
+        document.getElementById('cr-date').value = date || dateStr(new Date())
+        document.getElementById('cr-debut').value = ''
+        document.getElementById('cr-fin').value = ''
+        document.getElementById('cr-avec-groupe').checked = false
+        document.getElementById('cr-commun').checked = false
+        document.getElementById('cr-important').checked = false
+      }
+      document.getElementById('modal-creneau').classList.add('open')
+    }
+
+    window.fermerModalCreneau = function() {
+      document.getElementById('modal-creneau').classList.remove('open')
+      editingCreneauId = null
+    }
+
+    window.sauvegarderCreneau = async function() {
+      const titre = document.getElementById('cr-titre').value.trim()
+      const date = document.getElementById('cr-date').value
+      if (!titre || !date) { alert('Titre et date obligatoires.'); return }
+
+      const sel = document.getElementById('cr-joueur')
+      const joueurIds = [...sel.selectedOptions].map(o => o.value)
+      if (!joueurIds.length) { alert('Sélectionne au moins un joueur.'); return }
+
+      const id = editingCreneauId || `cr_${Date.now()}`
+      await (window.setDoc || setDoc)(doc(db, 'creneauxBlesses', id), {
+        titre,
+        type: document.getElementById('cr-type').value,
+        date,
+        heureDebut: document.getElementById('cr-debut').value || null,
+        heureFin: document.getElementById('cr-fin').value || null,
+        notes: document.getElementById('cr-notes').value,
+        avecGroupe: document.getElementById('cr-avec-groupe').checked,
+        commun: document.getElementById('cr-commun').checked,
+        important: document.getElementById('cr-important').checked,
+        joueurIds,
+        joueurId: joueurIds[0], // compat
+        updatedAt: serverTimestamp()
+      })
+      fermerModalCreneau()
+      _reloadCreneaux()
+    }
+
+    window.supprimerCreneau = async function() {
+      if (!editingCreneauId || !confirm('Supprimer ce créneau ?')) return
+      await (window.deleteDoc || deleteDoc)(doc(db, 'creneauxBlesses', editingCreneauId))
+      fermerModalCreneau()
+      _reloadCreneaux()
+    }
+
+    window.supprimerCreneauDirect = async function(id) {
+      if (!confirm('Supprimer ce créneau ?')) return
+      await (window.deleteDoc || deleteDoc)(doc(db, 'creneauxBlesses', id))
+      _reloadCreneaux()
+    }
+
+    // ==================== MODAL DUPLICATION AVANCÉE ====================
+    window.ouvrirModalDuplication = function(creneau = null, joueurId = null, date = null, scope = 'tous') {
+      // Initialiser contextMenuCreneau si nécessaire
+      if (!contextMenuCreneau) {
+        contextMenuCreneau = {}
+      }
+      
+      // Si appelé depuis le context menu avec un créneau
+      if (creneau) {
+        contextMenuCreneau.dupCreneau = creneau
+        contextMenuCreneau.dupJoueurId = joueurId
+        contextMenuCreneau.dupDate = date
+        contextMenuCreneau.dupScope = scope || 'tous'
+        
+        const titre = creneau.titre || 'Créneau'
+        
+        // Suggérer le jour suivant comme date par défaut
+        const tomorrow = new Date()
+        tomorrow.setDate(tomorrow.getDate() + 1)
+        const suggestedDate = dateStr(tomorrow)
+        
+        document.getElementById('dup-creneau-titre').textContent = titre
+        document.getElementById('dup-date').value = suggestedDate
+      } else {
+        // Appelé depuis le modal édition
+        contextMenuCreneau.dupCreneau = null
+        contextMenuCreneau.dupJoueurId = null
+        contextMenuCreneau.dupDate = null
+        contextMenuCreneau.dupScope = 'tous'
+        
+        const titre = document.getElementById('cr-titre').value || 'Créneau'
+        const date = document.getElementById('cr-date').value
+        
+        document.getElementById('dup-creneau-titre').textContent = titre
+        document.getElementById('dup-date').value = date
+      }
+      
+      // Réinitialiser les options
+      dupMode = 'meme-joueur'
+      selectedDupJoueurs = []
+      updateDupOptions()
+      renderDupJoueursList()
+      
+      document.getElementById('modal-duplication').classList.add('open')
+    }
+
+    window.fermerModalDuplication = function() {
+      document.getElementById('modal-duplication').classList.remove('open')
+    }
+
+    window.selectDupMode = function(mode) {
+      dupMode = mode
+      updateDupOptions()
+      
+      const joueursSelect = document.getElementById('dup-joueurs-select')
+      if (mode === 'autres-joueurs') {
+        joueursSelect.classList.add('show')
+        renderDupJoueursList()
+      } else {
+        joueursSelect.classList.remove('show')
+      }
+    }
+
+    function updateDupOptions() {
+      document.querySelectorAll('.dup-option').forEach(el => {
+        el.classList.toggle('selected', el.dataset.mode === dupMode)
+      })
+    }
+
+    function renderDupJoueursList() {
+      const container = document.getElementById('dup-joueurs-list')
+      container.innerHTML = ''
+      
+      // Afficher tous les joueurs blessés + ceux déjà affichés
+      const allRelevantJoueurs = joueurs.filter(j => {
+        if (j.archived) return false
+        const isBlesse = blessures.some(b => b.joueurId === j.id && b.statut !== 'gueri')
+        const isAffiche = joueursAffiches.includes(j.id)
+        return isBlesse || isAffiche
+      })
+      
+      allRelevantJoueurs.forEach(j => {
+        const isSelected = selectedDupJoueurs.includes(j.id)
+        const chip = document.createElement('div')
+        chip.style.cssText = `
+          padding: 4px 10px; border-radius: 14px; font-size: 11px; cursor: pointer;
+          border: 1px solid ${isSelected ? '#FECC00' : '#2a2a2a'};
+          background: ${isSelected ? '#FECC0022' : '#111'};
+          color: ${isSelected ? '#FECC00' : '#888'};
+        `
+        chip.textContent = `${j.nom} ${j.prenom[0]}.`
+        chip.onclick = () => toggleDupJoueur(j.id)
+        container.appendChild(chip)
+      })
+    }
+
+    function toggleDupJoueur(jid) {
+      if (selectedDupJoueurs.includes(jid)) {
+        selectedDupJoueurs = selectedDupJoueurs.filter(id => id !== jid)
+      } else {
+        selectedDupJoueurs.push(jid)
+      }
+      renderDupJoueursList()
+    }
+
+    window.confirmerDuplication = async function() {
+      const newDate = document.getElementById('dup-date').value
+      if (!newDate) { alert('Sélectionne une date.'); return }
+      
+      let targetJoueurIds = []
+      const scope = contextMenuCreneau?.dupScope || 'tous'
+      
+      // Vérifier si on a des joueurs sélectionnés depuis le nouveau modal (depuis dupScopeData)
+      if (dupScopeData.selectedJoueurs && dupScopeData.selectedJoueurs.length > 0) {
+        // Utiliser les joueurs sélectionnés depuis le modal de scope
+        targetJoueurIds = dupScopeData.selectedJoueurs
+        // Réinitialiser pour la prochaine fois
+        dupScopeData.selectedJoueurs = []
+      } else if (contextMenuCreneau?.dupCreneau && scope === 'un') {
+        // Si duplication depuis context menu avec scope 'un' = juste le joueur cliqué
+        targetJoueurIds = [contextMenuCreneau.dupJoueurId]
+      } else if (dupMode === 'meme-joueur') {
+        // Utiliser les joueurs du créneau actuel
+        const sel = document.getElementById('cr-joueur')
+        targetJoueurIds = [...sel.selectedOptions].map(o => o.value)
+      } else {
+        // Utiliser les joueurs sélectionnés
+        if (selectedDupJoueurs.length === 0) { alert('Sélectionne au moins un joueur.'); return }
+        targetJoueurIds = selectedDupJoueurs
+      }
+      
+      if (targetJoueurIds.length === 0) { alert('Aucun joueur sélectionné.'); return }
+      
+      // Récupérer les données du créneau
+      let creneauData
+      if (dupScopeData.creneau) {
+        // Depuis context menu - utiliser le créneau stocké dans dupScopeData
+        const cr = dupScopeData.creneau
+        creneauData = {
+          titre: cr.titre,
+          type: cr.type,
+          heureDebut: cr.heureDebut || null,
+          heureFin: cr.heureFin || null,
+          notes: cr.notes,
+          commun: cr.commun,
+          important: cr.important
+        }
+      } else if (contextMenuCreneau?.dupCreneau) {
+        // Fallback sur contextMenuCreneau
+        const cr = contextMenuCreneau.dupCreneau
+        creneauData = {
+          titre: cr.titre,
+          type: cr.type,
+          heureDebut: cr.heureDebut || null,
+          heureFin: cr.heureFin || null,
+          notes: cr.notes,
+          commun: cr.commun,
+          important: cr.important
+        }
+      } else {
+        // Depuis le modal édition - utiliser les champs
+        creneauData = {
+          titre: document.getElementById('cr-titre').value,
+          type: document.getElementById('cr-type').value,
+          heureDebut: document.getElementById('cr-debut').value || null,
+          heureFin: document.getElementById('cr-fin').value || null,
+          notes: document.getElementById('cr-notes').value,
+          commun: document.getElementById('cr-commun').checked,
+          important: document.getElementById('cr-important').checked
+        }
+      }
+      
+      // Créer des créneaux INDIVIDUELS pour chaque joueur sélectionné
+      let createdCount = 0
+      for (const jid of targetJoueurIds) {
+        const newId = `cr_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`
+        await (window.setDoc || setDoc)(doc(db, 'creneauxBlesses', newId), {
+          ...creneauData,
+          date: newDate,
+          joueurIds: [jid],  // Un seul joueur par créneau
+          joueurId: jid,
+          updatedAt: serverTimestamp()
+        })
+        createdCount++
+      }
+      
+      fermerModalDuplication()
+      fermerModalCreneau()
+      _reloadCreneaux()
+      
+      // Notification discrète
+      const btn = document.getElementById('objectif-btn')
+      const originalText = btn.textContent
+      btn.textContent = createdCount > 1 ? `✓ ${createdCount} créneaux créés !` : '✓ Créneau dupliqué !'
+      btn.classList.add('saved')
+      setTimeout(() => {
+        btn.textContent = originalText
+        btn.classList.remove('saved')
+      }, 2000)
+    }
+
+    // Ancienne fonction - gardée pour compatibilité si appelée directement
+    window.dupliquerCreneau = async function() {
+      ouvrirModalDuplication()
+    }
+
+    // ==================== DUPLIQUER SEMAINE ====================
+    window.dupliquerSemaineBlesses = function() {
+      // Afficher le modal avec la semaine actuelle
+      const dates = semaineDates()
+      const semaineLabel = dates[0].toLocaleDateString('fr-FR', { day:'numeric', month:'short' }) + ' — ' +
+                          dates[6].toLocaleDateString('fr-FR', { day:'numeric', month:'short', year:'numeric' })
+      document.getElementById('dup-semaine-current').textContent = semaineLabel
+      
+      // Réinitialiser le sélecteur de date
+      document.getElementById('dup-semaine-date').value = ''
+      document.getElementById('dup-semaine-date-label').textContent = 'Choisir un lundi...'
+      document.getElementById('dup-semaine-date-label').style.color = '#888'
+      
+      document.getElementById('modal-dup-semaine').classList.add('open')
+    }
+
+    window.fermerModalDupSemaine = function() {
+      document.getElementById('modal-dup-semaine').classList.remove('open')
+    }
+
+    window.confirmerDupSemaine = async function() {
+      const target = document.getElementById('dup-semaine-date').value
+      if (!target) {
+        alert('Sélectionne une date cible.')
+        return
+      }
+      
+      // Parser la date cible correctement (YYYY-MM-DD)
+      const [year, month, day] = target.split('-').map(Number)
+      const targetLundi = new Date(year, month - 1, day)
+      targetLundi.setHours(0, 0, 0, 0)
+      
+      const diff = Math.round((targetLundi - lundi) / 86400000)
+      
+      // Créneaux de la semaine actuelle pour les joueurs affichés
+      const currentSemaineStr = dateStr(lundi)
+      const crSemaine = creneaux.filter(cr => {
+        // Vérifier si le créneau appartient à la semaine courante
+        const crLundi = getLundi(new Date(cr.date + 'T00:00:00'))
+        // Fallback joueurId : en Supabase, joueur_ids peut être vide (import via table de liaison)
+        const crPlayers = (cr.joueurIds && cr.joueurIds.length) ? cr.joueurIds : (cr.joueurId ? [cr.joueurId] : [])
+        return dateStr(crLundi) === currentSemaineStr && joueursAffiches.some(jid => crPlayers.includes(jid))
+      })
+
+      if (crSemaine.length === 0) {
+        alert('Aucun créneau à dupliquer pour cette semaine.')
+        fermerModalDupSemaine()
+        return
+      }
+
+      for (const cr of crSemaine) {
+        // Calculer la nouvelle date en ajoutant le diff
+        const [crYear, crMonth, crDay] = cr.date.split('-').map(Number)
+        const oldDate = new Date(crYear, crMonth - 1, crDay)
+        const newDate = new Date(oldDate)
+        newDate.setDate(oldDate.getDate() + diff)
+
+        const { id, ...crData } = cr
+        // Reconstruire joueurIds non vide (fallback joueurId) pour la cohérence en base
+        const crPlayers = (cr.joueurIds && cr.joueurIds.length) ? cr.joueurIds : (cr.joueurId ? [cr.joueurId] : [])
+        await (window.setDoc || setDoc)(doc(db, 'creneauxBlesses', `cr_${Date.now()}_${Math.random().toString(36).slice(2)}`), {
+          ...crData,
+          joueurIds: crPlayers,
+          joueurId: crPlayers[0] || crData.joueurId || null,
+          date: dateStr(newDate),
+          updatedAt: serverTimestamp()
+        })
+      }
+      
+      fermerModalDupSemaine()
+      alert(`${crSemaine.length} créneau(x) dupliqué(s) !`)
+      lundi = targetLundi
+      _reloadCreneaux()
+    }
+
+    // ==================== JOUEURS ====================
+    window.ouvrirModalJoueurs = function() {
+      const c = document.getElementById('joueur-select-list')
+      c.innerHTML = ''
+      // Afficher uniquement les joueurs ayant un planning pendant la semaine visible.
+      // Les blessés actifs restent proposés séparément pour pouvoir créer un premier créneau.
+      const joueursPlanifies = new Set(getJoueurIdsPlanifiesSemaine())
+      const planifies = joueurs.filter(j => !j.archived && joueursPlanifies.has(j.id))
+      const blessesActifs = joueurs.filter(j => !j.archived && !joueursPlanifies.has(j.id) && (
+        blessures.find(b => b.joueurId === j.id && b.statut !== 'gueri')
+      ))
+      planifies.sort((a, b) => a.nom.localeCompare(b.nom)).forEach(j => {
+        const isSelected = joueursAffiches.includes(j.id)
+        const item = document.createElement('div')
+        item.className = 'joueur-select-item' + (isSelected ? ' selected' : '')
+        item.innerHTML = `
+          <div class="joueur-select-check">${isSelected ? '✓' : ''}</div>
+          <div style="flex:1">
+            <div style="font-size:13px; font-weight:600;">${j.nom} ${j.prenom}</div>
+            <div style="font-size:11px; color:#555;">${j.poste || ''}</div>
+          </div>
+        `
+        item.onclick = () => toggleJoueur(j.id)
+        c.appendChild(item)
+      })
+      if (blessesActifs.length) {
+        const separator = document.createElement('div')
+        separator.style.cssText = 'font-size:10px; color:#555; padding:8px 0 4px; text-transform:uppercase; letter-spacing:.06em;'
+        separator.textContent = 'Blessés actifs à planifier'
+        c.appendChild(separator)
+        blessesActifs.sort((a, b) => a.nom.localeCompare(b.nom)).forEach(j => {
+          const isSelected = joueursAffiches.includes(j.id)
+          const item = document.createElement('div')
+          item.className = 'joueur-select-item' + (isSelected ? ' selected' : '')
+          item.innerHTML = `
+            <div class="joueur-select-check">${isSelected ? '✓' : ''}</div>
+            <div style="flex:1"><div style="font-size:13px; font-weight:600;">${j.nom} ${j.prenom}</div><div style="font-size:11px; color:#555;">${j.poste || ''}</div></div>
+          `
+          item.onclick = () => toggleJoueur(j.id)
+          c.appendChild(item)
+        })
+      }
+      document.getElementById('modal-joueurs').classList.add('open')
+    }
+
+    window.fermerModalJoueurs = function() {
+      document.getElementById('modal-joueurs').classList.remove('open')
+      renderAll()
+    }
+
+    function toggleJoueur(jid) {
+      if (joueursAffiches.includes(jid)) {
+        joueursAffiches = joueursAffiches.filter(id => id !== jid)
+      } else {
+        joueursAffiches.push(jid)
+      }
+      joueursAffiches.sort((aId, bId) => {
+        const a = joueurs.find(j => j.id === aId)
+        const b = joueurs.find(j => j.id === bId)
+        if (!a || !b) return 0
+        return (a.nom || '').localeCompare(b.nom || '') || (a.prenom || '').localeCompare(b.prenom || '')
+      })
+      // Re-render la liste
+      ouvrirModalJoueurs()
+    }
+
+    window.retirerJoueur = function(jid) {
+      joueursAffiches = joueursAffiches.filter(id => id !== jid)
+      renderAll()
+    }
+
+    // ==================== OBJECTIFS INDIVIDUELS PAR JOUEUR ====================
+    function getSemaineId() {
+      return dateStr(lundi)
+    }
+
+    function getSemainesEcoulees(dateDebut) {
+      if (!dateDebut) return null
+      const start = new Date(dateDebut)
+      const now = new Date(lundi)
+      if (isNaN(start.getTime())) return null
+      const diffTime = now.getTime() - start.getTime()
+      const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24))
+      const diffWeeks = Math.floor(diffDays / 7) + 1
+      return diffWeeks > 0 ? diffWeeks : 1
+    }
+
+    async function chargerObjectifsJoueurs() {
+      const semaineId = getSemaineId()
+
+      try {
+        // Cache par semaine - chargement immédiat
+        const cacheKeyObj = 'planifB_objectifs_' + semaineId
+        const cachedObj = loadCache(cacheKeyObj)
+        if (cachedObj) { objectifsParJoueur = cachedObj }
+
+        // Refresh Firestore en arrière-plan (ne pas await)
+        const q = query(collection(db, 'objectifsBlesses'), where('semaineId', '==', semaineId))
+        getDocs(q).then(snap => {
+            snap.forEach(d => {
+              const data = d.data()
+              if (data.joueurId) {
+                objectifsParJoueur[data.joueurId] = data.texte || ''
+              }
+            })
+            saveCache(cacheKeyObj, objectifsParJoueur)
+          })
+          .catch(e => console.error('Erreur refresh objectifs:', e))
+      } catch(e) {
+        console.error('Erreur chargement objectifs:', e)
+      }
+    }
+
+    window.sauvegarderObjectifJoueur = async function(joueurId) {
+      const input = document.getElementById(`obj-${joueurId}`)
+      if (!input) return
+      
+      const texte = input.value.trim()
+      const semaineId = getSemaineId()
+      const docId = `${semaineId}_${joueurId}`
+      
+      try {
+        await (window.setDoc || setDoc)(doc(db, 'objectifsBlesses', docId), {
+          texte,
+          semaineId,
+          joueurId,
+          updatedAt: serverTimestamp()
+        })
+        objectifsParJoueur[joueurId] = texte
+        
+        // Feedback visuel temporaire
+        input.style.borderBottomColor = '#1D9E75'
+        setTimeout(() => {
+          input.style.borderBottomColor = ''
+        }, 1000)
+      } catch(e) {
+        console.error('Erreur sauvegarde objectif:', e)
+        alert('Erreur lors de la sauvegarde')
+      }
+    }
+
+    function ajusterHauteurTextareas() {
+      document.querySelectorAll('.objectif-joueur-input').forEach(textarea => {
+        textarea.style.height = 'auto';
+        textarea.style.height = textarea.scrollHeight + 'px';
+      });
+    }
+
+    // Recharger les objectifs quand on change de semaine
+    // NOTE: Ce wrapping doit rester ici, après la définition de renderAll et chargerObjectifsJoueurs
+
+    // ==================== MENU CONTEXTUEL ====================
+    window.ouvrirContextMenu = function(e, cr, joueurId, date) {
+      contextMenuCreneau = { creneau: cr, joueurId, date }
+      const menu = document.getElementById('context-menu')
+      menu.style.left = e.clientX + 'px'
+      menu.style.top = e.clientY + 'px'
+      menu.style.display = 'block'
+      
+      // Fermer le menu en cliquant ailleurs
+      setTimeout(() => {
+        document.addEventListener('click', fermerContextMenu, { once: true })
+      }, 100)
+    }
+
+    function fermerContextMenu() {
+      document.getElementById('context-menu').style.display = 'none'
+      contextMenuCreneau = null
+    }
+
+    window.contextAction = async function(action) {
+      if (!contextMenuCreneau) return
+      const { creneau, joueurId, date } = contextMenuCreneau
+      
+      // Vérifier si un seul joueur dans le créneau
+      const joueursIds = creneau.joueurIds || [creneau.joueurId]
+      const singleJoueur = joueursIds.length === 1
+      
+      switch(action) {
+        case 'edit':
+          ouvrirModalCreneau(creneau, joueurId, date)
+          fermerContextMenu()
+          break
+        case 'duplicate':
+          fermerContextMenu()
+          if (singleJoueur) {
+            // Un seul joueur : activer directement le mode duplication
+            dupModeClick = {
+              active: true,
+              creneau: creneau,
+              selectedJoueurs: joueursIds
+            }
+            // Afficher l'indicateur
+            const indicator = document.getElementById('move-indicator')
+            indicator.textContent = 'Clique sur le jour cible pour dupliquer'
+            indicator.style.display = 'block'
+            indicator.style.left = '50%'
+            indicator.style.top = '60px'
+            indicator.style.transform = 'translateX(-50%)'
+            indicator.style.background = '#FECC00'
+            renderAll()
+            document.addEventListener('keydown', handleDupKey)
+          } else {
+            // Plusieurs joueurs : afficher modal de sélection
+            ouvrirModalDupScope(creneau, joueurId)
+          }
+          break
+        case 'move':
+          fermerContextMenu()
+          if (singleJoueur) {
+            // Un seul joueur : activer directement le mode déplacement
+            activerModeDeplacement(creneau, date, joueurId, 'selection', joueursIds)
+          } else {
+            // Plusieurs joueurs : afficher modal de sélection
+            ouvrirModalMoveScope(creneau, joueurId, date)
+          }
+          break
+        case 'delete':
+          if (confirm('Supprimer ce créneau ?')) {
+            await (window.deleteDoc || deleteDoc)(doc(db, 'creneauxBlesses', creneau.id))
+            _reloadCreneaux()
+          }
+          fermerContextMenu()
+          break
+      }
+    }
+
+    // ==================== SCOPE DÉPLACEMENT ====================
+    window.ouvrirModalMoveScope = function(creneau, joueurId, date) {
+      const joueursIds = creneau.joueurIds || [creneau.joueurId]
+      
+      document.getElementById('move-scope-titre').textContent = creneau.titre || '—'
+      
+      // Générer la liste des joueurs avec checkboxes
+      const container = document.getElementById('move-joueurs-list')
+      container.innerHTML = ''
+      
+      joueursIds.forEach(jid => {
+        const j = joueurs.find(x => x.id === jid)
+        if (!j) return
+        
+        const item = document.createElement('div')
+        item.style.cssText = `
+          display: flex; align-items: center; gap: 10px; padding: 8px 10px;
+          border-radius: 8px; cursor: pointer; margin-bottom: 4px;
+          background: ${jid === joueurId ? '#FECC0022' : '#111'};
+          border: 1px solid ${jid === joueurId ? '#FECC00' : '#2a2a2a'};
+        `
+        item.innerHTML = `
+          <input type="checkbox" id="move-check-${jid}" value="${jid}" 
+                 ${jid === joueurId ? 'checked' : ''} 
+                 style="accent-color: #FECC00; width: 16px; height: 16px; cursor: pointer;">
+          <label for="move-check-${jid}" style="cursor: pointer; flex: 1; font-size: 13px; color: #fff;">
+            ${j.nom} ${j.prenom}
+          </label>
+        `
+        item.onclick = (e) => {
+          if (e.target.tagName !== 'INPUT') {
+            const check = item.querySelector('input')
+            check.checked = !check.checked
+          }
+        }
+        container.appendChild(item)
+      })
+      
+      // Réinitialiser l'action
+      moveScopeData.action = 'deplacer'
+      document.querySelectorAll('#modal-move-scope .dup-option').forEach(el => el.classList.remove('selected'))
+      document.querySelector('#modal-move-scope .dup-option[data-mode="deplacer"]').classList.add('selected')
+      
+      // Stocker les infos dans la variable dédiée
+      moveScopeData = { creneau, joueurId, date, selectedJoueurs: [], action: 'deplacer' }
+      
+      document.getElementById('modal-move-scope').classList.add('open')
+    }
+
+    window.fermerModalMoveScope = function() {
+      document.getElementById('modal-move-scope').classList.remove('open')
+    }
+
+    window.selectMoveAction = function(mode) {
+      moveScopeData.action = mode
+      document.querySelectorAll('#modal-move-scope .dup-option').forEach(el => el.classList.remove('selected'))
+      document.querySelector(`#modal-move-scope .dup-option[data-mode="${mode}"]`).classList.add('selected')
+    }
+
+    window.confirmerMoveScope = function() {
+      // Récupérer les joueurs sélectionnés
+      const checkboxes = document.querySelectorAll('#move-joueurs-list input[type="checkbox"]:checked')
+      const selectedJoueurs = [...checkboxes].map(cb => cb.value)
+      
+      if (selectedJoueurs.length === 0) {
+        alert('Sélectionne au moins un joueur.')
+        return
+      }
+      
+      moveScopeData.selectedJoueurs = selectedJoueurs
+      
+      fermerModalMoveScope()
+      
+      if (moveScopeData.action === 'retirer') {
+        // Retirer directement sans mode déplacement
+        retirerJoueursDuCreneau(moveScopeData.creneau, selectedJoueurs)
+      } else {
+        // Activer le mode déplacement avec les joueurs sélectionnés
+        activerModeDeplacement(moveScopeData.creneau, moveScopeData.date, moveScopeData.joueurId, 'selection', selectedJoueurs)
+      }
+    }
+
+    async function retirerJoueursDuCreneau(creneau, joueursIdsARetirer) {
+      try {
+        const currentIds = creneau.joueurIds || [creneau.joueurId]
+        const newIds = currentIds.filter(id => !joueursIdsARetirer.includes(id))
+        
+        if (newIds.length === 0) {
+          // Plus personne, supprimer le créneau
+          await (window.deleteDoc || deleteDoc)(doc(db, 'creneauxBlesses', creneau.id))
+          alert('Créneau supprimé (plus de joueurs)')
+        } else {
+          // Mettre à jour avec les joueurs restants
+          await (window.setDoc || setDoc)(doc(db, 'creneauxBlesses', creneau.id), { 
+            ...creneau, 
+            joueurIds: newIds,
+            joueurId: newIds[0],
+            updatedAt: serverTimestamp()
+          })
+          alert(`${joueursIdsARetirer.length} joueur(s) retiré(s) du créneau`)
+        }
+        _reloadCreneaux()
+      } catch(e) {
+        alert('Erreur lors du retrait')
+        console.error(e)
+      }
+    }
+
+    // ==================== SCOPE DUPLICATION ====================
+    window.ouvrirModalDupScope = function(creneau, joueurId) {
+      const joueursIds = creneau.joueurIds || [creneau.joueurId]
+      
+      document.getElementById('dup-scope-titre').textContent = creneau.titre || '—'
+      
+      // Générer la liste des joueurs avec checkboxes
+      const container = document.getElementById('dup-joueurs-list')
+      container.innerHTML = ''
+      
+      joueursIds.forEach(jid => {
+        const j = joueurs.find(x => x.id === jid)
+        if (!j) return
+        
+        const item = document.createElement('div')
+        item.style.cssText = `
+          display: flex; align-items: center; gap: 10px; padding: 8px 10px;
+          border-radius: 8px; cursor: pointer; margin-bottom: 4px;
+          background: ${jid === joueurId ? '#FECC0022' : '#111'};
+          border: 1px solid ${jid === joueurId ? '#FECC00' : '#2a2a2a'};
+        `
+        item.innerHTML = `
+          <input type="checkbox" id="dup-check-${jid}" value="${jid}" 
+                 ${jid === joueurId ? 'checked' : ''} 
+                 style="accent-color: #FECC00; width: 16px; height: 16px; cursor: pointer;">
+          <label for="dup-check-${jid}" style="cursor: pointer; flex: 1; font-size: 13px; color: #fff;">
+            ${j.nom} ${j.prenom}
+          </label>
+        `
+        item.onclick = (e) => {
+          if (e.target.tagName !== 'INPUT') {
+            const check = item.querySelector('input')
+            check.checked = !check.checked
+          }
+        }
+        container.appendChild(item)
+      })
+      
+      // Stocker le créneau en cours dans la variable dédiée
+      dupScopeData = { creneau, joueurId, date: null, selectedJoueurs: [] }
+      
+      document.getElementById('modal-dup-scope').classList.add('open')
+    }
+
+    window.fermerModalDupScope = function() {
+      document.getElementById('modal-dup-scope').classList.remove('open')
+    }
+
+    window.confirmerDupScope = function() {
+      // Récupérer les joueurs sélectionnés
+      const checkboxes = document.querySelectorAll('#dup-joueurs-list input[type="checkbox"]:checked')
+      const selectedJoueurs = [...checkboxes].map(cb => cb.value)
+      
+      if (selectedJoueurs.length === 0) {
+        alert('Sélectionne au moins un joueur.')
+        return
+      }
+      
+      // Stocker les joueurs sélectionnés et activer le mode duplication par clic
+      dupModeClick = {
+        active: true,
+        creneau: dupScopeData.creneau,
+        selectedJoueurs: selectedJoueurs
+      }
+      
+      fermerModalDupScope()
+      
+      // Afficher l'indicateur de duplication
+      const indicator = document.getElementById('move-indicator')
+      indicator.textContent = selectedJoueurs.length > 1 
+        ? `Clique sur le jour cible pour dupliquer ${selectedJoueurs.length} joueurs`
+        : 'Clique sur le jour cible pour dupliquer'
+      indicator.style.display = 'block'
+      indicator.style.left = '50%'
+      indicator.style.top = '60px'
+      indicator.style.transform = 'translateX(-50%)'
+      indicator.style.background = '#FECC00'
+      
+      // Re-render pour montrer les cibles cliquables
+      renderAll()
+      
+      // Ajouter écouteur Escape
+      document.addEventListener('keydown', handleDupKey)
+    }
+
+    function handleDupKey(e) {
+      if (e.key === 'Escape') {
+        annulerDupClick()
+      }
+    }
+
+    window.annulerDupClick = function() {
+      dupModeClick = { active: false, creneau: null, selectedJoueurs: [] }
+      document.getElementById('move-indicator').style.display = 'none'
+      document.removeEventListener('keydown', handleDupKey)
+      renderAll()
+    }
+
+    window.confirmerDupParClic = async function(targetDate, targetJoueurId = null) {
+      if (!dupModeClick.active || !dupModeClick.creneau) return
+      
+      const cr = dupModeClick.creneau
+      // Si un targetJoueurId est fourni (clic sur une autre ligne), dupliquer pour ce joueur
+      // Sinon, dupliquer pour les joueurs sélectionnés
+      const joueursToDup = targetJoueurId ? [targetJoueurId] : dupModeClick.selectedJoueurs
+      
+      try {
+        // Créer des créneaux INDIVIDUELS pour chaque joueur
+        let createdCount = 0
+        for (const jid of joueursToDup) {
+          const newId = `cr_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`
+          await (window.setDoc || setDoc)(doc(db, 'creneauxBlesses', newId), {
+            titre: cr.titre,
+            type: cr.type,
+            date: targetDate,
+            heureDebut: cr.heureDebut || null,
+            heureFin: cr.heureFin || null,
+            notes: cr.notes,
+            commun: cr.commun,
+            important: cr.important,
+            joueurIds: [jid],
+            joueurId: jid,
+            updatedAt: serverTimestamp()
+          })
+          createdCount++
+        }
+        
+        // Feedback
+        const indicator = document.getElementById('move-indicator')
+        indicator.textContent = createdCount > 1 
+          ? `✓ ${createdCount} créneaux créés !` 
+          : '✓ Créneau dupliqué !'
+        indicator.style.background = '#1D9E75'
+        setTimeout(() => {
+          indicator.style.display = 'none'
+          indicator.textContent = 'Clique sur le jour cible pour déplacer'
+          indicator.style.background = '#FECC00'
+        }, 1500)
+      } catch(e) {
+        alert('Erreur lors de la duplication')
+        console.error(e)
+      }
+      
+      _reloadCreneaux()
+      annulerDupClick()
+    }
+
+    // ==================== DÉPLACEMENT PAR CLIC DROIT ====================
+    function activerModeDeplacement(creneau, sourceDate, sourceJoueurId, scope = 'tous', selectedJoueurs = null) {
+      const joueursToMove = selectedJoueurs || (creneau.joueurIds || [creneau.joueurId])
+      
+      moveMode = { 
+        active: true, 
+        creneau, 
+        sourceDate, 
+        sourceJoueurId,
+        scope,
+        selectedJoueurs: joueursToMove,
+        targetDate: null,
+        targetJoueurId: null
+      }
+      
+      // Afficher l'indicateur
+      const indicator = document.getElementById('move-indicator')
+      const nbJoueurs = joueursToMove.length
+      indicator.textContent = nbJoueurs > 1 
+        ? `Clique sur le jour cible pour déplacer ${nbJoueurs} joueurs` 
+        : 'Clique sur le jour cible pour déplacer 1 joueur'
+      indicator.style.display = 'block'
+      indicator.style.left = '50%'
+      indicator.style.top = '60px'
+      indicator.style.transform = 'translateX(-50%)'
+      
+      // Re-render pour montrer le créneau en mode déplacement et les cibles
+      renderAll()
+      
+      // Ajouter un écouteur pour annuler avec Escape
+      document.addEventListener('keydown', handleMoveKey)
+    }
+
+    function handleMoveKey(e) {
+      if (e.key === 'Escape') {
+        annulerDeplacement()
+      }
+    }
+
+    window.confirmerDeplacement = async function(targetJoueurId, targetDate) {
+      if (!moveMode.active || !moveMode.creneau) return
+      
+      const cr = moveMode.creneau
+      const joueursToMove = moveMode.selectedJoueurs || [moveMode.sourceJoueurId]
+      const sameTargetJoueur = (targetJoueurId === moveMode.sourceJoueurId)
+      
+      try {
+        // 1. Retirer les joueurs sélectionnés du créneau actuel
+        const currentIds = cr.joueurIds || [cr.joueurId]
+        const remainingIds = currentIds.filter(id => !joueursToMove.includes(id))
+        
+        // Mettre à jour le créneau original avec les joueurs restants (s'il en reste)
+        if (remainingIds.length > 0) {
+          await (window.setDoc || setDoc)(doc(db, 'creneauxBlesses', cr.id), { 
+            ...cr, 
+            joueurIds: remainingIds,
+            joueurId: remainingIds[0],
+            updatedAt: serverTimestamp()
+          })
+        } else {
+          // Plus personne, supprimer le créneau original
+          await (window.deleteDoc || deleteDoc)(doc(db, 'creneauxBlesses', cr.id))
+        }
+        
+        // 2. Créer des créneaux INDIVIDUELS pour chaque joueur déplacé
+        let createdCount = 0
+        for (const jid of joueursToMove) {
+          const finalJoueurId = sameTargetJoueur ? jid : targetJoueurId
+          const newId = `cr_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`
+          const { id, ...crData } = cr
+          
+          await (window.setDoc || setDoc)(doc(db, 'creneauxBlesses', newId), {
+            ...crData,
+            date: targetDate,
+            joueurIds: [finalJoueurId],  // Un seul joueur par créneau
+            joueurId: finalJoueurId,
+            updatedAt: serverTimestamp()
+          })
+          createdCount++
+        }
+        
+        // Feedback visuel
+        const indicator = document.getElementById('move-indicator')
+        indicator.textContent = createdCount > 1 
+          ? `✓ ${createdCount} créneaux créés !` 
+          : '✓ Créneau déplacé !'
+        indicator.style.background = '#1D9E75'
+        setTimeout(() => {
+          indicator.style.display = 'none'
+          indicator.textContent = 'Clique sur le jour cible pour déplacer'
+          indicator.style.background = '#FECC00'
+        }, 1500)
+      } catch(e) {
+        alert('Erreur lors du déplacement')
+        console.error(e)
+      }
+      
+      _reloadCreneaux()
+      desactiverModeDeplacement()
+    }
+
+    window.annulerDeplacement = function() {
+      desactiverModeDeplacement()
+    }
+
+    function desactiverModeDeplacement() {
+      moveMode = { active: false, creneau: null, sourceDate: null, sourceJoueurId: null, scope: 'tous', targetJoueurId: null, targetDate: null, selectedJoueurs: [], action: 'deplacer' }
+      moveScopeData = { creneau: null, joueurId: null, date: null, selectedJoueurs: [], action: 'deplacer' }
+      document.getElementById('move-indicator').style.display = 'none'
+      document.removeEventListener('keydown', handleMoveKey)
+      renderAll()
+    }
+
+    // Clic sur le document pour fermer le menu contextuel
+    document.addEventListener('click', (e) => {
+      const menu = document.getElementById('context-menu')
+      if (menu && !menu.contains(e.target)) {
+        menu.style.display = 'none'
+      }
+    })
+
+    window.handleLogout = async function() {
+      await signOut(auth)
+      window.location.href = 'login.html'
+    }
+
+    // ==================== PLANNING KINÉ ====================
+
+    // Charger les dispos kiné depuis Firestore
+    async function chargerDispoKine() {
+      const cachedDispo = loadCache('planifB_dispoKine')
+      if (cachedDispo) dispoKine = cachedDispo
+      // Refresh Firestore en arrière-plan (ne pas await)
+      getDocs(collection(db, 'dispoKine')).then(snap => {
+        dispoKine = {}
+        snap.forEach(d => { dispoKine[d.id] = d.data() })
+        saveCache('planifB_dispoKine', dispoKine)
+      }).catch(e => {
+        console.error('Erreur chargement dispo kiné:', e)
+        if (!cachedDispo) dispoKine = {}
+      })
+    }
+
+    // Vérifie si un créneau kine est hors des plages dispo du kiné
+    function isHorsDispoKine(cr) {
+      if (cr.type !== 'kine') return false
+      if (!cr.heureDebut && !cr.heureFin) return false
+      const date = new Date(cr.date + 'T00:00:00')
+      const jourNom = JOURS_KINE[date.getDay() === 0 ? 6 : date.getDay() - 1]
+      const dispo = dispoKine[jourNom]
+      if (!dispo || !dispo.actif) return true // Pas de dispo ce jour = hors dispo
+
+      // Convertir en format plages si nécessaire
+      let plages = dispo.plages
+      if (!plages && dispo.debut && dispo.fin) {
+        plages = [{ debut: dispo.debut, fin: dispo.fin }]
+      }
+      if (!plages || plages.length === 0) return true
+
+      const toMin = h => { if (!h) return null; const [hh,mm] = h.split(':').map(Number); return hh*60+mm }
+      const crDebut = toMin(cr.heureDebut)
+      const crFin = toMin(cr.heureFin)
+
+      // Vérifier si le créneau est dans AU MOINS UNE des plages
+      for (const plage of plages) {
+        const dispoDebut = toMin(plage.debut)
+        const dispoFin = toMin(plage.fin)
+        if (dispoDebut === null || dispoFin === null) continue
+        // Le créneau est dans cette plage si:
+        // - son début est >= début de la plage
+        // - et sa fin est <= fin de la plage
+        const debutDansPlage = crDebut === null || crDebut >= dispoDebut
+        const finDansPlage = crFin === null || crFin <= dispoFin
+        if (debutDansPlage && finDansPlage) return false // Dans une plage = OK
+      }
+
+      return true // Hors de toutes les plages = hors dispo
+    }
+
+    // Vérifie si un créneau kine chevauche un autre créneau kine d'un joueur différent
+    function isConflitKine(cr) {
+      if (cr.type !== 'kine') return false
+      const toMin = h => { if (!h) return null; const [hh, mm] = h.split(':').map(Number); return hh * 60 + mm }
+      const crDebut = toMin(cr.heureDebut)
+      const crFin   = toMin(cr.heureFin)
+      if (crDebut === null || crFin === null) return false
+
+      const crPlayers = cr.joueurIds && cr.joueurIds.length ? cr.joueurIds : (cr.joueurId ? [cr.joueurId] : [])
+
+      return creneaux.some(other => {
+        if (other.id === cr.id) return false
+        if (other.type !== 'kine') return false
+        if (other.date !== cr.date) return false
+        // Au moins un joueur différent
+        const otherPlayers = other.joueurIds && other.joueurIds.length ? other.joueurIds : (other.joueurId ? [other.joueurId] : [])
+        const hasDifferentPlayer = otherPlayers.some(pid => !crPlayers.includes(pid))
+        if (!hasDifferentPlayer) return false
+        // Chevauchement horaire : les deux créneaux se croisent
+        const oDebut = toMin(other.heureDebut)
+        const oFin   = toMin(other.heureFin)
+        if (oDebut === null || oFin === null) return false
+        return crDebut < oFin && oDebut < crFin
+      })
+    }
+
+    // Vérifie si un créneau est en conflit avec un autre créneau (même joueur, même heure)
+    function isConflitSeance(cr) {
+      const toMin = h => { if (!h) return null; const [hh, mm] = h.split(':').map(Number); return hh * 60 + mm }
+      const crDebut = toMin(cr.heureDebut)
+      const crFin   = toMin(cr.heureFin)
+      if (crDebut === null || crFin === null) return false
+
+      const crPlayers = cr.joueurIds && cr.joueurIds.length ? cr.joueurIds : (cr.joueurId ? [cr.joueurId] : [])
+
+      return creneaux.some(other => {
+        if (other.id === cr.id) return false
+        if (other.date !== cr.date) return false
+        // Vérifier s'il y a au moins un joueur en commun
+        const otherPlayers = other.joueurIds && other.joueurIds.length ? other.joueurIds : (other.joueurId ? [other.joueurId] : [])
+        const hasCommonPlayer = otherPlayers.some(pid => crPlayers.includes(pid))
+        if (!hasCommonPlayer) return false
+        // Chevauchement horaire : les deux créneaux se croisent
+        const oDebut = toMin(other.heureDebut)
+        const oFin   = toMin(other.heureFin)
+        if (oDebut === null || oFin === null) return false
+        // Corrigé : 10h30-10h30 ne chevauche pas si l'un se termine exactement quand l'autre commence
+        return crDebut < oFin && oDebut < crFin && !(crFin <= oDebut || oFin <= crDebut)
+      })
+    }
+
+    
+    // Render la vue planning kiné
+    function renderKineView() {
+      const grid = document.getElementById('kine-day-grid')
+      if (!grid) return
+      grid.innerHTML = ''
+      const dates = getVisibleDates()
+      const aujourdhuiStr = dateStr(new Date())
+      grid.style.gridTemplateColumns = `repeat(${dates.length}, 1fr)`
+
+      dates.forEach((d, i) => {
+        const ds = dateStr(d)
+        const isToday = ds === aujourdhuiStr
+        const dayIdx = d.getDay() === 0 ? 6 : d.getDay() - 1
+        const jourNom = JOURS_KINE[dayIdx]
+        const dispo = dispoKine[jourNom]
+
+        // Convertir en format plages si nécessaire
+        let plages = dispo?.plages
+        if (!plages && dispo?.debut && dispo?.fin) {
+          plages = [{ debut: dispo.debut, fin: dispo.fin }]
+        }
+
+        const col = document.createElement('div')
+        col.className = 'kine-day-col' + (isToday ? ' today-col' : '')
+
+        // Header avec badge de dispo
+        let dispoBadge = ''
+        if (dispo && dispo.actif && plages && plages.length > 0) {
+          const plagesText = plages.map(p => `${p.debut}–${p.fin}`).join(', ')
+          dispoBadge = `<div class="dispo-badge">${plagesText}</div>`
+        } else {
+          dispoBadge = `<div class="dispo-badge none">Indisponible</div>`
+        }
+        col.innerHTML = `
+          <div class="kine-day-header">
+            <div class="kine-day-name">${jourNom}</div>
+            <div class="kine-day-num ${isToday ? 'today-kine' : ''}">${d.getDate()}</div>
+            ${dispoBadge}
+          </div>
+          <div class="kine-day-body" id="kine-body-${ds}"></div>
+        `
+        grid.appendChild(col)
+
+        const body = col.querySelector(`#kine-body-${ds}`)
+
+        // Créneaux kiné de ce jour
+        const creneauxKineJour = creneaux.filter(cr =>
+          cr.date === ds && cr.type === 'kine'
+        )
+
+        if (!creneauxKineJour.length) {
+          const empty = document.createElement('div')
+          empty.className = 'kine-empty'
+          empty.textContent = 'Aucun créneau'
+          body.appendChild(empty)
+        } else {
+          // Trier par heure
+          creneauxKineJour.sort((a, b) => (a.heureDebut || '').localeCompare(b.heureDebut || ''))
+          creneauxKineJour.forEach(cr => {
+            const hors = isHorsDispoKine(cr)
+            const joueurIds = cr.joueurIds || [cr.joueurId]
+            const joueurNoms = joueurIds.map(jid => {
+              const j = joueurs.find(x => x.id === jid)
+              return j ? `${j.nom} ${j.prenom[0]}.` : '?'
+            }).join(', ')
+            const couleur = couleurJoueur(joueurIds[0])
+
+            const conflit = isConflitKine(cr)
+            const item = document.createElement('div')
+            item.className = 'kine-creneau-item t-kine' + (hors ? ' hors-dispo' : '') + (conflit ? ' conflit-kine' : '')
+            item.innerHTML = `
+              <div class="kine-creneau-joueur" style="color:${couleur}">${joueurNoms}</div>
+              <div class="kine-creneau-titre">${cr.titre || 'Kiné'}</div>
+              <div class="kine-creneau-heure">${cr.heureDebut || ''}${cr.heureFin ? ' → ' + cr.heureFin : ''}</div>
+            `
+            body.appendChild(item)
+          })
+        }
+      })
+    }
+
+    // Switch entre les deux vues
+    window.switchView = function(view) {
+      const planningView = document.getElementById('main-planning-view')
+      const kineView = document.getElementById('kine-view')
+      const tabBlesses = document.getElementById('tab-blesses')
+      const tabKine = document.getElementById('tab-kine')
+
+      if (view === 'kine') {
+        planningView.style.display = 'none'
+        kineView.classList.add('active')
+        tabBlesses.classList.remove('active')
+        tabKine.classList.add('active')
+        renderKineView()
+      } else {
+        planningView.style.display = 'flex'
+        kineView.classList.remove('active')
+        tabBlesses.classList.add('active')
+        tabKine.classList.remove('active')
+      }
+    }
+
+    // Modal gestion dispos kiné
+    window.ouvrirModalDispoKine = async function() {
+      await chargerDispoKine()
+      const container = document.getElementById('dispo-rows')
+      container.innerHTML = ''
+      JOURS_KINE.forEach(jour => {
+        const dispo = dispoKine[jour] || { actif: false, plages: [{ debut: '09:00', fin: '18:00' }] }
+        // Si l'ancien format avec debut/fin existe, le convertir en plages
+        if (!dispo.plages && dispo.debut && dispo.fin) {
+          dispo.plages = [{ debut: dispo.debut, fin: dispo.fin }]
+        }
+        if (!dispo.plages) dispo.plages = [{ debut: '09:00', fin: '18:00' }]
+
+        const row = document.createElement('div')
+        row.className = 'dispo-day-row'
+        row.innerHTML = `
+          <div class="dispo-day-header">
+            <div class="dispo-day-label">${jour}</div>
+            <div class="dispo-toggle">
+              <input type="checkbox" id="dispo-actif-${jour}" ${dispo.actif ? 'checked' : ''}
+                onchange="toggleDispoRow('${jour}')">
+              <label for="dispo-actif-${jour}" style="font-size:12px; color:#666; cursor:pointer;">Disponible</label>
+            </div>
+          </div>
+          <div class="dispo-plages-container" id="dispo-plages-${jour}" style="${dispo.actif ? '' : 'opacity:.3; pointer-events:none;'}">
+          </div>
+          <button class="btn-add-plage" id="btn-add-plage-${jour}" onclick="ajouterPlage('${jour}')" style="${dispo.actif ? '' : 'display:none;'}">+ Ajouter une plage</button>
+        `
+        container.appendChild(row)
+        
+        // Rendre les plages
+        renderPlagesJour(jour, dispo.plages)
+      })
+      document.getElementById('modal-dispo-kine').classList.add('open')
+    }
+
+    function renderPlagesJour(jour, plages) {
+      const container = document.getElementById(`dispo-plages-${jour}`)
+      container.innerHTML = ''
+      plages.forEach((plage, idx) => {
+        const plageRow = document.createElement('div')
+        plageRow.className = 'dispo-plage-row'
+        plageRow.innerHTML = `
+          <div class="dispo-times">
+            <input type="time" id="dispo-debut-${jour}-${idx}" value="${plage.debut || '09:00'}">
+            <span>→</span>
+            <input type="time" id="dispo-fin-${jour}-${idx}" value="${plage.fin || '18:00'}">
+          </div>
+          <button class="btn-remove-plage" onclick="supprimerPlage('${jour}', ${idx})" ${plages.length === 1 ? 'disabled style="opacity:.3; cursor:not-allowed;"' : ''}>✕</button>
+        `
+        container.appendChild(plageRow)
+      })
+    }
+
+    window.toggleDispoRow = function(jour) {
+      const checked = document.getElementById(`dispo-actif-${jour}`).checked
+      const plagesContainer = document.getElementById(`dispo-plages-${jour}`)
+      const addBtn = document.getElementById(`btn-add-plage-${jour}`)
+      plagesContainer.style.opacity = checked ? '1' : '.3'
+      plagesContainer.style.pointerEvents = checked ? 'auto' : 'none'
+      addBtn.style.display = checked ? 'block' : 'none'
+    }
+
+    window.ajouterPlage = function(jour) {
+      const container = document.getElementById(`dispo-plages-${jour}`)
+      const currentPlages = container.querySelectorAll('.dispo-plage-row').length
+      const newIdx = currentPlages
+      const plageRow = document.createElement('div')
+      plageRow.className = 'dispo-plage-row'
+      plageRow.innerHTML = `
+        <div class="dispo-times">
+          <input type="time" id="dispo-debut-${jour}-${newIdx}" value="09:00">
+          <span>→</span>
+          <input type="time" id="dispo-fin-${jour}-${newIdx}" value="12:00">
+        </div>
+        <button class="btn-remove-plage" onclick="supprimerPlage('${jour}', ${newIdx})">✕</button>
+      `
+      container.appendChild(plageRow)
+    }
+
+    window.supprimerPlage = function(jour, idx) {
+      const container = document.getElementById(`dispo-plages-${jour}`)
+      const rows = container.querySelectorAll('.dispo-plage-row')
+      if (rows.length <= 1) return // Garder au moins une plage
+      rows[idx].remove()
+      // Réindexer les IDs
+      const newRows = container.querySelectorAll('.dispo-plage-row')
+      newRows.forEach((row, newIdx) => {
+        row.querySelector(`input[id^="dispo-debut-"]`).id = `dispo-debut-${jour}-${newIdx}`
+        row.querySelector(`input[id^="dispo-fin-"]`).id = `dispo-fin-${jour}-${newIdx}`
+        row.querySelector('button').onclick = () => supprimerPlage(jour, newIdx)
+      })
+    }
+
+    window.fermerModalDispoKine = function() {
+      document.getElementById('modal-dispo-kine').classList.remove('open')
+    }
+
+    window.sauvegarderDispoKine = async function() {
+      try {
+        for (const jour of JOURS_KINE) {
+          const actif = document.getElementById(`dispo-actif-${jour}`).checked
+          const plagesContainer = document.getElementById(`dispo-plages-${jour}`)
+          const plageRows = plagesContainer.querySelectorAll('.dispo-plage-row')
+          const plages = []
+          plageRows.forEach((row, idx) => {
+            const debut = document.getElementById(`dispo-debut-${jour}-${idx}`).value
+            const fin = document.getElementById(`dispo-fin-${jour}-${idx}`).value
+            plages.push({ debut, fin })
+          })
+          await (window.setDoc || setDoc)(doc(db, 'dispoKine', jour), { actif, plages, updatedAt: serverTimestamp() })
+        }
+        await chargerDispoKine()
+        fermerModalDispoKine()
+        renderKineView()
+        renderAll() // Mettre à jour les alertes dans le planning blessés
+      } catch(e) {
+        alert('Erreur lors de la sauvegarde')
+        console.error(e)
+      }
+    }
+
+    window.dupliquerDispoSemaines = async function() {
+      if (!confirm('Voulez-vous vraiment appliquer ces disponibilités à toutes les semaines futures ? Cela remplacera les dispos existantes.')) return
+
+      try {
+        // Récupérer les dispos actuelles depuis le modal
+        const disposActuelles = {}
+        for (const jour of JOURS_KINE) {
+          const actif = document.getElementById(`dispo-actif-${jour}`).checked
+          const plagesContainer = document.getElementById(`dispo-plages-${jour}`)
+          const plageRows = plagesContainer.querySelectorAll('.dispo-plage-row')
+          const plages = []
+          plageRows.forEach((row, idx) => {
+            const debut = document.getElementById(`dispo-debut-${jour}-${idx}`).value
+            const fin = document.getElementById(`dispo-fin-${jour}-${idx}`).value
+            plages.push({ debut, fin })
+          })
+          disposActuelles[jour] = { actif, plages }
+        }
+
+        // Sauvegarder pour la semaine courante
+        for (const jour of JOURS_KINE) {
+          await (window.setDoc || setDoc)(doc(db, 'dispoKine', jour), { ...disposActuelles[jour], updatedAt: serverTimestamp() })
+        }
+
+        // Sauvegarder comme modèle par défaut
+        await (window.setDoc || setDoc)(doc(db, 'settings', 'dispoKineDefault'), { dispos: disposActuelles, updatedAt: serverTimestamp() })
+
+        await chargerDispoKine()
+        fermerModalDispoKine()
+        renderKineView()
+        renderAll()
+        alert('Disponibilités enregistrées comme modèle par défaut ! Elles seront appliquées automatiquement aux nouvelles semaines.')
+      } catch(e) {
+        alert('Erreur lors de la duplication')
+        console.error(e)
+      }
+    }
+
+    // ==================== MULTI-SÉLECTION ====================
+    window.toggleMultiSelectModeBlesses = function() {
+      multiSelectMode.active = !multiSelectMode.active
+      
+      if (!multiSelectMode.active) {
+        // Désactiver : vider la sélection et cacher la barre
+        multiSelectMode.selectedCreneaux = []
+        document.getElementById('multi-select-bar').style.display = 'none'
+        document.getElementById('btn-multi-select').textContent = '☐ Sélection multiple'
+        document.getElementById('btn-multi-select').classList.remove('active')
+      } else {
+        // Activer
+        document.getElementById('btn-multi-select').textContent = '☑ Sélection multiple (ON)'
+        document.getElementById('btn-multi-select').classList.add('active')
+      }
+      
+      renderAll()
+    }
+
+    window.toggleMultiSelectCreneau = function(creneauId) {
+      const idx = multiSelectMode.selectedCreneaux.indexOf(creneauId)
+      if (idx === -1) {
+        multiSelectMode.selectedCreneaux.push(creneauId)
+      } else {
+        multiSelectMode.selectedCreneaux.splice(idx, 1)
+      }
+      
+      // Mettre à jour la barre d'actions
+      updateMultiSelectBar()
+      renderAll()
+    }
+
+    function updateMultiSelectBar() {
+      const count = multiSelectMode.selectedCreneaux.length
+      document.getElementById('multi-select-count').textContent = count
+      
+      if (count > 0) {
+        document.getElementById('multi-select-bar').style.display = 'flex'
+      } else {
+        document.getElementById('multi-select-bar').style.display = 'none'
+      }
+    }
+
+    window.annulerMultiSelect = function() {
+      multiSelectMode.active = false
+      multiSelectMode.selectedCreneaux = []
+      document.getElementById('multi-select-bar').style.display = 'none'
+      document.getElementById('btn-multi-select').textContent = '☐ Sélection multiple'
+      document.getElementById('btn-multi-select').classList.remove('active')
+      renderAll()
+    }
+
+    window.supprimerMultiSelect = async function() {
+      const count = multiSelectMode.selectedCreneaux.length
+      if (count === 0) return
+      
+      if (!confirm(`Supprimer ${count} créneau(x) ?`)) return
+      
+      try {
+        for (const creneauId of multiSelectMode.selectedCreneaux) {
+          await (window.deleteDoc || deleteDoc)(doc(db, 'creneauxBlesses', creneauId))
+        }
+        
+        // Réinitialiser et désactiver le mode
+        multiSelectMode.active = false
+        multiSelectMode.selectedCreneaux = []
+        document.getElementById('multi-select-bar').style.display = 'none'
+        document.getElementById('btn-multi-select').textContent = '☐ Sélection multiple'
+        document.getElementById('btn-multi-select').classList.remove('active')
+        
+        alert(`${count} créneau(x) supprimé(s)`)
+        _reloadCreneaux()
+      } catch(e) {
+        alert('Erreur lors de la suppression')
+        console.error(e)
+      }
+    }
+
+    window.dupliquerMultiSelect = async function() {
+      const count = multiSelectMode.selectedCreneaux.length
+      if (count === 0) return
+      
+      // Récupérer les créneaux sélectionnés
+      const creneauxToDup = creneaux.filter(cr => multiSelectMode.selectedCreneaux.includes(cr.id))
+      
+      // Trier par date pour trouver la date de référence (la plus ancienne)
+      creneauxToDup.sort((a, b) => new Date(a.date) - new Date(b.date))
+      const referenceDate = creneauxToDup[0].date
+      
+      // Activer le mode duplication avec ces créneaux et la date de référence
+      dupModeClick = {
+        active: true,
+        multiCreneaux: creneauxToDup,
+        isMulti: true,
+        referenceDate: referenceDate  // Date de référence pour calculer les décalages
+      }
+      
+      // Afficher l'indicateur
+      const indicator = document.getElementById('move-indicator')
+      indicator.textContent = count > 1 
+        ? `Clique sur un jour pour dupliquer ${count} créneaux (enchaînement conservé)`
+        : 'Clique sur un jour pour dupliquer le créneau'
+      indicator.style.display = 'block'
+      indicator.style.left = '50%'
+      indicator.style.top = '60px'
+      indicator.style.transform = 'translateX(-50%)'
+      indicator.style.background = '#FECC00'
+      
+      // Sortir du mode multi-sélection
+      multiSelectMode.active = false
+      multiSelectMode.selectedCreneaux = []
+      document.getElementById('multi-select-bar').style.display = 'none'
+      document.getElementById('btn-multi-select').textContent = '☐ Sélection multiple'
+      document.getElementById('btn-multi-select').classList.remove('active')
+      
+      renderAll()
+      document.addEventListener('keydown', handleDupKey)
+    }
+
+    // NOTE: La gestion de la duplication multiple (isMulti) est dans le bloc
+    // "FIX CACHE MULTI-SELECT DUP" en bas du script, qui met aussi à jour le cache local.
+
+    // ==================== BARRE DE MULTI-SÉLECTION DRAGGABLE ====================
+    function makeElementDraggable(elmnt) {
+      let pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
+      const dragHandle = elmnt.querySelector('.multi-select-drag-handle') || elmnt;
+      
+      dragHandle.addEventListener('mousedown', dragMouseDown);
+
+      function dragMouseDown(e) {
+        if (e.target.closest('button') || e.target.closest('input') || e.target.closest('select')) {
+          return;
+        }
+        e.preventDefault();
+        
+        const rect = elmnt.getBoundingClientRect();
+        elmnt.style.bottom = 'auto';
+        elmnt.style.transform = 'none';
+        elmnt.style.top = rect.top + 'px';
+        elmnt.style.left = rect.left + 'px';
+        
+        pos3 = e.clientX;
+        pos4 = e.clientY;
+        
+        document.addEventListener('mouseup', closeDragElement);
+        document.addEventListener('mousemove', elementDrag);
+        
+        elmnt.style.cursor = 'grabbing';
+        dragHandle.style.cursor = 'grabbing';
+      }
+
+      function elementDrag(e) {
+        e.preventDefault();
+        pos1 = pos3 - e.clientX;
+        pos2 = pos4 - e.clientY;
+        pos3 = e.clientX;
+        pos4 = e.clientY;
+        
+        const newTop = elmnt.offsetTop - pos2;
+        const newLeft = elmnt.offsetLeft - pos1;
+        
+        const padding = 10;
+        const maxLeft = window.innerWidth - elmnt.offsetWidth - padding;
+        const maxTop = window.innerHeight - elmnt.offsetHeight - padding;
+        
+        elmnt.style.top = Math.max(padding, Math.min(newTop, maxTop)) + "px";
+        elmnt.style.left = Math.max(padding, Math.min(newLeft, maxLeft)) + "px";
+      }
+
+      function closeDragElement() {
+        document.removeEventListener('mouseup', closeDragElement);
+        document.removeEventListener('mousemove', elementDrag);
+        elmnt.style.cursor = '';
+        dragHandle.style.cursor = 'grab';
+      }
+    }
+
+    // Initialiser la barre de multi-sélection comme déplaçable
+    const msBar = document.getElementById('multi-select-bar');
+    if (msBar) {
+      makeElementDraggable(msBar);
+    }
+
+    // ==================== DUPLICATION JOURNÉE ENTIÈRE ====================
+    let dupJourneeData = window.dupJourneeData = { sourceDateStr: '', dayName: '', creneaux: [] };
+
+    window.ouvrirModalDupJournee = function(sourceDateStr, dayName) {
+      dupJourneeData.sourceDateStr = sourceDateStr;
+      dupJourneeData.dayName = dayName;
+      
+      // Filtrer les créneaux pour ce jour
+      const dayCreneaux = creneaux.filter(cr => cr.date === sourceDateStr);
+      dupJourneeData.creneaux = dayCreneaux;
+      
+      // Trouver tous les blessés uniques ayant des créneaux ce jour-là
+      const playerIds = new Set();
+      dayCreneaux.forEach(cr => {
+        // Fallback joueurId : en Supabase, joueur_ids peut être [] (import via table de liaison)
+        const crPlayers = (cr.joueurIds && Array.isArray(cr.joueurIds) && cr.joueurIds.length > 0)
+          ? cr.joueurIds
+          : (cr.joueurId ? [cr.joueurId] : []);
+        crPlayers.forEach(id => playerIds.add(id));
+      });
+      
+      const sourceLabel = document.getElementById('dup-journee-source-label');
+      if (sourceLabel) {
+        sourceLabel.textContent = `${dayName} ${sourceDateStr.split('-').reverse().slice(0, 2).join('/')}`;
+      }
+      
+      // Réinitialiser le sélecteur de date
+      const targetInput = document.getElementById('dup-journee-date');
+      if (targetInput) { targetInput.value = ''; }
+      const dateLabel = document.getElementById('dup-journee-date-label');
+      if (dateLabel) { dateLabel.textContent = 'Choisir une date...'; dateLabel.style.color = '#888'; }
+      
+      // Remplir la liste des blessés avec des checkboxes
+      const container = document.getElementById('dup-journee-players-list');
+      if (container) {
+        container.innerHTML = '';
+        
+        if (playerIds.size === 0) {
+          container.innerHTML = '<div style="font-size:12px; color:#666; text-align:center; padding:10px;">Aucun blessé sur cette journée.</div>';
+        } else {
+          Array.from(playerIds).forEach(pid => {
+            const player = joueurs.find(j => j.id === pid);
+            if (!player) return;
+            const label = document.createElement('label');
+            label.style.cssText = 'display:flex; align-items:center; gap:8px; cursor:pointer; color:#fff; font-size:12px;';
+            label.innerHTML = `
+              <input type="checkbox" name="dup-journee-player-check" value="${pid}" checked style="accent-color:#FECC00;" />
+              <span>${player.nom} ${player.prenom || ''}</span>
+            `;
+            container.appendChild(label);
+          });
+        }
+      }
+      
+      const modal = document.getElementById('modal-dup-journee');
+      if (modal) {
+        modal.classList.add('open');
+      }
+    };
+
+    window.selectJourneePlayers = function(mode) {
+      const checks = document.querySelectorAll('input[name="dup-journee-player-check"]');
+      checks.forEach(chk => {
+        chk.checked = (mode === 'all');
+      });
+    };
+
+    window.fermerModalDupJournee = function() {
+      const modal = document.getElementById('modal-dup-journee');
+      if (modal) {
+        modal.classList.remove('open');
+      }
+    };
+
+    window.confirmerDupJournee = async function() {
+      const targetDateStr = document.getElementById('dup-journee-date').value;
+      if (!targetDateStr) {
+        alert('Veuillez sélectionner une date cible.');
+        return;
+      }
+      
+      // Récupérer les blessés sélectionnés
+      const checkedBoxes = document.querySelectorAll('input[name="dup-journee-player-check"]:checked');
+      const selectedPlayerIds = Array.from(checkedBoxes).map(cb => cb.value);
+      
+      if (selectedPlayerIds.length === 0) {
+        alert('Veuillez sélectionner au moins un blessé.');
+        return;
+      }
+      
+      // Filtrer les créneaux à dupliquer : ils doivent appartenir à au moins un joueur sélectionné
+      const creneauxToDuplicate = dupJourneeData.creneaux.filter(cr => {
+        const crPlayers = cr.joueurIds && Array.isArray(cr.joueurIds) ? cr.joueurIds : (cr.joueurId ? [cr.joueurId] : []);
+        return crPlayers.some(pid => selectedPlayerIds.includes(pid));
+      });
+      
+      if (creneauxToDuplicate.length === 0) {
+        alert('Aucun créneau ne correspond aux blessés sélectionnés.');
+        return;
+      }
+      
+      let createdCount = 0;
+      try {
+        for (const cr of creneauxToDuplicate) {
+          // Filtrer uniquement les joueurs concernés parmi ceux sélectionnés
+          const crPlayers = cr.joueurIds && Array.isArray(cr.joueurIds) ? cr.joueurIds : (cr.joueurId ? [cr.joueurId] : []);
+          const targetPlayers = crPlayers.filter(pid => selectedPlayerIds.includes(pid));
+          
+          if (targetPlayers.length === 0) continue;
+          
+          const newId = `cr_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
+          const newCreneau = {
+            titre: cr.titre || '',
+            type: cr.type || '',
+            date: targetDateStr,
+            heureDebut: cr.heureDebut || null,
+            heureFin: cr.heureFin || null,
+            notes: cr.notes || '',
+            avecGroupe: cr.avecGroupe || false,
+            commun: cr.commun || false,
+            important: cr.important || false,
+            joueurId: targetPlayers[0],
+            joueurIds: targetPlayers,
+            updatedAt: serverTimestamp()
+          };
+          
+          await (window.setDoc || setDoc)(doc(db, 'creneauxBlesses', newId), newCreneau);
+          createdCount++;
+        }
+        
+        alert(`${createdCount} créneau(x) dupliqué(s) avec succès vers le ${targetDateStr.split('-').reverse().join('/')} !`);
+        fermerModalDupJournee();
+        _reloadCreneaux();
+      } catch(e) {
+        alert('Erreur lors de la duplication : ' + e.message);
+        console.error(e);
+      }
+    };
+
+    // ==================== CALENDRIER PICKER PARTAGÉ ====================
+    let _calBlessesMonth = new Date()
+    let _calBlessesCallback = null
+    let _calBlessesMondayOnly = false
+    let _calBlessesSourceDate = null
+    const _calMonthNames = ['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre']
+    const _calDayNames = ['Lun','Mar','Mer','Jeu','Ven','Sam','Dim']
+
+    window.ouvrirCalendrierBlesses = function(callback, mondayOnly = false, sourceDate = null) {
+      _calBlessesCallback = callback
+      _calBlessesMondayOnly = mondayOnly
+      _calBlessesSourceDate = sourceDate
+      // Ouvrir sur le mois de la date source si fournie, sinon le mois courant
+      if (sourceDate) {
+        const [sy, sm] = sourceDate.split('-').map(Number)
+        _calBlessesMonth = new Date(sy, sm - 1, 1)
+      } else {
+        _calBlessesMonth = new Date()
+      }
+      _renderCalBlesses()
+      document.getElementById('modal-cal-blesses').classList.add('open')
+    }
+
+    window.fermerCalendrierBlesses = function() {
+      document.getElementById('modal-cal-blesses').classList.remove('open')
+      _calBlessesCallback = null
+    }
+
+    window.calBlessesPrevMonth = function() {
+      _calBlessesMonth.setMonth(_calBlessesMonth.getMonth() - 1)
+      _renderCalBlesses()
+    }
+
+    window.calBlessesNextMonth = function() {
+      _calBlessesMonth.setMonth(_calBlessesMonth.getMonth() + 1)
+      _renderCalBlesses()
+    }
+
+    function _renderCalBlesses() {
+      const year = _calBlessesMonth.getFullYear()
+      const month = _calBlessesMonth.getMonth()
+      document.getElementById('cal-blesses-title').textContent = `${_calMonthNames[month]} ${year}`
+      const grid = document.getElementById('cal-blesses-grid')
+      grid.innerHTML = ''
+
+      _calDayNames.forEach(d => {
+        const h = document.createElement('div')
+        h.style.cssText = 'font-size:10px; font-weight:700; color:#555; padding:4px 0;'
+        h.textContent = d
+        grid.appendChild(h)
+      })
+
+      const firstDay = new Date(year, month, 1)
+      let startOffset = firstDay.getDay() - 1
+      if (startOffset < 0) startOffset = 6
+
+      for (let i = 0; i < startOffset; i++) {
+        grid.appendChild(document.createElement('div'))
+      }
+
+      const daysInMonth = new Date(year, month + 1, 0).getDate()
+      const todayStr = dateStr(new Date())
+
+      for (let d = 1; d <= daysInMonth; d++) {
+        const dayDate = new Date(year, month, d)
+        const dayStr = dateStr(dayDate)
+        const isMonday = dayDate.getDay() === 1
+        const isToday = dayStr === todayStr
+        const isSource = _calBlessesSourceDate && dayStr === _calBlessesSourceDate
+        const disabled = _calBlessesMondayOnly && !isMonday
+
+        const btn = document.createElement('button')
+        btn.textContent = d
+        let bgColor = 'transparent'
+        let txtColor = '#fff'
+        let fontWeight = '400'
+        let outline = 'none'
+        if (disabled) { txtColor = '#333' }
+        else if (isSource) { bgColor = '#4A90E222'; txtColor = '#4A90E2'; fontWeight = '700'; outline = '1px solid #4A90E244' }
+        else if (isToday) { bgColor = '#FECC0022'; txtColor = '#FECC00'; fontWeight = '700' }
+        btn.style.cssText = `
+          border:none; border-radius:6px; padding:6px 2px; font-size:12px; cursor:${disabled ? 'not-allowed' : 'pointer'};
+          background:${bgColor}; color:${txtColor}; font-weight:${fontWeight};
+          outline:${outline}; opacity:${disabled ? '0.3' : '1'}; transition:background 0.15s; position:relative;
+        `
+        if (isSource && !disabled) {
+          const dot = document.createElement('span')
+          dot.style.cssText = 'position:absolute; bottom:2px; left:50%; transform:translateX(-50%); width:4px; height:4px; border-radius:50%; background:#4A90E2; display:block;'
+          btn.appendChild(dot)
+        }
+        if (!disabled) {
+          btn.addEventListener('mouseenter', () => { btn.style.background = '#FECC0033'; btn.style.color = '#FECC00' })
+          btn.addEventListener('mouseleave', () => {
+            btn.style.background = isSource ? '#4A90E222' : (isToday ? '#FECC0022' : 'transparent')
+            btn.style.color = isSource ? '#4A90E2' : (isToday ? '#FECC00' : '#fff')
+          })
+          btn.addEventListener('click', () => {
+            document.getElementById('modal-cal-blesses').classList.remove('open')
+            if (_calBlessesCallback) {
+              _calBlessesCallback(dayStr)
+              _calBlessesCallback = null
+            }
+          })
+        }
+        grid.appendChild(btn)
+      }
+    }
+
+    // ==================== SUPPRIMER JOURNÉE ENTIÈRE ====================
+    let delJourneeData = { sourceDateStr: '', dayName: '' }
+
+    window.ouvrirModalDelJournee = function(sourceDateStr, dayName) {
+      delJourneeData = { sourceDateStr, dayName }
+
+      document.getElementById('del-journee-label').textContent =
+        `${dayName} ${sourceDateStr.split('-').reverse().slice(0, 2).join('/')}`
+
+      const dayCreneaux = creneaux.filter(cr => cr.date === sourceDateStr)
+      const playerIds = new Set()
+      dayCreneaux.forEach(cr => {
+        ;(cr.joueurIds && Array.isArray(cr.joueurIds) ? cr.joueurIds : (cr.joueurId ? [cr.joueurId] : []))
+          .forEach(id => playerIds.add(id))
+      })
+
+      const container = document.getElementById('del-journee-players-list')
+      container.innerHTML = ''
+      if (playerIds.size === 0) {
+        container.innerHTML = '<div style="font-size:12px; color:#666; text-align:center; padding:10px;">Aucun créneau sur cette journée.</div>'
+      } else {
+        Array.from(playerIds).forEach(pid => {
+          const player = joueurs.find(j => j.id === pid)
+          if (!player) return
+          const label = document.createElement('label')
+          label.style.cssText = 'display:flex; align-items:center; gap:8px; cursor:pointer; color:#fff; font-size:12px;'
+          label.innerHTML = `
+            <input type="checkbox" name="del-journee-player-check" value="${pid}" checked style="accent-color:#E24B4A;" />
+            <span>${player.nom} ${player.prenom || ''}</span>
+          `
+          container.appendChild(label)
+        })
+      }
+
+      document.getElementById('modal-del-journee').classList.add('open')
+    }
+
+    window.selectDelJourneePlayers = function(mode) {
+      document.querySelectorAll('input[name="del-journee-player-check"]')
+        .forEach(chk => { chk.checked = mode === 'all' })
+    }
+
+    window.fermerModalDelJournee = function() {
+      document.getElementById('modal-del-journee').classList.remove('open')
+    }
+
+    window.confirmerDelJournee = async function() {
+      const selectedPlayerIds = Array.from(
+        document.querySelectorAll('input[name="del-journee-player-check"]:checked')
+      ).map(cb => cb.value)
+
+      if (selectedPlayerIds.length === 0) {
+        alert('Veuillez sélectionner au moins un blessé.')
+        return
+      }
+
+      const { sourceDateStr } = delJourneeData
+      const dayCreneaux = creneaux.filter(cr => cr.date === sourceDateStr)
+      const toDelete = dayCreneaux.filter(cr => {
+        const crPlayers = cr.joueurIds && Array.isArray(cr.joueurIds) ? cr.joueurIds : (cr.joueurId ? [cr.joueurId] : [])
+        return crPlayers.some(pid => selectedPlayerIds.includes(pid))
+      })
+
+      if (toDelete.length === 0) {
+        alert('Aucun créneau trouvé pour les blessés sélectionnés.')
+        return
+      }
+
+      if (!confirm(`Supprimer ${toDelete.length} créneau(x) pour les blessés sélectionnés le ${sourceDateStr.split('-').reverse().slice(0,2).join('/')} ?`)) return
+
+      try {
+        for (const cr of toDelete) {
+          await (window.deleteDoc || deleteDoc)(doc(db, 'creneauxBlesses', cr.id))
+        }
+        // Mise à jour du cache local immédiatement
+        const deletedIds = toDelete.map(cr => cr.id)
+        creneaux = creneaux.filter(cr => !deletedIds.includes(cr.id))
+        saveCache('planifB_creneaux', creneaux)
+        fermerModalDelJournee()
+        renderAll()
+      } catch(e) {
+        alert('Erreur lors de la suppression : ' + e.message)
+        console.error(e)
+      }
+    }
+
+    // ==================== FIX CACHE MULTI-SELECT DUP ====================
+    // Surcharge confirmerDupParClic (version multi) pour mettre à jour le cache local immédiatement
+    const _origConfirmerDupParClicV2 = window.confirmerDupParClic
+    window.confirmerDupParClic = async function(targetDate, targetJoueurId = null) {
+      if (dupModeClick.isMulti && dupModeClick.multiCreneaux) {
+        const creneauxToDup = dupModeClick.multiCreneaux
+        const referenceDate = dupModeClick.referenceDate
+        const newCreneaux = []
+
+        try {
+          for (const cr of creneauxToDup) {
+            const refDate = new Date(referenceDate.split('-').map(Number).reduce((acc, v, i) =>
+              i === 0 ? new Date(v, 0, 1) : (i === 1 ? new Date(acc.getFullYear(), v - 1, 1) : new Date(acc.getFullYear(), acc.getMonth(), v)), 0))
+            const crDate = new Date(cr.date + 'T00:00:00')
+            const [refY, refM, refD] = referenceDate.split('-').map(Number)
+            const [crY, crM, crD] = cr.date.split('-').map(Number)
+            const diffDays = Math.round((new Date(crY, crM-1, crD) - new Date(refY, refM-1, refD)) / 86400000)
+            const [tY, tM, tD] = targetDate.split('-').map(Number)
+            const nd = new Date(tY, tM-1, tD)
+            nd.setDate(nd.getDate() + diffDays)
+            const finalDate = dateStr(nd)
+
+            const joueursToDup = targetJoueurId ? [targetJoueurId] : (cr.joueurIds || [cr.joueurId])
+            for (const jid of joueursToDup) {
+              const newId = `cr_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`
+              const newCr = {
+                titre: cr.titre, type: cr.type, date: finalDate,
+                heureDebut: cr.heureDebut || null, heureFin: cr.heureFin || null, notes: cr.notes,
+                commun: cr.commun || false, important: cr.important || false,
+                joueurIds: [jid], joueurId: jid
+              }
+              await (window.setDoc || setDoc)(doc(db, 'creneauxBlesses', newId), { ...newCr, updatedAt: serverTimestamp() })
+              newCreneaux.push({ id: newId, ...newCr })
+            }
+          }
+
+          // Mettre à jour le cache local immédiatement
+          creneaux = [...creneaux, ...newCreneaux]
+          saveCache('planifB_creneaux', creneaux)
+
+          const indicator = document.getElementById('move-indicator')
+          indicator.textContent = newCreneaux.length > 1 ? `✓ ${newCreneaux.length} créneaux créés !` : '✓ Créneau dupliqué !'
+          indicator.style.background = '#1D9E75'
+          setTimeout(() => {
+            indicator.style.display = 'none'
+            indicator.textContent = 'Clique sur le jour cible pour déplacer'
+            indicator.style.background = '#FECC00'
+          }, 1500)
+
+          annulerDupClick()
+          renderAll()
+        } catch(e) {
+          alert('Erreur lors de la duplication')
+          console.error(e)
+          annulerDupClick()
+        }
+      } else {
+        return _origConfirmerDupParClicV2.call(this, targetDate, targetJoueurId)
+      }
+    }
+
+    // ==================== IMPRESSION ====================
+    function getWeekNumber(d) {
+      const date = new Date(d)
+      date.setHours(0, 0, 0, 0)
+      date.setDate(date.getDate() + 3 - (date.getDay() + 6) % 7)
+      const week1 = new Date(date.getFullYear(), 0, 4)
+      return 1 + Math.round(((date - week1) / 86400000 - 3 + (week1.getDay() + 6) % 7) / 7)
+    }
+
+    window.ouvrirModalImpression = function() {
+      document.getElementById('modal-impression').classList.add('open')
+    }
+    window.fermerModalImpression = function() {
+      document.getElementById('modal-impression').classList.remove('open')
+    }
+
+    window.genererImpression = function() {
+      const orientation = document.querySelector('input[name="print-orientation"]:checked')?.value || 'portrait'
+      const parPage = parseInt(document.getElementById('print-joueurs-par-page').value) || 6
+      const hideWknd = document.getElementById('print-hide-weekend').checked
+
+      fermerModalImpression()
+
+      const dates = semaineDates().filter(d => {
+        if (!hideWknd) return true
+        const day = d.getDay()
+        return day !== 6 && day !== 0
+      })
+      const aujourdhuiStr = dateStr(new Date())
+      const weekNum = getWeekNumber(lundi)
+      const semaineLabelTxt = dates[0].toLocaleDateString('fr-FR', { day:'numeric', month:'short' }) +
+        ' — ' + dates[dates.length - 1].toLocaleDateString('fr-FR', { day:'numeric', month:'short', year:'numeric' })
+
+      const joueursToPrint = joueursAffiches.map(jid => joueurs.find(j => j.id === jid)).filter(Boolean)
+      const pages = []
+      for (let i = 0; i < joueursToPrint.length; i += parPage) {
+        pages.push(joueursToPrint.slice(i, i + parPage))
+      }
+      if (!pages.length) pages.push([])
+
+      // Construire le HTML de chaque page
+      const pagesHTML = pages.map((pageJoueurs, pageIdx) => {
+        const headerRow = `
+          <div class="print-coin"></div>
+          ${dates.map(d => {
+            const isToday = dateStr(d) === aujourdhuiStr
+            const dayIdx = d.getDay() === 0 ? 6 : d.getDay() - 1
+            return `<div class="print-day-hdr">
+              <div class="print-day-name">${JOURS[dayIdx].slice(0,3)}</div>
+              <div class="print-day-num" style="${isToday ? 'color:#FECC00' : ''}">${d.getDate()}</div>
+            </div>`
+          }).join('')}`
+
+        const rowsHTML = pageJoueurs.map(j => {
+          const jid = j.id
+          const couleur = couleurJoueur(jid)
+          const blessure = blessures.find(b => b.joueurId === jid && b.statut !== 'gueri')
+          const semainesBlessure = blessure?.debut ? getSemainesEcoulees(blessure.debut) : null
+          const lbl = `<div class="print-joueur-label" style="border-left:3px solid ${couleur}">
+            <div class="print-joueur-nom">${j.nom} ${j.prenom?.[0] || ''}.</div>
+            <div class="print-joueur-patho">${blessure ? (blessure.patho?.slice(0,18) || '') : (j.poste || '')}</div>
+            ${semainesBlessure !== null ? `<div class="print-joueur-semaine">Sem. ${semainesBlessure}</div>` : ''}
+          </div>`
+          const cells = dates.map(d => {
+            const ds = dateStr(d)
+            const crs = creneaux.filter(cr =>
+              cr.date === ds && (cr.joueurIds?.includes(jid) || cr.joueurId === jid)
+            ).sort((a, b) => (a.heureDebut || '99:99').localeCompare(b.heureDebut || '99:99'))
+            return `<div class="print-cell">${crs.map(cr => `
+              <div class="print-creneau ${TYPE_CLASS[cr.type] || 't-autre'}${cr.important ? ' important' : ''}">
+                <div class="print-creneau-titre">${cr.titre || '—'}</div>
+                <div class="print-creneau-heure">${cr.heureDebut || ''}${cr.heureFin ? ' → '+cr.heureFin : ''}</div>
+              </div>`).join('')}</div>`
+          }).join('')
+          return lbl + cells
+        }).join('')
+
+        return `<div class="print-page">
+          <div class="print-header">
+            <img src="https://www.sca-albi.fr/wp-content/uploads/2023/10/cropped-SCA-bis.png">
+            <div>
+              <div class="print-header-title">Planning Blessés — SCA Albi</div>
+              <div class="print-header-sub">${semaineLabelTxt}</div>
+            </div>
+            <div class="print-header-week">
+              <div class="print-week-num">S${weekNum}</div>
+              <div class="print-week-label">Semaine ${weekNum}</div>
+            </div>
+          </div>
+          <div class="print-grid" style="grid-template-columns:120px repeat(${dates.length},1fr)">
+            ${headerRow}${rowsHTML}
+          </div>
+          <div class="print-footer">Page ${pageIdx+1}/${pages.length} — SCA Albi Rugby — Généré le ${new Date().toLocaleDateString('fr-FR')}</div>
+        </div>`
+      }).join('')
+
+      // Ouvrir une fenêtre popup propre, sans shell
+      const printWin = window.open('', '_blank', 'width=900,height=700')
+      printWin.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8">
+        <title>Planning Blessés — SCA Albi</title>
+        <style>
+          * { box-sizing: border-box; margin: 0; padding: 0; }
+          @page { size: A4 ${orientation}; margin: 0; }
+          html, body { background: #0f0f0f; color: #fff; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+          .print-page { background: #0f0f0f; color: #fff; padding: 10px 12px; box-sizing: border-box; page-break-after: always; break-after: page; width: 100%; display: flex; flex-direction: column; min-height: 100vh; }
+          .print-page:last-child { page-break-after: avoid; break-after: avoid; }
+          .print-header { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+          .print-header img { width: 36px; height: auto; }
+          .print-header-title { font-size: 16px; font-weight: 700; color: #FECC00; }
+          .print-header-sub { font-size: 11px; color: #888; margin-top: 1px; }
+          .print-header-week { margin-left: auto; text-align: right; }
+          .print-week-num { font-size: 20px; font-weight: 800; color: #FECC00; }
+          .print-week-label { font-size: 9px; color: #666; text-transform: uppercase; }
+          .print-grid { display: grid; width: 100%; flex: 1; }
+          .print-coin { background: #0f0f0f; }
+          .print-day-hdr { background: #1a1a1a; padding: 4px 3px; text-align: center; border-right: 1px solid #2a2a2a; border-bottom: 1px solid #2a2a2a; }
+          .print-day-name { font-size: 9px; font-weight: 700; color: #555; text-transform: uppercase; }
+          .print-day-num { font-size: 13px; font-weight: 700; }
+          .print-joueur-label { background: #111; padding: 4px 6px; border-bottom: 1px solid #1a1a1a; display: flex; flex-direction: column; justify-content: center; }
+          .print-joueur-nom { font-size: 11px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+          .print-joueur-patho { font-size: 9px; color: #E24B4A; }
+          .print-joueur-semaine { font-size: 8px; color: #666; }
+          .print-cell { border-right: 1px solid #1a1a1a; border-bottom: 1px solid #1a1a1a; padding: 2px; background: #0a0a0a; }
+          .print-creneau { border-radius: 3px; padding: 2px 4px; margin-bottom: 2px; font-size: 8px; border: 1px solid transparent; }
+          .print-creneau-titre { font-weight: 700; white-space: normal; word-break: break-word; }
+          .print-creneau-heure { font-size: 7px; opacity: .8; }
+          .t-muscu { background: #FECC0022; border-color: #FECC0044; color: #FECC00; }
+          .t-terrain { background: #1D9E7522; border-color: #1D9E7544; color: #5DCAA5; }
+          .t-kine { background: #378ADD22; border-color: #378ADD44; color: #85B7EB; }
+          .t-cardio { background: #E91E6322; border-color: #E91E6344; color: #F48FB1; }
+          .t-repos { background: #88878022; border-color: #88878044; color: #B4B2A9; }
+          .t-medical { background: #E24B4A22; border-color: #E24B4A44; color: #F09595; }
+          .t-autre { background: #2a2a2a; border-color: #444; color: #888; }
+          .print-footer { margin-top: 6px; font-size: 8px; color: #444; text-align: center; }
+        </style>
+      </head><body>${pagesHTML}</body></html>`)
+      printWin.document.close()
+      printWin.focus()
+      setTimeout(() => {
+        printWin.print()
+        printWin.close()
+      }, 500)
+    }
+  </script>
+  <!-- MODAL IMPRESSION -->
+  <div class="modal-overlay" id="modal-impression">
+    <div class="modal" style="width: 400px;">
+      <div class="modal-title">🖨️ Impression du planning</div>
+      <div style="font-size:12px; color:#888; margin-bottom:16px;">
+        Générez un PDF du planning blessés pour la semaine en cours.
+      </div>
+      <div class="form-field" style="margin-bottom:14px;">
+        <label>Orientation</label>
+        <div style="display:flex; gap:10px; margin-top:6px;">
+          <label style="display:flex; align-items:center; gap:6px; cursor:pointer; padding:8px 14px; border-radius:8px; border:1px solid #2a2a2a; font-size:13px;" id="orient-portrait-label">
+            <input type="radio" name="print-orientation" value="portrait" checked style="accent-color:#FECC00;">
+            📄 Portrait
+          </label>
+          <label style="display:flex; align-items:center; gap:6px; cursor:pointer; padding:8px 14px; border-radius:8px; border:1px solid #2a2a2a; font-size:13px;" id="orient-paysage-label">
+            <input type="radio" name="print-orientation" value="paysage" style="accent-color:#FECC00;">
+            📐 Paysage
+          </label>
+        </div>
+      </div>
+      <div class="form-field" style="margin-bottom:14px;">
+        <label>Joueurs par page</label>
+        <select id="print-joueurs-par-page" style="margin-top:6px;">
+          <option value="4">4 joueurs / page</option>
+          <option value="6" selected>6 joueurs / page</option>
+          <option value="8">8 joueurs / page</option>
+          <option value="10">10 joueurs / page</option>
+          <option value="12">12 joueurs / page</option>
+          <option value="999">Tous sur une page</option>
+        </select>
+      </div>
+      <div class="form-field" style="margin-bottom:6px;">
+        <label style="display:flex; align-items:center; gap:8px;">
+          <input type="checkbox" id="print-hide-weekend" checked style="accent-color:#FECC00;">
+          Masquer le week-end (sam/dim)
+        </label>
+      </div>
+      <div class="modal-actions">
+        <button class="btn-ghost" onclick="fermerModalImpression()">Annuler</button>
+        <button class="btn-primary" onclick="genererImpression()">🖨️ Imprimer</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="print-root"></div>
+
+</body>
+</html>

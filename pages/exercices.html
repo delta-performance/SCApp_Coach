@@ -1,0 +1,666 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <base href="../renderer/">
+  <meta charset="UTF-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' blob:; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; connect-src 'self' https://ywtrsuoqbtjlsumwdmjw.supabase.co wss://ywtrsuoqbtjlsumwdmjw.supabase.co https://*.googleapis.com https://*.firebaseio.com wss://*.firebaseio.com https://*.firebasestorage.app https://identitytoolkit.googleapis.com https://securetoken.googleapis.com; font-src 'self' data:;">
+  <title>SCA Albi — Exercices</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #0f0f0f; color: #fff; display: flex; height: 100vh; overflow: hidden; }
+    .sidebar { width: 220px; min-width: 220px; background: #1a1a1a; border-right: 1px solid #2a2a2a; display: flex; flex-direction: column; padding: 20px 0; }
+    .sidebar-logo { display: flex; align-items: center; gap: 10px; padding: 0 20px 24px; border-bottom: 1px solid #2a2a2a; }
+    .sidebar-logo img { width: 36px; }
+    .sidebar-logo span { font-size: 15px; font-weight: 700; color: #FECC00; }
+    .nav-section { padding: 16px 12px 8px; font-size: 10px; font-weight: 600; color: #444; letter-spacing: .08em; text-transform: uppercase; }
+    .nav-item { display: flex; align-items: center; gap: 10px; padding: 9px 20px; font-size: 13px; color: #888; cursor: pointer; border-left: 2px solid transparent; transition: all .15s; }
+    .nav-item:hover { color: #fff; background: #222; }
+    .nav-item.active { color: #FECC00; border-left-color: #FECC00; background: #222; }
+    .nav-dot { width: 7px; height: 7px; border-radius: 50%; background: currentColor; opacity: 0.6; }
+    .sidebar-bottom { margin-top: auto; padding: 16px 20px; border-top: 1px solid #2a2a2a; }
+    .user-info { font-size: 12px; color: #555; margin-bottom: 8px; }
+    .logout-btn { font-size: 12px; color: #555; cursor: pointer; background: none; border: none; }
+    .logout-btn:hover { color: #E24B4A; }
+    .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+    .topbar { height: 56px; border-bottom: 1px solid #2a2a2a; display: flex; align-items: center; padding: 0 24px; gap: 12px; flex-shrink: 0; }
+    .topbar-title { font-size: 15px; font-weight: 600; flex: 1; }
+    .btn-primary { padding: 7px 14px; border-radius: 8px; border: none; background: #FECC00; color: #0f0f0f; font-size: 13px; font-weight: 600; cursor: pointer; }
+    .btn-primary:hover { opacity: .88; }
+    .btn-ghost { padding: 7px 12px; border-radius: 8px; border: 1px solid #2a2a2a; background: none; color: #888; font-size: 13px; cursor: pointer; }
+    .btn-ghost:hover { color: #fff; border-color: #444; }
+    .content { flex: 1; overflow: hidden; display: flex; flex-direction: column; padding: 20px 24px; }
+
+    /* TOOLBAR */
+    .toolbar { display: flex; gap: 10px; margin-bottom: 16px; flex-wrap: wrap; align-items: center; }
+    .search-input { padding: 7px 12px; border-radius: 8px; border: 1px solid #2a2a2a; background: #1a1a1a; color: #fff; font-size: 13px; outline: none; flex: 1; max-width: 280px; }
+    .search-input:focus { border-color: #FECC00; }
+    .filter-sel { padding: 7px 12px; border-radius: 8px; border: 1px solid #2a2a2a; background: #1a1a1a; color: #fff; font-size: 13px; outline: none; }
+    .compteur { font-size: 12px; color: #555; margin-left: auto; }
+
+    /* TABLEAU */
+    .table-wrap { flex: 1; overflow-y: auto; }
+    .exo-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+    .exo-table th { padding: 8px 10px; text-align: left; font-size: 10px; color: #555; font-weight: 600; text-transform: uppercase; letter-spacing: .06em; border-bottom: 1px solid #2a2a2a; position: sticky; top: 0; background: #0f0f0f; z-index: 1; white-space: nowrap; }
+    .exo-table td { padding: 7px 10px; border-bottom: 1px solid #111; vertical-align: middle; }
+    .exo-table tr:hover td { background: #1a1a1a; }
+    .exo-table tr.base-row td { opacity: 0.7; }
+    .exo-input { width: 100%; background: none; border: none; color: #fff; font-size: 12px; outline: none; padding: 2px 0; }
+    .exo-input:focus { border-bottom: 1px solid #FECC00; color: #FECC00; }
+    .exo-sel-inline { width: 100%; background: none; border: none; color: #fff; font-size: 12px; outline: none; cursor: pointer; }
+    .exo-sel-inline:focus { border-bottom: 1px solid #FECC00; }
+    .source-badge { display: inline-block; padding: 2px 7px; border-radius: 10px; font-size: 9px; font-weight: 700; }
+    .badge-base { background: #2a2a2a; color: #555; }
+    .badge-custom { background: #FECC0022; color: #FECC00; border: 1px solid #FECC0044; }
+    .del-btn { background: none; border: none; color: #333; cursor: pointer; font-size: 11px; padding: 3px 6px; border-radius: 4px; }
+    .del-btn:hover { color: #E24B4A; background: #E24B4A11; }
+    .edit-btn { background: none; border: none; color: #555; cursor: pointer; font-size: 12px; padding: 3px 6px; border-radius: 4px; }
+    .edit-btn:hover { color: #FECC00; background: #FECC0011; }
+    .row-actions { display: flex; gap: 2px; }
+    .exo-input:disabled { color: #888; cursor: not-allowed; opacity: 0.6; }
+    .photo-preview { width: 28px; height: 28px; border-radius: 4px; object-fit: cover; }
+    .photo-placeholder { width: 28px; height: 28px; border-radius: 4px; background: #2a2a2a; display: flex; align-items: center; justify-content: center; font-size: 8px; color: #444; }
+
+    /* MODAL AJOUT */
+    .modal-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.75); align-items: center; justify-content: center; z-index: 100; }
+    .modal-overlay.open { display: flex; }
+    .modal { background: #1a1a1a; border: 1px solid #2a2a2a; border-radius: 16px; padding: 28px; width: 520px; max-height: 85vh; overflow-y: auto; }
+    .modal-title { font-size: 15px; font-weight: 700; margin-bottom: 20px; }
+    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .form-field label { display: block; font-size: 11px; color: #555; margin-bottom: 4px; }
+    .form-field input, .form-field select { width: 100%; padding: 8px 10px; border-radius: 8px; border: 1px solid #2a2a2a; background: #0f0f0f; color: #fff; font-size: 13px; outline: none; }
+    .form-field input:focus, .form-field select:focus { border-color: #FECC00; }
+    .form-full { grid-column: 1 / -1; }
+    .modal-actions { display: flex; gap: 10px; margin-top: 20px; }
+
+    /* IMPORT */
+    .import-zone { border: 2px dashed #2a2a2a; border-radius: 10px; padding: 20px; text-align: center; cursor: pointer; transition: border-color .15s; }
+    .import-zone:hover { border-color: #FECC00; }
+    .import-zone p { font-size: 13px; color: #555; }
+
+  </style>
+  <link rel="manifest" href="../manifest.json">
+  <script type="module" src="../auth-guard.js"></script>
+</head>
+<body>
+  <div class="sidebar">
+    <div class="sidebar-logo">
+      <img src="https://www.sca-albi.fr/wp-content/uploads/2023/10/cropped-SCA-bis.png">
+      <span>SCA Albi</span>
+    </div>
+    <div class="nav-section">Effectif</div>
+    <div class="nav-item" onclick="location.href='index.html'"><div class="nav-dot"></div> Roster</div>
+    <div class="nav-section">Entraînement</div>
+    <div class="nav-item" onclick="location.href='seances.html'"><div class="nav-dot"></div> Séances</div>
+    <div class="nav-item active" onclick="location.href='exercices.html'"><div class="nav-dot"></div> Exercices</div>
+    <div class="nav-section">Suivi</div>
+    <div class="nav-item" onclick="location.href='wellness.html'"><div class="nav-dot"></div> Wellness</div>
+    <div class="nav-item" onclick="location.href='performances.html'"><div class="nav-dot"></div> Performances</div>
+    <div class="nav-item" onclick="location.href='medical.html'"><div class="nav-dot"></div> Médical</div>
+    <div class="nav-item" onclick="location.href='absences.html'"><div class="nav-dot"></div> Absences</div>
+    <div class="nav-item" onclick="location.href='suivi-poids.html'"><div class="nav-dot"></div> Suivi Poids</div>
+    <div class="nav-section">Planning</div>
+    <div class="nav-item" onclick="location.href='planning.html'"><div class="nav-dot"></div> Planning club</div>
+    <div class="nav-item" onclick="location.href='planning-blesses.html'"><div class="nav-dot"></div> Blessés</div>
+    <div class="nav-item" onclick="location.href='fiches-seances.html'"><div class="nav-dot"></div> Fiches Séances</div>
+    <div class="nav-section">Équipes</div>
+    <div class="nav-item" onclick="location.href='equipes.html'"><div class="nav-dot"></div> Composition équipes</div>
+    <div class="nav-section">GPS</div>
+    <div class="nav-item" onclick="location.href='gps.html'"><div class="nav-dot"></div> Données GPS</div>
+    <div class="nav-item" onclick="location.href='gps-match.html'"><div class="nav-dot"></div> Rapport de match</div>
+    <div class="nav-item" onclick="location.href='gps-planif.html'"><div class="nav-dot"></div> Planif. charge</div>
+    <div class="nav-item" onclick="location.href='profil-force-vitesse.html'"><div class="nav-dot"></div> Profil F-V</div>
+    <div class="sidebar-bottom">
+      <div class="user-info" id="user-email"></div>
+      <button class="logout-btn" onclick="handleLogout()">Se déconnecter</button>
+    </div>
+  </div>
+
+  <div class="main">
+    <div class="topbar">
+      <div class="topbar-title">Base d'exercices</div>
+      <button class="btn-ghost" onclick="ouvrirImport()">Importer CSV</button>
+      <button class="btn-ghost" onclick="window.open('jeux.html', '_blank', 'width=1200,height=800,menubar=no,toolbar=no,location=no,status=no')">Jeux</button>
+      <button class="btn-primary" onclick="ouvrirAjout()">+ Ajouter un exercice</button>
+    </div>
+    <div class="content">
+      <div class="toolbar">
+        <input class="search-input" id="search" placeholder="Rechercher..." oninput="filtrer()" />
+        <select class="filter-sel" id="filtre-zone" onchange="filtrer()">
+          <option value="">Toutes les zones</option>
+        </select>
+        <select class="filter-sel" id="filtre-source" onchange="filtrer()">
+          <option value="">Toutes les sources</option>
+          <option value="base">Base</option>
+          <option value="custom">Personnalisés</option>
+        </select>
+        <div class="compteur" id="compteur">— exercices</div>
+      </div>
+
+      <div class="table-wrap">
+        <table class="exo-table">
+          <thead>
+            <tr>
+              <th style="width:28px;"></th>
+              <th>Exercice</th>
+              <th>Zone du corps</th>
+              <th>Latéralité</th>
+              <th>Partie</th>
+              <th>Plan</th>
+              <th>Axe</th>
+              <th>Dominante</th>
+              <th>Source</th>
+              <th style="width:30px;"></th>
+            </tr>
+          </thead>
+          <tbody id="exo-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL AJOUT -->
+  <div class="modal-overlay" id="modal-ajout">
+    <div class="modal">
+      <div class="modal-title">Ajouter un exercice</div>
+      <div class="form-grid">
+        <div class="form-field form-full">
+          <label>Nom de l'exercice *</label>
+          <input type="text" id="aj-nom" placeholder="Ex: Squat bulgare lestage" />
+        </div>
+        <div class="form-field">
+          <label>Zone du corps</label>
+          <select id="aj-zone">
+            <option value="">—</option>
+            <option>Bas du corps</option>
+            <option>Chaîne postérieure</option>
+            <option>Haut du corps poussée</option>
+            <option>Haut du corps tirage</option>
+            <option>Olympique</option>
+            <option>Explosif</option>
+            <option>Gainage</option>
+            <option>Cardio</option>
+            <option>Portés</option>
+            <option>Nuque / Épaules</option>
+          </select>
+        </div>
+        <div class="form-field">
+          <label>Latéralité</label>
+          <select id="aj-lat">
+            <option value="">—</option>
+            <option>Bilatéral</option>
+            <option>Unilatéral</option>
+            <option>Alterné</option>
+          </select>
+        </div>
+        <div class="form-field">
+          <label>Partie du corps</label>
+          <select id="aj-partie">
+            <option value="">—</option>
+            <option>Membres inférieurs</option>
+            <option>Membres supérieurs</option>
+            <option>Tronc</option>
+            <option>Full body</option>
+          </select>
+        </div>
+        <div class="form-field">
+          <label>Plan</label>
+          <select id="aj-plan">
+            <option value="">—</option>
+            <option>Sagittal</option>
+            <option>Frontal</option>
+            <option>Transversal</option>
+            <option>Multi-plan</option>
+          </select>
+        </div>
+        <div class="form-field">
+          <label>Axe</label>
+          <select id="aj-axe">
+            <option value="">—</option>
+            <option>Vertical</option>
+            <option>Horizontal</option>
+            <option>Diagonal</option>
+            <option>Rotation</option>
+          </select>
+        </div>
+        <div class="form-field">
+          <label>Dominante</label>
+          <select id="aj-dom">
+            <option value="">—</option>
+            <option>Force</option>
+            <option>Puissance</option>
+            <option>Endurance</option>
+            <option>Vitesse</option>
+            <option>Mobilité</option>
+            <option>Stabilisation</option>
+          </select>
+        </div>
+        <div class="form-field form-full">
+          <label>Photo URL (optionnel)</label>
+          <input type="text" id="aj-photo" placeholder="https://..." />
+        </div>
+      </div>
+      <div class="modal-actions">
+        <button class="btn-ghost" onclick="fermerAjout()">Annuler</button>
+        <button class="btn-primary" onclick="sauvegarderExo()">Ajouter</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL IMPORT CSV -->
+  <div class="modal-overlay" id="modal-import">
+    <div class="modal">
+      <div class="modal-title">Importer des exercices depuis un CSV</div>
+      <div style="font-size:12px; color:#555; margin-bottom:16px;">
+        Colonnes attendues : <code style="color:#FECC00;">Zone du corps | Exercices | PhotosURL | Latéralité | Partie | Plan | Axe | Dominante</code>
+      </div>
+      <div class="import-zone" onclick="document.getElementById('csv-input').click()">
+        <p>Clique pour choisir un fichier CSV</p>
+        <p style="font-size:11px; margin-top:4px;">Séparateur : point-virgule (;) ou virgule</p>
+      </div>
+      <input type="file" id="csv-input" accept=".csv" style="display:none" onchange="importerCSV(this)" />
+      <div id="import-status" style="margin-top:12px; font-size:12px; color:#1D9E75;"></div>
+      <div class="modal-actions">
+        <button class="btn-ghost" onclick="fermerImport()">Fermer</button>
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from '../renderer/supabase-adapter.js'
+    import { getAuth, onAuthStateChanged, signOut } from '../renderer/supabase-adapter.js'
+    import { getFirestore, doc, setDoc, getDoc } from '../renderer/supabase-adapter.js'
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyCvMs-5LX9Ivk3OkzUR3iz9Kk1E5b9_7Vk",
+      authDomain: "delta-rugby-app.firebaseapp.com",
+      projectId: "delta-rugby-app",
+      storageBucket: "delta-rugby-app.firebasestorage.app",
+      messagingSenderId: "61187079762",
+      appId: "1:61187079762:web:56cd1eaa8beb9e1a2ee98b"
+    }
+    const fbApp = initializeApp(firebaseConfig)
+    const auth = getAuth(fbApp)
+    const db = getFirestore(fbApp)
+
+    let exercicesCustom = []
+    let allExos = []
+    // ==================== CACHE LOCAL (clés partagées avec le shell) ====================
+    function loadCache(key) {
+      try {
+        const r = JSON.parse(localStorage.getItem('cache_' + key) || 'null')
+        return r ? (r.data !== undefined ? r.data : null) : null
+      } catch(e) { return null }
+    }
+    function saveCache(key, data) {
+      try { localStorage.setItem('cache_' + key, JSON.stringify({ ts: Date.now(), data })) } catch(e) {}
+    }
+
+    let filtreSearch = ''
+    let filtreZone = ''
+    let filtreSource = ''
+    let pendingSave = null
+    let cached = null
+
+    // ======= CACHE SYNCHRONE (avant auth) =======
+    ;(function() {
+      try {
+      // requestAnimationFrame garantit que le DOM est peint avant de render
+      requestAnimationFrame(function() { try {
+      cached = loadCache('exercices_config')
+      if (cached) {
+        exercicesCustom = cached
+        buildAllExos(); remplirFiltreZone(); renderTable()
+        if (window.__shellContentReady) window.__shellContentReady()
+        if (window.__pageReady) window.__pageReady('exercices.html')
+      }
+      } catch(e2) { console.warn('Cache render error:', e2) } }); // end rAF
+      } catch(e) { console.warn("Cache sync error:", e) }
+    })()
+
+    onAuthStateChanged(auth, async user => {
+      if (!user) { window.location.href = 'login.html'; return }
+      document.getElementById('user-email').textContent = user.email
+
+      // Refresh Firestore
+      const snap = await getDoc(doc(db, 'config', 'exercices'))
+      exercicesCustom = snap.exists() ? (snap.data().liste || []) : []
+      saveCache('exercices_config', exercicesCustom)
+      buildAllExos(); remplirFiltreZone(); renderTable()
+      if (!cached && window.__shellContentReady) window.__shellContentReady()
+      if (window.__pageReady) window.__pageReady('exercices.html')
+    })
+
+    function buildAllExos() {
+      allExos = [
+        ...exercicesCustom.map(e => ({ ...e, source:'custom' }))
+      ]
+    }
+
+    function remplirFiltreZone() {
+      const zones = [...new Set(allExos.map(e => e.zone).filter(Boolean))].sort()
+      const sel = document.getElementById('filtre-zone')
+      zones.forEach(z => sel.appendChild(new Option(z, z)))
+    }
+
+    window.filtrer = function() {
+      filtreSearch = document.getElementById('search').value.toLowerCase()
+      filtreZone = document.getElementById('filtre-zone').value
+      filtreSource = document.getElementById('filtre-source').value
+      renderTable()
+    }
+
+    function renderTable() {
+      const tbody = document.getElementById('exo-tbody')
+      tbody.innerHTML = ''
+
+      const filtered = allExos.filter(e => {
+        if (filtreSearch && !e.nom.toLowerCase().includes(filtreSearch)) return false
+        if (filtreZone && e.zone !== filtreZone) return false
+        if (filtreSource && e.source !== filtreSource) return false
+        return true
+      })
+
+      document.getElementById('compteur').textContent = `${filtered.length} / ${allExos.length} exercices`
+
+      filtered.forEach((e, i) => {
+        const isBase = e.source === 'base'
+        const tr = document.createElement('tr')
+        if (isBase) tr.className = 'base-row'
+
+        // 1. PHOTO
+        const photoTd = document.createElement('td')
+        if (e.photo) {
+          const img = document.createElement('img')
+          img.src = e.photo
+          img.className = 'photo-preview'
+          img.onerror = () => img.replaceWith(makePlaceholder())
+          photoTd.appendChild(img)
+        } else {
+          photoTd.appendChild(makePlaceholder())
+        }
+        tr.appendChild(photoTd)
+
+        // 2. COLONNES ÉDITABLES
+        const cols = ['nom', 'zone', 'lateralite', 'partie', 'plan', 'axe', 'dominante']
+
+        cols.forEach(col => {
+  const td = document.createElement('td')
+  const valeurOriginale = e[col] || ''
+
+  // Petite fonction pour mettre la première lettre en majuscule proprement
+  const formaterTexte = (str) => {
+    if (!str) return ''
+    const s = str.trim()
+    return s.charAt(0).toUpperCase() + s.slice(1)
+  }
+
+  const valeurBase = formaterTexte(valeurOriginale)
+
+  if (isBase) {
+    // Lecture seule pour les exercices de base
+    td.textContent = valeurBase || '—'
+    td.style.color = '#555'
+  } else {
+    // Mode édition pour les exercices Custom
+    const customIdx = exercicesCustom.findIndex(x => x.nom === e.nom)
+    const listFields = ['zone', 'lateralite', 'partie', 'plan', 'axe', 'dominante']
+
+    if (listFields.includes(col)) {
+      const sel = document.createElement('select')
+      sel.className = 'exo-sel-inline'
+
+      // 1. Tes options "socle" par défaut
+      const defaults = {
+        zone: ['Bas du corps', 'Chaîne postérieure', 'Haut du corps poussée', 'Haut du corps tirage', 'Olympique', 'Explosif', 'Gainage', 'Cardio', 'Portés', 'Nuque / Épaules'],
+        lateralite: ['Bilatéral', 'Unilatéral', 'Alterné'],
+        partie: ['Membres inférieurs', 'Membres supérieurs', 'Tronc', 'Full body'],
+        plan: ['Sagittal', 'Frontal', 'Transversal', 'Multi-plan'],
+        axe: ['Vertical', 'Horizontal', 'Diagonal', 'Rotation'],
+        dominante: ['Force', 'Puissance', 'Endurance', 'Vitesse', 'Mobilité', 'Stabilisation']
+      }[col] || []
+
+      // 2. On récupère les valeurs de la base ET les défauts, on les formate (Majuscule)
+      const deLaBase = exercicesCustom.map(ex => formaterTexte(ex[col]))
+      const desDefauts = defaults.map(d => formaterTexte(d))
+
+      // 3. Fusion + Suppression doublons (Set) + Tri
+      // On filtre les vides avant de créer le Set pour ne pas avoir de "trous"
+      const listeNettoyee = [...new Set([...desDefauts, ...deLaBase])].filter(v => v !== '')
+      const toutesLesOptions = ['', ...listeNettoyee].sort((a, b) => a.localeCompare(b))
+
+      // 4. Génération des éléments <option>
+      toutesLesOptions.forEach(o => {
+        const opt = new Option(o || '—', o)
+        // Comparaison insensible à la casse pour être sûr de sélectionner la bonne option
+        if (o === valeurBase) opt.selected = true
+        sel.appendChild(opt)
+      })
+
+      sel.onchange = async () => {
+        if (customIdx >= 0) {
+          exercicesCustom[customIdx][col] = sel.value
+          await sauvegarderDB()
+        }
+      }
+      td.appendChild(sel)
+    } else {
+      // Champ texte classique (pour le nom de l'exercice)
+      const input = document.createElement('input')
+      input.className = 'exo-input'
+      input.value = valeurBase
+      input.onchange = async () => {
+        if (customIdx >= 0) {
+          // On formate aussi le nom quand on le modifie
+          const nouveauNom = formaterTexte(input.value)
+          input.value = nouveauNom
+          exercicesCustom[customIdx][col] = nouveauNom
+          await sauvegarderDB()
+        }
+      }
+      td.appendChild(input)
+    }
+  }
+  tr.appendChild(td)
+})
+
+        // 3. BADGE SOURCE
+        const srcTd = document.createElement('td')
+        srcTd.innerHTML = `<span class="source-badge ${isBase ? 'badge-base' : 'badge-custom'}">${isBase ? 'Base' : 'Custom'}</span>`
+        tr.appendChild(srcTd)
+
+        // 4. BOUTONS ÉDITER / SUPPRIMER
+        const delTd = document.createElement('td')
+        if (!isBase) {
+          const wrap = document.createElement('div')
+          wrap.className = 'row-actions'
+
+          const editBtn = document.createElement('button')
+          editBtn.className = 'edit-btn'
+          editBtn.textContent = '✎'
+          editBtn.title = 'Modifier l\'exercice'
+          editBtn.onclick = () => ouvrirEdition(e.nom)
+          wrap.appendChild(editBtn)
+
+          const btn = document.createElement('button')
+          btn.className = 'del-btn'
+          btn.textContent = '✕'
+          btn.onclick = async () => {
+            if (!confirm(`Supprimer "${e.nom}" ?`)) return
+            exercicesCustom = exercicesCustom.filter(x => x.nom !== e.nom)
+            await sauvegarderDB()
+            buildAllExos()
+            renderTable()
+          }
+          wrap.appendChild(btn)
+
+          delTd.appendChild(wrap)
+        }
+        tr.appendChild(delTd)
+        
+        tbody.appendChild(tr)
+      })
+    }
+
+    function makePlaceholder() {
+      const div = document.createElement('div')
+      div.className = 'photo-placeholder'
+      div.textContent = 'img'
+      return div
+    }
+
+    async function sauvegarderDB() {
+      await setDoc(doc(db, 'config', 'exercices'), { liste: exercicesCustom }, { merge: true })
+    }
+
+    // ==================== AJOUT / ÉDITION ====================
+    let modeEdition = false
+    let nomEdition = ''
+
+    window.ouvrirAjout = function() {
+      modeEdition = false
+      nomEdition = ''
+      document.querySelector('#modal-ajout .modal-title').textContent = 'Ajouter un exercice'
+      document.getElementById('aj-nom').value = ''
+      document.getElementById('aj-nom').disabled = false
+      document.getElementById('aj-zone').value = ''
+      document.getElementById('aj-lat').value = ''
+      document.getElementById('aj-partie').value = ''
+      document.getElementById('aj-plan').value = ''
+      document.getElementById('aj-axe').value = ''
+      document.getElementById('aj-dom').value = ''
+      document.getElementById('aj-photo').value = ''
+      document.querySelector('#modal-ajout .btn-primary').textContent = 'Ajouter'
+      document.getElementById('modal-ajout').classList.add('open')
+    }
+
+    window.ouvrirEdition = function(nom) {
+      const exo = exercicesCustom.find(x => x.nom === nom)
+      if (!exo) return
+      modeEdition = true
+      nomEdition = nom
+      document.querySelector('#modal-ajout .modal-title').textContent = 'Modifier l\'exercice'
+      document.getElementById('aj-nom').value = exo.nom
+      document.getElementById('aj-nom').disabled = true
+      document.getElementById('aj-zone').value = exo.zone || ''
+      document.getElementById('aj-lat').value = exo.lateralite || ''
+      document.getElementById('aj-partie').value = exo.partie || ''
+      document.getElementById('aj-plan').value = exo.plan || ''
+      document.getElementById('aj-axe').value = exo.axe || ''
+      document.getElementById('aj-dom').value = exo.dominante || ''
+      document.getElementById('aj-photo').value = exo.photo || ''
+      document.querySelector('#modal-ajout .btn-primary').textContent = 'Enregistrer'
+      document.getElementById('modal-ajout').classList.add('open')
+    }
+
+    window.fermerAjout = function() {
+      document.getElementById('modal-ajout').classList.remove('open')
+    }
+
+    window.sauvegarderExo = async function() {
+      if (modeEdition) {
+        const idx = exercicesCustom.findIndex(x => x.nom === nomEdition)
+        if (idx < 0) return
+        exercicesCustom[idx] = {
+          ...exercicesCustom[idx],
+          zone: document.getElementById('aj-zone').value,
+          photo: document.getElementById('aj-photo').value,
+          lateralite: document.getElementById('aj-lat').value,
+          partie: document.getElementById('aj-partie').value,
+          plan: document.getElementById('aj-plan').value,
+          axe: document.getElementById('aj-axe').value,
+          dominante: document.getElementById('aj-dom').value,
+          source: 'custom'
+        }
+        await sauvegarderDB()
+        buildAllExos()
+        renderTable()
+        fermerAjout()
+        return
+      }
+
+      const nom = document.getElementById('aj-nom').value.trim()
+      if (!nom) { alert('Le nom est obligatoire.'); return }
+      if (allExos.find(e => e.nom.toLowerCase() === nom.toLowerCase())) { alert('Exercice déjà existant.'); return }
+      exercicesCustom.push({
+        nom,
+        zone: document.getElementById('aj-zone').value,
+        photo: document.getElementById('aj-photo').value,
+        lateralite: document.getElementById('aj-lat').value,
+        partie: document.getElementById('aj-partie').value,
+        plan: document.getElementById('aj-plan').value,
+        axe: document.getElementById('aj-axe').value,
+        dominante: document.getElementById('aj-dom').value,
+        source: 'custom'
+      })
+      await sauvegarderDB()
+      buildAllExos()
+      renderTable()
+      fermerAjout()
+    }
+
+    // ==================== IMPORT CSV ====================
+    window.ouvrirImport = function() {
+      document.getElementById('import-status').textContent = ''
+      document.getElementById('modal-import').classList.add('open')
+    }
+    window.fermerImport = function() {
+      document.getElementById('modal-import').classList.remove('open')
+    }
+
+    window.importerCSV = async function(input) {
+      const file = input.files[0]
+      if (!file) return
+      const text = await file.text()
+      const lines = text.split('\n').filter(l => l.trim())
+      if (lines.length < 2) return
+
+      const sep = lines[0].includes(';') ? ';' : ','
+      const headers = lines[0].split(sep).map(h => h.trim().replace(/"/g, '').toLowerCase())
+
+      const idx = {
+        zone: headers.findIndex(h => h.includes('zone')),
+        nom: headers.findIndex(h => h.includes('exercice')),
+        photo: headers.findIndex(h => h.includes('photo')),
+        lat: headers.findIndex(h => h.includes('lat')),
+        partie: headers.findIndex(h => h.includes('partie')),
+        plan: headers.findIndex(h => h.includes('plan')),
+        axe: headers.findIndex(h => h.includes('axe')),
+        dom: headers.findIndex(h => h.includes('domin')),
+      }
+
+      let ajoutés = 0, ignorés = 0
+      lines.slice(1).forEach(line => {
+        const vals = line.split(sep).map(v => v.trim().replace(/"/g, ''))
+        const nom = idx.nom >= 0 ? vals[idx.nom] : ''
+        if (!nom) return
+        if (allExos.find(e => e.nom.toLowerCase() === nom.toLowerCase())) { ignorés++; return }
+        exercicesCustom.push({
+          nom,
+          zone: idx.zone >= 0 ? vals[idx.zone] : '',
+          photo: idx.photo >= 0 ? vals[idx.photo] : '',
+          lateralite: idx.lat >= 0 ? vals[idx.lat] : '',
+          partie: idx.partie >= 0 ? vals[idx.partie] : '',
+          plan: idx.plan >= 0 ? vals[idx.plan] : '',
+          axe: idx.axe >= 0 ? vals[idx.axe] : '',
+          dominante: idx.dom >= 0 ? vals[idx.dom] : '',
+          source: 'custom'
+        })
+        ajoutés++
+      })
+
+      await sauvegarderDB()
+      buildAllExos()
+      renderTable()
+      document.getElementById('import-status').textContent = `✓ ${ajoutés} exercice(s) importé(s), ${ignorés} ignoré(s) (déjà existants).`
+      input.value = ''
+    }
+
+    window.handleLogout = async function() {
+      await signOut(auth)
+      window.location.href = 'login.html'
+    }
+  </script>
+</body>
+</html>

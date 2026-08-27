@@ -1,0 +1,2885 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <base href="../renderer/">
+  <meta charset="UTF-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' blob:; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; connect-src 'self' https://ywtrsuoqbtjlsumwdmjw.supabase.co wss://ywtrsuoqbtjlsumwdmjw.supabase.co https://*.googleapis.com https://*.firebaseio.com wss://*.firebaseio.com https://*.firebasestorage.app https://identitytoolkit.googleapis.com https://securetoken.googleapis.com; font-src 'self' data:;">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SCA Albi — Jeux</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 100%; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #0f0f0f; color: #fff; display: flex; flex-direction: column; overflow: hidden; }
+
+    .topbar { height: 56px; border-bottom: 1px solid #2a2a2a; display: flex; align-items: center; padding: 0 24px; gap: 12px; flex-shrink: 0; background: #0f0f0f; }
+    .topbar-title { font-size: 15px; font-weight: 600; flex: 1; }
+    .topbar-player { font-size: 12px; color: #888; }
+    .btn-ghost { padding: 7px 12px; border-radius: 8px; border: 1px solid #2a2a2a; background: none; color: #888; font-size: 13px; cursor: pointer; }
+    .btn-ghost:hover { color: #fff; border-color: #444; }
+    .btn-primary { padding: 7px 14px; border-radius: 8px; border: none; background: #FECC00; color: #0f0f0f; font-size: 13px; font-weight: 600; cursor: pointer; }
+    .btn-primary:hover { opacity: .88; }
+    .btn-sm { padding: 5px 10px; font-size: 11px; }
+
+    .content { flex: 1; overflow: hidden; display: flex; flex-direction: column; padding: 24px; }
+
+    /* LANDING */
+    .landing { max-width: 900px; margin: 0 auto; padding-top: 20px; text-align: center; }
+    .landing h2 { font-size: 22px; margin-bottom: 16px; }
+    .landing .jeux-field { text-align: left; }
+    .players-trombi { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; max-height: 70vh; overflow-y: auto; padding: 8px; }
+    .trombi-card { width: 90px; display: flex; flex-direction: column; align-items: center; gap: 4px; cursor: pointer; position: relative; }
+    .trombi-card:hover .trombi-circle { border-color: #FECC00; background: #FECC0015; transform: scale(1.05); }
+    .trombi-card.selected .trombi-circle { border-color: #FECC00; box-shadow: 0 0 12px #FECC00; }
+    .trombi-circle { width: 65px; height: 65px; border-radius: 50%; border: 3px solid #2a2a2a; background: #111; display: flex; align-items: center; justify-content: center; transition: all .15s; overflow: hidden; }
+    .trombi-photo { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; }
+    .trombi-initials { width: 100%; height: 100%; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 16px; font-weight: 700; color: #fff; background: #333; }
+    .trombi-name { font-size: 10px; font-weight: 600; color: #ccc; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 88px; }
+    .trombi-test { width: 90px; display: flex; flex-direction: column; align-items: center; gap: 4px; cursor: pointer; position: relative; }
+    .trombi-test:hover .trombi-circle { border-color: #FECC00; transform: scale(1.05); }
+    .trombi-test .trombi-circle { border-color: #555; border-style: dashed; }
+
+    /* MENU */
+    .jeux-menu { display: none; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 16px; max-width: 1000px; }
+    .jeux-menu.active { display: grid; }
+    .jeux-card { background: #1a1a1a; border: 1px solid #2a2a2a; border-radius: 12px; padding: 20px; transition: all .15s; }
+    .jeux-card:hover { border-color: #FECC00; transform: translateY(-2px); }
+    .jeux-card h3 { font-size: 15px; margin-bottom: 6px; color: #FECC00; }
+    .jeux-card p { font-size: 12px; color: #888; line-height: 1.4; margin-bottom: 12px; }
+    .jeux-card-stats { display: flex; gap: 12px; margin-bottom: 14px; }
+    .jeux-card-stat { background: #161616; border-radius: 6px; padding: 8px 12px; flex: 1; }
+    .jeux-card-stat span { display: block; font-size: 10px; color: #555; text-transform: uppercase; letter-spacing: .05em; }
+    .jeux-card-stat strong { font-size: 15px; color: #fff; }
+    .jeux-card-actions { display: flex; gap: 8px; }
+    .jeux-card-actions button { flex: 1; }
+
+    /* GAME */
+    .jeux-game { display: none; flex-direction: column; height: 100%; }
+    .jeux-game.active { display: flex; }
+    .jeux-setup { max-width: 420px; margin: 0 auto; padding-top: 40px; text-align: center; }
+    .jeux-setup h2 { font-size: 18px; margin-bottom: 8px; }
+    .jeux-setup .player-name { color: #FECC00; font-weight: 700; margin-bottom: 20px; }
+    .jeux-setup .info { font-size: 12px; color: #666; margin-bottom: 20px; }
+    .jeux-field { margin-bottom: 14px; text-align: left; }
+    .jeux-field label { display: block; font-size: 11px; color: #555; margin-bottom: 4px; }
+    .jeux-field input, .jeux-field select { width: 100%; padding: 10px 12px; border-radius: 8px; border: 1px solid #2a2a2a; background: #0f0f0f; color: #fff; font-size: 14px; outline: none; }
+    .jeux-field input:focus, .jeux-field select:focus { border-color: #FECC00; }
+    .jeux-history { margin-top: 20px; }
+    .jeux-history h4 { font-size: 12px; color: #555; margin-bottom: 10px; text-transform: uppercase; letter-spacing: .06em; }
+    .jeux-history-list { display: flex; flex-direction: column; gap: 6px; }
+    .jeux-history-item { display: flex; justify-content: space-between; font-size: 12px; padding: 8px 10px; background: #161616; border-radius: 6px; }
+    .jeux-history-item span:first-child { color: #888; }
+    .jeux-history-item span:last-child { color: #FECC00; font-weight: 600; }
+    .jeux-playarea { flex: 1; position: relative; background: #0a0a0a; border-radius: 12px; margin-top: 16px; overflow: hidden; cursor: crosshair; user-select: none; touch-action: none; }
+    .jeux-timer { position: absolute; top: 16px; right: 20px; font-size: 20px; font-weight: 700; color: #FECC00; z-index: 5; }
+    .jeux-score { position: absolute; top: 16px; left: 20px; font-size: 20px; font-weight: 700; color: #fff; z-index: 5; }
+    .jeux-score-label { font-size: 11px; color: #888; font-weight: 400; }
+    .jeux-target { position: absolute; width: 48px; height: 48px; border-radius: 50%; background: #FECC00; box-shadow: 0 0 22px #FECC0088; cursor: pointer; transform: translate(-50%, -50%); transition: transform .08s; }
+
+    @keyframes hit-ripple {
+      0% { transform: translate(-50%, -50%) scale(1); opacity: 0.8; }
+      100% { transform: translate(-50%, -50%) scale(2.8); opacity: 0; }
+    }
+    .ripple-effect { position: absolute; width: 48px; height: 48px; border-radius: 50%; pointer-events: none; transform: translate(-50%, -50%); }
+    .ripple-effect.hit { background: rgba(29, 158, 117, 0.55); box-shadow: 0 0 20px rgba(29, 158, 117, 0.6); animation: hit-ripple 0.4s ease-out forwards; }
+    .ripple-effect.miss { background: rgba(226, 75, 74, 0.55); box-shadow: 0 0 20px rgba(226, 75, 74, 0.6); animation: hit-ripple 0.4s ease-out forwards; }
+
+    @keyframes flash-red-twice {
+      0% { background: #FECC00; box-shadow: 0 0 22px #FECC0088; opacity: 1; }
+      25% { background: #E24B4A; box-shadow: 0 0 22px #E24B4A88; }
+      50% { background: #FECC00; box-shadow: 0 0 22px #FECC0088; }
+      75% { background: #E24B4A; box-shadow: 0 0 22px #E24B4A88; }
+      100% { background: #FECC00; box-shadow: 0 0 22px #FECC0088; opacity: 1; }
+    }
+    .jeux-target.missed { animation: flash-red-twice 0.2s linear 2; pointer-events: none; }
+
+    .jeux-result { display: none; flex-direction: column; align-items: center; justify-content: center; height: 100%; text-align: center; }
+    .jeux-result.active { display: flex; }
+    .jeux-result h2 { font-size: 28px; margin-bottom: 8px; }
+    .jeux-result .big-score { font-size: 64px; font-weight: 800; color: #FECC00; line-height: 1; margin-bottom: 6px; }
+    .jeux-result .score-unit { font-size: 20px; color: #FECC00; margin-bottom: 16px; }
+    .jeux-result p { font-size: 13px; color: #888; margin-bottom: 24px; }
+
+    /* MEMORY BALLS */
+    .memory-instruction { position: absolute; top: 16px; left: 50%; transform: translateX(-50%); font-size: 18px; font-weight: 700; color: #FECC00; z-index: 10; text-align: center; background: rgba(15,15,15,0.8); padding: 8px 16px; border-radius: 8px; max-width: 90%; }
+    .jeux-playarea.memory-3d { perspective: 900px; perspective-origin: 50% 50%; }
+    .memory-ball { position: absolute; width: 64px; height: 64px; border-radius: 50%; cursor: pointer; left: 0; top: 0; display: flex; align-items: center; justify-content: center; font-size: 22px; font-weight: 800; color: #0f0f0f; transition: box-shadow 0.2s; user-select: none; transform-style: preserve-3d;
+      background: radial-gradient(circle at 28% 28%, #fff3b0 0%, #FECC00 35%, #c79e00 70%, #6e5900 100%);
+      box-shadow: inset -6px -6px 14px rgba(0,0,0,0.25), 0 10px 24px rgba(0,0,0,0.45);
+      border: 1px solid rgba(255,255,255,0.08);
+    }
+    .memory-ball::after { content: ''; position: absolute; top: 8%; left: 14%; width: 26%; height: 18%; border-radius: 50%; background: radial-gradient(ellipse at center, rgba(255,255,255,0.8) 0%, rgba(255,255,255,0) 70%); pointer-events: none; }
+    .memory-ball.correct { background: radial-gradient(circle at 28% 28%, #a8f0d3 0%, #1D9E75 35%, #116b4e 70%, #0a3d2d 100%); box-shadow: inset -6px -6px 14px rgba(0,0,0,0.25), 0 0 28px #1D9E7588; color: #fff; }
+    .memory-ball.wrong { background: radial-gradient(circle at 28% 28%, #ffc9c9 0%, #E24B4A 35%, #a01f1e 70%, #5c0f0f 100%); box-shadow: inset -6px -6px 14px rgba(0,0,0,0.25), 0 0 28px #E24B4A88; color: #fff; }
+    .memory-ball.found { opacity: 0.5; pointer-events: none; }
+    .memory-label { pointer-events: none; }
+
+    /* COLOR GAME */
+    .colors-targets { position: absolute; top: 16px; left: 50%; transform: translateX(-50%); display: flex; gap: 10px; z-index: 10; background: rgba(15,15,15,0.8); padding: 10px 16px; border-radius: 10px; }
+    .colors-target { width: 32px; height: 32px; border-radius: 6px; border: 2px solid #fff; box-shadow: 0 2px 8px rgba(0,0,0,0.5); }
+    .colors-target.done { border-color: #1D9E75; box-shadow: 0 0 12px #1D9E75; }
+    .colors-dot { position: absolute; width: 44px; height: 44px; border-radius: 50%; cursor: pointer; transform: translate(-50%, -50%); transition: transform .1s; box-shadow: 0 4px 12px rgba(0,0,0,0.4); }
+    .colors-dot:hover { transform: translate(-50%, -50%) scale(1.1); }
+    .colors-dot.correct { animation: colorPulse 0.3s ease-out; }
+    .colors-dot.wrong { animation: colorShake 0.3s ease-in-out; }
+    @keyframes colorPulse { 0% { transform: translate(-50%, -50%) scale(1); } 50% { transform: translate(-50%, -50%) scale(1.25); } 100% { transform: translate(-50%, -50%) scale(1); } }
+    @keyframes colorShake { 0%, 100% { transform: translate(-50%, -50%) translateX(0); } 25% { transform: translate(-50%, -50%) translateX(-6px); } 75% { transform: translate(-50%, -50%) translateX(6px); } }
+    .colors-level { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 48px; font-weight: 800; color: #FECC00; opacity: 0; pointer-events: none; z-index: 20; }
+    .colors-level.show { animation: levelPop 0.8s ease-out forwards; }
+    @keyframes levelPop { 0% { opacity: 0; transform: translate(-50%, -50%) scale(0.5); } 20% { opacity: 1; transform: translate(-50%, -50%) scale(1.2); } 60% { opacity: 1; transform: translate(-50%, -50%) scale(1); } 100% { opacity: 0; transform: translate(-50%, -50%) scale(1); } }
+
+    /* SIMON */
+    .simon-dot { position: absolute; width: 52px; height: 52px; border-radius: 50%; cursor: pointer; transition: transform .12s, box-shadow .12s, filter .12s; box-shadow: 0 6px 18px rgba(0,0,0,0.45); transform: translate(-50%, -50%); }
+    .simon-dot:hover { transform: translate(-50%, -50%) scale(1.08); }
+    .simon-dot:active { transform: translate(-50%, -50%) scale(0.92); }
+    .simon-dot.red { background: radial-gradient(circle at 30% 30%, #ff9999, #E24B4A 50%, #9b1f1f); }
+    .simon-dot.blue { background: radial-gradient(circle at 30% 30%, #93c5fd, #3B82F6 50%, #1e40af); }
+    .simon-dot.green { background: radial-gradient(circle at 30% 30%, #86efac, #1D9E75 50%, #116b4e); }
+    .simon-dot.yellow { background: radial-gradient(circle at 30% 30%, #fde68a, #F59E0B 50%, #b45309); }
+    .simon-dot.flash { transform: translate(-50%, -50%) scale(1.25); filter: brightness(1.5); box-shadow: 0 0 30px currentColor; z-index: 10; }
+    .simon-dot.success { transform: translate(-50%, -50%) scale(1.25); box-shadow: 0 0 30px #1D9E75; z-index: 10; }
+    .simon-dot.error { transform: translate(-50%, -50%) scale(1.25); box-shadow: 0 0 30px #E24B4A; z-index: 10; }
+    .simon-dot.disabled { pointer-events: none; opacity: 0.65; }
+    .simon-status { position: absolute; top: 60px; left: 50%; transform: translateX(-50%); font-size: 28px; font-weight: 700; color: #FECC00; z-index: 6; text-align: center; text-shadow: 0 2px 8px rgba(0,0,0,0.6); }
+
+    /* VITESSE COULEUR */
+    .vitesse-indicator { position: absolute; top: 50px; left: 50%; transform: translateX(-50%); width: 60px; height: 60px; border-radius: 12px; box-shadow: 0 4px 16px rgba(0,0,0,0.4); z-index: 6; }
+    .vitesse-status { position: absolute; top: 130px; left: 50%; transform: translateX(-50%); font-size: 22px; font-weight: 700; color: #FECC00; z-index: 6; text-align: center; text-shadow: 0 2px 8px rgba(0,0,0,0.6); }
+    .vitesse-dot { position: absolute; width: 80px; height: 80px; border-radius: 50%; cursor: pointer; transition: transform .12s, box-shadow .12s; box-shadow: 0 6px 18px rgba(0,0,0,0.45); transform: translate(-50%, -50%); }
+    .vitesse-dot:hover { transform: translate(-50%, -50%) scale(1.08); }
+    .vitesse-dot:active { transform: translate(-50%, -50%) scale(0.92); }
+    .vitesse-dot.flash-correct { transform: translate(-50%, -50%) scale(1.25); box-shadow: 0 0 30px #1D9E75; z-index: 10; }
+    .vitesse-dot.flash-wrong { transform: translate(-50%, -50%) scale(1.25); box-shadow: 0 0 30px #E24B4A; z-index: 10; }
+    .vitesse-pick { position: absolute; width: 70px; height: 70px; border-radius: 50%; cursor: pointer; transition: transform .12s, box-shadow .12s; box-shadow: 0 6px 18px rgba(0,0,0,0.45); transform: translate(-50%, -50%); border: 3px solid rgba(255,255,255,0.3); }
+    .vitesse-pick:hover { transform: translate(-50%, -50%) scale(1.08); }
+    .vitesse-pick.selected { border: 4px solid #FECC00; box-shadow: 0 0 20px #FECC00; }
+    .vitesse-sequence-bar { position: absolute; top: 170px; left: 50%; transform: translateX(-50%); display: flex; gap: 8px; z-index: 6; }
+    .vitesse-seq-slot { width: 28px; height: 28px; border-radius: 6px; border: 2px solid #333; background: #1a1a1a; }
+    .vitesse-seq-slot.filled { border-color: #FECC00; }
+
+    /* COUNTDOWN OVERLAY */
+    .countdown-overlay { display: none; position: fixed; inset: 0; background: rgba(15,15,15,0.96); z-index: 200; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 24px; }
+    .countdown-overlay.active { display: flex; }
+    .countdown-title { font-size: 28px; font-weight: 700; color: #FECC00; margin-bottom: 16px; }
+    .countdown-rules { font-size: 15px; color: #aaa; max-width: 460px; line-height: 1.5; margin-bottom: 40px; }
+    .countdown-number { font-size: 120px; font-weight: 800; color: #fff; line-height: 1; min-width: 140px; }
+    .countdown-label { font-size: 13px; color: #555; margin-top: 10px; text-transform: uppercase; letter-spacing: 0.1em; }
+
+    /* CLASSEMENT */
+    .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); align-items: center; justify-content: center; z-index: 100; }
+    .modal-overlay.open { display: flex; }
+    .modal { background: #1a1a1a; border: 1px solid #2a2a2a; border-radius: 16px; padding: 24px; width: 480px; max-width: 90vw; max-height: 80vh; display: flex; flex-direction: column; }
+    .modal-title { font-size: 16px; font-weight: 700; margin-bottom: 16px; }
+    .classement-list { overflow-y: auto; flex: 1; }
+    .classement-row { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid #222; }
+    .classement-rank { width: 28px; font-size: 14px; font-weight: 800; color: #FECC00; text-align: center; }
+    .classement-name { flex: 1; font-size: 13px; }
+    .classement-score { font-size: 14px; font-weight: 700; color: #FECC00; }
+    .modal-actions { margin-top: 16px; display: flex; justify-content: flex-end; }
+
+    /* ZONE EDITOR */
+    .zone-editor-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 150; flex-direction: column; align-items: center; justify-content: center; }
+    .zone-editor-overlay.active { display: flex; }
+    .zone-editor-container { width: 90vw; max-width: 1100px; }
+    .zone-editor-title { font-size: 16px; font-weight: 700; color: #FECC00; margin-bottom: 8px; text-align: center; }
+    .zone-editor-hint { font-size: 12px; color: #888; text-align: center; margin-bottom: 16px; }
+    .zone-editor-area { position: relative; width: 100%; height: 60vh; background: #0a0a0a; border-radius: 12px; overflow: hidden; border: 1px solid #2a2a2a; }
+    .zone-editor-rect { position: absolute; border: 3px dashed #FECC00; background: rgba(252,204,0,0.08); cursor: move; user-select: none; }
+    .zone-editor-handle { position: absolute; width: 16px; height: 16px; background: #FECC00; border-radius: 50%; border: 2px solid #0f0f0f; }
+    .zone-handle-nw { top: -8px; left: -8px; cursor: nwse-resize; }
+    .zone-handle-ne { top: -8px; right: -8px; cursor: nesw-resize; }
+    .zone-handle-sw { bottom: -8px; left: -8px; cursor: nesw-resize; }
+    .zone-handle-se { bottom: -8px; right: -8px; cursor: nwse-resize; }
+    .zone-handle-n { top: -8px; left: 50%; transform: translateX(-50%); cursor: ns-resize; }
+    .zone-handle-s { bottom: -8px; left: 50%; transform: translateX(-50%); cursor: ns-resize; }
+    .zone-handle-w { left: -8px; top: 50%; transform: translateY(-50%); cursor: ew-resize; }
+    .zone-handle-e { right: -8px; top: 50%; transform: translateY(-50%); cursor: ew-resize; }
+    .zone-editor-actions { display: flex; gap: 10px; justify-content: center; margin-top: 16px; }
+    .zone-editor-reset { font-size: 11px; color: #888; cursor: pointer; background: none; border: none; }
+    .zone-editor-reset:hover { color: #E24B4A; }
+    .zone-btn { padding: 5px 10px; font-size: 11px; border-radius: 6px; border: 1px solid #2a2a2a; background: #1a1a1a; color: #888; cursor: pointer; margin-top: 8px; }
+    .zone-btn:hover { color: #FECC00; border-color: #FECC00; }
+
+    /* DUEL */
+    .duel-split { display: flex; height: 100%; gap: 2px; }
+    .duel-side { flex: 1; position: relative; overflow: hidden; user-select: none; touch-action: none; }
+    .duel-side-left { background: #0a0a0a; border-right: 1px solid #FECC0033; }
+    .duel-side-right { background: #0a0a0a; border-left: 1px solid #FECC0033; }
+    .duel-label { position: absolute; bottom: 10px; left: 50%; transform: translateX(-50%); font-size: 14px; font-weight: 700; color: #FECC00; z-index: 5; background: rgba(15,15,15,0.8); padding: 4px 12px; border-radius: 6px; white-space: nowrap; }
+    .duel-score { position: absolute; top: 12px; font-size: 28px; font-weight: 800; z-index: 5; }
+    .duel-score-left { left: 16px; color: #3B82F6; }
+    .duel-score-right { right: 16px; color: #E24B4A; }
+    .duel-target { position: absolute; width: 48px; height: 48px; border-radius: 50%; background: #FECC00; box-shadow: 0 0 22px #FECC0088; cursor: pointer; transform: translate(-50%, -50%); transition: transform .08s; }
+    .duel-color-dot { position: absolute; width: 56px; height: 56px; border-radius: 50%; cursor: pointer; transform: translate(-50%, -50%); transition: transform .1s; box-shadow: 0 4px 12px rgba(0,0,0,0.4); }
+    .duel-color-dot:hover { transform: translate(-50%, -50%) scale(1.1); }
+    .duel-color-indicator { position: absolute; top: 12px; left: 50%; transform: translateX(-50%); width: 50px; height: 50px; border-radius: 10px; border: 3px solid #fff; box-shadow: 0 0 20px rgba(255,255,255,0.3); z-index: 10; }
+    .duel-level-info { position: absolute; top: 70px; left: 50%; transform: translateX(-50%); font-size: 14px; font-weight: 600; color: #fff; z-index: 10; background: rgba(15,15,15,0.8); padding: 4px 12px; border-radius: 6px; white-space: nowrap; }
+    .duel-vs { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 32px; font-weight: 800; color: #FECC00; z-index: 8; pointer-events: none; text-shadow: 0 2px 12px rgba(0,0,0,0.8); }
+    .duel-winner-flash { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 40px; font-weight: 800; z-index: 20; pointer-events: none; animation: duelFlash 0.6s ease-out forwards; }
+    @keyframes duelFlash { 0% { opacity: 0; transform: scale(0.5); } 30% { opacity: 1; transform: scale(1.2); } 100% { opacity: 0; transform: scale(1); } }
+    .duel-winner-flash.p1 { color: #3B82F6; text-shadow: 0 0 30px #3B82F6; }
+    .duel-winner-flash.p2 { color: #E24B4A; text-shadow: 0 0 30px #E24B4A; }
+    .duel-setup-players { display: flex; gap: 16px; margin-bottom: 16px; }
+    .duel-player-pick { flex: 1; text-align: left; }
+    .duel-player-pick label { display: block; font-size: 11px; color: #555; margin-bottom: 4px; }
+    .duel-player-pick select { width: 100%; padding: 10px 12px; border-radius: 8px; border: 1px solid #2a2a2a; background: #0f0f0f; color: #fff; font-size: 14px; outline: none; }
+    .duel-player-pick select:focus { border-color: #FECC00; }
+  </style>
+  <link rel="manifest" href="../manifest.json">
+  <script type="module" src="../auth-guard.js"></script>
+</head>
+<body>
+  <div class="topbar">
+    <div class="topbar-title">Jeux</div>
+    <div class="topbar-player" id="topbar-player"></div>
+    <button class="btn-ghost" onclick="changerJoueur()">Changer de joueur</button>
+    <button class="btn-ghost" onclick="window.close()">Fermer</button>
+  </div>
+
+  <div class="content">
+    <!-- CHOIX JOUEUR -->
+    <div class="landing" id="landing">
+      <h2>Choisis ton joueur</h2>
+      <div class="players-trombi" id="players-trombi"></div>
+      <button class="btn-primary" style="margin-top:12px;" onclick="confirmerJoueur()">Continuer</button>
+    </div>
+
+    <!-- MENU DES JEUX -->
+    <div class="jeux-menu" id="jeux-menu">
+      <div class="jeux-card" id="card-reaction">
+        <h3>Points de r&eacute;action</h3>
+        <p>Clique le plus vite possible sur les points qui apparaissent &agrave; l'&eacute;cran pendant 20 secondes.</p>
+        <div class="jeux-card-stats">
+          <div class="jeux-card-stat"><span>Dernier</span><strong id="stat-reaction-last">—</strong></div>
+          <div class="jeux-card-stat"><span>Meilleur</span><strong id="stat-reaction-best">—</strong></div>
+        </div>
+        <div class="jeux-card-actions">
+          <button class="btn-ghost btn-sm" onclick="ouvrirClassement('reaction')">Classement</button>
+          <button class="btn-primary btn-sm" onclick="ouvrirJeu('reaction')">Jouer</button>
+        </div>
+      </div>
+
+      <div class="jeux-card" id="card-memory">
+        <h3>Memory Balles</h3>
+        <p>M&eacute;morise 6 balles en mouvement, puis retrouve 3 d'entre elles dans le bon ordre.</p>
+        <div class="jeux-card-stats">
+          <div class="jeux-card-stat"><span>Dernier</span><strong id="stat-memory-last">—</strong></div>
+          <div class="jeux-card-stat"><span>Meilleur</span><strong id="stat-memory-best">—</strong></div>
+        </div>
+        <div class="jeux-card-actions">
+          <button class="btn-ghost btn-sm" onclick="ouvrirClassement('memory')">Classement</button>
+          <button class="btn-primary btn-sm" onclick="ouvrirJeu('memory')">Jouer</button>
+        </div>
+      </div>
+
+      <div class="jeux-card" id="card-colors">
+        <h3>Jeu des couleurs</h3>
+        <p>Retrouve 3 couleurs dans le bon ordre parmi les points. 5 manches de plus en plus difficiles.</p>
+        <div class="jeux-card-stats">
+          <div class="jeux-card-stat"><span>Dernier</span><strong id="stat-colors-last">—</strong></div>
+          <div class="jeux-card-stat"><span>Meilleur</span><strong id="stat-colors-best">—</strong></div>
+        </div>
+        <div class="jeux-card-actions">
+          <button class="btn-ghost btn-sm" onclick="ouvrirClassement('colors')">Classement</button>
+          <button class="btn-primary btn-sm" onclick="ouvrirJeu('colors')">Jouer</button>
+        </div>
+      </div>
+
+      <div class="jeux-card" id="card-simon">
+        <h3>Simon colors</h3>
+        <p>M&eacute;morise la suite de couleurs et reproduis-la. 20 niveaux, 1 erreur = game over.</p>
+        <div class="jeux-card-stats">
+          <div class="jeux-card-stat"><span>Dernier</span><strong id="stat-simon-last">—</strong></div>
+          <div class="jeux-card-stat"><span>Meilleur</span><strong id="stat-simon-best">—</strong></div>
+        </div>
+        <div class="jeux-card-actions">
+          <button class="btn-ghost btn-sm" onclick="ouvrirClassement('simon')">Classement</button>
+          <button class="btn-primary btn-sm" onclick="ouvrirJeu('simon')">Jouer</button>
+        </div>
+      </div>
+
+      <div class="jeux-card" id="card-vitesse">
+        <h3>Vitesse couleur</h3>
+        <p>Clique sur la bonne couleur parmi 2 points. 10 s&eacute;ries puis restitue l'ordre des couleurs.</p>
+        <div class="jeux-card-stats">
+          <div class="jeux-card-stat"><span>Dernier</span><strong id="stat-vitesse-last">—</strong></div>
+          <div class="jeux-card-stat"><span>Meilleur</span><strong id="stat-vitesse-best">—</strong></div>
+        </div>
+        <div class="jeux-card-actions">
+          <button class="btn-ghost btn-sm" onclick="ouvrirClassement('vitesse')">Classement</button>
+          <button class="btn-primary btn-sm" onclick="ouvrirJeu('vitesse')">Jouer</button>
+        </div>
+      </div>
+
+      <div class="jeux-card" id="card-duel">
+        <h3>Duel</h3>
+        <p>Affronte un autre joueur (ou un test). Niveau 1 : premier &agrave; cliquer sur le point. Niveau 2 : premier &agrave; cliquer sur la bonne couleur. &Eacute;galit&eacute; ? Manche finale.</p>
+        <div class="jeux-card-stats">
+          <div class="jeux-card-stat"><span>Victoires</span><strong id="stat-duel-wins">—</strong></div>
+          <div class="jeux-card-stat"><span>Duels</span><strong id="stat-duel-total">—</strong></div>
+        </div>
+        <div class="jeux-card-actions">
+          <button class="btn-ghost btn-sm" onclick="ouvrirClassement('duel')">Classement</button>
+          <button class="btn-primary btn-sm" onclick="ouvrirJeu('duel')">Jouer</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- JEU RÉACTION -->
+    <div class="jeux-game" id="jeux-game-reaction">
+      <div class="jeux-setup" id="reaction-setup">
+        <h2>Points de r&eacute;action</h2>
+        <div class="player-name" id="reaction-player-name"></div>
+        <div class="info">Le score est la moyenne de tes temps de r&eacute;action (en ms).<br>Plus c'est bas, mieux c'est. Un point manqu&eacute; compte 2000 ms.</div>
+        <button class="btn-primary" style="width:100%;" onclick="demarrerReaction()">D&eacute;marrer</button>
+        <button class="zone-btn" onclick="ouvrirZoneEditor('reaction')">Définir la zone de jeu</button>
+        <div class="jeux-history" id="reaction-history" style="display:none;">
+          <h4>Historique</h4>
+          <div class="jeux-history-list" id="reaction-history-list"></div>
+        </div>
+      </div>
+
+      <div class="jeux-playarea" id="reaction-playarea" style="display:none;">
+        <div class="jeux-score"><div class="jeux-score-label">Moyenne</div><span id="reaction-score">—</span> ms</div>
+        <div class="jeux-timer"><span id="reaction-timer">20.0</span>s</div>
+      </div>
+
+      <div class="jeux-result" id="reaction-result">
+        <h2>Temps &eacute;coul&eacute; !</h2>
+        <div class="big-score" id="reaction-final-score">0</div>
+        <div class="score-unit">ms en moyenne</div>
+        <p>Plus la moyenne est basse, meilleure est ta r&eacute;action.</p>
+        <div style="display:flex; gap:10px;">
+          <button class="btn-ghost" onclick="resetReaction()">Rejouer</button>
+          <button class="btn-primary" onclick="retourMenu()">Menu des jeux</button>
+        </div>
+        <div class="jeux-history" id="reaction-result-history" style="margin-top:28px; width:100%; max-width:420px;"></div>
+      </div>
+    </div>
+
+    <!-- JEU MEMORY BALLES -->
+    <div class="jeux-game" id="jeux-game-memory">
+      <div class="jeux-setup" id="memory-setup">
+        <h2>Memory Balles</h2>
+        <div class="player-name" id="memory-player-name"></div>
+        <div class="info">M&eacute;morise les 6 balles pendant 10 s, suis leur mouvement, puis retrouve 3 balles demand&eacute;es dans le bon ordre.</div>
+        <button class="btn-primary" style="width:100%;" onclick="demarrerMemory()">D&eacute;marrer</button>
+        <button class="zone-btn" onclick="ouvrirZoneEditor('memory')">Définir la zone de jeu</button>
+        <div class="jeux-history" id="memory-history" style="display:none;">
+          <h4>Historique</h4>
+          <div class="jeux-history-list" id="memory-history-list"></div>
+        </div>
+      </div>
+
+      <div class="jeux-playarea memory-3d" id="memory-playarea" style="display:none;">
+        <div class="memory-instruction" id="memory-instruction">M&eacute;morise les balles</div>
+        <div class="jeux-timer"><span id="memory-timer">10.0</span>s</div>
+      </div>
+
+      <div class="jeux-result" id="memory-result">
+        <h2>Termin&eacute; !</h2>
+        <div class="big-score" id="memory-final-score">0</div>
+        <div class="score-unit">points</div>
+        <div id="memory-score-detail" style="font-size:13px;color:#888;margin-bottom:20px;line-height:1.5;"></div>
+        <div style="display:flex; gap:10px;">
+          <button class="btn-ghost" onclick="resetMemory()">Rejouer</button>
+          <button class="btn-primary" onclick="retourMenu()">Menu des jeux</button>
+        </div>
+        <div class="jeux-history" id="memory-result-history" style="margin-top:28px; width:100%; max-width:420px;"></div>
+      </div>
+    </div>
+
+    <!-- JEU DES COULEURS -->
+    <div class="jeux-game" id="jeux-game-colors">
+      <div class="jeux-setup" id="colors-setup">
+        <h2>Jeu des couleurs</h2>
+        <div class="player-name" id="colors-player-name"></div>
+        <div class="info">Clique sur 3 points de couleur dans l'ordre affich&eacute; en haut. 5 manches, de 5 &agrave; 10 points. Les manches 4 et 5 sont en mouvement.</div>
+        <button class="btn-primary" style="width:100%;" onclick="demarrerColors()">D&eacute;marrer</button>
+        <button class="zone-btn" onclick="ouvrirZoneEditor('colors')">Définir la zone de jeu</button>
+        <div class="jeux-history" id="colors-history" style="display:none;">
+          <h4>Historique</h4>
+          <div class="jeux-history-list" id="colors-history-list"></div>
+        </div>
+      </div>
+
+      <div class="jeux-playarea" id="colors-playarea" style="display:none;">
+        <div class="colors-targets" id="colors-targets"></div>
+        <div class="jeux-timer"><span id="colors-timer">0.00</span>s</div>
+        <div class="jeux-score"><div class="jeux-score-label">Manche</div><span id="colors-level">1</span>/5</div>
+        <div class="colors-level" id="colors-level-popup">Manche 1</div>
+      </div>
+
+      <div class="jeux-result" id="colors-result">
+        <h2>Termin&eacute; !</h2>
+        <div class="big-score" id="colors-final-score">0</div>
+        <div class="score-unit">ms en moyenne</div>
+        <div id="colors-score-detail" style="font-size:13px;color:#888;margin-bottom:20px;line-height:1.5;"></div>
+        <div style="display:flex; gap:10px;">
+          <button class="btn-ghost" onclick="resetColors()">Rejouer</button>
+          <button class="btn-primary" onclick="retourMenu()">Menu des jeux</button>
+        </div>
+        <div class="jeux-history" id="colors-result-history" style="margin-top:28px; width:100%; max-width:420px;"></div>
+      </div>
+    </div>
+
+    <!-- JEU SIMON -->
+    <div class="jeux-game" id="jeux-game-simon">
+      <div class="jeux-setup" id="simon-setup">
+        <h2>Simon colors</h2>
+        <div class="player-name" id="simon-player-name"></div>
+        <div class="info">M&eacute;morise la suite de couleurs affich&eacute;e, puis reproduis-la. Niveau 1 = 3 couleurs, jusqu'&agrave; 20 couleurs. 2 erreurs au m&ecirc;me niveau = game over.</div>
+        <button class="btn-primary" style="width:100%;" onclick="demarrerSimon()">D&eacute;marrer</button>
+        <button class="zone-btn" onclick="ouvrirZoneEditor('simon')">Définir la zone de jeu</button>
+        <div class="jeux-history" id="simon-history" style="display:none;">
+          <h4>Historique</h4>
+          <div class="jeux-history-list" id="simon-history-list"></div>
+        </div>
+      </div>
+
+      <div class="jeux-playarea" id="simon-playarea" style="display:none;">
+        <div class="simon-status" id="simon-status">Regarde la suite</div>
+        <div class="jeux-score"><div class="jeux-score-label">Niveau</div><span id="simon-level">1</span></div>
+        <div class="simon-board" id="simon-board"></div>
+      </div>
+
+      <div class="jeux-result" id="simon-result">
+        <h2>Game over !</h2>
+        <div class="big-score" id="simon-final-score">0</div>
+        <div class="score-unit">niveau atteint</div>
+        <p id="simon-result-detail" style="font-size:13px;color:#888;margin-bottom:24px;"></p>
+        <div style="display:flex; gap:10px;">
+          <button class="btn-ghost" onclick="resetSimon()">Rejouer</button>
+          <button class="btn-primary" onclick="retourMenu()">Menu des jeux</button>
+        </div>
+        <div class="jeux-history" id="simon-result-history" style="margin-top:28px; width:100%; max-width:420px;"></div>
+      </div>
+    </div>
+
+    <!-- JEU VITESSE COULEUR -->
+    <div class="jeux-game" id="jeux-game-vitesse">
+      <div class="jeux-setup" id="vitesse-setup">
+        <h2>Vitesse couleur</h2>
+        <div class="player-name" id="vitesse-player-name"></div>
+        <div class="info">Phase 1 : 10 s&eacute;ries, clique sur la bonne couleur parmi 2 points. Phase 2 : retrouve l'ordre des 10 couleurs sur lesquelles tu as cliqu&eacute;.</div>
+        <button class="btn-primary" style="width:100%;" onclick="demarrerVitesse()">D&eacute;marrer</button>
+        <button class="zone-btn" onclick="ouvrirZoneEditor('vitesse')">Définir la zone de jeu</button>
+        <div class="jeux-history" id="vitesse-history" style="display:none;">
+          <h4>Historique</h4>
+          <div class="jeux-history-list" id="vitesse-history-list"></div>
+        </div>
+      </div>
+
+      <div class="jeux-playarea" id="vitesse-playarea" style="display:none;">
+        <div class="vitesse-indicator" id="vitesse-indicator"></div>
+        <div class="vitesse-status" id="vitesse-status">Clique sur la bonne couleur</div>
+        <div class="jeux-score"><div class="jeux-score-label">S&eacute;rie</div><span id="vitesse-round">1</span>/10</div>
+      </div>
+
+      <div class="jeux-result" id="vitesse-result">
+        <h2>Termin&eacute; !</h2>
+        <div class="big-score" id="vitesse-final-score">0</div>
+        <div class="score-unit">points</div>
+        <div id="vitesse-score-detail" style="font-size:13px;color:#888;margin-bottom:20px;line-height:1.5;"></div>
+        <div style="display:flex; gap:10px;">
+          <button class="btn-ghost" onclick="resetVitesse()">Rejouer</button>
+          <button class="btn-primary" onclick="retourMenu()">Menu des jeux</button>
+        </div>
+        <div class="jeux-history" id="vitesse-result-history" style="margin-top:28px; width:100%; max-width:420px;"></div>
+      </div>
+    </div>
+
+    <!-- JEU DUEL -->
+    <div class="jeux-game" id="jeux-game-duel">
+      <div class="jeux-setup" id="duel-setup">
+        <h2>Duel</h2>
+        <div class="info">Affronte un autre joueur ou un test. L'&eacute;cran est s&eacute;par&eacute; en 2.<br><br>
+          <strong>Niveau 1</strong> : 5 manches de 1 point. Un point appara&icirc;t au m&ecirc;me endroit des 2 c&ocirc;t&eacute;s, premier &agrave; cliquer gagne.<br>
+          <strong>Niveau 2</strong> : 5 manches de 2 points. Une couleur s'affiche en haut, premier &agrave; cliquer sur la bonne couleur gagne.<br>
+          <strong>&Eacute;galit&eacute; ?</strong> : manche finale, 6 couleurs diff&eacute;rentes, 1 seule bonne couleur en haut.</div>
+        <div class="duel-setup-players">
+          <div class="duel-player-pick">
+            <label>Joueur 1 (gauche, bleu)</label>
+            <select id="duel-p1"></select>
+          </div>
+          <div class="duel-player-pick">
+            <label>Joueur 2 (droite, rouge)</label>
+            <select id="duel-p2"></select>
+          </div>
+        </div>
+        <button class="btn-primary" style="width:100%;" onclick="demarrerDuel()">D&eacute;marrer</button>
+        <button class="zone-btn" onclick="ouvrirZoneEditor('duel')">Définir la zone de jeu</button>
+        <div class="jeux-history" id="duel-history" style="display:none;">
+          <h4>Historique</h4>
+          <div class="jeux-history-list" id="duel-history-list"></div>
+        </div>
+      </div>
+
+      <div class="jeux-playarea" id="duel-playarea" style="display:none; padding:0;">
+        <div class="duel-split" id="duel-split" style="width:100%;height:100%;">
+          <div class="duel-side duel-side-left" id="duel-side-left">
+            <div class="duel-score duel-score-left" id="duel-score-p1">0</div>
+            <div class="duel-label" id="duel-label-p1">J1</div>
+          </div>
+          <div class="duel-side duel-side-right" id="duel-side-right">
+            <div class="duel-score duel-score-right" id="duel-score-p2">0</div>
+            <div class="duel-label" id="duel-label-p2">J2</div>
+          </div>
+        </div>
+        <div class="duel-level-info" id="duel-level-info" style="display:none;"></div>
+        <div class="duel-color-indicator" id="duel-color-indicator" style="display:none;"></div>
+      </div>
+
+      <div class="jeux-result" id="duel-result">
+        <h2 id="duel-result-title">Match termin&eacute; !</h2>
+        <div class="big-score" id="duel-final-score">0 - 0</div>
+        <div class="score-unit" id="duel-winner-label">Vainqueur</div>
+        <div id="duel-score-detail" style="font-size:13px;color:#888;margin-bottom:20px;line-height:1.5;"></div>
+        <div style="display:flex; gap:10px;">
+          <button class="btn-ghost" onclick="resetDuel()">Rejouer</button>
+          <button class="btn-primary" onclick="retourMenu()">Menu des jeux</button>
+        </div>
+        <div class="jeux-history" id="duel-result-history" style="margin-top:28px; width:100%; max-width:420px;"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- DÉCOMPTE -->
+  <div class="countdown-overlay" id="countdown-overlay">
+    <div class="countdown-title" id="countdown-title">Prêt ?</div>
+    <div class="countdown-rules" id="countdown-rules">Récapitulatif des règles...</div>
+    <div class="countdown-number" id="countdown-number">5</div>
+    <div class="countdown-label">Le jeu commence dans</div>
+  </div>
+
+  <!-- CLASSEMENT -->
+  <div class="modal-overlay" id="classement-modal">
+    <div class="modal">
+      <div class="modal-title" id="classement-title">Classement</div>
+      <div class="classement-list" id="classement-list"></div>
+      <div class="modal-actions">
+        <button class="btn-ghost" onclick="fermerClassement()">Fermer</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ZONE EDITOR -->
+  <div class="zone-editor-overlay" id="zone-editor-overlay">
+    <div class="zone-editor-container">
+      <div class="zone-editor-title" id="zone-editor-title">Zone de jeu</div>
+      <div class="zone-editor-hint">Glisse le rectangle pour déplacer. Tire les poignées pour redimensionner. Les consignes restent au même endroit, seuls les points/balles apparaissent dans la zone.</div>
+      <div class="zone-editor-area" id="zone-editor-area">
+        <div class="zone-editor-rect" id="zone-editor-rect">
+          <div class="zone-editor-handle zone-handle-nw"></div>
+          <div class="zone-editor-handle zone-handle-ne"></div>
+          <div class="zone-editor-handle zone-handle-sw"></div>
+          <div class="zone-editor-handle zone-handle-se"></div>
+          <div class="zone-editor-handle zone-handle-n"></div>
+          <div class="zone-editor-handle zone-handle-s"></div>
+          <div class="zone-editor-handle zone-handle-w"></div>
+          <div class="zone-editor-handle zone-handle-e"></div>
+        </div>
+      </div>
+      <div class="zone-editor-actions">
+        <button class="btn-ghost" onclick="resetZoneEditor()">Réinitialiser</button>
+        <button class="btn-ghost" onclick="fermerZoneEditor()">Annuler</button>
+        <button class="btn-primary" onclick="validerZone()">Valider</button>
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from '../renderer/supabase-adapter.js'
+    import { getAuth, onAuthStateChanged } from '../renderer/supabase-adapter.js'
+    import { getFirestore, collection, getDocs, addDoc, serverTimestamp } from '../renderer/supabase-adapter.js'
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyCvMs-5LX9Ivk3OkzUR3iz9Kk1E5b9_7Vk",
+      authDomain: "delta-rugby-app.firebaseapp.com",
+      projectId: "delta-rugby-app",
+      storageBucket: "delta-rugby-app.firebasestorage.app",
+      messagingSenderId: "61187079762",
+      appId: "1:61187079762:web:56cd1eaa8beb9e1a2ee98b"
+    }
+    const fbApp = initializeApp(firebaseConfig)
+    const auth = getAuth(fbApp)
+    const db = getFirestore(fbApp)
+
+    const GAMES = ['reaction', 'memory', 'colors', 'simon', 'vitesse', 'duel']
+    const POINT_DURATION = 2000
+    const TOTAL_POINTS = 8
+    const CLICK_WINDOW = 2000
+    const FLASH_DURATION = 200
+    let allPlayers = []
+    let currentPlayer = ''
+    let cachedScores = {}
+
+    // ==================== PHOTO CACHE ====================
+    const photoMemoryCache = new Map() // url -> dataURL
+    let photoDB = null
+
+    async function openPhotoDB() {
+      if (photoDB) return photoDB
+      return new Promise((resolve) => {
+        try {
+          const req = indexedDB.open('jeux_photo_cache', 1)
+          req.onupgradeneeded = (e) => {
+            const db = e.target.result
+            if (!db.objectStoreNames.contains('photos')) db.createObjectStore('photos')
+          }
+          req.onsuccess = (e) => { photoDB = e.target.result; resolve(photoDB) }
+          req.onerror = () => resolve(null)
+        } catch(e) { resolve(null) }
+      })
+    }
+
+    async function getCachedPhoto(url) {
+      if (!url) return null
+      if (photoMemoryCache.has(url)) return photoMemoryCache.get(url)
+      // IndexedDB
+      try {
+        const db = await openPhotoDB()
+        if (db) {
+          const result = await new Promise((resolve) => {
+            const tx = db.transaction('photos', 'readonly')
+            const req = tx.objectStore('photos').get(url)
+            req.onsuccess = () => resolve(req.result)
+            req.onerror = () => resolve(null)
+          })
+          if (result) { photoMemoryCache.set(url, result); return result }
+        }
+      } catch(e) {}
+      // Fetch + cache
+      try {
+        const response = await fetch(url)
+        const blob = await response.blob()
+        const dataUrl = await new Promise((resolve) => {
+          const reader = new FileReader()
+          reader.onloadend = () => resolve(reader.result)
+          reader.onerror = () => resolve(null)
+          reader.readAsDataURL(blob)
+        })
+        if (dataUrl) {
+          photoMemoryCache.set(url, dataUrl)
+          try {
+            const db = await openPhotoDB()
+            if (db) {
+              const tx = db.transaction('photos', 'readwrite')
+              tx.objectStore('photos').put(dataUrl, url)
+            }
+          } catch(e) {}
+          return dataUrl
+        }
+      } catch(e) {}
+      return null
+    }
+
+    async function preloadPlayerPhotos() {
+      const promises = allPlayers
+        .filter(p => p.photo && !p.archived && !p.espoir)
+        .map(p => getCachedPhoto(p.photo).catch(() => null))
+      await Promise.all(promises)
+    }
+
+    function applyPhotoTransform(img, zoom, px, py) {
+      img.style.objectPosition = px + '% ' + py + '%'
+      if (zoom && zoom !== 1) {
+        img.style.transform = 'scale(' + zoom + ')'
+        img.style.transformOrigin = px + '% ' + py + '%'
+      }
+    }
+
+    function setTrombiPhoto(circle, photoUrl, prenom, nom) {
+      // Try memory cache (sync)
+      if (photoMemoryCache.has(photoUrl)) {
+        const img = document.createElement('img')
+        img.className = 'trombi-photo'
+        img.src = photoMemoryCache.get(photoUrl)
+        const p = allPlayers.find(p => p.photo === photoUrl)
+        if (p) applyPhotoTransform(img, p.photoZoom || 1, p.photoPosX != null ? p.photoPosX : 50, p.photoPosY != null ? p.photoPosY : 50)
+        img.onerror = () => {
+          const init = document.createElement('div')
+          init.className = 'trombi-initials'
+          init.textContent = getInitials(prenom, nom)
+          img.replaceWith(init)
+        }
+        circle.appendChild(img)
+        return
+      }
+      // Show initials first, swap when loaded
+      const init = document.createElement('div')
+      init.className = 'trombi-initials'
+      init.textContent = getInitials(prenom, nom)
+      circle.appendChild(init)
+      getCachedPhoto(photoUrl).then(dataUrl => {
+        if (!dataUrl || !circle.isConnected) return
+        const img = document.createElement('img')
+        img.className = 'trombi-photo'
+        img.src = dataUrl
+        const p = allPlayers.find(p => p.photo === photoUrl)
+        if (p) applyPhotoTransform(img, p.photoZoom || 1, p.photoPosX != null ? p.photoPosX : 50, p.photoPosY != null ? p.photoPosY : 50)
+        img.onerror = () => { /* keep initials */ }
+        circle.innerHTML = ''
+        circle.appendChild(img)
+      })
+    }
+
+    // ==================== ZONE DE JEU ====================
+    function loadGameZone(game) {
+      try {
+        const z = JSON.parse(localStorage.getItem('jeux_zone_' + game))
+        if (z && z.width != null && z.height != null) return z
+      } catch(e) {}
+      return { top: 0, left: 0, width: 100, height: 100 }
+    }
+    function saveGameZone(game, zone) {
+      try { localStorage.setItem('jeux_zone_' + game, JSON.stringify(zone)) } catch(e) {}
+    }
+    function getGameZone(game) {
+      const area = document.getElementById(game + '-playarea')
+      if (!area) return { left: 0, top: 0, width: window.innerWidth, height: window.innerHeight }
+      const z = loadGameZone(game)
+      return {
+        left: z.left * area.clientWidth / 100,
+        top: z.top * area.clientHeight / 100,
+        width: z.width * area.clientWidth / 100,
+        height: z.height * area.clientHeight / 100
+      }
+    }
+
+    // --- Zone Editor ---
+    let zoneEditorGame = null
+    let zoneEditorState = { dragging: false, resizing: null, startX: 0, startY: 0, origLeft: 0, origTop: 0, origWidth: 0, origHeight: 0 }
+
+    window.ouvrirZoneEditor = function(game) {
+      zoneEditorGame = game
+      const titleMap = { reaction: 'Points de réaction', memory: 'Memory Balles', colors: 'Jeu des couleurs', simon: 'Simon colors', vitesse: 'Vitesse couleur', duel: 'Duel' }
+      document.getElementById('zone-editor-title').textContent = 'Zone de jeu — ' + (titleMap[game] || game)
+      const z = loadGameZone(game)
+      const rect = document.getElementById('zone-editor-rect')
+      rect.style.left = z.left + '%'
+      rect.style.top = z.top + '%'
+      rect.style.width = z.width + '%'
+      rect.style.height = z.height + '%'
+      document.getElementById('zone-editor-overlay').classList.add('active')
+      // Force layout so the area dimensions are available
+      document.getElementById('zone-editor-area').offsetHeight
+    }
+    window.fermerZoneEditor = function() {
+      document.getElementById('zone-editor-overlay').classList.remove('active')
+      zoneEditorGame = null
+    }
+    window.resetZoneEditor = function() {
+      const rect = document.getElementById('zone-editor-rect')
+      rect.style.left = '0%'
+      rect.style.top = '0%'
+      rect.style.width = '100%'
+      rect.style.height = '100%'
+    }
+    window.validerZone = function() {
+      if (!zoneEditorGame) return
+      const area = document.getElementById('zone-editor-area')
+      const rect = document.getElementById('zone-editor-rect')
+      const z = {
+        left: Math.round(rect.offsetLeft / area.clientWidth * 100),
+        top: Math.round(rect.offsetTop / area.clientHeight * 100),
+        width: Math.round(rect.offsetWidth / area.clientWidth * 100),
+        height: Math.round(rect.offsetHeight / area.clientHeight * 100)
+      }
+      saveGameZone(zoneEditorGame, z)
+      fermerZoneEditor()
+    }
+
+    // Zone editor drag/resize logic
+    ;(function() {
+      const rect = document.getElementById('zone-editor-rect')
+      const area = document.getElementById('zone-editor-area')
+      if (!rect || !area) return
+
+      function startDrag(e, handle) {
+        e.preventDefault()
+        e.stopPropagation()
+        const pt = e.touches ? e.touches[0] : e
+        zoneEditorState.dragging = true
+        zoneEditorState.resizing = handle
+        zoneEditorState.startX = pt.clientX
+        zoneEditorState.startY = pt.clientY
+        zoneEditorState.origLeft = rect.offsetLeft
+        zoneEditorState.origTop = rect.offsetTop
+        zoneEditorState.origWidth = rect.offsetWidth
+        zoneEditorState.origHeight = rect.offsetHeight
+      }
+
+      function onMove(e) {
+        if (!zoneEditorState.dragging) return
+        e.preventDefault()
+        const pt = e.touches ? e.touches[0] : e
+        const dx = pt.clientX - zoneEditorState.startX
+        const dy = pt.clientY - zoneEditorState.startY
+        const h = zoneEditorState.resizing
+        let l = zoneEditorState.origLeft, t = zoneEditorState.origTop, w = zoneEditorState.origWidth, hh = zoneEditorState.origHeight
+
+        if (h === 'move') {
+          l = Math.max(0, Math.min(area.clientWidth - w, zoneEditorState.origLeft + dx))
+          t = Math.max(0, Math.min(area.clientHeight - hh, zoneEditorState.origTop + dy))
+        } else {
+          if (h.includes('w')) { l = Math.max(0, Math.min(zoneEditorState.origLeft + zoneEditorState.origWidth - 40, zoneEditorState.origLeft + dx)); w = zoneEditorState.origWidth - (l - zoneEditorState.origLeft) }
+          if (h.includes('e')) { w = Math.max(40, Math.min(area.clientWidth - zoneEditorState.origLeft, zoneEditorState.origWidth + dx)) }
+          if (h.includes('n')) { t = Math.max(0, Math.min(zoneEditorState.origTop + zoneEditorState.origHeight - 40, zoneEditorState.origTop + dy)); hh = zoneEditorState.origHeight - (t - zoneEditorState.origTop) }
+          if (h.includes('s')) { hh = Math.max(40, Math.min(area.clientHeight - zoneEditorState.origTop, zoneEditorState.origHeight + dy)) }
+        }
+        rect.style.left = l + 'px'
+        rect.style.top = t + 'px'
+        rect.style.width = w + 'px'
+        rect.style.height = hh + 'px'
+      }
+
+      function endDrag() { zoneEditorState.dragging = false; zoneEditorState.resizing = null }
+
+      // Drag the rectangle body
+      rect.addEventListener('mousedown', (e) => { if (e.target === rect) startDrag(e, 'move') })
+      rect.addEventListener('touchstart', (e) => { if (e.target === rect) startDrag(e, 'move') }, { passive: false })
+      // Resize handles
+      const handles = rect.querySelectorAll('.zone-editor-handle')
+      handles.forEach(handle => {
+        const cls = handle.className.replace('zone-editor-handle zone-handle-', '')
+        handle.addEventListener('mousedown', (e) => startDrag(e, cls))
+        handle.addEventListener('touchstart', (e) => startDrag(e, cls), { passive: false })
+      })
+      document.addEventListener('mousemove', onMove)
+      document.addEventListener('touchmove', onMove, { passive: false })
+      document.addEventListener('mouseup', endDrag)
+      document.addEventListener('touchend', endDrag)
+    })()
+
+    onAuthStateChanged(auth, async user => {
+      if (!user) return
+      try {
+        const snap = await getDocs(collection(db, 'joueurs'))
+        allPlayers = snap.docs
+          .map(d => ({ id: d.id, ...d.data() }))
+          .filter(p => `${p.prenom || ''} ${p.nom || ''}`.trim())
+          .filter(p => !p.archived && !p.espoir) // retirer archivés et espoirs
+          .sort((a, b) => {
+            const na = `${a.prenom || ''} ${a.nom || ''}`.trim()
+            const nb = `${b.prenom || ''} ${b.nom || ''}`.trim()
+            return na.localeCompare(nb, 'fr')
+          })
+        remplirListeJoueurs()
+        preloadPlayerPhotos() // précharger en arrière-plan
+        await loadAllJeuxScores()
+      } catch (e) {
+        console.warn('Erreur chargement joueurs:', e)
+      }
+    })
+
+    async function loadAllJeuxScores() {
+      try {
+        const snap = await getDocs(collection(db, 'jeux_scores'))
+        const byPlayer = {}
+        snap.docs.forEach(d => {
+          const s = d.data()
+          const player = s.player || s.joueur
+          if (!player) return
+          if (!byPlayer[player]) byPlayer[player] = []
+          byPlayer[player].push({
+            date: s.date || s.created_at || new Date().toISOString(),
+            game: s.game,
+            score: Number(s.score)
+          })
+        })
+        cachedScores = byPlayer
+      } catch (e) {
+        console.warn('Erreur chargement scores jeux:', e)
+        cachedScores = {}
+      }
+    }
+
+    function loadJeuxScores() {
+      return cachedScores
+    }
+
+    async function addJeuxScore(player, game, score) {
+      if (!player || player === '---test---') return
+      const entry = { date: new Date().toISOString(), game, score }
+      if (!cachedScores[player]) cachedScores[player] = []
+      cachedScores[player].push(entry)
+      try {
+        await addDoc(collection(db, 'jeux_scores'), {
+          player,
+          game,
+          score,
+          date: entry.date,
+          created_at: entry.date
+        })
+      } catch (e) {
+        console.warn('Erreur sauvegarde score Supabase:', e)
+      }
+    }
+
+    function getPlayerHistory(player, game) {
+      const scores = loadJeuxScores()
+      return (scores[player] || []).filter(s => s.game === game).sort((a, b) => new Date(b.date) - new Date(a.date))
+    }
+    function getGameBestScore(player, game) {
+      const hist = getPlayerHistory(player, game)
+      if (!hist.length) return null
+      return game === 'reaction' ? Math.min(...hist.map(s => s.score)) : Math.max(...hist.map(s => s.score))
+    }
+    function getGameLastScore(player, game) {
+      const hist = getPlayerHistory(player, game)
+      return hist.length ? hist[0].score : null
+    }
+    function getLeaderboard(game) {
+      const scores = loadJeuxScores()
+      if (game === 'duel') {
+        // Pour le duel : trier par nombre de victoires
+        const board = Object.entries(scores).map(([player, list]) => {
+          const gameScores = list.filter(s => s.game === 'duel')
+          if (!gameScores.length) return null
+          const wins = gameScores.filter(s => s.score > 0).length
+          const total = gameScores.length
+          return { player, best: wins, last: total }
+        }).filter(Boolean)
+        board.sort((a, b) => b.best - a.best)
+        return board
+      }
+      const board = Object.entries(scores).map(([player, list]) => {
+        const gameScores = list.filter(s => s.game === game).map(s => s.score)
+        if (!gameScores.length) return null
+        return { player, best: game === 'reaction' ? Math.min(...gameScores) : Math.max(...gameScores), last: gameScores[gameScores.length - 1] }
+      }).filter(Boolean)
+      board.sort((a, b) => game === 'reaction' ? a.best - b.best : b.best - a.best)
+      return board
+    }
+    function getAllJeuxPlayers() {
+      return Object.keys(loadJeuxScores())
+    }
+
+    function escapeJeuxHtml(text) {
+      const div = document.createElement('div')
+      div.textContent = text
+      return div.innerHTML
+    }
+    function formatJeuxDate(iso) {
+      const d = new Date(iso)
+      return d.toLocaleDateString('fr-FR') + ' ' + d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })
+    }
+    function formatMs(ms) {
+      if (ms == null) return '—'
+      return Math.round(ms) + ' ms'
+    }
+
+    function getInitials(prenom, nom) {
+      const i1 = (prenom || '').trim().charAt(0).toUpperCase()
+      const i2 = (nom || '').trim().charAt(0).toUpperCase()
+      return (i1 + i2) || '?'
+    }
+
+    function remplirListeJoueurs() {
+      const saved = getAllJeuxPlayers()
+      const container = document.getElementById('players-trombi')
+      if (!container) return
+      container.innerHTML = ''
+
+      // Joueurs depuis la base (déjà filtrés : pas d'archivés ni d'espoirs), ordre alphabétique
+      allPlayers.forEach(p => {
+        const fullName = `${p.prenom || ''} ${p.nom || ''}`.trim()
+        const card = document.createElement('div')
+        card.className = 'trombi-card'
+        card.dataset.player = fullName
+        card.addEventListener('click', () => selectTrombiPlayer(card, fullName))
+
+        const circle = document.createElement('div')
+        circle.className = 'trombi-circle'
+        if (p.photo) {
+          setTrombiPhoto(circle, p.photo, p.prenom, p.nom)
+        } else {
+          const init = document.createElement('div')
+          init.className = 'trombi-initials'
+          init.textContent = getInitials(p.prenom, p.nom)
+          circle.appendChild(init)
+        }
+        card.appendChild(circle)
+
+        const name = document.createElement('div')
+        name.className = 'trombi-name'
+        name.textContent = getInitials(p.prenom, p.nom) // juste les initiales
+        card.appendChild(name)
+
+        container.appendChild(card)
+      })
+
+      // Joueurs sauvegardés dans les scores mais pas dans la base
+      const knownNames = new Set(allPlayers.map(p => `${p.prenom || ''} ${p.nom || ''}`.trim()))
+      saved.forEach(name => {
+        if (knownNames.has(name)) return
+        const card = document.createElement('div')
+        card.className = 'trombi-card'
+        card.dataset.player = name
+        card.addEventListener('click', () => selectTrombiPlayer(card, name))
+
+        const circle = document.createElement('div')
+        circle.className = 'trombi-circle'
+        const init = document.createElement('div')
+        init.className = 'trombi-initials'
+        init.textContent = getInitials(...name.split(' '))
+        circle.appendChild(init)
+        card.appendChild(circle)
+
+        const nameEl = document.createElement('div')
+        nameEl.className = 'trombi-name'
+        nameEl.textContent = getInitials(...name.split(' ')) // juste les initiales
+        card.appendChild(nameEl)
+
+        container.appendChild(card)
+      })
+
+      // Option Test
+      const testCard = document.createElement('div')
+      testCard.className = 'trombi-test'
+      testCard.dataset.player = '---test---'
+      testCard.addEventListener('click', () => selectTrombiPlayer(testCard, '---test---'))
+      const testCircle = document.createElement('div')
+      testCircle.className = 'trombi-circle'
+      const testIcon = document.createElement('div')
+      testIcon.className = 'trombi-initials'
+      testIcon.textContent = '⏱'
+      testCircle.appendChild(testIcon)
+      testCard.appendChild(testCircle)
+      const testName = document.createElement('div')
+      testName.className = 'trombi-name'
+      testName.textContent = 'Test'
+      testCard.appendChild(testName)
+      container.appendChild(testCard)
+    }
+
+    function selectTrombiPlayer(card, name) {
+      // Désélectionner les autres
+      document.querySelectorAll('.trombi-card, .trombi-test').forEach(c => c.classList.remove('selected'))
+      card.classList.add('selected')
+      currentPlayer = name
+    }
+
+    window.confirmerJoueur = async function() {
+      if (!currentPlayer) { alert('Choisis un joueur.'); return }
+      document.getElementById('landing').style.display = 'none'
+      document.getElementById('jeux-menu').classList.add('active')
+      document.getElementById('topbar-player').textContent = currentPlayer === '---test---' ? 'Mode Test' : currentPlayer
+      await loadAllJeuxScores()
+      refreshStats()
+    }
+
+    window.changerJoueur = function() {
+      stopReaction()
+      stopMemory()
+      stopColors()
+      stopSimon()
+      stopVitesse()
+      stopDuel()
+      currentPlayer = ''
+      document.querySelectorAll('.trombi-card, .trombi-test').forEach(c => c.classList.remove('selected'))
+      document.getElementById('landing').style.display = 'block'
+      document.getElementById('jeux-menu').classList.remove('active')
+      document.querySelectorAll('.jeux-game').forEach(g => g.classList.remove('active'))
+      document.getElementById('topbar-player').textContent = ''
+    }
+
+    function refreshStats() {
+      GAMES.forEach(game => {
+        if (game === 'duel') {
+          // Stats spéciales duel : victoires / total
+          const hist = currentPlayer === '---test---' ? [] : getPlayerHistory(currentPlayer, 'duel')
+          const wins = hist.filter(s => s.score > 0).length
+          document.getElementById('stat-duel-wins').textContent = wins
+          document.getElementById('stat-duel-total').textContent = hist.length
+          return
+        }
+        const last = getGameLastScore(currentPlayer, game)
+        const best = getGameBestScore(currentPlayer, game)
+        document.getElementById(`stat-${game}-last`).textContent = formatScore(game, last)
+        document.getElementById(`stat-${game}-best`).textContent = formatScore(game, best)
+      })
+    }
+
+    function formatScore(game, score) {
+      if (score == null) return '—'
+      if (game === 'reaction') return Math.round(score) + ' ms'
+      if (game === 'colors') return Math.round(score) + ' ms'
+      if (game === 'duel') return score > 0 ? 'Victoire' : score === 0 ? 'Nul' : 'Défaite'
+      return Math.round(score) + ' pts'
+    }
+
+    window.retourMenu = function() {
+      stopReaction()
+      stopMemory()
+      stopColors()
+      stopSimon()
+      stopVitesse()
+      stopDuel()
+      document.querySelectorAll('.jeux-game').forEach(g => g.classList.remove('active'))
+      document.getElementById('jeux-menu').classList.add('active')
+      refreshStats()
+    }
+
+    window.ouvrirJeu = function(game) {
+      document.getElementById('jeux-menu').classList.remove('active')
+      document.getElementById('jeux-game-' + game).classList.add('active')
+      if (game === 'reaction') preparerReaction()
+      if (game === 'memory') preparerMemory()
+      if (game === 'colors') preparerColors()
+      if (game === 'simon') preparerSimon()
+      if (game === 'vitesse') preparerVitesse()
+      if (game === 'duel') preparerDuel()
+    }
+
+    window.ouvrirClassement = function(game) {
+      const board = getLeaderboard(game)
+      const titleMap = { reaction: 'Classement — Points de réaction', memory: 'Classement — Memory Balles', colors: 'Classement — Jeu des couleurs', simon: 'Classement — Simon colors', vitesse: 'Classement — Vitesse couleur', duel: 'Classement — Duel (victoires)' }
+      document.getElementById('classement-title').textContent = titleMap[game] || 'Classement'
+      const list = document.getElementById('classement-list')
+      if (!board.length) {
+        list.innerHTML = '<p style="text-align:center;color:#666;font-size:13px;padding:20px;">Aucun score enregistré.</p>'
+      } else {
+        list.innerHTML = board.map((row, i) => `
+          <div class="classement-row">
+            <div class="classement-rank">${i + 1}</div>
+            <div class="classement-name">${escapeJeuxHtml(row.player)}</div>
+            <div class="classement-score">${game === 'duel' ? row.best + ' victoires' : formatScore(game, row.best)}</div>
+          </div>
+        `).join('')
+      }
+      document.getElementById('classement-modal').classList.add('open')
+    }
+
+    window.fermerClassement = function() {
+      document.getElementById('classement-modal').classList.remove('open')
+    }
+
+    // ==================== REACTION ====================
+
+    const reactionState = {
+      times: [],
+      pointTimes: [],
+      pointIndex: 0,
+      running: false,
+      timer: null,
+      nextTimeout: null,
+      warnTimeout: null,
+      disappearTimeout: null,
+      startTime: 0
+    }
+
+    function generatePointTimes(count, totalDuration) {
+      const lastPointEnd = totalDuration - 1
+      let gaps = Array.from({ length: count }, () => 1 + Math.random())
+      const sum = gaps.reduce((a, b) => a + b, 0)
+      gaps = gaps.map(g => g / sum * lastPointEnd)
+      const times = []
+      let acc = 0
+      for (const g of gaps) {
+        acc += g
+        times.push(acc)
+      }
+      return times
+    }
+
+    function preparerReaction() {
+      document.getElementById('reaction-setup').style.display = 'block'
+      document.getElementById('reaction-playarea').style.display = 'none'
+      document.getElementById('reaction-result').classList.remove('active')
+      document.getElementById('reaction-player-name').textContent = currentPlayer === '---test---' ? 'Mode Test' : currentPlayer
+      afficherHistoriqueReaction()
+    }
+
+    function afficherHistoriqueReaction() {
+      const list = currentPlayer === '---test---' ? [] : getPlayerHistory(currentPlayer, 'reaction').slice(0, 10)
+      const hist = document.getElementById('reaction-history')
+      if (!list.length) {
+        hist.style.display = 'none'
+        return
+      }
+      hist.style.display = 'block'
+      document.getElementById('reaction-history-list').innerHTML = list.map(s => `
+        <div class="jeux-history-item">
+          <span>${formatJeuxDate(s.date)}</span>
+          <span>${formatMs(s.score)}</span>
+        </div>
+      `).join('')
+    }
+
+    function averageTimes(times) {
+      if (!times.length) return 0
+      return times.reduce((a, b) => a + b, 0) / times.length
+    }
+
+    async function enterFullscreen() {
+      const el = document.documentElement
+      try {
+        if (el.requestFullscreen) await el.requestFullscreen()
+        else if (el.webkitRequestFullscreen) await el.webkitRequestFullscreen()
+        else if (el.msRequestFullscreen) await el.msRequestFullscreen()
+      } catch (e) { console.warn('Plein écran refusé:', e) }
+    }
+
+    function showCountdown(title, rules, callback) {
+      enterFullscreen()
+      const overlay = document.getElementById('countdown-overlay')
+      document.getElementById('countdown-title').innerHTML = title
+      document.getElementById('countdown-rules').innerHTML = rules
+      document.getElementById('countdown-number').textContent = '5'
+      overlay.classList.add('active')
+      let count = 5
+      const interval = setInterval(() => {
+        count--
+        if (count <= 0) {
+          clearInterval(interval)
+          overlay.classList.remove('active')
+          callback()
+        } else {
+          document.getElementById('countdown-number').textContent = count
+        }
+      }, 1000)
+    }
+
+    async function exitFullscreen() {
+      try {
+        if (document.exitFullscreen) await document.exitFullscreen()
+        else if (document.webkitExitFullscreen) await document.webkitExitFullscreen()
+        else if (document.msExitFullscreen) await document.msExitFullscreen()
+      } catch (e) {}
+    }
+
+    window.demarrerReaction = async function() {
+      if (!currentPlayer) { alert('Choisis un joueur.'); return }
+      showCountdown('Points de r&eacute;action', 'Clique le plus vite possible sur les points jaunes. La moyenne de tes temps de r&eacute;action fera ton score. Un point manqu&eacute; = 2000 ms. Le point reste visible 2 secondes.', () => {
+        reactionState.times = []
+        reactionState.pointTimes = generatePointTimes(TOTAL_POINTS, 20)
+        reactionState.pointIndex = 0
+        reactionState.running = true
+        document.getElementById('reaction-score').textContent = '—'
+        document.getElementById('reaction-timer').textContent = '20.0'
+        document.getElementById('reaction-setup').style.display = 'none'
+        document.getElementById('reaction-result').classList.remove('active')
+        document.getElementById('reaction-playarea').style.display = 'block'
+        reactionState.startTime = performance.now()
+        reactionState.timer = requestAnimationFrame(tickReaction)
+        scheduleNextPoint()
+      })
+    }
+
+    function tickReaction(now) {
+      if (!reactionState.running) return
+      const elapsed = (now - reactionState.startTime) / 1000
+      const remaining = Math.max(0, 20 - elapsed)
+      document.getElementById('reaction-timer').textContent = remaining.toFixed(1)
+      if (remaining <= 0) {
+        finReaction()
+        return
+      }
+      reactionState.timer = requestAnimationFrame(tickReaction)
+    }
+
+    function scheduleNextPoint() {
+      if (!reactionState.running) return
+      if (reactionState.pointIndex >= reactionState.pointTimes.length) return
+      const elapsed = (performance.now() - reactionState.startTime) / 1000
+      const nextTime = reactionState.pointTimes[reactionState.pointIndex]
+      const delay = Math.max(0, (nextTime - elapsed) * 1000)
+      reactionState.nextTimeout = setTimeout(showPoint, delay)
+    }
+
+    function showPoint() {
+      if (!reactionState.running) return
+      const area = document.getElementById('reaction-playarea')
+      const existing = area.querySelector('.jeux-target')
+      if (existing) existing.remove()
+      const zone = getGameZone('reaction')
+      const margin = 40
+      const size = 48
+      const minX = zone.left + margin + size / 2
+      const maxX = zone.left + zone.width - margin - size / 2
+      const minY = zone.top + margin + size / 2
+      const maxY = zone.top + zone.height - margin - size / 2
+      const x = minX + Math.random() * Math.max(0, maxX - minX)
+      const y = minY + Math.random() * Math.max(0, maxY - minY)
+      const point = document.createElement('div')
+      point.className = 'jeux-target'
+      point.style.left = x + 'px'
+      point.style.top = y + 'px'
+      point.dataset.appearTime = performance.now()
+      point.dataset.handled = 'false'
+      point.dataset.warning = 'false'
+      const hit = (e) => {
+        if (e.cancelable) e.preventDefault()
+        e.stopPropagation()
+        hitPoint(point)
+      }
+      point.addEventListener('mousedown', hit)
+      point.addEventListener('touchstart', hit, { passive: false })
+      area.appendChild(point)
+      reactionState.pointIndex++
+      // Avertissement visuel subtil à 1.5s (le point pulse en rouge)
+      reactionState.warnTimeout = setTimeout(() => {
+        if (point.dataset.handled === 'true') return
+        point.dataset.warning = 'true'
+        point.classList.add('missed')
+      }, 1500)
+      // Disparition à 2s = pénalité 2000ms
+      reactionState.disappearTimeout = setTimeout(() => missPoint(point), CLICK_WINDOW)
+    }
+
+    function createRipple(x, y, type) {
+      const area = document.getElementById('reaction-playarea')
+      const ripple = document.createElement('div')
+      ripple.className = 'ripple-effect ' + type
+      ripple.style.left = x + 'px'
+      ripple.style.top = y + 'px'
+      area.appendChild(ripple)
+      setTimeout(() => ripple.remove(), 420)
+    }
+
+    function updateScoreDisplay() {
+      const avg = averageTimes(reactionState.times)
+      document.getElementById('reaction-score').textContent = Math.round(avg)
+    }
+
+    function handlePointDone(point, success) {
+      if (!reactionState.running || point.dataset.handled === 'true' || !point.parentNode) return
+      point.dataset.handled = 'true'
+      clearTimeout(reactionState.warnTimeout)
+      clearTimeout(reactionState.disappearTimeout)
+      if (success) {
+        const appear = Number(point.dataset.appearTime || 0)
+        const reactionTime = appear ? performance.now() - appear : 0
+        reactionState.times.push(reactionTime)
+        createRipple(point.offsetLeft, point.offsetTop, 'hit')
+      } else {
+        reactionState.times.push(POINT_DURATION)
+        createRipple(point.offsetLeft, point.offsetTop, 'miss')
+      }
+      point.remove()
+      updateScoreDisplay()
+      scheduleNextPoint()
+    }
+
+    function hitPoint(point) {
+      // Le warning à 1.5s est purement visuel — le joueur peut encore cliquer jusqu'à 2s
+      handlePointDone(point, true)
+    }
+
+    function missPoint(point) {
+      handlePointDone(point, false)
+    }
+
+    async function finReaction() {
+      reactionState.running = false
+      clearTimeout(reactionState.nextTimeout)
+      clearTimeout(reactionState.warnTimeout)
+      clearTimeout(reactionState.disappearTimeout)
+      cancelAnimationFrame(reactionState.timer)
+      const area = document.getElementById('reaction-playarea')
+      const existing = area.querySelector('.jeux-target')
+      if (existing) {
+        if (existing.dataset.handled !== 'true') {
+          reactionState.times.push(POINT_DURATION)
+          createRipple(existing.offsetLeft, existing.offsetTop, 'miss')
+        }
+        existing.dataset.handled = 'true'
+        existing.remove()
+      }
+      const avg = averageTimes(reactionState.times)
+      await addJeuxScore(currentPlayer, 'reaction', avg)
+      document.getElementById('reaction-final-score').textContent = Math.round(avg)
+      document.getElementById('reaction-playarea').style.display = 'none'
+      document.getElementById('reaction-result').classList.add('active')
+      await exitFullscreen()
+      afficherHistoriqueResult()
+    }
+
+    function afficherHistoriqueResult() {
+      const list = currentPlayer === '---test---' ? [] : getPlayerHistory(currentPlayer, 'reaction').slice(0, 10)
+      const container = document.getElementById('reaction-result-history')
+      if (!list.length) { container.innerHTML = currentPlayer === '---test---' ? '<p style="color:#666;">Mode Test : score non sauvegardé.</p>' : ''; return }
+      container.innerHTML = `<h4>Historique de ${escapeJeuxHtml(currentPlayer)}</h4><div class="jeux-history-list">${list.map(s => `<div class="jeux-history-item"><span>${formatJeuxDate(s.date)}</span><span>${formatMs(s.score)}</span></div>`).join('')}</div>`
+    }
+
+    window.resetReaction = function() {
+      preparerReaction()
+      document.getElementById('reaction-setup').style.display = 'block'
+      document.getElementById('reaction-result').classList.remove('active')
+    }
+
+    function stopReaction() {
+      reactionState.running = false
+      clearTimeout(reactionState.nextTimeout)
+      clearTimeout(reactionState.warnTimeout)
+      clearTimeout(reactionState.disappearTimeout)
+      cancelAnimationFrame(reactionState.timer)
+      const area = document.getElementById('reaction-playarea')
+      if (area) { const p = area.querySelector('.jeux-target'); if (p) p.remove() }
+    }
+
+    // ==================== MEMORY BALLS ====================
+
+    const memoryState = {
+      balls: [],
+      targets: [],
+      phase: '', // 'memorize', 'move', 'quiz', 'done'
+      timer: null,
+      animFrame: null,
+      startTime: 0,
+      quizStartTime: 0,
+      clickTimes: [],
+      correctClickTimes: [],
+      foundCount: 0,
+      orderCorrect: false,
+      clicks: 0
+    }
+
+    const MEMORY_LABELS = ['A','B','C','D','E','F']
+
+    function preparerMemory() {
+      document.getElementById('memory-setup').style.display = 'block'
+      document.getElementById('memory-playarea').style.display = 'none'
+      document.getElementById('memory-result').classList.remove('active')
+      document.getElementById('memory-player-name').textContent = currentPlayer === '---test---' ? 'Mode Test' : currentPlayer
+      afficherHistoriqueMemory()
+    }
+
+    function afficherHistoriqueMemory() {
+      const list = currentPlayer === '---test---' ? [] : getPlayerHistory(currentPlayer, 'memory').slice(0, 10)
+      const hist = document.getElementById('memory-history')
+      if (!list.length) {
+        hist.style.display = 'none'
+        return
+      }
+      hist.style.display = 'block'
+      document.getElementById('memory-history-list').innerHTML = list.map(s => `
+        <div class="jeux-history-item">
+          <span>${formatJeuxDate(s.date)}</span>
+          <span>${Math.round(s.score)} pts</span>
+        </div>
+      `).join('')
+    }
+
+    window.demarrerMemory = async function() {
+      if (!currentPlayer) { alert('Choisis un joueur.'); return }
+      showCountdown('Memory Balles', 'Mémorise les 6 balles et leurs lettres pendant 10 s. Puis suis-les en mouvement 3D. Enfin, retrouve 3 balles dans le bon ordre.', () => {
+        memoryState.phase = 'memorize'
+        memoryState.startTime = performance.now()
+        memoryState.clickTimes = []
+        memoryState.correctClickTimes = []
+        memoryState.foundCount = 0
+        memoryState.orderCorrect = false
+        memoryState.clicks = 0
+        document.getElementById('memory-setup').style.display = 'none'
+        document.getElementById('memory-result').classList.remove('active')
+        document.getElementById('memory-playarea').style.display = 'block'
+        document.getElementById('memory-instruction').textContent = 'Mémorise les balles'
+        document.getElementById('memory-timer').textContent = '10.0'
+        // Forcer le layout avant de calculer les positions
+        document.getElementById('memory-playarea').offsetHeight
+        initMemoryBalls()
+        renderMemoryBalls(true)
+        memoryState.timer = requestAnimationFrame(tickMemory)
+      })
+    }
+
+    function initMemoryBalls() {
+      const area = document.getElementById('memory-playarea')
+      const zone = getGameZone('memory')
+      const positions = generateRandomPositions(MEMORY_LABELS.length, zone.width, zone.height, 64, 30, zone.left, zone.top)
+      memoryState.balls = MEMORY_LABELS.map((label, i) => ({
+        id: i,
+        label,
+        x: positions[i].x,
+        y: positions[i].y,
+        z: (Math.random() - 0.5) * 80,
+        vx: (Math.random() - 0.5) * 2.2,
+        vy: (Math.random() - 0.5) * 2.2,
+        vz: (Math.random() - 0.5) * 1.4,
+        el: null
+      }))
+      // 3 cibles aléatoires parmi 6 dans un ordre aléatoire
+      const shuffled = [...MEMORY_LABELS].sort(() => Math.random() - 0.5)
+      memoryState.targets = shuffled.slice(0, 3)
+    }
+
+    function generateRandomPositions(count, w, h, size, margin, offsetX, offsetY) {
+      offsetX = offsetX || 0
+      offsetY = offsetY || 0
+      const positions = []
+      const minDist = size + margin
+      const effectiveW = Math.max(w, size * 2 + margin * 2)
+      const effectiveH = Math.max(h, size * 2 + margin * 2)
+      const maxAttempts = 1000
+      for (let i = 0; i < count; i++) {
+        let pos = null
+        for (let a = 0; a < maxAttempts; a++) {
+          const x = offsetX + size / 2 + margin + Math.random() * (effectiveW - size - 2 * margin)
+          const y = offsetY + size / 2 + margin + Math.random() * (effectiveH - size - 2 * margin)
+          const tooClose = positions.some(p => Math.hypot(p.x - x, p.y - y) < minDist)
+          if (!tooClose) {
+            pos = { x, y }
+            break
+          }
+        }
+        if (!pos) {
+          // fallback : place en grille si random échoue
+          const cols = 5, rows = 2
+          const col = i % cols, row = Math.floor(i / cols)
+          pos = {
+            x: offsetX + (effectiveW / cols) * col + (effectiveW / cols) / 2,
+            y: offsetY + (effectiveH / rows) * row + (effectiveH / rows) / 2
+          }
+        }
+        positions.push(pos)
+      }
+      return positions
+    }
+
+    function renderMemoryBalls(showLabels) {
+      const area = document.getElementById('memory-playarea')
+      area.querySelectorAll('.memory-ball').forEach(b => b.remove())
+      memoryState.balls.forEach(ball => {
+        const el = document.createElement('div')
+        el.className = 'memory-ball'
+        el.textContent = showLabels ? ball.label : ''
+        el.style.left = ball.x + 'px'
+        el.style.top = ball.y + 'px'
+        const scale = 0.65 + (ball.z + 150) / 230
+        el.style.transform = `translate3d(-50%, -50%, ${ball.z}px) scale(${scale})`
+        el.dataset.label = ball.label
+        el.addEventListener('mousedown', (e) => memoryBallClick(ball.label))
+        el.addEventListener('touchstart', (e) => { e.preventDefault(); memoryBallClick(ball.label) }, { passive: false })
+        area.appendChild(el)
+        ball.el = el
+      })
+    }
+
+    function updateMemoryBalls(elapsed) {
+      const area = document.getElementById('memory-playarea')
+      const zone = getGameZone('memory')
+      const w = zone.left + zone.width
+      const h = zone.top + zone.height
+      const minW = zone.left
+      const minH = zone.top
+      memoryState.balls.forEach(ball => {
+        // Changement de direction aléatoire régulier
+        if (Math.random() < 0.015) {
+          ball.vx += (Math.random() - 0.5) * 1.2
+          ball.vy += (Math.random() - 0.5) * 1.2
+          ball.vz += (Math.random() - 0.5) * 0.8
+        }
+        const maxV = 3
+        ball.vx = Math.max(-maxV, Math.min(maxV, ball.vx))
+        ball.vy = Math.max(-maxV, Math.min(maxV, ball.vy))
+        ball.vz = Math.max(-maxV, Math.min(maxV, ball.vz))
+
+        ball.x += ball.vx
+        ball.y += ball.vy
+        ball.z += ball.vz
+        const r = 48 // marge pour que le bord extérieur de la balle (même agrandie) reste visible
+        if (ball.x < minW + r) { ball.x = minW + r; ball.vx *= -1 }
+        if (ball.x > w - r) { ball.x = w - r; ball.vx *= -1 }
+        if (ball.y < minH + r) { ball.y = minH + r; ball.vy *= -1 }
+        if (ball.y > h - r) { ball.y = h - r; ball.vy *= -1 }
+        if (ball.z < -120) { ball.z = -120; ball.vz *= -1 }
+        if (ball.z > 120) { ball.z = 120; ball.vz *= -1 }
+        if (ball.el) {
+          ball.el.style.left = ball.x + 'px'
+          ball.el.style.top = ball.y + 'px'
+          const scale = 0.55 + (ball.z + 150) / 210
+          const shadowOffset = 14 + ball.z / 12
+          const shadowBlur = 24 + ball.z / 6
+          const opacity = 0.55 + (ball.z + 120) / 480
+          ball.el.style.opacity = Math.max(0.4, Math.min(1, opacity))
+          ball.el.style.transform = `translate3d(-50%, -50%, ${ball.z}px) scale(${scale})`
+          ball.el.style.boxShadow = `0 ${shadowOffset}px ${shadowBlur}px rgba(0,0,0,0.45), inset -6px -6px 14px rgba(0,0,0,0.25)`
+        }
+      })
+    }
+
+    function tickMemory(now) {
+      if (!memoryState.phase || memoryState.phase === 'done') return
+      const elapsed = (now - memoryState.startTime) / 1000
+
+      if (memoryState.phase === 'memorize') {
+        const remaining = Math.max(0, 10 - elapsed)
+        document.getElementById('memory-timer').textContent = remaining.toFixed(1)
+        if (remaining <= 0) {
+          startMemoryMove()
+        }
+      } else if (memoryState.phase === 'move') {
+        const remaining = Math.max(0, 10 - elapsed)
+        document.getElementById('memory-timer').textContent = remaining.toFixed(1)
+        updateMemoryBalls(elapsed)
+        if (remaining <= 0) {
+          startMemoryQuiz()
+        }
+      }
+
+      if (memoryState.phase !== 'done') {
+        memoryState.animFrame = requestAnimationFrame(tickMemory)
+      }
+    }
+
+    function startMemoryMove() {
+      memoryState.phase = 'move'
+      memoryState.startTime = performance.now()
+      document.getElementById('memory-instruction').textContent = 'Suis les balles'
+      memoryState.balls.forEach(ball => {
+        if (ball.el) ball.el.textContent = ''
+      })
+    }
+
+    function startMemoryQuiz() {
+      memoryState.phase = 'quiz'
+      memoryState.quizStartTime = performance.now()
+      memoryState.clicks = 0
+      memoryState.foundCount = 0
+      memoryState.orderCorrect = true
+      memoryState.clickTimes = []
+      memoryState.correctClickTimes = []
+      // Arrêter le mouvement
+      memoryState.balls.forEach(ball => { ball.vx = 0; ball.vy = 0; ball.vz = 0 })
+      updateMemoryBalls(0)
+      updateMemoryInstruction()
+    }
+
+    function updateMemoryInstruction() {
+      const remaining = memoryState.targets.slice(memoryState.foundCount)
+      if (!remaining.length) {
+        document.getElementById('memory-instruction').textContent = 'Terminé !'
+      } else {
+        const names = remaining.map(l => l).join(', puis ')
+        document.getElementById('memory-instruction').textContent = `Clique sur : ${names}`
+      }
+    }
+
+    function memoryBallClick(label) {
+      if (memoryState.phase !== 'quiz') return
+      const expected = memoryState.targets[memoryState.clicks]
+      const time = (performance.now() - memoryState.quizStartTime) / 1000
+      memoryState.clickTimes.push(time)
+      const ball = memoryState.balls.find(b => b.label === label)
+      if (!ball || ball.el.classList.contains('found')) return
+
+      ball.el.classList.add('found')
+      if (label === expected) {
+        ball.el.classList.add('correct')
+        ball.el.textContent = label
+        memoryState.foundCount++
+        memoryState.correctClickTimes.push(time)
+      } else {
+        ball.el.classList.add('wrong')
+        ball.el.textContent = label
+        memoryState.orderCorrect = false
+      }
+      memoryState.clicks++
+      updateMemoryInstruction()
+
+      if (memoryState.clicks >= 3) {
+        setTimeout(finMemory, 600)
+      }
+    }
+
+    async function finMemory() {
+      memoryState.phase = 'done'
+      cancelAnimationFrame(memoryState.animFrame)
+      memoryState.orderCorrect = memoryState.orderCorrect && memoryState.foundCount === 3
+
+      const avgTime = memoryState.correctClickTimes.length
+        ? memoryState.correctClickTimes.reduce((a, b) => a + b, 0) / memoryState.correctClickTimes.length
+        : 0
+      const foundScore = (memoryState.foundCount / 3) * 60
+      const orderScore = memoryState.orderCorrect ? 20 : 0
+      const speedScore = memoryState.foundCount > 0 ? Math.max(0, 20 - avgTime * 2) : 0
+      const globalScore = Math.round(foundScore + orderScore + speedScore)
+
+      await addJeuxScore(currentPlayer, 'memory', globalScore)
+      document.getElementById('memory-final-score').textContent = globalScore
+      document.getElementById('memory-score-detail').innerHTML = `
+        Balles retrouv&eacute;es : ${memoryState.foundCount}/3 (+${Math.round(foundScore)} pts)<br>
+        Ordre correct : ${memoryState.orderCorrect ? 'Oui (+20 pts)' : 'Non'}<br>
+        Temps moyen : ${avgTime.toFixed(2)} s (+${Math.round(speedScore)} pts)
+      `
+      document.getElementById('memory-playarea').style.display = 'none'
+      document.getElementById('memory-result').classList.add('active')
+      await exitFullscreen()
+      afficherHistoriqueMemoryResult()
+    }
+
+    function afficherHistoriqueMemoryResult() {
+      const list = currentPlayer === '---test---' ? [] : getPlayerHistory(currentPlayer, 'memory').slice(0, 10)
+      const container = document.getElementById('memory-result-history')
+      if (!list.length) { container.innerHTML = currentPlayer === '---test---' ? '<p style="color:#666;">Mode Test : score non sauvegardé.</p>' : ''; return }
+      container.innerHTML = `<h4>Historique de ${escapeJeuxHtml(currentPlayer)}</h4><div class="jeux-history-list">${list.map(s => `<div class="jeux-history-item"><span>${formatJeuxDate(s.date)}</span><span>${Math.round(s.score)} pts</span></div>`).join('')}</div>`
+    }
+
+    window.resetMemory = function() {
+      preparerMemory()
+      document.getElementById('memory-setup').style.display = 'block'
+      document.getElementById('memory-result').classList.remove('active')
+    }
+
+    function stopMemory() {
+      memoryState.phase = 'done'
+      cancelAnimationFrame(memoryState.animFrame)
+      const area = document.getElementById('memory-playarea')
+      if (area) area.querySelectorAll('.memory-ball').forEach(b => b.remove())
+    }
+
+    // ==================== COLOR GAME ====================
+
+    const COLORS = ['#E24B4A', '#1D9E75', '#3B82F6', '#F59E0B', '#8B5CF6', '#EC4899']
+    const COLOR_LEVELS = [
+      { count: 5, moving: false },
+      { count: 7, moving: false },
+      { count: 9, moving: false },
+      { count: 8, moving: true },
+      { count: 10, moving: true }
+    ]
+
+    const colorsState = {
+      level: 0,
+      dots: [],
+      targets: [],
+      found: 0,
+      levelTimes: [],
+      startTime: 0,
+      animFrame: null,
+      phase: 'idle'
+    }
+
+    function preparerColors() {
+      document.getElementById('colors-setup').style.display = 'block'
+      document.getElementById('colors-playarea').style.display = 'none'
+      document.getElementById('colors-result').classList.remove('active')
+      document.getElementById('colors-player-name').textContent = currentPlayer === '---test---' ? 'Mode Test' : currentPlayer
+      afficherHistoriqueColors()
+    }
+
+    function afficherHistoriqueColors() {
+      const list = currentPlayer === '---test---' ? [] : getPlayerHistory(currentPlayer, 'colors').slice(0, 10)
+      const hist = document.getElementById('colors-history')
+      if (!list.length) {
+        hist.style.display = 'none'
+        return
+      }
+      hist.style.display = 'block'
+      document.getElementById('colors-history-list').innerHTML = list.map(s => `
+        <div class="jeux-history-item">
+          <span>${formatJeuxDate(s.date)}</span>
+          <span>${Math.round(s.score)} ms</span>
+        </div>
+      `).join('')
+    }
+
+    window.demarrerColors = async function() {
+      if (!currentPlayer) { alert('Choisis un joueur.'); return }
+      showCountdown('Jeu des couleurs', 'Clique sur les 3 couleurs demand&eacute;es dans l\'ordre affich&eacute; en haut. 5 manches de 5 &agrave; 10 points. Les manches 4 et 5 sont en mouvement.', () => {
+        colorsState.level = 0
+        colorsState.levelTimes = []
+        colorsState.phase = 'playing'
+        document.getElementById('colors-setup').style.display = 'none'
+        document.getElementById('colors-result').classList.remove('active')
+        document.getElementById('colors-playarea').style.display = 'block'
+        startColorLevel()
+      })
+    }
+
+    function startColorLevel() {
+      const config = COLOR_LEVELS[colorsState.level]
+      colorsState.dots = []
+      colorsState.found = 0
+      colorsState.startTime = performance.now()
+      const area = document.getElementById('colors-playarea')
+      area.querySelectorAll('.colors-dot').forEach(d => d.remove())
+      document.getElementById('colors-level').textContent = colorsState.level + 1
+      document.getElementById('colors-timer').textContent = '0.00'
+      updateTimerDisplay()
+
+      // Générer les points
+      const zone = getGameZone('colors')
+      const positions = generateRandomPositions(config.count, zone.width, zone.height, 44, 20, zone.left, zone.top)
+      const dotColors = generateDotColors(config.count)
+      colorsState.targets = generateColorTargets(dotColors)
+
+      renderColorTargets()
+
+      colorsState.dots = positions.map((pos, i) => ({
+        id: i,
+        color: dotColors[i],
+        x: pos.x,
+        y: pos.y,
+        vx: config.moving ? (Math.random() - 0.5) * 2.4 : 0,
+        vy: config.moving ? (Math.random() - 0.5) * 2.4 : 0,
+        el: null
+      }))
+
+      colorsState.dots.forEach(dot => {
+        const el = document.createElement('div')
+        el.className = 'colors-dot'
+        el.style.left = dot.x + 'px'
+        el.style.top = dot.y + 'px'
+        el.style.background = dot.color
+        el.style.boxShadow = `0 0 16px ${dot.color}88`
+        el.addEventListener('mousedown', (e) => colorDotClick(dot.color, el))
+        el.addEventListener('touchstart', (e) => { e.preventDefault(); colorDotClick(dot.color, el) }, { passive: false })
+        area.appendChild(el)
+        dot.el = el
+      })
+
+      // Animation popup
+      const popup = document.getElementById('colors-level-popup')
+      popup.textContent = 'Manche ' + (colorsState.level + 1)
+      popup.classList.remove('show')
+      void popup.offsetWidth
+      popup.classList.add('show')
+
+      if (config.moving) {
+        colorsState.animFrame = requestAnimationFrame(animateColorDots)
+      }
+    }
+
+    function generateDotColors(count) {
+      // Quand possible (count <= 6), toutes les couleurs sont différentes
+      if (count <= COLORS.length) {
+        return [...COLORS].sort(() => Math.random() - 0.5).slice(0, count)
+      }
+      const colors = [...COLORS].sort(() => Math.random() - 0.5)
+      while (colors.length < count) {
+        colors.push(COLORS[Math.floor(Math.random() * COLORS.length)])
+      }
+      return colors
+    }
+
+    function generateColorTargets(dotColors) {
+      // Au moins 2 couleurs différentes parmi les 3 cibles
+      const unique = [...new Set(dotColors)].sort(() => Math.random() - 0.5)
+      const a = unique[0]
+      const b = unique[1 % unique.length]
+      const c = dotColors[Math.floor(Math.random() * dotColors.length)]
+      return [a, b, c].sort(() => Math.random() - 0.5)
+    }
+
+    function renderColorTargets() {
+      const container = document.getElementById('colors-targets')
+      container.innerHTML = colorsState.targets.map((color, i) => `
+        <div class="colors-target ${i < colorsState.found ? 'done' : ''}" id="color-target-${i}" style="background:${color};"></div>
+      `).join('')
+    }
+
+    function updateTimerDisplay() {
+      if (colorsState.phase !== 'playing') return
+      const elapsed = (performance.now() - colorsState.startTime) / 1000
+      document.getElementById('colors-timer').textContent = elapsed.toFixed(2)
+    }
+
+    function colorDotClick(color, el) {
+      if (colorsState.phase !== 'playing') return
+      const expected = colorsState.targets[colorsState.found]
+      if (color === expected) {
+        el.classList.add('correct')
+        colorsState.found++
+        renderColorTargets()
+        if (colorsState.found >= 3) {
+          const time = performance.now() - colorsState.startTime
+          colorsState.levelTimes.push(time)
+          setTimeout(nextColorLevel, 400)
+        }
+      } else {
+        el.classList.remove('wrong')
+        void el.offsetWidth
+        el.classList.add('wrong')
+      }
+    }
+
+    function animateColorDots() {
+      if (colorsState.phase !== 'playing') return
+      const area = document.getElementById('colors-playarea')
+      const zone = getGameZone('colors')
+      const w = zone.left + zone.width
+      const h = zone.top + zone.height
+      const r = 22
+      const minW = zone.left
+      const minH = zone.top
+      updateTimerDisplay()
+      colorsState.dots.forEach(dot => {
+        dot.x += dot.vx
+        dot.y += dot.vy
+        if (dot.x < minW + r) { dot.x = minW + r; dot.vx *= -1 }
+        if (dot.x > w - r) { dot.x = w - r; dot.vx *= -1 }
+        if (dot.y < minH + r) { dot.y = minH + r; dot.vy *= -1 }
+        if (dot.y > h - r) { dot.y = h - r; dot.vy *= -1 }
+        if (Math.random() < 0.02) {
+          dot.vx += (Math.random() - 0.5) * 1.0
+          dot.vy += (Math.random() - 0.5) * 1.0
+          dot.vx = Math.max(-2.5, Math.min(2.5, dot.vx))
+          dot.vy = Math.max(-2.5, Math.min(2.5, dot.vy))
+        }
+        if (dot.el) {
+          dot.el.style.left = dot.x + 'px'
+          dot.el.style.top = dot.y + 'px'
+        }
+      })
+      colorsState.animFrame = requestAnimationFrame(animateColorDots)
+    }
+
+    function nextColorLevel() {
+      cancelAnimationFrame(colorsState.animFrame)
+      if (colorsState.level < COLOR_LEVELS.length - 1) {
+        colorsState.level++
+        startColorLevel()
+      } else {
+        finColors()
+      }
+    }
+
+    async function finColors() {
+      colorsState.phase = 'done'
+      const avg = colorsState.levelTimes.reduce((a, b) => a + b, 0) / colorsState.levelTimes.length
+      await addJeuxScore(currentPlayer, 'colors', avg)
+      document.getElementById('colors-final-score').textContent = Math.round(avg)
+      document.getElementById('colors-score-detail').innerHTML = colorsState.levelTimes.map((t, i) => `
+        Manche ${i + 1} : ${(t / 1000).toFixed(2)} s
+      `).join('<br>')
+      document.getElementById('colors-playarea').style.display = 'none'
+      document.getElementById('colors-result').classList.add('active')
+      await exitFullscreen()
+      afficherHistoriqueColorsResult()
+    }
+
+    function afficherHistoriqueColorsResult() {
+      const list = currentPlayer === '---test---' ? [] : getPlayerHistory(currentPlayer, 'colors').slice(0, 10)
+      const container = document.getElementById('colors-result-history')
+      if (!list.length) { container.innerHTML = currentPlayer === '---test---' ? '<p style="color:#666;">Mode Test : score non sauvegardé.</p>' : ''; return }
+      container.innerHTML = `<h4>Historique de ${escapeJeuxHtml(currentPlayer)}</h4><div class="jeux-history-list">${list.map(s => `<div class="jeux-history-item"><span>${formatJeuxDate(s.date)}</span><span>${Math.round(s.score)} ms</span></div>`).join('')}</div>`
+    }
+
+    window.resetColors = function() {
+      preparerColors()
+      document.getElementById('colors-setup').style.display = 'block'
+      document.getElementById('colors-result').classList.remove('active')
+    }
+
+    function stopColors() {
+      colorsState.phase = 'done'
+      cancelAnimationFrame(colorsState.animFrame)
+      const area = document.getElementById('colors-playarea')
+      if (area) area.querySelectorAll('.colors-dot').forEach(d => d.remove())
+    }
+
+    // ==================== SIMON ====================
+
+    const SIMON_COLORS = [
+      { name: 'red', label: 'Rouge' },
+      { name: 'blue', label: 'Bleu' },
+      { name: 'green', label: 'Vert' },
+      { name: 'yellow', label: 'Jaune' }
+    ]
+
+    const simonState = {
+      level: 1,
+      balls: [],
+      sequence: [],        // [{ color, ballIndex }]
+      inputIndex: 0,
+      errorsAtLevel: 0,
+      phase: 'idle', // idle, show, input, done
+      timeouts: []
+    }
+
+    function preparerSimon() {
+      document.getElementById('simon-setup').style.display = 'block'
+      document.getElementById('simon-playarea').style.display = 'none'
+      document.getElementById('simon-result').classList.remove('active')
+      document.getElementById('simon-player-name').textContent = currentPlayer === '---test---' ? 'Mode Test' : currentPlayer
+      afficherHistoriqueSimon()
+    }
+
+    function afficherHistoriqueSimon() {
+      const list = currentPlayer === '---test---' ? [] : getPlayerHistory(currentPlayer, 'simon').slice(0, 10)
+      const hist = document.getElementById('simon-history')
+      if (!list.length) {
+        hist.style.display = 'none'
+        return
+      }
+      hist.style.display = 'block'
+      document.getElementById('simon-history-list').innerHTML = list.map(s => `
+        <div class="jeux-history-item">
+          <span>${formatJeuxDate(s.date)}</span>
+          <span>Niveau ${Math.round(s.score)}</span>
+        </div>
+      `).join('')
+    }
+
+    window.demarrerSimon = async function() {
+      if (!currentPlayer) { alert('Choisis un joueur.'); return }
+      showCountdown('Simon colors', 'Mémorise la suite de couleurs qui clignote parmi les 30 boules, puis reproduis-la dans le bon ordre. Niveau 1 = 3 couleurs, la suite s\'allonge à chaque niveau. 1 erreur = game over.', () => {
+        simonState.level = 1
+        simonState.errorsAtLevel = 0
+        simonState.phase = 'idle'
+        simonState.timeouts.forEach(t => clearTimeout(t))
+        simonState.timeouts = []
+        document.getElementById('simon-setup').style.display = 'none'
+        document.getElementById('simon-result').classList.remove('active')
+        document.getElementById('simon-playarea').style.display = 'block'
+        document.getElementById('simon-playarea').offsetHeight
+        renderSimonBoard()
+        startSimonLevel()
+      })
+    }
+
+    function renderSimonBoard() {
+      const area = document.getElementById('simon-playarea')
+      area.querySelectorAll('.simon-dot').forEach(d => d.remove())
+      const zone = getGameZone('simon')
+      const positions = generateRandomPositions(30, zone.width, zone.height, 52, 16, zone.left, zone.top)
+      // Au moins 7 boules de chaque couleur, le reste aléatoire
+      let colors = SIMON_COLORS.flatMap(c => Array(7).fill(c.name))
+      while (colors.length < 30) colors.push(SIMON_COLORS[Math.floor(Math.random() * SIMON_COLORS.length)].name)
+      colors = colors.sort(() => Math.random() - 0.5)
+      simonState.balls = positions.map((pos, i) => {
+        const color = colors[i]
+        const el = document.createElement('div')
+        el.className = 'simon-dot ' + color
+        el.dataset.color = color
+        el.style.left = pos.x + 'px'
+        el.style.top = pos.y + 'px'
+        el.addEventListener('mousedown', () => simonClick(color, el))
+        el.addEventListener('touchstart', (e) => { e.preventDefault(); simonClick(color, el) }, { passive: false })
+        area.appendChild(el)
+        return { color, el }
+      })
+    }
+
+    function startSimonLevel() {
+      simonState.inputIndex = 0
+      simonState.errorsAtLevel = 0
+      simonState.phase = 'show'
+      // Niveau 1 = 3 couleurs, +1 à chaque niveau, max 20
+      // La suite reprend la précédente et ajoute une nouvelle couleur
+      const targetLength = Math.min(simonState.level + 2, 20)
+      while (simonState.sequence.length < targetLength) {
+        const color = SIMON_COLORS[Math.floor(Math.random() * SIMON_COLORS.length)].name
+        // Assigner une boule fixe pour cette étape
+        const candidates = simonState.balls.map((b, idx) => ({ ...b, idx })).filter(b => b.color === color)
+        const ballIndex = candidates[Math.floor(Math.random() * candidates.length)].idx
+        simonState.sequence.push({ color, ballIndex })
+      }
+      document.getElementById('simon-level').textContent = simonState.level
+      document.getElementById('simon-status').textContent = `Niveau ${simonState.level} — Regarde la suite (${targetLength} couleurs)`
+      disableSimonDots(true)
+
+      let i = 0
+      function nextFlash() {
+        if (i >= simonState.sequence.length) {
+          simonState.phase = 'input'
+          document.getElementById('simon-status').textContent = 'À TOI DE JOUER !'
+          disableSimonDots(false)
+          return
+        }
+        flashSimonStep(simonState.sequence[i])
+        i++
+        simonState.timeouts.push(setTimeout(nextFlash, 700))
+      }
+      simonState.timeouts.push(setTimeout(nextFlash, 500))
+    }
+
+    function flashSimonStep(step) {
+      const ball = simonState.balls[step.ballIndex]
+      if (!ball) return
+      ball.el.classList.add('flash')
+      simonState.timeouts.push(setTimeout(() => ball.el.classList.remove('flash'), 600))
+    }
+
+    function disableSimonDots(disabled) {
+      document.querySelectorAll('.simon-dot').forEach(d => {
+        d.classList.toggle('disabled', disabled)
+      })
+    }
+
+    function simonClick(color, el) {
+      if (simonState.phase !== 'input') return
+      const expected = simonState.sequence[simonState.inputIndex]
+      const clickedBall = simonState.balls.find(b => b.el === el)
+      const clickedIndex = simonState.balls.findIndex(b => b.el === el)
+      if (clickedIndex === expected.ballIndex) {
+        if (clickedBall) {
+          clickedBall.el.classList.add('success')
+          simonState.timeouts.push(setTimeout(() => clickedBall.el.classList.remove('success'), 250))
+        }
+        simonState.inputIndex++
+        if (simonState.inputIndex >= simonState.sequence.length) {
+          simonState.phase = 'idle'
+          disableSimonDots(true)
+          document.getElementById('simon-status').textContent = 'Bravo ! Niveau suivant...'
+          simonState.timeouts.push(setTimeout(nextSimonLevel, 900))
+        }
+      } else {
+        if (clickedBall) {
+          clickedBall.el.classList.add('error')
+          simonState.timeouts.push(setTimeout(() => clickedBall.el.classList.remove('error'), 300))
+        }
+        gameOverSimon()
+      }
+    }
+
+    function replaySimonSequence() {
+      let i = 0
+      simonState.phase = 'show'
+      document.getElementById('simon-status').textContent = `Niveau ${simonState.level} — Regarde la suite`
+      function nextFlash() {
+        if (i >= simonState.sequence.length) {
+          simonState.phase = 'input'
+          document.getElementById('simon-status').textContent = 'À TOI DE JOUER !'
+          disableSimonDots(false)
+          return
+        }
+        flashSimonStep(simonState.sequence[i])
+        i++
+        simonState.timeouts.push(setTimeout(nextFlash, 700))
+      }
+      nextFlash()
+    }
+
+    function nextSimonLevel() {
+      if (simonState.level >= 20) {
+        simonState.level = 20
+        finishSimonVictory()
+      } else {
+        simonState.level++
+        startSimonLevel()
+      }
+    }
+
+    async function finishSimonVictory() {
+      simonState.phase = 'done'
+      disableSimonDots(true)
+      await addJeuxScore(currentPlayer, 'simon', simonState.level)
+      document.getElementById('simon-final-score').textContent = simonState.level
+      document.getElementById('simon-result-detail').textContent = 'Félicitations, tu as atteint le niveau maximum !'
+      document.getElementById('simon-playarea').style.display = 'none'
+      document.getElementById('simon-result').classList.add('active')
+      await exitFullscreen()
+      afficherHistoriqueSimonResult()
+    }
+
+    async function gameOverSimon() {
+      simonState.phase = 'done'
+      disableSimonDots(true)
+      await addJeuxScore(currentPlayer, 'simon', simonState.level)
+      document.getElementById('simon-final-score').textContent = simonState.level
+      document.getElementById('simon-result-detail').textContent = `Tu as atteint le niveau ${simonState.level}.`
+      document.getElementById('simon-playarea').style.display = 'none'
+      document.getElementById('simon-result').classList.add('active')
+      await exitFullscreen()
+      afficherHistoriqueSimonResult()
+    }
+
+    function afficherHistoriqueSimonResult() {
+      const list = currentPlayer === '---test---' ? [] : getPlayerHistory(currentPlayer, 'simon').slice(0, 10)
+      const container = document.getElementById('simon-result-history')
+      if (!list.length) { container.innerHTML = currentPlayer === '---test---' ? '<p style="color:#666;">Mode Test : score non sauvegardé.</p>' : ''; return }
+      container.innerHTML = `<h4>Historique de ${escapeJeuxHtml(currentPlayer)}</h4><div class="jeux-history-list">${list.map(s => `<div class="jeux-history-item"><span>${formatJeuxDate(s.date)}</span><span>Niveau ${Math.round(s.score)}</span></div>`).join('')}</div>`
+    }
+
+    window.resetSimon = function() {
+      simonState.level = 1
+      simonState.sequence = []
+      simonState.inputIndex = 0
+      simonState.errorsAtLevel = 0
+      simonState.phase = 'idle'
+      simonState.timeouts.forEach(t => clearTimeout(t))
+      simonState.timeouts = []
+      preparerSimon()
+      document.getElementById('simon-setup').style.display = 'block'
+      document.getElementById('simon-result').classList.remove('active')
+    }
+
+    function stopSimon() {
+      simonState.phase = 'done'
+      simonState.timeouts.forEach(t => clearTimeout(t))
+      simonState.timeouts = []
+      const area = document.getElementById('simon-playarea')
+      if (area) area.querySelectorAll('.simon-dot').forEach(d => d.remove())
+    }
+
+    // ==================== VITESSE COULEUR ====================
+
+    const VITESSE_COLORS = ['#E24B4A', '#3B82F6', '#1D9E75', '#F59E0B', '#8B5CF6', '#EC4899']
+    const VITESSE_ROUNDS = 10
+
+    const vitesseState = {
+      phase: 'idle',   // idle, reaction, memory, done
+      round: 0,
+      correctColors: [],   // liste des couleurs cibles (l'ordre à retrouver)
+      reactionTimes: [],
+      dotEls: [],           // les 2 points affichés
+      startTime: 0,
+      memoryPicks: [],      // choix du joueur en phase 2
+      memoryPickEls: [],
+      timeouts: []
+    }
+
+    function cleanVitessePlayarea() {
+      const area = document.getElementById('vitesse-playarea')
+      if (!area) return
+      // Reset total du HTML de la playarea
+      area.innerHTML = `
+        <div class="vitesse-indicator" id="vitesse-indicator" style="background:#333;box-shadow:none;"></div>
+        <div class="vitesse-status" id="vitesse-status">Clique sur la bonne couleur</div>
+        <div class="jeux-score"><div class="jeux-score-label">S&eacute;rie</div><span id="vitesse-round">1</span>/10</div>
+      `
+    }
+
+    function preparerVitesse() {
+      cleanVitessePlayarea()
+      document.getElementById('vitesse-setup').style.display = 'block'
+      document.getElementById('vitesse-playarea').style.display = 'none'
+      document.getElementById('vitesse-result').classList.remove('active')
+      document.getElementById('vitesse-player-name').textContent = currentPlayer === '---test---' ? 'Mode Test' : currentPlayer
+      afficherHistoriqueVitesse()
+    }
+
+    function afficherHistoriqueVitesse() {
+      const list = currentPlayer === '---test---' ? [] : getPlayerHistory(currentPlayer, 'vitesse').slice(0, 10)
+      const hist = document.getElementById('vitesse-history')
+      if (!list.length) { hist.style.display = 'none'; return }
+      hist.style.display = 'block'
+      document.getElementById('vitesse-history-list').innerHTML = list.map(s => `
+        <div class="jeux-history-item">
+          <span>${formatJeuxDate(s.date)}</span>
+          <span>${Math.round(s.score)} pts</span>
+        </div>
+      `).join('')
+    }
+
+    window.demarrerVitesse = async function() {
+      if (!currentPlayer) { alert('Choisis un joueur.'); return }
+      showCountdown('Vitesse couleur', 'Phase 1 : 10 séries. À chaque série, 2 points de couleurs différentes s\'affichent. Un carré en haut indique la couleur à cliquer. Clique vite ! Phase 2 : retrouve l\'ordre des 10 couleurs sur lesquelles tu as cliqué.', () => {
+        // Nettoyage complet
+        cleanVitessePlayarea()
+        // Reset complet de l'état
+        vitesseState.phase = 'reaction'
+        vitesseState.round = 0
+        vitesseState.correctColors = []
+        vitesseState.reactionTimes = []
+        vitesseState.memoryPicks = []
+        vitesseState.memoryPickEls = []
+        vitesseState.dotEls = []
+        vitesseState.timeouts.forEach(t => clearTimeout(t))
+        vitesseState.timeouts = []
+        document.getElementById('vitesse-setup').style.display = 'none'
+        document.getElementById('vitesse-result').classList.remove('active')
+        document.getElementById('vitesse-playarea').style.display = 'block'
+        document.getElementById('vitesse-playarea').offsetHeight
+        startVitesseRound()
+      })
+    }
+
+    function startVitesseRound() {
+      vitesseState.round++
+      if (vitesseState.round > VITESSE_ROUNDS) {
+        startVitesseMemory()
+        return
+      }
+      document.getElementById('vitesse-round').textContent = vitesseState.round
+      document.getElementById('vitesse-status').textContent = 'Clique sur la bonne couleur'
+
+      const area = document.getElementById('vitesse-playarea')
+      // Nettoyer les anciens points
+      area.querySelectorAll('.vitesse-dot').forEach(d => d.remove())
+
+      // Choisir 2 couleurs différentes
+      const shuffled = [...VITESSE_COLORS].sort(() => Math.random() - 0.5)
+      const colorA = shuffled[0]
+      const colorB = shuffled[1]
+      const targetColor = Math.random() < 0.5 ? colorA : colorB
+      vitesseState.correctColors.push(targetColor)
+
+      // Afficher le carré indicateur
+      const indicator = document.getElementById('vitesse-indicator')
+      indicator.style.background = targetColor
+      indicator.style.boxShadow = `0 4px 16px ${targetColor}88`
+
+      // Placer 2 points aléatoirement dans la zone
+      const zone = getGameZone('vitesse')
+      const positions = generateRandomPositions(2, zone.width, zone.height, 80, 40, zone.left, zone.top)
+      const colors = Math.random() < 0.5 ? [colorA, colorB] : [colorB, colorA]
+      vitesseState.dotEls = positions.map((pos, i) => {
+        const el = document.createElement('div')
+        el.className = 'vitesse-dot'
+        el.style.left = pos.x + 'px'
+        el.style.top = pos.y + 'px'
+        el.style.background = colors[i]
+        el.style.boxShadow = `0 6px 18px ${colors[i]}88`
+        el.addEventListener('mousedown', () => vitesseDotClick(colors[i], el))
+        el.addEventListener('touchstart', (e) => { e.preventDefault(); vitesseDotClick(colors[i], el) }, { passive: false })
+        area.appendChild(el)
+        return el
+      })
+
+      vitesseState.startTime = performance.now()
+    }
+
+    function vitesseDotClick(color, el) {
+      if (vitesseState.phase !== 'reaction') return
+      const targetColor = vitesseState.correctColors[vitesseState.correctColors.length - 1]
+      if (color === targetColor) {
+        const time = performance.now() - vitesseState.startTime
+        el.classList.add('flash-correct')
+        vitesseState.timeouts.push(setTimeout(() => el.classList.remove('flash-correct'), 300))
+        vitesseState.reactionTimes.push(time)
+        vitesseState.timeouts.push(setTimeout(startVitesseRound, 400))
+      } else {
+        // Mauvaise couleur : flash rouge, mais on reste sur la même série
+        el.classList.add('flash-wrong')
+        vitesseState.timeouts.push(setTimeout(() => el.classList.remove('flash-wrong'), 300))
+      }
+    }
+
+    function startVitesseMemory() {
+      vitesseState.phase = 'memory'
+      vitesseState.memoryPicks = []
+      const area = document.getElementById('vitesse-playarea')
+      area.querySelectorAll('.vitesse-dot, .vitesse-pick, .vitesse-seq-bar').forEach(d => d.remove())
+
+      // Restaurer le HTML du score
+      const scoreEl = document.getElementById('vitesse-round').parentElement
+      scoreEl.innerHTML = '<div class="jeux-score-label">Mémoire</div><span id="vitesse-round">0</span>/' + VITESSE_ROUNDS
+
+      document.getElementById('vitesse-indicator').style.background = '#333'
+      document.getElementById('vitesse-indicator').style.boxShadow = 'none'
+      document.getElementById('vitesse-status').textContent = `Phase 2 : Clique sur les ${VITESSE_ROUNDS} couleurs dans l'ordre`
+
+      // Afficher les 6 couleurs en bas de l'écran
+      const w = area.clientWidth
+      const h = area.clientHeight
+      const pickY = h - 70
+      const spacing = 90
+      const startX = (w - (VITESSE_COLORS.length - 1) * spacing) / 2
+      vitesseState.memoryPickEls = VITESSE_COLORS.map((color, i) => {
+        const el = document.createElement('div')
+        el.className = 'vitesse-pick'
+        el.style.left = (startX + i * spacing) + 'px'
+        el.style.top = pickY + 'px'
+        el.style.background = color
+        el.style.boxShadow = `0 6px 18px ${color}88`
+        el.addEventListener('mousedown', () => vitesseMemoryClick(color, el))
+        el.addEventListener('touchstart', (e) => { e.preventDefault(); vitesseMemoryClick(color, el) }, { passive: false })
+        area.appendChild(el)
+        return el
+      })
+
+      // Barre de progression : slot du joueur + bonne couleur en dessous
+      const bar = document.createElement('div')
+      bar.className = 'vitesse-sequence-bar'
+      bar.id = 'vitesse-seq-bar'
+      bar.innerHTML = Array.from({ length: VITESSE_ROUNDS }, (_, i) => `
+        <div style="display:flex;flex-direction:column;align-items:center;gap:3px;">
+          <div class="vitesse-seq-slot" id="vitesse-slot-${i}"></div>
+          <div class="vitesse-seq-answer" id="vitesse-answer-${i}" style="width:20px;height:20px;border-radius:4px;background:#1a1a1a;border:1px solid #333;"></div>
+        </div>
+      `).join('')
+      area.appendChild(bar)
+    }
+
+    function vitesseMemoryClick(color, el) {
+      if (vitesseState.phase !== 'memory') return
+      const idx = vitesseState.memoryPicks.length
+      if (idx >= VITESSE_ROUNDS) return
+      vitesseState.memoryPicks.push(color)
+
+      // Marquer visuellement
+      el.classList.add('selected')
+      vitesseState.timeouts.push(setTimeout(() => el.classList.remove('selected'), 300))
+
+      // Mettre à jour la barre avec vert/rouge + afficher la bonne couleur en dessous
+      const slot = document.getElementById(`vitesse-slot-${idx}`)
+      const answer = document.getElementById(`vitesse-answer-${idx}`)
+      if (slot) {
+        const isCorrect = color === vitesseState.correctColors[idx]
+        slot.style.background = color
+        slot.style.border = `3px solid ${isCorrect ? '#1D9E75' : '#E24B4A'}`
+        slot.style.boxShadow = isCorrect ? '0 0 10px #1D9E75' : '0 0 10px #E24B4A'
+        slot.classList.add('filled')
+      }
+      if (answer) {
+        answer.style.background = vitesseState.correctColors[idx]
+        answer.style.border = '1px solid #555'
+      }
+      document.getElementById('vitesse-round').textContent = vitesseState.memoryPicks.length
+
+      if (vitesseState.memoryPicks.length >= VITESSE_ROUNDS) {
+        vitesseState.timeouts.push(setTimeout(finVitesse, 800))
+      }
+    }
+
+    async function finVitesse() {
+      vitesseState.phase = 'done'
+      const area = document.getElementById('vitesse-playarea')
+      area.querySelectorAll('.vitesse-pick, .vitesse-seq-bar').forEach(d => d.remove())
+
+      // Score vitesse : moyenne des temps (plus bas = mieux), converti en note /50
+      const avgTime = vitesseState.reactionTimes.reduce((a, b) => a + b, 0) / vitesseState.reactionTimes.length
+      // 200ms = 50 pts, 2000ms = 0 pts
+      const speedScore = Math.max(0, Math.min(50, Math.round(50 * (2000 - avgTime) / 1800)))
+
+      // Score mémoire : nombre de couleurs dans le bon ordre /10, converti en note /50
+      let correctCount = 0
+      for (let i = 0; i < VITESSE_ROUNDS; i++) {
+        if (vitesseState.memoryPicks[i] === vitesseState.correctColors[i]) correctCount++
+      }
+      const memoryScore = Math.round((correctCount / VITESSE_ROUNDS) * 50)
+
+      const globalScore = speedScore + memoryScore
+
+      await addJeuxScore(currentPlayer, 'vitesse', globalScore)
+      document.getElementById('vitesse-final-score').textContent = globalScore
+      document.getElementById('vitesse-score-detail').innerHTML = `
+        <strong>Phase vitesse</strong> : ${Math.round(avgTime)} ms en moyenne → ${speedScore}/50 pts<br>
+        <strong>Phase mémoire</strong> : ${correctCount}/${VITESSE_ROUNDS} dans le bon ordre → ${memoryScore}/50 pts
+      `
+      document.getElementById('vitesse-playarea').style.display = 'none'
+      document.getElementById('vitesse-result').classList.add('active')
+      await exitFullscreen()
+      afficherHistoriqueVitesseResult()
+    }
+
+    function afficherHistoriqueVitesseResult() {
+      const list = currentPlayer === '---test---' ? [] : getPlayerHistory(currentPlayer, 'vitesse').slice(0, 10)
+      const container = document.getElementById('vitesse-result-history')
+      if (!list.length) { container.innerHTML = currentPlayer === '---test---' ? '<p style="color:#666;">Mode Test : score non sauvegardé.</p>' : ''; return }
+      container.innerHTML = `<h4>Historique de ${escapeJeuxHtml(currentPlayer)}</h4><div class="jeux-history-list">${list.map(s => `<div class="jeux-history-item"><span>${formatJeuxDate(s.date)}</span><span>${Math.round(s.score)} pts</span></div>`).join('')}</div>`
+    }
+
+    window.resetVitesse = function() {
+      vitesseState.phase = 'idle'
+      vitesseState.round = 0
+      vitesseState.correctColors = []
+      vitesseState.reactionTimes = []
+      vitesseState.memoryPicks = []
+      vitesseState.memoryPickEls = []
+      vitesseState.dotEls = []
+      vitesseState.timeouts.forEach(t => clearTimeout(t))
+      vitesseState.timeouts = []
+      cleanVitessePlayarea()
+      preparerVitesse()
+    }
+
+    function stopVitesse() {
+      vitesseState.phase = 'done'
+      vitesseState.timeouts.forEach(t => clearTimeout(t))
+      vitesseState.timeouts = []
+      const area = document.getElementById('vitesse-playarea')
+      if (area) {
+        area.querySelectorAll('.vitesse-dot, .vitesse-pick, .vitesse-seq-bar').forEach(d => d.remove())
+      }
+    }
+
+    // ==================== DUEL ====================
+
+    const DUEL_COLORS = ['#E24B4A', '#3B82F6', '#1D9E75', '#F59E0B', '#8B5CF6', '#EC4899']
+    const duelState = {
+      phase: 'idle', // idle, level1, level2, finale, done
+      p1: '', p2: '',
+      scoreP1: 0, scoreP2: 0,
+      round: 0,
+      roundTarget: 0,
+      timeouts: [],
+      currentTargetColor: null,
+      roundResolved: false
+    }
+
+    function preparerDuel() {
+      // Remplir les sélecteurs de joueurs
+      const selP1 = document.getElementById('duel-p1')
+      const selP2 = document.getElementById('duel-p2')
+      selP1.innerHTML = ''
+      selP2.innerHTML = ''
+      // Option Test en premier
+      const testOpt = new Option('⏱ Test (aléatoire)', '---test---')
+      selP1.add(testOpt)
+      selP2.add(new Option('⏱ Test (aléatoire)', '---test---'))
+      allPlayers.forEach(p => {
+        const fullName = `${p.prenom || ''} ${p.nom || ''}`.trim()
+        selP1.add(new Option(fullName, fullName))
+        selP2.add(new Option(fullName, fullName))
+      })
+      // Pré-sélection : joueur courant en P1 si défini
+      if (currentPlayer && currentPlayer !== '---test---') {
+        selP1.value = currentPlayer
+      } else {
+        selP1.value = '---test---'
+      }
+      selP2.value = '---test---'
+
+      document.getElementById('duel-setup').style.display = 'block'
+      document.getElementById('duel-playarea').style.display = 'none'
+      document.getElementById('duel-result').classList.remove('active')
+      afficherHistoriqueDuel()
+    }
+
+    function afficherHistoriqueDuel() {
+      const list = currentPlayer === '---test---' ? [] : getPlayerHistory(currentPlayer, 'duel').slice(0, 10)
+      const hist = document.getElementById('duel-history')
+      if (!list.length) { hist.style.display = 'none'; return }
+      hist.style.display = 'block'
+      document.getElementById('duel-history-list').innerHTML = list.map(s => `
+        <div class="jeux-history-item">
+          <span>${formatJeuxDate(s.date)}</span>
+          <span>${s.score > 0 ? 'Victoire' : s.score === 0 ? 'Nul' : 'Défaite'}</span>
+        </div>
+      `).join('')
+    }
+
+    function duelLabel(name) {
+      return name === '---test---' ? 'Test' : name
+    }
+
+    window.demarrerDuel = async function() {
+      const p1 = document.getElementById('duel-p1').value
+      const p2 = document.getElementById('duel-p2').value
+      if (!p1 || !p2) { alert('Choisis les 2 joueurs.'); return }
+      duelState.p1 = p1
+      duelState.p2 = p2
+      duelState.scoreP1 = 0
+      duelState.scoreP2 = 0
+      showCountdown('Duel', `Joueur 1 (${duelLabel(p1)}) à gauche, Joueur 2 (${duelLabel(p2)}) à droite.<br>Niveau 1 : 5 manches, premier à cliquer sur le point gagne 1 pt.<br>Niveau 2 : 5 manches, premier à cliquer sur la bonne couleur gagne 2 pts.<br>Égalité ? Manche finale : 6 couleurs, 1 seule bonne.`, () => {
+        document.getElementById('duel-setup').style.display = 'none'
+        document.getElementById('duel-result').classList.remove('active')
+        document.getElementById('duel-playarea').style.display = 'block'
+        document.getElementById('duel-label-p1').textContent = duelLabel(p1)
+        document.getElementById('duel-label-p2').textContent = duelLabel(p2)
+        document.getElementById('duel-score-p1').textContent = '0'
+        document.getElementById('duel-score-p2').textContent = '0'
+        document.getElementById('duel-playarea').offsetHeight
+        startDuelLevel1()
+      })
+    }
+
+    function updateDuelScore() {
+      document.getElementById('duel-score-p1').textContent = duelState.scoreP1
+      document.getElementById('duel-score-p2').textContent = duelState.scoreP2
+    }
+
+    function showDuelLevelInfo(text) {
+      const el = document.getElementById('duel-level-info')
+      el.textContent = text
+      el.style.display = 'block'
+    }
+    function hideDuelLevelInfo() {
+      document.getElementById('duel-level-info').style.display = 'none'
+    }
+    function showDuelColorIndicator(color) {
+      const el = document.getElementById('duel-color-indicator')
+      el.style.background = color
+      el.style.boxShadow = `0 0 20px ${color}`
+      el.style.display = 'block'
+    }
+    function hideDuelColorIndicator() {
+      document.getElementById('duel-color-indicator').style.display = 'none'
+    }
+
+    function clearDuelSides() {
+      document.getElementById('duel-side-left').querySelectorAll('.duel-target, .duel-color-dot, .duel-winner-flash').forEach(e => e.remove())
+      document.getElementById('duel-side-right').querySelectorAll('.duel-target, .duel-color-dot, .duel-winner-flash').forEach(e => e.remove())
+    }
+
+    function showDuelWinnerFlash(side, text) {
+      const sideEl = side === 1 ? document.getElementById('duel-side-left') : document.getElementById('duel-side-right')
+      const flash = document.createElement('div')
+      flash.className = 'duel-winner-flash ' + (side === 1 ? 'p1' : 'p2')
+      flash.textContent = text
+      sideEl.appendChild(flash)
+      setTimeout(() => flash.remove(), 600)
+    }
+
+    // --- NIVEAU 1 : premier à cliquer sur le point ---
+    function startDuelLevel1() {
+      duelState.phase = 'level1'
+      duelState.round = 0
+      showDuelLevelInfo('Niveau 1 — Premier à cliquer (5 manches)')
+      hideDuelColorIndicator()
+      nextDuelRound1()
+    }
+
+    function nextDuelRound1() {
+      duelState.round++
+      if (duelState.round > 5) {
+        startDuelLevel2()
+        return
+      }
+      showDuelLevelInfo(`Niveau 1 — Manche ${duelState.round}/5 — Premier à cliquer !`)
+      clearDuelSides()
+      duelState.roundResolved = false
+
+      // Délai aléatoire avant apparition (1 à 3s)
+      const delay = 1000 + Math.random() * 2000
+      duelState.timeouts.push(setTimeout(() => {
+        if (duelState.phase !== 'level1') return
+        spawnDuelPoint()
+      }, delay))
+    }
+
+    function spawnDuelPoint() {
+      const area = document.getElementById('duel-playarea')
+      const zone = getGameZone('duel')
+      // Position relative au centre de chaque moitié
+      const leftSide = document.getElementById('duel-side-left')
+      const rightSide = document.getElementById('duel-side-right')
+      const lw = leftSide.clientWidth, lh = leftSide.clientHeight
+      const rw = rightSide.clientWidth, rh = rightSide.clientHeight
+      // Même position relative sur chaque moitié
+      const margin = 60
+      const size = 48
+      const relX = margin + Math.random() * Math.max(0, lw - 2 * margin)
+      const relY = margin + Math.random() * Math.max(0, lh - 2 * margin)
+
+      function makePoint(sideEl, side) {
+        const point = document.createElement('div')
+        point.className = 'duel-target'
+        point.style.left = relX + 'px'
+        point.style.top = relY + 'px'
+        const hit = (e) => {
+          if (e.cancelable) e.preventDefault()
+          e.stopPropagation()
+          resolveDuelRound1(side)
+        }
+        point.addEventListener('mousedown', hit)
+        point.addEventListener('touchstart', hit, { passive: false })
+        sideEl.appendChild(point)
+        return point
+      }
+      makePoint(leftSide, 1)
+      makePoint(rightSide, 2)
+    }
+
+    function resolveDuelRound1(winner) {
+      if (duelState.roundResolved) return
+      duelState.roundResolved = true
+      if (winner === 1) { duelState.scoreP1++; showDuelWinnerFlash(1, 'GAGNÉ') }
+      else { duelState.scoreP2++; showDuelWinnerFlash(2, 'GAGNÉ') }
+      updateDuelScore()
+      clearDuelSides()
+      duelState.timeouts.push(setTimeout(nextDuelRound1, 900))
+    }
+
+    // --- NIVEAU 2 : premier à cliquer sur la bonne couleur ---
+    function startDuelLevel2() {
+      duelState.phase = 'level2'
+      duelState.round = 0
+      showDuelLevelInfo('Niveau 2 — Première à la bonne couleur (5 manches)')
+      nextDuelRound2()
+    }
+
+    function nextDuelRound2() {
+      duelState.round++
+      if (duelState.round > 5) {
+        checkDuelFinale()
+        return
+      }
+      showDuelLevelInfo(`Niveau 2 — Manche ${duelState.round}/5 — Clique sur la bonne couleur !`)
+      clearDuelSides()
+      duelState.roundResolved = false
+
+      // Choisir une couleur cible + 6 couleurs aléatoires (dont la cible)
+      const shuffled = [...DUEL_COLORS].sort(() => Math.random() - 0.5)
+      const targetColor = shuffled[0]
+      duelState.currentTargetColor = targetColor
+      showDuelColorIndicator(targetColor)
+
+      // Délai avant apparition
+      const delay = 800 + Math.random() * 1500
+      duelState.timeouts.push(setTimeout(() => {
+        if (duelState.phase !== 'level2') return
+        spawnDuelColors(targetColor)
+      }, delay))
+    }
+
+    function spawnDuelColors(targetColor) {
+      const leftSide = document.getElementById('duel-side-left')
+      const rightSide = document.getElementById('duel-side-right')
+      const lw = leftSide.clientWidth, lh = leftSide.clientHeight
+      const rw = rightSide.clientWidth, rh = rightSide.clientHeight
+      const margin = 60
+      const size = 56
+
+      // 6 couleurs différentes sur chaque côté, même position relative
+      const colors = [...DUEL_COLORS].sort(() => Math.random() - 0.5)
+      const positions = generateRandomPositions(6, lw, lh, size, margin)
+
+      function makeDots(sideEl, side) {
+        colors.forEach((color, i) => {
+          const dot = document.createElement('div')
+          dot.className = 'duel-color-dot'
+          dot.style.left = positions[i].x + 'px'
+          dot.style.top = positions[i].y + 'px'
+          dot.style.background = color
+          dot.style.boxShadow = `0 4px 12px ${color}88`
+          const hit = (e) => {
+            if (e.cancelable) e.preventDefault()
+            e.stopPropagation()
+            resolveDuelRound2(side, color === targetColor, dot)
+          }
+          dot.addEventListener('mousedown', hit)
+          dot.addEventListener('touchstart', hit, { passive: false })
+          sideEl.appendChild(dot)
+        })
+      }
+      makeDots(leftSide, 1)
+      makeDots(rightSide, 2)
+    }
+
+    function resolveDuelRound2(side, correct, dot) {
+      if (duelState.roundResolved) return
+      if (!correct) {
+        // Mauvaise couleur : flash rouge sur le point, mais on continue la manche
+        if (dot) {
+          dot.style.boxShadow = '0 0 20px #E24B4A'
+          setTimeout(() => { if (dot.isConnected) dot.style.boxShadow = '' }, 300)
+        }
+        return
+      }
+      duelState.roundResolved = true
+      if (side === 1) { duelState.scoreP1 += 2; showDuelWinnerFlash(1, '+2') }
+      else { duelState.scoreP2 += 2; showDuelWinnerFlash(2, '+2') }
+      updateDuelScore()
+      hideDuelColorIndicator()
+      clearDuelSides()
+      duelState.timeouts.push(setTimeout(nextDuelRound2, 900))
+    }
+
+    // --- FINALE (en cas d'égalité) ---
+    function checkDuelFinale() {
+      if (duelState.scoreP1 === duelState.scoreP2) {
+        startDuelFinale()
+      } else {
+        finDuel()
+      }
+    }
+
+    function startDuelFinale() {
+      duelState.phase = 'finale'
+      showDuelLevelInfo('ÉGALITÉ — Manche finale : 6 couleurs, 1 seule bonne !')
+      clearDuelSides()
+      duelState.roundResolved = false
+
+      const shuffled = [...DUEL_COLORS].sort(() => Math.random() - 0.5)
+      const targetColor = shuffled[0]
+      duelState.currentTargetColor = targetColor
+      showDuelColorIndicator(targetColor)
+
+      // Délai avant apparition
+      duelState.timeouts.push(setTimeout(() => {
+        if (duelState.phase !== 'finale') return
+        spawnDuelFinale(targetColor)
+      }, 1500))
+    }
+
+    function spawnDuelFinale(targetColor) {
+      const leftSide = document.getElementById('duel-side-left')
+      const rightSide = document.getElementById('duel-side-right')
+      const lw = leftSide.clientWidth, lh = leftSide.clientHeight
+      const margin = 60
+      const size = 56
+      const colors = [...DUEL_COLORS].sort(() => Math.random() - 0.5)
+      const positions = generateRandomPositions(6, lw, lh, size, margin)
+
+      function makeDots(sideEl, side) {
+        colors.forEach((color, i) => {
+          const dot = document.createElement('div')
+          dot.className = 'duel-color-dot'
+          dot.style.left = positions[i].x + 'px'
+          dot.style.top = positions[i].y + 'px'
+          dot.style.background = color
+          dot.style.boxShadow = `0 4px 12px ${color}88`
+          const hit = (e) => {
+            if (e.cancelable) e.preventDefault()
+            e.stopPropagation()
+            resolveDuelFinale(side, color === targetColor, dot)
+          }
+          dot.addEventListener('mousedown', hit)
+          dot.addEventListener('touchstart', hit, { passive: false })
+          sideEl.appendChild(dot)
+        })
+      }
+      makeDots(leftSide, 1)
+      makeDots(rightSide, 2)
+    }
+
+    function resolveDuelFinale(side, correct, dot) {
+      if (duelState.roundResolved) return
+      if (!correct) {
+        if (dot) {
+          dot.style.boxShadow = '0 0 20px #E24B4A'
+          setTimeout(() => { if (dot.isConnected) dot.style.boxShadow = '' }, 300)
+        }
+        return
+      }
+      duelState.roundResolved = true
+      if (side === 1) { duelState.scoreP1 += 6; showDuelWinnerFlash(1, 'VICTOIRE') }
+      else { duelState.scoreP2 += 6; showDuelWinnerFlash(2, 'VICTOIRE') }
+      updateDuelScore()
+      hideDuelColorIndicator()
+      clearDuelSides()
+      duelState.timeouts.push(setTimeout(finDuel, 1200))
+    }
+
+    async function finDuel() {
+      duelState.phase = 'done'
+      hideDuelLevelInfo()
+      hideDuelColorIndicator()
+      clearDuelSides()
+
+      const winner = duelState.scoreP1 > duelState.scoreP2 ? 1 : duelState.scoreP2 > duelState.scoreP1 ? 2 : 0
+      const winnerName = winner === 1 ? duelState.p1 : winner === 2 ? duelState.p2 : null
+
+      // Sauvegarder les scores : victoire = 1, défaite = -1, nul = 0
+      if (duelState.p1 !== '---test---') {
+        await addJeuxScore(duelState.p1, 'duel', winner === 1 ? 1 : winner === 2 ? -1 : 0)
+      }
+      if (duelState.p2 !== '---test---') {
+        await addJeuxScore(duelState.p2, 'duel', winner === 2 ? 1 : winner === 1 ? -1 : 0)
+      }
+
+      document.getElementById('duel-final-score').textContent = `${duelState.scoreP1} - ${duelState.scoreP2}`
+      document.getElementById('duel-winner-label').textContent = winnerName ? 'Vainqueur : ' + duelLabel(winnerName) : 'Match nul'
+      document.getElementById('duel-score-detail').innerHTML = `
+        <strong>${duelLabel(duelState.p1)}</strong> : ${duelState.scoreP1} pts<br>
+        <strong>${duelLabel(duelState.p2)}</strong> : ${duelState.scoreP2} pts
+      `
+      document.getElementById('duel-playarea').style.display = 'none'
+      document.getElementById('duel-result').classList.add('active')
+      await exitFullscreen()
+      afficherHistoriqueDuelResult()
+    }
+
+    function afficherHistoriqueDuelResult() {
+      const list = currentPlayer === '---test---' ? [] : getPlayerHistory(currentPlayer, 'duel').slice(0, 10)
+      const container = document.getElementById('duel-result-history')
+      if (!list.length) { container.innerHTML = currentPlayer === '---test---' ? '<p style="color:#666;">Mode Test : score non sauvegardé.</p>' : ''; return }
+      container.innerHTML = `<h4>Historique de ${escapeJeuxHtml(currentPlayer)}</h4><div class="jeux-history-list">${list.map(s => `<div class="jeux-history-item"><span>${formatJeuxDate(s.date)}</span><span>${s.score > 0 ? 'Victoire' : s.score === 0 ? 'Nul' : 'Défaite'}</span></div>`).join('')}</div>`
+    }
+
+    window.resetDuel = function() {
+      stopDuel()
+      preparerDuel()
+      document.getElementById('duel-setup').style.display = 'block'
+      document.getElementById('duel-result').classList.remove('active')
+    }
+
+    function stopDuel() {
+      duelState.phase = 'done'
+      duelState.timeouts.forEach(t => clearTimeout(t))
+      duelState.timeouts = []
+      hideDuelLevelInfo()
+      hideDuelColorIndicator()
+      clearDuelSides()
+    }
+  </script>
+</body>
+</html>

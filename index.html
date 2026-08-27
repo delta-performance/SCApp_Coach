@@ -140,7 +140,6 @@
       font-size: 32px;
       line-height: 1;
     }
-    .card-body {}
     .card-title {
       font-size: 16px;
       font-weight: 700;
@@ -207,6 +206,7 @@
   <link rel="stylesheet" href="theme.css">
   <script src="theme.js"></script>
   <script type="module" src="auth.js"></script>
+<script type="module" src="permissions.js"></script>
 </head>
 <body>
 
@@ -226,82 +226,54 @@
   </div>
 </header>
 
-<main>
-
-  <!-- Planning -->
-  <a class="card card-planning" href="planning.html">
-    <div class="card-icon">📅</div>
-    <div class="card-body">
-      <div class="card-title"><span class="card-title-dot"></span>Planning</div>
-      <div class="card-sub">Calendrier hebdomadaire, événements</div>
-    </div>
-  </a>
-
-  <!-- Séances (Fiches) -->
-  <a class="card card-seances" href="fiches-seances.html">
-    <div class="card-icon">🏉</div>
-    <div class="card-body">
-      <div class="card-title"><span class="card-title-dot"></span>Séances</div>
-      <div class="card-sub">Fiches séances, plan détaillé, blocs</div>
-    </div>
-  </a>
-
-  <!-- Équipes entraînement -->
-  <a class="card card-equipes" href="equipes.html">
-    <div class="card-icon">👥</div>
-    <div class="card-body">
-      <div class="card-title"><span class="card-title-dot"></span>Équipes</div>
-      <div class="card-sub">Composition, séquences, rotations</div>
-    </div>
-  </a>
-
-  <!-- Charge GPS -->
-  <a class="card card-gps" href="gps-planif.html">
-    <div class="card-icon">📡</div>
-    <div class="card-body">
-      <div class="card-title"><span class="card-title-dot"></span>Charge GPS</div>
-      <div class="card-sub">Planification de charge, HI</div>
-    </div>
-  </a>
-
-  <!-- Muscu -->
-  <a class="card card-muscu" href="seances.html">
-    <div class="card-icon">🏋️</div>
-    <div class="card-body">
-      <div class="card-title"><span class="card-title-dot"></span>Musculation</div>
-      <div class="card-sub">Planification cycles, séances, exercices</div>
-    </div>
-  </a>
-
-  <!-- Suivi Poids -->
-  <a class="card card-muscu" href="suivi-poids.html" style="--accent: #378ADD;">
-    <div class="card-icon">⚖️</div>
-    <div class="card-body">
-      <div class="card-title"><span class="card-title-dot"></span>Suivi Poids</div>
-      <div class="card-sub">Pesées, masse grasse, historique</div>
-    </div>
-  </a>
-
-  <!-- Vue TV -->
-  <a class="card card-tv" href="tv.html">
-    <div class="card-icon">📺</div>
-    <div class="card-body">
-      <div class="card-title"><span class="card-title-dot"></span>Vue TV</div>
-      <div class="card-sub">Affichage tableau grand écran</div>
-    </div>
-  </a>
-
+<main id="grid">
+  <div id="loading-grid" style="grid-column:1/-1;text-align:center;padding:40px;color:#555;font-size:14px;">Chargement des modules…</div>
 </main>
 
 <footer>SCA Albi &mdash; Outil interne staff</footer>
 
-<script>
+<script type="module">
+  import { waitForPermissions, hasPagePermission } from './permissions.js'
+
   // Date dynamique
   const now = new Date()
-  const days = ['Dim.','Lun.','Mar.','Mer.','Jeu.','Ven.','Sam.']
   const months = ['Jan','Fév','Mar','Avr','Mai','Jun','Jul','Aoû','Sep','Oct','Nov','Déc']
   document.getElementById('date-day').textContent = now.getDate()
   document.getElementById('date-month').textContent = months[now.getMonth()]
+
+  // Génération dynamique des vignettes depuis pages.json
+  try {
+    const res = await fetch('pages.json')
+    const pages = await res.json()
+    await waitForPermissions()
+
+    const grid = document.getElementById('grid')
+    grid.innerHTML = ''
+
+    for (const p of pages) {
+      if (p.group && !hasPagePermission(p.file)) continue
+
+      const a = document.createElement('a')
+      a.className = 'card'
+      a.style.setProperty('--accent', p.color || '#FECC00')
+      a.href = `viewer.html?page=${encodeURIComponent(p.file)}`
+      a.innerHTML = `
+        <div class="card-icon">${p.icon || '•'}</div>
+        <div class="card-body">
+          <div class="card-title"><span class="card-title-dot"></span>${p.title || p.file}</div>
+          <div class="card-sub">${p.sub || 'Ouvrir'}</div>
+        </div>
+      `
+      grid.appendChild(a)
+    }
+
+    if (!grid.children.length) {
+      grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:40px;color:#555;">Aucun module disponible pour ton rôle.</div>'
+    }
+  } catch (e) {
+    console.error(e)
+    document.getElementById('grid').innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:40px;color:#E24B4A;">Impossible de charger le menu.</div>'
+  }
 </script>
 
 </body>

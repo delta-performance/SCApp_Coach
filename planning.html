@@ -555,6 +555,8 @@
   </style>
 
   <link rel="manifest" href="../manifest.json">
+  <link rel="stylesheet" href="theme.css">
+  <script src="theme.js"></script>
 </head>
 <body>
   <!-- iPad TopBar -->
@@ -565,6 +567,7 @@
     </a>
     <div class="ipad-topbar-sep"></div>
     <div class="ipad-topbar-title">Planning</div>
+    <button class="theme-toggle-btn" onclick="toggleTheme()"><span class="theme-icon">☀️</span></button>
     <button class="btn-ghost" onclick="logout()" style="margin-left:auto;min-height:36px;font-size:12px;">Déconnexion</button>
   </div>
   <!-- Bottom Nav -->
@@ -936,9 +939,10 @@
   </div>
 
   <script type="module">
-    import { initializeApp } from './firebase-bundle.js'
-    import { getAuth, onAuthStateChanged, signOut, setPersistence, browserLocalPersistence } from './firebase-bundle.js'
-    import { getFirestore, collection, doc, setDoc, deleteDoc, onSnapshot, serverTimestamp, getDoc, getDocs, query, where } from './firebase-bundle.js'
+    import { initializeApp } from './supabase-adapter.js'
+    import { getAuth, onAuthStateChanged, signOut, setPersistence, browserLocalPersistence } from './supabase-adapter.js'
+    import { getFirestore, collection, doc, setDoc, deleteDoc, onSnapshot, serverTimestamp, getDoc, getDocs, query, where } from './supabase-adapter.js'
+    import './update-check.js'
 
 const firebaseConfig = {
   apiKey: "AIzaSyCvMs-5LX9Ivk3OkzUR3iz9Kk1E5b9_7Vk",
@@ -952,6 +956,23 @@ const firebaseConfig = {
 const fbApp = initializeApp(firebaseConfig)
 const auth = getAuth(fbApp)
 const db = getFirestore(fbApp)
+
+function getDataScopeStart() {
+  const scope = localStorage.getItem('delta-data-scope') || '30days'
+  if (scope === 'all') return null
+  if (window.__getDataScopeDates) {
+    return window.__getDataScopeDates(scope).start
+  }
+  const d = new Date()
+  d.setDate(d.getDate() - 30)
+  return d.toISOString().split('T')[0]
+}
+
+function scopedQuery(name, dateField = 'date') {
+  const start = getDataScopeStart()
+  if (!start) return collection(db, name)
+  return query(collection(db, name), where(dateField, '>=', start))
+}
 
 // Auth persistant pour fonctionner hors connexion
 try { setPersistence(auth, browserLocalPersistence).catch(() => {}) } catch(e) {}
@@ -1787,7 +1808,7 @@ onAuthStateChanged(auth, user => {
   // Load adversaires for match logos - CRITICAL: must be loaded early
   loadAdversaires()
 
-  onSnapshot(collection(db, 'planning'), snap => {
+  onSnapshot(scopedQuery('planning'), snap => {
     events = snap.docs.map(d => ({ id: d.id, ...d.data() }))
     renderPlanning()
   })
@@ -3630,7 +3651,7 @@ window.updateStats = async function() {
       getDocs(collection(db, 'joueurs')),
       getDocs(collection(db, 'absences')),
       getDocs(collection(db, 'blessures')),
-      getDocs(collection(db, 'creneauxBlesses'))
+      getDocs(scopedQuery('creneauxBlesses'))
     ])
     
     const joueursData = joueursSnap.docs.map(d => ({ id: d.id, ...d.data() }))

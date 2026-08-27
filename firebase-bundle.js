@@ -1982,6 +1982,19 @@ function _errorWithCustomMessage(auth, code, message) {
 function _serverAppCurrentUserOperationNotSupportedError(auth) {
   return _errorWithCustomMessage(auth, "operation-not-supported-in-this-environment", "Operations that alter the current user are not supported in conjunction with FirebaseServerApp");
 }
+function _assertInstanceOf(auth, object, instance) {
+  const constructorInstance = instance;
+  if (!(object instanceof constructorInstance)) {
+    if (constructorInstance.name !== object.constructor.name) {
+      _fail(
+        auth,
+        "argument-error"
+        /* AuthErrorCode.ARGUMENT_ERROR */
+      );
+    }
+    throw _errorWithCustomMessage(auth, "argument-error", `Type of ${object.constructor.name} does not match expected instance.Did you pass a reference from a different Auth SDK?`);
+  }
+}
 function createErrorInternal(authOrCode, ...rest) {
   if (typeof authOrCode !== "string") {
     const code = rest[0];
@@ -2360,7 +2373,7 @@ async function _performApiRequest(auth, method, path, request, customErrorMap = 
         };
       }
     }
-    const query2 = querystring(Object.assign({ key: auth.config.apiKey }, params)).slice(1);
+    const query3 = querystring(Object.assign({ key: auth.config.apiKey }, params)).slice(1);
     const headers = await auth._getAdditionalHeaders();
     headers[
       "Content-Type"
@@ -2379,7 +2392,7 @@ async function _performApiRequest(auth, method, path, request, customErrorMap = 
     if (!isCloudflareWorker()) {
       fetchArgs.referrerPolicy = "no-referrer";
     }
-    return FetchProvider.fetch()(_getFinalTarget(auth, auth.config.apiHost, path, query2), fetchArgs);
+    return FetchProvider.fetch()(_getFinalTarget(auth, auth.config.apiHost, path, query3), fetchArgs);
   });
 }
 async function _performFetchWithErrorHandling(auth, customErrorMap, fetchFn) {
@@ -2431,8 +2444,8 @@ async function _performSignInRequest(auth, method, path, request, customErrorMap
   }
   return serverResponse;
 }
-function _getFinalTarget(auth, host, path, query2) {
-  const base = `${host}${path}?${query2}`;
+function _getFinalTarget(auth, host, path, query3) {
+  const base = `${host}${path}?${query3}`;
   if (!auth.config.emulator) {
     return `${auth.config.apiScheme}://${base}`;
   }
@@ -6451,6 +6464,20 @@ var AbstractPopupRedirectOperation = class {
   }
 };
 var _POLL_WINDOW_CLOSE_TIMEOUT = new Delay(2e3, 1e4);
+async function signInWithPopup(auth, provider, resolver) {
+  if (_isFirebaseServerApp(auth.app)) {
+    return Promise.reject(_createError(
+      auth,
+      "operation-not-supported-in-this-environment"
+      /* AuthErrorCode.OPERATION_NOT_SUPPORTED */
+    ));
+  }
+  const authInternal = _castAuth(auth);
+  _assertInstanceOf(auth, provider, FederatedAuthProvider);
+  const resolverInternal = _withDefaultResolver(authInternal, resolver);
+  const action = new PopupOperation(authInternal, "signInViaPopup", provider, resolverInternal);
+  return action.executeNotNull();
+}
 var PopupOperation = class _PopupOperation extends AbstractPopupRedirectOperation {
   constructor(auth, filter, provider, resolver, user) {
     super(auth, filter, resolver, user);
@@ -19638,6 +19665,9 @@ function __PRIVATE_validateReference(e, t) {
   if ((e = getModularInstance(e)).firestore !== t) throw new FirestoreError(D.INVALID_ARGUMENT, "Provided document reference is from a different Firestore instance.");
   return e;
 }
+function deleteField() {
+  return new __PRIVATE_DeleteFieldValueImpl("deleteField");
+}
 function serverTimestamp() {
   return new __PRIVATE_ServerTimestampFieldValueImpl("serverTimestamp");
 }
@@ -19694,6 +19724,101 @@ function deleteDoc2(...args) {
   }
   return deleteDoc(...args);
 }
+var SCOPED_COLLECTIONS = {
+  wellness: { field: "date" },
+  poids: { field: "date" },
+  dataPerf: { field: "date" },
+  seances: { field: "date" },
+  fiches_seances: { field: "date" },
+  gps: { field: "date" },
+  planificationsGPS: { field: "semaine" },
+  creneauxBlesses: { field: "date" },
+  feuillesMatch: { field: "date" },
+  blocsBonus: { field: "date" },
+  progressionsBonus: { field: "date" },
+  rfuData: { field: "date" }
+};
+function _getLocalDateString(date) {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, "0");
+  const d = String(date.getDate()).padStart(2, "0");
+  return y + "-" + m + "-" + d;
+}
+function _getScopeDates() {
+  let scope = "30days";
+  if (typeof window !== "undefined" && window.__dataScope) scope = window.__dataScope;
+  if (scope === "all") return null;
+  if (typeof window !== "undefined" && window.__getDataScopeDates) {
+    return window.__getDataScopeDates(scope);
+  }
+  const now = /* @__PURE__ */ new Date();
+  if (scope === "30days") {
+    const d = new Date(now);
+    d.setDate(d.getDate() - 30);
+    return { start: _getLocalDateString(d), end: null };
+  }
+  const y = now.getFullYear();
+  const m = now.getMonth();
+  const startYear = m >= 6 ? y : y - 1;
+  return { start: startYear + "-07-01", end: null };
+}
+function _hasDateConstraint(constraints, field) {
+  return constraints.some((c) => c && c.__field === field && c.__op && c.__op !== "array-contains-any");
+}
+function collection2(dbOrRef, name4, ...args) {
+  const colRef = collection(dbOrRef, name4, ...args);
+  colRef.__collectionName = name4;
+  return colRef;
+}
+function where2(field, op, value) {
+  const c = where(field, op, value);
+  c.__field = typeof field === "string" ? field : field && field.segments ? field.segments.join(".") : String(field);
+  c.__op = op;
+  c.__value = value;
+  return c;
+}
+function orderBy2(field, dir) {
+  const c = orderBy(field, dir);
+  c.__field = typeof field === "string" ? field : field && field.segments ? field.segments.join(".") : String(field);
+  c.__order = dir || "asc";
+  return c;
+}
+function query2(q, ...constraints) {
+  const res = query(q, ...constraints);
+  res.__collectionName = q && (q.__collectionName || (q._query && q._query.path && q._query.path.segments ? q._query.path.segments[0] : void 0));
+  res.__constraints = [...q && q.__constraints || [], ...constraints];
+  if (q && q.__noScope) res.__noScope = true;
+  return res;
+}
+function _applyDateScope(q, constraints, config) {
+  if (!config) return q;
+  const { field } = config;
+  if (_hasDateConstraint(constraints, field)) return q;
+  const dates = _getScopeDates();
+  if (!dates || !dates.start) return q;
+  const newConstraints = [...constraints, where2(field, ">=", dates.start)];
+  if (dates.end) newConstraints.push(where2(field, "<=", dates.end));
+  return query(q, ...newConstraints);
+}
+function getDocs2(q) {
+  if (typeof window !== "undefined" && window.getDocs) {
+    return window.getDocs(q);
+  }
+  const name4 = q && q.__collectionName;
+  const constraints = q && q.__constraints || [];
+  if (name4 && SCOPED_COLLECTIONS[name4] && !q.__noScope) {
+    q = _applyDateScope(q, constraints, SCOPED_COLLECTIONS[name4]);
+  }
+  return getDocs(q);
+}
+function onSnapshot2(q, ...args) {
+  const name4 = q && q.__collectionName;
+  const constraints = q && q.__constraints || [];
+  if (name4 && SCOPED_COLLECTIONS[name4] && !q.__noScope) {
+    q = _applyDateScope(q, constraints, SCOPED_COLLECTIONS[name4]);
+  }
+  return onSnapshot(q, ...args);
+}
 var _firestoreInstances = /* @__PURE__ */ new Map();
 function getFirestore2(app) {
   const key = app ? app.name : "[DEFAULT]";
@@ -19710,36 +19835,40 @@ function getFirestore2(app) {
   return db;
 }
 export {
+  GoogleAuthProvider,
   addDoc2 as addDoc,
   browserLocalPersistence,
   browserSessionPersistence,
-  collection,
+  collection2 as collection,
   createUserWithEmailAndPassword,
   deleteApp,
   deleteDoc2 as deleteDoc,
+  deleteField,
   doc,
   getApp,
   getApps,
   getAuth2 as getAuth,
   getDoc,
-  getDocs,
+  getDocs2 as getDocs,
+  getDocs as getDocsOriginal,
   getFirestore2 as getFirestore,
   initializeApp,
   initializeFirestore,
   limit,
   memoryLocalCache,
   onAuthStateChanged,
-  onSnapshot,
-  orderBy,
-  query,
+  onSnapshot2 as onSnapshot,
+  orderBy2 as orderBy,
+  query2 as query,
   serverTimestamp,
   setDoc2 as setDoc,
   setPersistence,
   signInWithEmailAndPassword,
+  signInWithPopup,
   signOut,
   startAfter,
   updateDoc2 as updateDoc,
-  where,
+  where2 as where,
   writeBatch
 };
 /*! Bundled license information:
@@ -19890,7 +20019,6 @@ export {
 
 @firebase/util/dist/index.esm2017.js:
 firebase/app/dist/esm/index.esm.js:
-@firebase/auth/dist/esm2017/index-68602d24.js:
 @firebase/auth/dist/esm2017/index-68602d24.js:
 @firebase/auth/dist/esm2017/index-68602d24.js:
 @firebase/auth/dist/esm2017/index-68602d24.js:

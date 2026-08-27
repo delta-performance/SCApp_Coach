@@ -1,0 +1,1383 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <base href="../renderer/">
+  <meta charset="UTF-8">
+  <title>SCA Albi — Wellness</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #0f0f0f; color: #fff; display: flex; height: 100vh; overflow: hidden; }
+    .sidebar { width: 220px; min-width: 220px; background: #1a1a1a; border-right: 1px solid #2a2a2a; display: flex; flex-direction: column; padding: 44px 0 20px; }
+    .sidebar-logo { display: flex; align-items: center; gap: 10px; padding: 0 20px 24px; border-bottom: 1px solid #2a2a2a; -webkit-app-region: drag; }
+    .sidebar-logo img { width: 36px; }
+    .sidebar-logo span { font-size: 15px; font-weight: 700; color: #FECC00; }
+    .nav-section { padding: 16px 12px 8px; font-size: 10px; font-weight: 600; color: #444; letter-spacing: .08em; text-transform: uppercase; }
+    .nav-item { display: flex; align-items: center; gap: 10px; padding: 9px 20px; font-size: 13px; color: #888; cursor: pointer; border-left: 2px solid transparent; transition: all .15s; }
+    .nav-item:hover { color: #fff; background: #222; }
+    .nav-item.active { color: #FECC00; border-left-color: #FECC00; background: #222; }
+    .nav-dot { width: 7px; height: 7px; border-radius: 50%; background: currentColor; opacity: 0.6; }
+    .sidebar-bottom { margin-top: auto; padding: 16px 20px; border-top: 1px solid #2a2a2a; }
+    .user-info { font-size: 12px; color: #555; margin-bottom: 8px; }
+    .logout-btn { font-size: 12px; color: #555; cursor: pointer; background: none; border: none; }
+    .logout-btn:hover { color: #E24B4A; }
+    .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+    .topbar { height: 56px; border-bottom: 1px solid #2a2a2a; display: flex; align-items: center; padding: 0 28px; gap: 12px; }
+    .topbar-title { font-size: 15px; font-weight: 600; flex: 1; -webkit-app-region: drag; }
+    .topbar-date { font-size: 12px; color: #555; }
+    .content { flex: 1; overflow-y: auto; padding: 24px 28px; }
+
+    /* STATS SUMMARY */
+    .stats-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 24px; }
+    .stat-card { background: #1a1a1a; border: 1px solid #2a2a2a; border-radius: 10px; padding: 14px 16px; }
+    .stat-label { font-size: 11px; color: #555; margin-bottom: 6px; text-transform: uppercase; letter-spacing: .06em; }
+    .stat-value { font-size: 24px; font-weight: 700; color: #fff; }
+    .stat-sub { font-size: 11px; color: #555; margin-top: 3px; }
+
+    /* FILTRES */
+    .toolbar { display: flex; align-items: center; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
+    .filter-btn { padding: 5px 14px; border-radius: 20px; border: 1px solid #2a2a2a; background: #1a1a1a; color: #888; font-size: 12px; cursor: pointer; transition: all .15s; }
+    .filter-btn:hover { color: #fff; border-color: #444; }
+    .filter-btn.active { background: #FECC00; color: #0f0f0f; border-color: #FECC00; font-weight: 600; }
+    .search-input { padding: 6px 12px; border-radius: 20px; border: 1px solid #2a2a2a; background: #1a1a1a; color: #fff; font-size: 12px; outline: none; margin-left: auto; width: 180px; }
+    .search-input:focus { border-color: #FECC00; }
+
+    /* ROSTER WELLNESS */
+    .poste-section { margin-bottom: 20px; }
+    .poste-label { font-size: 11px; font-weight: 600; color: #555; letter-spacing: .06em; text-transform: uppercase; margin-bottom: 8px; }
+    .players-grid { display: flex; flex-wrap: wrap; gap: 8px; }
+    .player-card {
+      width: 96px; border-radius: 10px; border: 1px solid #2a2a2a;
+      overflow: visible; cursor: pointer; transition: transform .12s, border-color .15s;
+      position: relative; background: #1a1a1a;
+    }
+    .player-card:hover { transform: scale(1.03); border-color: #FECC00; }
+    .player-photo { width: 96px; height: 96px; display: flex; align-items: center; justify-content: center; font-size: 24px; font-weight: 700; color: #fff; border-radius: 10px 10px 0 0; overflow: hidden; }
+    .player-photo img { width: 96px; height: 96px; object-fit: cover; }
+    .player-info { padding: 6px 8px 8px; }
+    .player-name { font-size: 11px; font-weight: 600; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .wellness-bar { height: 3px; border-radius: 2px; background: #2a2a2a; margin: 4px 0 3px; }
+    .wellness-fill { height: 3px; border-radius: 2px; }
+    .player-score { font-size: 10px; color: #555; }
+    .player-pictos { position: absolute; top: 4px; right: 4px; display: flex; flex-direction: column; gap: 3px; }
+    .picto { width: 18px; height: 18px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 700; }
+    .comment-badge {
+      position: absolute; top: -8px; right: -8px;
+      width: 22px; height: 22px; border-radius: 50%;
+      background: #1D9E75; color: #fff; border: 2px solid #0f0f0f;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 11px; line-height: 1; z-index: 2;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.35);
+    }
+    .no-data-overlay {
+      position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.55); display: flex; align-items: flex-start; justify-content: center;
+      padding-top: 40px;
+      font-size: 10px; color: #aaa; border-radius: 10px;
+      font-weight: 600; pointer-events: none;
+    }
+
+    /* MODAL DETAIL */
+    .modal-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.75); align-items: center; justify-content: center; z-index: 100; }
+    .modal-overlay.open { display: flex; }
+    .modal { background: #1a1a1a; border: 1px solid #2a2a2a; border-radius: 16px; padding: 28px; width: 480px; max-height: 80vh; overflow-y: auto; }
+    .modal-header { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; }
+    .modal-avatar { width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 16px; font-weight: 700; color: #FECC00; }
+    .modal-nom { font-size: 16px; font-weight: 700; }
+    .modal-poste { font-size: 12px; color: #555; }
+    .modal-close { margin-left: auto; background: none; border: none; color: #555; font-size: 18px; cursor: pointer; }
+    .modal-close:hover { color: #fff; }
+    .detail-section { margin-bottom: 16px; }
+    .detail-title { font-size: 11px; color: #555; text-transform: uppercase; letter-spacing: .06em; margin-bottom: 8px; }
+    .hooper-grid { display: grid; grid-template-columns: 1fr auto; gap: 6px; align-items: center; }
+    .hooper-item-label { font-size: 13px; color: #ccc; }
+    .hooper-score-badge { padding: 3px 10px; border-radius: 12px; font-size: 12px; font-weight: 700; }
+    .detail-row { display: flex; justify-content: space-between; align-items: center; padding: 6px 0; border-bottom: 1px solid #222; }
+    .detail-key { font-size: 13px; color: #888; }
+    .detail-val { font-size: 13px; font-weight: 600; }
+    .historique-chart { height: 60px; background: #111; border-radius: 8px; margin-top: 6px; display: flex; align-items: flex-end; gap: 4px; padding: 8px; }
+    .histo-bar { flex: 1; border-radius: 3px 3px 0 0; min-height: 4px; transition: height .3s; }
+    .alerte-variation { background: #EF9F2722; border: 1px solid #EF9F27; border-radius: 8px; padding: 8px 12px; font-size: 12px; color: #EF9F27; margin-bottom: 12px; }
+    /* ALERTES */
+    .alerte-section { margin-bottom: 20px; }
+    .alerte-level-title { font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: .06em; color: #ccc; margin-bottom: 10px; display: flex; align-items: center; gap: 8px; }
+    .alerte-dot { width: 8px; height: 8px; border-radius: 50%; }
+    .alerte-card { background: #1a1a1a; border: 1px solid #2a2a2a; border-radius: 12px; padding: 12px 16px; margin-bottom: 8px; display: flex; align-items: center; gap: 12px; cursor: pointer; transition: border-color .15s; flex-wrap: wrap; }
+    .alerte-card:hover { border-color: #FECC00; }
+    .alerte-avatar { width: 40px; height: 40px; border-radius: 50%; overflow: hidden; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 700; color: #fff; flex-shrink: 0; }
+    .alerte-nom { font-size: 14px; font-weight: 700; }
+    .alerte-poste { font-size: 11px; color: #555; }
+    .alerte-metrics { display: flex; gap: 16px; flex: 1; justify-content: flex-end; flex-wrap: wrap; }
+    .alerte-metric { text-align: right; min-width: 60px; }
+    .alerte-metric-label { font-size: 10px; color: #555; text-transform: uppercase; letter-spacing: .04em; }
+    .alerte-metric-value { font-size: 13px; font-weight: 600; color: #fff; }
+    .alerte-badge { padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: 600; text-transform: uppercase; }
+    .badge-forte { background: #E24B4A22; color: #E24B4A; border: 1px solid #E24B4A44; }
+    .badge-moderee { background: #EF9F2722; color: #EF9F27; border: 1px solid #EF9F2744; }
+    .empty-alertes { color: #555; text-align: center; padding: 40px; font-size: 13px; }
+  </style>
+  <link rel="manifest" href="../manifest.json">
+  <script type="module" src="../auth-guard.js"></script>
+</head>
+<body>
+  <div class="sidebar">
+    <div class="sidebar-logo">
+      <img src="https://www.sca-albi.fr/wp-content/uploads/2023/10/cropped-SCA-bis.png">
+      <span>SCA Albi</span>
+    </div>
+    <div class="nav-section">Effectif</div>
+    <div class="nav-item" onclick="location.href='index.html'">
+      <div class="nav-dot"></div> Roster
+    </div>
+    <div class="nav-section">Entraînement</div>
+    <div class="nav-item" onclick="location.href='seances.html'">
+  <div class="nav-dot"></div> Séances
+    </div>
+    <div class="nav-item" onclick="location.href='exercices.html'"><div class="nav-dot"></div> Exercices</div>
+    <div class='nav-section'>Suivi</div>
+    <div class='nav-item active' id='nav-wellness' onclick='switchView(`wellness`)'>
+      <div class='nav-dot'></div> Wellness
+    </div>
+    <div class='nav-item' id='nav-alertes' onclick='switchView(`alertes`)'>
+      <div class='nav-dot'></div> Alertes
+    </div>
+    <div class="nav-item" onclick="location.href='performances.html'">
+      <div class="nav-dot"></div> Performances
+    </div>
+    <div class="nav-item" onclick="location.href='medical.html'">
+      <div class="nav-dot"></div> Médical
+    </div>
+    <div class="nav-item" onclick="location.href='absences.html'">
+      <div class="nav-dot"></div> Absences
+    </div>
+    <div class="nav-item" onclick="location.href='suivi-poids.html'">
+      <div class="nav-dot"></div> Suivi Poids
+    </div>
+    <div class="nav-section">Planning</div>
+    <div class="nav-item" onclick="location.href='planning.html'">
+      <div class="nav-dot"></div> Planning club
+    </div>
+    <div class="nav-item" onclick="location.href='planning-blesses.html'">
+      <div class="nav-dot"></div> Planning Blessés
+    </div>
+    <div class="nav-item" onclick="location.href='fiches-seances.html'">
+      <div class="nav-dot"></div> Fiches Séances
+    </div>
+    <div class="nav-section">Équipes</div>
+    <div class="nav-item" onclick="location.href='equipes.html'">
+  <div class="nav-dot"></div> Composition équipes
+    </div>
+    <div class="nav-section">GPS</div>
+    <div class="nav-item" onclick="location.href='gps.html'">
+  <div class="nav-dot"></div> Données GPS
+    </div>
+    <div class="nav-item" onclick="location.href='gps-match.html'">
+  <div class="nav-dot"></div> Rapport de match
+    </div>
+    <div class="nav-item" onclick="location.href='gps-planif.html'">
+  <div class="nav-dot"></div> Planif. charge
+    </div>
+    <div class="nav-item" onclick="location.href='profil-force-vitesse.html'"><div class="nav-dot"></div> Profil F-V</div>
+    <div class="sidebar-bottom">
+      <div class="user-info" id="user-email"></div>
+      <button class="logout-btn" onclick="handleLogout()">Se déconnecter</button>
+    </div>
+  </div>
+
+  <div class="main">
+    <div class="topbar">
+      <div class='topbar-title' id='topbar-title'>Wellness</div>
+      <div class="topbar-date" id="topbar-date"></div>
+    </div>
+    <div class='content'>
+      <div id='wellness-view'>
+      <div class='stats-row'>
+        <div class="stat-card">
+          <div class="stat-label">Reçus aujourd'hui</div>
+          <div class="stat-value" id="stat-recus">—</div>
+          <div class="stat-sub" id="stat-recus-sub">sur — joueurs</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Score moyen équipe</div>
+          <div class="stat-value" id="stat-moy">—</div>
+          <div class="stat-sub">/7</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Alertes forme</div>
+          <div class="stat-value" id="stat-alertes" style="color:#E24B4A">—</div>
+          <div class="stat-sub">score &lt; 3.5 ou variation</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Tap test moyen</div>
+          <div class="stat-value" id="stat-tap">—</div>
+          <div class="stat-sub">taps / 10s</div>
+        </div>
+      </div>
+
+      <!-- SELECTION DE DATE -->
+      <div class="toolbar" style="background: #161616; padding: 10px 16px; border-radius: 10px; border: 1px solid #242424; margin-bottom: 16px; gap: 12px;">
+        <span style="font-size: 11px; color: #888; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; display: flex; align-items: center;">Mode d'affichage:</span>
+        <button class="filter-btn active" id="btn-mode-latest" onclick="setMode('latest')">Dernières valeurs</button>
+        <button class="filter-btn" id="btn-mode-date" onclick="setMode('date')">Par date</button>
+        
+        <div id="date-navigator" style="display: none; align-items: center; gap: 6px; margin-left: auto;">
+          <button class="filter-btn" onclick="navigateDate(1)" style="padding: 5px 12px; font-size: 11px;">◀ Précédent</button>
+          <select id="select-date" onchange="onDateSelect(this.value)" style="padding: 5px 12px; border-radius: 20px; border: 1px solid #2a2a2a; background: #1a1a1a; color: #fff; font-size: 12px; outline: none; cursor: pointer; font-weight: 600;">
+            <!-- Dates dynamically loaded -->
+          </select>
+          <button class="filter-btn" onclick="navigateDate(-1)" style="padding: 5px 12px; font-size: 11px;">Suivant ▶</button>
+        </div>
+      </div>
+
+      <div class="toolbar">
+        <button class="filter-btn active" onclick="setFilter('tous',this)">Tous</button>
+        <button class="filter-btn" onclick="setFilter('disponibles',this)">Disponibles</button>
+        <button class="filter-btn" onclick="setFilter('blesses',this)">Blessés</button>
+        <button class="filter-btn" onclick="setFilter('alertes',this)">Alertes</button>
+        <button class="filter-btn" onclick="setFilter('recus',this)">Reçus</button>
+        <button class="filter-btn" onclick="setFilter('manquants',this)">Manquants</button>
+        <button class="filter-btn" onclick="setFilter('commentaires',this)">Commentaires</button>
+        <input class="search-input" id="search" placeholder="Rechercher..." oninput="renderRoster()" />
+      </div>
+
+      <div class="toolbar" id="exclusion-toolbar" style="margin-bottom: 12px;">
+        <span style="font-size: 11px; color: #888; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;">Masquer :</span>
+        <button class="filter-btn hide-btn active" data-hide="espoir" onclick="toggleHide('espoir')">Espoirs</button>
+        <button class="filter-btn hide-btn" data-hide="espoirNavette" onclick="toggleHide('espoirNavette')">Espoirs navette</button>
+        <button class="filter-btn hide-btn" data-hide="absent" onclick="toggleHide('absent')">Absents</button>
+      </div>
+
+      <div id='alert-subtoolbar' style='display:none; padding:4px 16px 0; gap:8px; align-items:center;'>
+        <button class='filter-btn active' id='btn-alert-toutes' onclick='setAlertFilter("toutes",this)'>Toutes</button>
+        <button class='filter-btn' id='btn-alert-hooper' onclick='setAlertFilter("hooper",this)'>Hooper</button>
+      </div>
+
+      <div id='roster-wellness'></div>
+      </div>
+
+      <div id='alertes-view' style='display:none'>
+        <div class='toolbar'>
+          <button class='filter-btn active' onclick='setAlertFilter(`toutes`,this)'>Toutes</button>
+          <button class='filter-btn' onclick='setAlertFilter(`hooper`,this)'>Hooper</button>
+          <input class='search-input' id='alert-search' placeholder='Rechercher...' oninput='renderAlertes()' />
+        </div>
+        <div class="toolbar" id="exclusion-toolbar-alertes" style="margin-bottom: 12px;">
+          <span style="font-size: 11px; color: #888; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;">Masquer :</span>
+          <button class="filter-btn hide-btn active" data-hide="espoir" onclick="toggleHide('espoir')">Espoirs</button>
+          <button class="filter-btn hide-btn" data-hide="espoirNavette" onclick="toggleHide('espoirNavette')">Espoirs navette</button>
+          <button class="filter-btn hide-btn" data-hide="absent" onclick="toggleHide('absent')">Absents</button>
+        </div>
+        <div id='alertes-list'></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL DETAIL -->
+  <div class="modal-overlay" id="modal-detail">
+    <div class="modal">
+      <div class="modal-header">
+        <div class="modal-avatar" id="detail-avatar"></div>
+        <div>
+          <div class="modal-nom" id="detail-nom"></div>
+          <div class="modal-poste" id="detail-poste"></div>
+        </div>
+        <button class="modal-close" onclick="fermerDetail()">✕</button>
+      </div>
+      <div id="detail-contenu"></div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from '../renderer/supabase-adapter.js'
+    import { getAuth, onAuthStateChanged, signOut } from '../renderer/supabase-adapter.js'
+    import { getFirestore, collection, doc, getDocs, onSnapshot, query, where, orderBy, limit } from '../renderer/supabase-adapter.js'
+    import { calcWellnessScore, detectVariation } from '../renderer/seances-charges.js'
+
+    // RÉGLAGES PHOTO (zoom & placement)
+    function applyPhotoStyle(img, j) {
+      if (!j) return
+      const zoom = j.photoZoom || 1
+      const px = j.photoPosX != null ? j.photoPosX : 50
+      const py = j.photoPosY != null ? j.photoPosY : 50
+      img.style.objectPosition = px + '% ' + py + '%'
+      if (zoom !== 1) {
+        img.style.transform = 'scale(' + zoom + ')'
+        img.style.transformOrigin = px + '% ' + py + '%'
+      }
+    }
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyCvMs-5LX9Ivk3OkzUR3iz9Kk1E5b9_7Vk",
+      authDomain: "delta-rugby-app.firebaseapp.com",
+      projectId: "delta-rugby-app",
+      storageBucket: "delta-rugby-app.firebasestorage.app",
+      messagingSenderId: "61187079762",
+      appId: "1:61187079762:web:56cd1eaa8beb9e1a2ee98b"
+    }
+
+    const fbApp = initializeApp(firebaseConfig)
+    const auth = getAuth(fbApp)
+    const db = getFirestore(fbApp)
+
+    function getDataScopeStart() {
+      const scope = localStorage.getItem('delta-data-scope') || '30days'
+      if (scope === 'all') return null
+      if (window.__getDataScopeDates) {
+        return window.__getDataScopeDates(scope).start
+      }
+      const d = new Date()
+      d.setDate(d.getDate() - 30)
+      return d.toISOString().split('T')[0]
+    }
+
+    function scopedQuery(name, dateField = 'date') {
+      const start = getDataScopeStart()
+      if (!start) return collection(db, name)
+      return query(collection(db, name), where(dateField, '>=', start))
+    }
+
+    const POSTES_ORDER = ['Pilier gauche','Talonneur','Pilier droit','2e Ligne','N8','3e Ligne aile','Demi de mêlée',"Demi d'ouverture",'Centre','Ailier','Arrière']
+    const COULEURS_POSTE = { 'Pilier gauche':'#8B3A3A','Pilier droit':'#7A2A2A','Talonneur':'#6B3A8B','2e Ligne':'#3A6B8B','N8':'#1A6B4A','3e Ligne aile':'#3A8B6B','Demi de mêlée':'#8B6B3A',"Demi d'ouverture":'#6B8B3A','Centre':'#3A4A8B','Ailier':'#8B3A6B','Arrière':'#2A6B5B' }
+    const HOOPER_LABELS = { fatigue: 'Fatigue générale', sommeil: 'Qualité du sommeil', stress: 'Stress', doms: 'Douleurs musculaires', humeur: 'Humeur / motivation' }
+
+    let joueurs = []
+    let wellnessAujourdhui = {} // holds active data for cards/stats render
+    let wellnessHistorique = {} // jid -> list of {date, score}
+    let allWellness = []
+    let allDates = []
+    let absences = []
+    let blessures = []
+    let currentMode = 'latest' // 'latest' or 'date'
+    let selectedDate = new Date().toISOString().split('T')[0]
+
+    // ==================== CACHE LOCAL (clés partagées avec le shell) ====================
+    function loadCache(key) {
+      try {
+        const r = JSON.parse(localStorage.getItem('cache_' + key) || 'null')
+        return r ? (r.data !== undefined ? r.data : null) : null
+      } catch(e) { return null }
+    }
+    function saveCache(key, data) {
+      try { localStorage.setItem('cache_' + key, JSON.stringify({ ts: Date.now(), data })) } catch(e) {}
+    }
+
+    let currentFilter = 'tous'
+    let currentView = 'wellness'
+    let alertTypeFilter = 'toutes'
+    let hiddenFlags = { espoir: true, espoirNavette: false, absent: false }
+
+    const aujourdhui = new Date().toISOString().split('T')[0]
+
+    function absenceActiveCeJour(jid, date) {
+      if (!jid || !date) return false
+      return absences.some(a => {
+        if (a.joueurId !== jid || a.statut === 'termine') return false
+        const debut = a.debut || a.dateDebut
+        const fin = a.fin || a.dateFin
+        if (!debut || date < debut) return false
+        return !fin || date <= fin
+      })
+    }
+
+    function estAbsent(j) {
+      const date = currentMode === 'date' ? selectedDate : aujourdhui
+      return absenceActiveCeJour(j.id, date)
+    }
+    function estBlesse(j) {
+      const date = currentMode === 'date' ? selectedDate : aujourdhui
+      const bActuelle = blessures.some(b => {
+        if (!b.joueurId || b.joueurId !== j.id) return false
+        const statut = b.statut || ''
+        if (statut === 'gueri') return false
+        const debut = b.dateDebut || b.debut || ''
+        const retour = b.dateRetour || b.retourEstime || ''
+        if (debut && debut > date) return false
+        if (retour && retour < date) return false
+        return true
+      })
+      if (bActuelle) return true
+      // Compat : anciennes périodes de blessure stockées dans absences
+      return absences.some(a => {
+        if (a.joueurId !== j.id) return false
+        const debut = a.debut || a.dateDebut
+        if (!debut) return false
+        const type = (a.type || a.motif || '').toLowerCase()
+        if (type !== 'blessure' && type !== 'blesse') return false
+        const fin = a.fin || a.dateFin || debut
+        return date >= debut && date <= fin
+      })
+    }
+
+    function shouldShow(j) {
+      if (j.archived) return false
+      if (j.espoir && !j.espoirNavette && hiddenFlags.espoir) return false
+      if (j.espoirNavette && hiddenFlags.espoirNavette) return false
+      if (estAbsent(j) && hiddenFlags.absent) return false
+      return true
+    }
+    function visibleJoueurs() {
+      return joueurs.filter(shouldShow)
+    }
+
+    function dateMinusDays(days) {
+      const d = new Date()
+      d.setDate(d.getDate() - days)
+      return d.toISOString().split('T')[0]
+    }
+    function getBaseline(jid, metric) {
+      const startStr = dateMinusDays(21)
+      let vals = allWellness.filter(w => {
+        const wjid = w.joueurId || w.id
+        return wjid === jid && w.date >= startStr && w.date !== aujourdhui && w[metric] != null && w[metric] > 0
+      }).map(w => w[metric])
+      const minVals = metric === 'tapCount' ? 1 : 2
+      if (vals.length < minVals) return null
+      if (metric === 'tapCount') {
+        const sorted = [...vals].sort((a, b) => a - b)
+        const median = sorted.length % 2 === 0 ? (sorted[sorted.length / 2 - 1] + sorted[sorted.length / 2]) / 2 : sorted[Math.floor(sorted.length / 2)]
+        vals = vals.filter(v => v <= median * 1.5)
+        if (vals.length < 1) return null
+      }
+      return vals.reduce((a, b) => a + b, 0) / vals.length
+    }
+    function evolInfo(current, baseline, metric) {
+      if (baseline == null || baseline <= 0) return null
+      const diff = (current - baseline) / baseline
+      const pct = Math.round(diff * 100)
+      if (diff >= 0.10) return { color: '#1D9E75', text: '↑ +' + pct + '%', diff, pct }
+      const redThresh = metric === 'tapCount' ? -0.08 : -0.10
+      if (diff <= redThresh) return { color: '#E24B4A', text: '↓ ' + pct + '%', diff, pct }
+      if (metric === 'tapCount' && diff < -0.05) return { color: '#EF9F27', text: '↓ ' + pct + '%', diff, pct }
+      return { color: '#EF9F27', text: '≈ moyenne', diff, pct }
+    }
+    function calcHooperScore(hooper) {
+      if (!hooper || typeof hooper !== 'object') return null
+      const vals = Object.values(hooper).filter(v => typeof v === 'number')
+      if (!vals.length) return null
+      return vals.reduce((a, b) => a + b, 0) / vals.length
+    }
+    function getScore(w) {
+      const h = calcHooperScore(w?.hooper)
+      return h != null ? h : (w?.scoreGlobal || null)
+    }
+    function getVariationStats(historique, score) {
+      if (!historique || historique.length < 3) return null
+      const vals = historique.slice(-7).map(h => h.score).filter(v => v != null)
+      if (vals.length < 3) return null
+      const moy = vals.reduce((a, b) => a + b, 0) / vals.length
+      const sd = Math.sqrt(vals.reduce((a, b) => a + Math.pow(b - moy, 2), 0) / vals.length)
+      const drop = score < moy ? moy - score : 0
+      const ecart = (sd > 0 && score < moy) ? drop / sd : 0
+      let niveau = null
+      if (score <= 3.5 || ecart > 1.5 || drop > 1.5) niveau = 'forte'
+      else if (score < 4.5 || ecart >= 1 || drop >= 1) niveau = 'moderee'
+      if (niveau && (ecart >= 1 || drop >= 1)) {
+        if (score >= 6) niveau = null
+        else if (score >= 5) niveau = 'moderee'
+        else niveau = 'forte'
+      }
+      return { moy, sd, niveau, ecart, drop }
+    }
+    function getComment(w) {
+      if (!w) return ''
+      const c = w.commentaire || w.comment || ''
+      return typeof c === 'string' ? c.trim() : ''
+    }
+
+    function formatHeuresSommeil(decimal) {
+      if (decimal == null || isNaN(decimal)) return '—'
+      const h = Math.floor(decimal)
+      const m = Math.round((decimal - h) * 60)
+      return `${h}h${m.toString().padStart(2, '0')}`
+    }
+
+    function formatFrenchDate(dateStr) {
+      if (!dateStr) return '—'
+      try {
+        const parts = dateStr.split('-')
+        if (parts.length !== 3) return dateStr
+        const d = new Date(parts[0], parts[1] - 1, parts[2])
+        if (isNaN(d.getTime())) return dateStr
+        return d.toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' })
+      } catch(e) {
+        return dateStr
+      }
+    }
+
+    function processWellnessData(dataList) {
+      allWellness = dataList
+      console.log('[WELLNESS] processWellnessData called with', dataList.length, 'docs')
+      if (dataList.length > 0) {
+        console.log('[WELLNESS] Sample doc:', JSON.stringify(dataList[0]).slice(0, 300))
+        console.log('[WELLNESS] Sample keys:', Object.keys(dataList[0]))
+        console.log('[WELLNESS] Dates found:', [...new Set(dataList.map(w => w.date))].sort().reverse().slice(0, 5))
+      }
+
+      const datesSet = new Set()
+      dataList.forEach(w => {
+        if (w.date) datesSet.add(w.date)
+      })
+      allDates = Array.from(datesSet).sort((a, b) => b.localeCompare(a))
+      
+      const select = document.getElementById('select-date')
+      if (select) {
+        select.innerHTML = ''
+        allDates.forEach(d => {
+          const opt = document.createElement('option')
+          opt.value = d
+          opt.textContent = formatFrenchDate(d)
+          select.appendChild(opt)
+        })
+      }
+      
+      wellnessHistorique = {}
+      dataList.forEach(data => {
+        const jid = data.joueurId || data.id
+        if (!jid) return
+        if (!wellnessHistorique[jid]) wellnessHistorique[jid] = []
+        wellnessHistorique[jid].push({ date: data.date, score: getScore(data) })
+      })
+      console.log('[WELLNESS] wellnessHistorique keys (first 10):', Object.keys(wellnessHistorique).slice(0, 10))
+      console.log('[WELLNESS] joueurs ids (first 10):', joueurs.map(j => j.id).slice(0, 10))
+      const matchCount = joueurs.filter(j => wellnessHistorique[j.id]).length
+      console.log('[WELLNESS] Match count:', matchCount, '/', joueurs.length, 'joueurs have wellness data')
+      Object.keys(wellnessHistorique).forEach(jid => {
+        wellnessHistorique[jid].sort((a, b) => a.date.localeCompare(b.date))
+      })
+
+      if (allDates.length > 0) {
+        if (allDates.includes(aujourdhui)) {
+          selectedDate = aujourdhui
+        } else {
+          selectedDate = allDates[0]
+        }
+      } else {
+        selectedDate = aujourdhui
+      }
+      
+      if (select) {
+        select.value = selectedDate
+      }
+      
+      updateWellnessActive()
+    }
+
+    function updateWellnessActive() {
+      wellnessAujourdhui = {}
+      
+      if (currentMode === 'latest') {
+        joueurs.forEach(j => {
+          const hist = wellnessHistorique[j.id] || []
+          if (hist.length > 0) {
+            const latestEntry = hist[hist.length - 1]
+            const raw = allWellness.find(w => w.joueurId === j.id && w.date === latestEntry.date)
+            if (raw) {
+              wellnessAujourdhui[j.id] = raw
+            }
+          }
+        })
+        document.getElementById('date-navigator').style.display = 'none'
+        document.getElementById('topbar-date').textContent = "Dernières valeurs enregistrées"
+      } else {
+        allWellness.forEach(w => {
+          if (w.date === selectedDate) {
+            wellnessAujourdhui[w.joueurId] = w
+          }
+        })
+        document.getElementById('date-navigator').style.display = 'flex'
+        document.getElementById('topbar-date').textContent = formatFrenchDate(selectedDate)
+        if (document.getElementById('select-date')) {
+          document.getElementById('select-date').value = selectedDate
+        }
+      }
+      
+      majStats()
+      renderRoster()
+      if (currentView === 'alertes') renderAlertes()
+    }
+
+    window.setMode = function(mode) {
+      currentMode = mode
+      document.querySelectorAll('#btn-mode-latest, #btn-mode-date').forEach(b => b.classList.remove('active'))
+      if (mode === 'latest') {
+        document.getElementById('btn-mode-latest').classList.add('active')
+      } else {
+        document.getElementById('btn-mode-date').classList.add('active')
+      }
+      updateWellnessActive()
+    }
+
+    window.onDateSelect = function(date) {
+      selectedDate = date
+      updateWellnessActive()
+    }
+
+    window.navigateDate = function(direction) {
+      if (allDates.length === 0) return
+      const currentIndex = allDates.indexOf(selectedDate)
+      if (currentIndex === -1) return
+      
+      const newIndex = currentIndex + direction
+      if (newIndex >= 0 && newIndex < allDates.length) {
+        selectedDate = allDates[newIndex]
+        document.getElementById('select-date').value = selectedDate
+        updateWellnessActive()
+      }
+    }
+
+    ;(function() {
+      try {
+      requestAnimationFrame(function() { try {
+      const cachedJoueurs = loadCache('wellness_joueurs')
+      const cachedWellness = loadCache('wellness_wellness')
+      const cachedAbsences = loadCache('wellness_absences') || loadCache('absences_absences') || loadCache('absences')
+      console.log('[WELLNESS] Cache load — joueurs:', cachedJoueurs?.length, 'wellness:', cachedWellness?.length, 'absences:', cachedAbsences?.length)
+      if (cachedJoueurs) joueurs = cachedJoueurs.filter(j => !j.archived)
+      if (cachedAbsences) absences = cachedAbsences
+      if (cachedWellness && cachedJoueurs) {
+        // Filtrer le cache par date (scope 30days par defaut) pour ne pas
+        // afficher des donnees tronquees par la limite de 1000 lignes Supabase
+        const scope = localStorage.getItem('delta-data-scope') || '30days'
+        const start = window.__getDataScopeDates ? window.__getDataScopeDates(scope).start : null
+        let filteredWellness = cachedWellness
+        if (start && scope !== 'all') {
+          filteredWellness = cachedWellness.filter(w => w.date && w.date >= start)
+        }
+        console.log('[WELLNESS] Cache filtered:', cachedWellness.length, '→', filteredWellness.length, '(start:', start, ')')
+        processWellnessData(filteredWellness)
+        if (window.__shellContentReady) window.__shellContentReady()
+        if (window.__pageReady) window.__pageReady('wellness.html')
+      }
+      } catch(e2) { console.warn('Cache render error:', e2) } });
+      } catch(e) { console.warn("Cache sync error:", e) }
+    })()
+
+    onAuthStateChanged(auth, async user => {
+      if (!user) { window.location.href = 'login.html'; return }
+      document.getElementById('user-email').textContent = user.email
+
+      const [snap, snapWellness, snapAbsences, snapBlessures] = await Promise.all([
+        getDocs(collection(db, 'joueurs')),
+        getDocs(scopedQuery('wellness')),
+        getDocs(collection(db, 'absences')),
+        getDocs(collection(db, 'blessures'))
+      ])
+      joueurs = snap.docs.map(d => ({ id: d.id, ...d.data() })).filter(j => !j.archived)
+      saveCache('wellness_joueurs', joueurs)
+
+      const rawData = snapWellness.docs.map(d => ({id: d.id, ...d.data()}))
+      console.log('[WELLNESS] Supabase fetch — joueurs:', joueurs.length, 'wellness:', rawData.length, 'absences:', absences.length)
+      if (rawData.length > 0) console.log('[WELLNESS] First wellness doc from Supabase:', JSON.stringify(rawData[0]).slice(0, 300))
+      absences = snapAbsences.docs.map(d => ({ id: d.id, ...d.data() }))
+      blessures = snapBlessures.docs.map(d => ({ id: d.id, ...d.data() }))
+      saveCache('wellness_wellness', rawData)
+      saveCache('wellness_absences', absences)
+      processWellnessData(rawData)
+      if (window.__shellContentReady) window.__shellContentReady()
+      if (window.__pageReady) window.__pageReady('wellness.html')
+
+      // ── Listeners temps réel (comme performances.html) ──────────
+      // Tant que la page est active, ces listeners maintiennent joueurs/
+      // wellness à jour en continu sans dépendre uniquement de la Sentinelle
+      // ou d'un rafraîchissement manuel.
+      let listeners = []
+
+      function startListeners() {
+        if (listeners.length > 0) return // déjà actifs
+
+        listeners.push(
+          onSnapshot(collection(db, 'joueurs'), snap => {
+            joueurs = snap.docs.map(d => ({ id: d.id, ...d.data() })).filter(j => !j.archived)
+            saveCache('wellness_joueurs', joueurs)
+            updateWellnessActive()
+            if (window.__shellContentReady) window.__shellContentReady()
+            if (window.__pageReady) window.__pageReady('wellness.html')
+          }),
+
+          onSnapshot(scopedQuery('wellness'), snap => {
+            const freshData = snap.docs.map(d => ({ id: d.id, ...d.data() }))
+            saveCache('wellness_wellness', freshData)
+            processWellnessData(freshData)
+          }),
+
+          onSnapshot(collection(db, 'absences'), snap => {
+            absences = snap.docs.map(d => ({ id: d.id, ...d.data() }))
+            saveCache('wellness_absences', absences)
+            updateWellnessActive()
+          }),
+
+          onSnapshot(collection(db, 'blessures'), snap => {
+            blessures = snap.docs.map(d => ({ id: d.id, ...d.data() }))
+            updateWellnessActive()
+          })
+        )
+      }
+
+      function stopListeners() {
+        listeners.forEach(unsubscribe => unsubscribe())
+        listeners = []
+      }
+
+      // Démarrer les listeners seulement si cette page est actuellement active
+      if (document.querySelector('.nav-item[data-page="wellness.html"]')?.classList.contains('active')) {
+        startListeners()
+      }
+
+      // Exposer les fonctions via le registry du shell
+      if (window.__registerPageListeners) {
+        window.__registerPageListeners('wellness.html', stopListeners, startListeners)
+      } else {
+        window.__wellnessStartListeners = startListeners
+        window.__wellnessStopListeners = stopListeners
+      }
+    })
+
+    let _splashDoneWellness = false
+    function majStats() {
+      const v = visibleJoueurs()
+      const visibleIds = new Set(v.map(j => j.id))
+      const joueursDispo = v.filter(j => !estAbsent(j))
+      const recus = Object.keys(wellnessAujourdhui).filter(id => visibleIds.has(id)).length
+      const scores = v.map(j => getScore(wellnessAujourdhui[j.id])).filter(Boolean)
+      const moy = scores.length ? (scores.reduce((a, b) => a + b, 0) / scores.length).toFixed(1) : '—'
+      const alertes = v.filter(j => {
+        const w = wellnessAujourdhui[j.id]
+        if (!w) return false
+        const score = getScore(w)
+        if (score != null) {
+          const stats = getVariationStats(wellnessHistorique[j.id] || [], score)
+          if (stats?.niveau) return true
+        }
+        if (w.tapCount != null) {
+          const tapEvol = evolInfo(w.tapCount, getBaseline(j.id, 'tapCount'), 'tapCount')
+          if (tapEvol && (tapEvol.color === '#E24B4A' || (tapEvol.color === '#EF9F27' && tapEvol.diff < -0.05))) return true
+        }
+        return false
+      }).length
+      const taps = v.map(j => wellnessAujourdhui[j.id]?.tapCount).filter(Boolean)
+      const tapMoy = taps.length ? Math.round(taps.reduce((a, b) => a + b, 0) / taps.length) : '—'
+
+      document.getElementById('stat-recus').textContent = recus
+      document.getElementById('stat-recus-sub').textContent = `sur ${joueursDispo.length} joueurs`
+      document.getElementById('stat-moy').textContent = moy
+      document.getElementById('stat-alertes').textContent = alertes
+      document.getElementById('stat-tap').textContent = tapMoy
+    }
+
+    window.renderRoster = function() {
+      const container = document.getElementById('roster-wellness')
+      container.innerHTML = ''
+      const search = document.getElementById('search').value.toLowerCase()
+
+      const filtres = visibleJoueurs().filter(j => {
+        const w = wellnessAujourdhui[j.id]
+        const nom = (j.nom + ' ' + j.prenom).toLowerCase()
+        if (search && !nom.includes(search)) return false
+        if (currentFilter === 'alertes') {
+          if (!w) return false
+          const score = getScore(w)
+          if (score == null) return false
+          const stats = getVariationStats(wellnessHistorique[j.id] || [], score)
+          return !!(stats && stats.niveau)
+        }
+        if (currentFilter === 'recus') return !!w
+        if (currentFilter === 'manquants') return !w && !estAbsent(j)
+        if (currentFilter === 'commentaires') return !!(w && getComment(w))
+        if (currentFilter === 'disponibles') return !estBlesse(j) && !estAbsent(j)
+        if (currentFilter === 'blesses') return estBlesse(j) && !estAbsent(j)
+        return true
+      })
+
+      if (currentFilter === 'alertes') {
+        renderAlertesInline(container, filtres)
+        return
+      }
+      if (currentFilter === 'manquants') {
+        if (filtres.length) {
+          const sec = document.createElement('div')
+          sec.className = 'poste-section'
+          sec.innerHTML = `<div class="poste-label">Joueurs sans retour wellness (${filtres.length})</div>`
+          const grid = document.createElement('div')
+          grid.className = 'players-grid'
+          filtres.forEach(j => grid.appendChild(makeCard(j)))
+          sec.appendChild(grid)
+          container.appendChild(sec)
+        }
+        return
+      }
+      POSTES_ORDER.forEach(poste => {
+        const groupe = filtres.filter(j => j.poste === poste)
+        if (!groupe.length) return
+
+        const sec = document.createElement('div')
+        sec.className = 'poste-section'
+        sec.innerHTML = `<div class="poste-label">${poste}s (${groupe.length})</div>`
+
+        const grid = document.createElement('div')
+        grid.className = 'players-grid'
+        groupe.forEach(j => grid.appendChild(makeCard(j)))
+        sec.appendChild(grid)
+        container.appendChild(sec)
+      })
+    }
+
+    function renderAlertesInline(container, filtres) {
+      const green = [], orange = [], red = []
+      filtres.forEach(j => {
+        const w = wellnessAujourdhui[j.id]
+        if (!w) return
+        const score = getScore(w)
+        if (score != null && (alertTypeFilter === 'hooper' || alertTypeFilter === 'toutes')) {
+          const stats = getVariationStats(wellnessHistorique[j.id] || [], score)
+          if (stats && stats.niveau) {
+            const item = { j, w, score, moy: stats.moy, sd: stats.sd, niveau: stats.niveau, ecart: stats.ecart, magnitude: stats.ecart }
+            if (stats.niveau === 'forte') red.push(item)
+            else orange.push(item)
+          }
+        }
+        if (alertTypeFilter === 'toutes' && w.tapCount != null) {
+          const tapEvol = evolInfo(w.tapCount, getBaseline(j.id, 'tapCount'), 'tapCount')
+          if (tapEvol) {
+            const magnitude = Math.abs(tapEvol.pct)
+            if (tapEvol.color === '#E24B4A') {
+              red.push({ j, w, tapEvol, magnitude })
+            } else if (tapEvol.color === '#EF9F27' && tapEvol.diff < -0.05) {
+              orange.push({ j, w, tapEvol, magnitude })
+            }
+          }
+        }
+      })
+      const sorter = (a, b) => b.magnitude - a.magnitude
+      green.sort(sorter); orange.sort(sorter); red.sort(sorter)
+      const cardFactory = (item) => item.tapEvol ? makeTapAlerteCard(item) : makeAlerteCard(item)
+      const makeSection = (title, list, color) => {
+        if (!list.length) return null
+        const sec = document.createElement('div')
+        sec.className = 'alerte-section'
+        const t = document.createElement('div')
+        t.className = 'alerte-level-title'
+        const dot = document.createElement('span')
+        dot.className = 'alerte-dot'
+        dot.style.background = color
+        t.appendChild(dot)
+        t.appendChild(document.createTextNode(title + ' '))
+        const count = document.createElement('span')
+        count.style.cssText = 'color:#555;font-size:11px;'
+        count.textContent = '(' + list.length + ')'
+        t.appendChild(count)
+        sec.appendChild(t)
+        list.forEach(a => sec.appendChild(cardFactory(a)))
+        return sec
+      }
+      if (!green.length && !orange.length && !red.length) {
+        const empty = document.createElement('div')
+        empty.className = 'empty-alertes'
+        empty.textContent = 'Aucune alerte wellness active.'
+        container.appendChild(empty)
+        return
+      }
+      const s = makeSection('Alertes rouges', red, '#E24B4A'); if (s) container.appendChild(s)
+      const o = makeSection('Alertes oranges', orange, '#EF9F27'); if (o) container.appendChild(o)
+      const g = makeSection('Alertes vertes', green, '#1D9E75'); if (g) container.appendChild(g)
+    }
+
+    function makeCard(j) {
+      const w = wellnessAujourdhui[j.id]
+      const score = getScore(w)
+      const wColor = score === null ? '#444' : score >= 5 ? '#1D9E75' : score >= 3.5 ? '#EF9F27' : '#E24B4A'
+      const isAbsent = estAbsent(j)
+      const isBlesse = estBlesse(j) && !isAbsent
+      const hasVariation = w && detectVariation(wellnessHistorique[j.id] || [], score)
+
+      const card = document.createElement('div')
+      card.className = 'player-card'
+      card.style.opacity = isAbsent ? '0.45' : '1'
+      card.style.filter = isAbsent ? 'grayscale(0.6)' : 'none'
+      card.style.borderColor = isBlesse ? '#E24B4A' : (score ? wColor + '55' : '#2a2a2a')
+      card.style.boxShadow = isBlesse ? '0 0 0 1px #E24B4A, inset 0 3px 0 #E24B4A' : 'none'
+      card.onclick = () => ouvrirDetail(j)
+
+      // Photo / initiales
+      const photo = document.createElement('div')
+      photo.className = 'player-photo'
+      photo.style.position = 'relative'
+      photo.style.background = isBlesse ? '#fff' : (COULEURS_POSTE[j.poste] || '#333')
+      photo.style.color = isBlesse ? '#0f0f0f' : '#fff'
+      const addCross = () => {
+        const cross = document.createElement('div')
+        cross.style.cssText = 'position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#E24B4A;font-size:120px;font-weight:900;opacity:0.75;pointer-events:none;line-height:1;'
+        cross.textContent = '+'
+        photo.appendChild(cross)
+      }
+      if (j.photo) {
+        const img = document.createElement('img')
+        img.src = j.photo
+        img.onerror = () => { photo.textContent = j.prenom[0] + j.nom[0]; if (isBlesse) addCross() }
+        applyPhotoStyle(img, j)
+        photo.appendChild(img)
+      } else {
+        photo.textContent = j.prenom[0] + j.nom[0]
+      }
+      if (isBlesse) addCross()
+      card.appendChild(photo)
+
+      // Pictos (top-right: statut / variation / espoir)
+      const pictos = document.createElement('div')
+      pictos.className = 'player-pictos'
+      if (isAbsent) { const p = document.createElement('div'); p.className = 'picto'; p.style.cssText = 'background:#444'; p.textContent = 'A'; pictos.appendChild(p) }
+      if (hasVariation) { const p = document.createElement('div'); p.className = 'picto'; p.style.cssText = 'background:' + (hasVariation === 'forte' ? '#E24B4A' : '#EF9F27'); p.textContent = '!'; pictos.appendChild(p) }
+      if (j.espoir) { const p = document.createElement('div'); p.className = 'picto'; p.style.cssText = 'background:#378ADD'; p.textContent = 'E'; pictos.appendChild(p) }
+      // Sommeil — premier item dans la colonne pictos (top-right)
+      if (w?.sommeil != null) {
+        const ev = evolInfo(w.sommeil, getBaseline(j.id, 'sommeil'))
+        const sleepColor = ev ? ev.color : '#fff'
+        const sleepBorder = ev ? ev.color : 'transparent'
+        const sleepBadge = document.createElement('div')
+        sleepBadge.style.cssText = `background:rgba(0,0,0,0.65);color:${sleepColor};font-size:9px;font-weight:700;padding:2px 5px;border-radius:8px;line-height:1.4;text-align:center;white-space:nowrap;border:1px solid ${sleepBorder};`
+        sleepBadge.textContent = formatHeuresSommeil(w.sommeil)
+        pictos.insertBefore(sleepBadge, pictos.firstChild)
+      }
+      card.appendChild(pictos)
+
+      if (w) {
+        // Tap test — top-left
+        if (w.tapCount != null) {
+          const ev = evolInfo(w.tapCount, getBaseline(j.id, 'tapCount'), 'tapCount')
+          const tapColor = ev ? ev.color : '#FECC00'
+          const tapBorder = ev ? ev.color : 'transparent'
+          const tapBadge = document.createElement('div')
+          tapBadge.style.cssText = `position:absolute;top:4px;left:4px;background:rgba(0,0,0,0.65);color:${tapColor};font-size:9px;font-weight:700;padding:2px 5px;border-radius:8px;line-height:1.4;pointer-events:none;border:1px solid ${tapBorder};`
+          tapBadge.textContent = w.tapCount + '✦'
+          card.appendChild(tapBadge)
+        }
+        // Commentaire — badge vert style notification iPhone
+        const commentText = getComment(w)
+        if (commentText) {
+          const commentBadge = document.createElement('div')
+          commentBadge.className = 'comment-badge'
+          commentBadge.title = commentText
+          commentBadge.textContent = '💬'
+          card.appendChild(commentBadge)
+        }
+      }
+
+      // Info
+      const info = document.createElement('div')
+      info.className = 'player-info'
+      const nom = document.createElement('div')
+      nom.className = 'player-name'
+      nom.textContent = j.nom
+
+      const bar = document.createElement('div')
+      bar.className = 'wellness-bar'
+      const fill = document.createElement('div')
+      fill.className = 'wellness-fill'
+      fill.style.width = score ? Math.round(score / 7 * 100) + '%' : '0'
+      fill.style.background = wColor
+      bar.appendChild(fill)
+
+      const sc = document.createElement('div')
+      sc.className = 'player-score'
+      if (score) {
+        const dateStr = w.date === aujourdhui ? '' : ` (${w.date.slice(5).replace('-', '/')})`
+        sc.textContent = score.toFixed(1) + '/7' + dateStr
+      } else {
+        sc.textContent = 'En attente'
+      }
+
+      info.appendChild(nom); info.appendChild(bar); info.appendChild(sc)
+      if (!w && !isAbsent) {
+        const overlay = document.createElement('div')
+        overlay.className = 'no-data-overlay'
+        overlay.textContent = 'Pas reçu'
+        card.appendChild(overlay)
+      }
+      card.appendChild(info)
+      return card
+    }
+
+    function ouvrirDetail(j) {
+      const w = wellnessAujourdhui[j.id]
+      const histo = wellnessHistorique[j.id] || []
+      const score = getScore(w)
+      const hasVariation = w && detectVariation(histo, score)
+
+      document.getElementById('detail-avatar').textContent = j.prenom[0] + j.nom[0]
+      document.getElementById('detail-avatar').style.background = COULEURS_POSTE[j.poste] || '#333'
+      document.getElementById('detail-nom').textContent = j.prenom + ' ' + j.nom
+      document.getElementById('detail-poste').textContent = j.poste || ''
+
+      const c = document.getElementById('detail-contenu')
+      c.innerHTML = ''
+
+      if (!w) {
+        c.innerHTML = '<div style="color:#555; text-align:center; padding:20px;">Aucune donnée wellness pour ce joueur.</div>'
+      } else {
+        if (hasVariation) {
+          const varColor = hasVariation === 'forte' ? '#E24B4A' : '#EF9F27'
+          c.innerHTML = '<div class="alerte-variation" style="background:' + varColor + '22; border-color:' + varColor + '; color:' + varColor + ';">⚠ Alerte ' + (hasVariation === 'forte' ? 'forte' : 'modérée') + ' (Hooper)</div>'
+        }
+
+        // Score global (calculé à partir du Hooper)
+        const scoreColor = score >= 5 ? '#1D9E75' : score >= 3.5 ? '#EF9F27' : '#E24B4A'
+        const sleepEvol = w.sommeil != null ? evolInfo(w.sommeil, getBaseline(j.id, 'sommeil')) : null
+        const tapEvol = w.tapCount != null ? evolInfo(w.tapCount, getBaseline(j.id, 'tapCount'), 'tapCount') : null
+        c.innerHTML += `
+          <div class="detail-section">
+            <div class="detail-row">
+              <span class="detail-key">Date de l\'enregistrement</span>
+              <span class="detail-val" style="color:#FECC00; font-weight:600;">${formatFrenchDate(w.date)}</span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-key">Score global</span>
+              <span class="detail-val" style="color:${scoreColor}; font-size:20px;">${score != null ? score.toFixed(1) : '—'}/7</span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-key">Heures de sommeil</span>
+              <span class="detail-val" style="color:${sleepEvol?.color || '#fff'}">${formatHeuresSommeil(w.sommeil)}${sleepEvol ? ' — ' + sleepEvol.text : ''}</span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-key">Tap test</span>
+              <span class="detail-val" style="color:${tapEvol?.color || '#fff'}">${w.tapCount != null ? w.tapCount + ' taps / 10s' : '—'}${tapEvol ? ' — ' + tapEvol.text : ''}</span>
+            </div>
+          </div>
+        `
+        const commentText = getComment(w)
+        if (commentText) {
+          c.innerHTML += `
+            <div class="detail-section">
+              <div class="detail-title">Commentaire du joueur</div>
+              <div style="background:#111; border:1px solid #2a2a2a; border-radius:10px; padding:12px; font-size:13px; color:#ddd; line-height:1.5; white-space:pre-wrap;">${commentText.replace(/</g, '&lt;')}</div>
+            </div>
+          `
+        }
+
+        // Hooper détail
+        if (w.hooper) {
+          const sec = document.createElement('div')
+          sec.className = 'detail-section'
+          sec.innerHTML = '<div class="detail-title">Questionnaire Hooper</div><div class="hooper-grid"></div>'
+          const grid = sec.querySelector('.hooper-grid')
+          Object.entries(w.hooper).forEach(([k, v]) => {
+            const color = v >= 5 ? '#1D9E75' : v >= 3.5 ? '#EF9F27' : '#E24B4A'
+            grid.innerHTML += `
+              <span class="hooper-item-label">${HOOPER_LABELS[k] || k}</span>
+              <span class="hooper-score-badge" style="background:${color}22; color:${color}; border:1px solid ${color}44;">${v}/7</span>
+            `
+          })
+          c.appendChild(sec)
+        }
+
+        // Historique 7 jours
+        if (histo.length > 0) {
+          const sec = document.createElement('div')
+          sec.className = 'detail-section'
+          sec.innerHTML = '<div class="detail-title">Historique 7 jours</div>'
+          const chart = document.createElement('div')
+          chart.className = 'historique-chart'
+          const recent = histo.slice(-7)
+          recent.forEach(h => {
+            const bar = document.createElement('div')
+            bar.className = 'histo-bar'
+            const pct = Math.round((h.score / 7) * 100)
+            const col = h.score >= 5 ? '#1D9E75' : h.score >= 3.5 ? '#EF9F27' : '#E24B4A'
+            bar.style.cssText = `height:${pct}%; background:${col}; flex:1;`
+            bar.title = h.date + ' : ' + h.score?.toFixed(1)
+            chart.appendChild(bar)
+          })
+          sec.appendChild(chart)
+          c.appendChild(sec)
+        }
+      }
+
+      document.getElementById('modal-detail').classList.add('open')
+    }
+
+    window.fermerDetail = function() {
+      document.getElementById('modal-detail').classList.remove('open')
+    }
+
+    function renderAlertes() {
+      const container = document.getElementById('alertes-list')
+      container.innerHTML = ''
+      if (!joueurs.length) return
+      const search = (document.getElementById('alert-search')?.value || '').toLowerCase()
+      const matchSearch = (j) => {
+        const nom = (j.nom + ' ' + j.prenom).toLowerCase()
+        return !search || nom.includes(search)
+      }
+      const green = []
+      const orange = []
+      const red = []
+      visibleJoueurs().forEach(j => {
+        const w = wellnessAujourdhui[j.id]
+        if (!w) return
+        const score = getScore(w)
+        if (score != null && (alertTypeFilter === 'hooper' || alertTypeFilter === 'toutes')) {
+          const stats = getVariationStats(wellnessHistorique[j.id] || [], score)
+          if (stats && stats.niveau && matchSearch(j)) {
+            const item = { j, w, score, moy: stats.moy, sd: stats.sd, niveau: stats.niveau, ecart: stats.ecart, magnitude: stats.ecart }
+            if (stats.niveau === 'forte') red.push(item)
+            else if (stats.niveau === 'moderee') orange.push(item)
+          }
+        }
+        if (alertTypeFilter === 'toutes' && w.tapCount != null) {
+          const tapEvol = evolInfo(w.tapCount, getBaseline(j.id, 'tapCount'), 'tapCount')
+          if (tapEvol && matchSearch(j)) {
+            const item = { j, w, tapEvol, magnitude: Math.abs(tapEvol.pct) }
+            if (tapEvol.color === '#E24B4A') red.push(item)
+            else if (tapEvol.color === '#EF9F27' && tapEvol.diff < -0.05) orange.push(item)
+          }
+        }
+      })
+      const sorter = (a, b) => b.magnitude - a.magnitude
+      green.sort(sorter)
+      orange.sort(sorter)
+      red.sort(sorter)
+      const cardFactory = (item) => item.tapEvol ? makeTapAlerteCard(item) : makeAlerteCard(item)
+      const makeSection = (sectionTitle, list, color) => {
+        const sec = document.createElement('div')
+        sec.className = 'alerte-section'
+        const t = document.createElement('div')
+        t.className = 'alerte-level-title'
+        const dot = document.createElement('span')
+        dot.className = 'alerte-dot'
+        dot.style.background = color
+        t.appendChild(dot)
+        t.appendChild(document.createTextNode(sectionTitle + ' '))
+        const count = document.createElement('span')
+        count.style.cssText = 'color:#555;font-size:11px;'
+        count.textContent = '(' + list.length + ')'
+        t.appendChild(count)
+        sec.appendChild(t)
+        list.forEach(a => sec.appendChild(cardFactory(a)))
+        return sec
+      }
+      if (!green.length && !orange.length && !red.length) {
+        const empty = document.createElement('div')
+        empty.className = 'empty-alertes'
+        empty.textContent = 'Aucune alerte wellness active.'
+        container.appendChild(empty)
+        return
+      }
+      if (green.length) container.appendChild(makeSection('Alertes vertes', green, '#1D9E75'))
+      if (orange.length) container.appendChild(makeSection('Alertes oranges', orange, '#EF9F27'))
+      if (red.length) container.appendChild(makeSection('Alertes rouges', red, '#E24B4A'))
+    }
+
+    function makeAlerteCard({ j, w, score, moy, sd, niveau }) {
+      const card = document.createElement('div')
+      card.className = 'alerte-card'
+      card.style.borderColor = niveau === 'forte' ? '#E24B4A' : '#EF9F27'
+      card.onclick = () => ouvrirDetail(j)
+      const avatar = document.createElement('div')
+      avatar.className = 'alerte-avatar'
+      if (j.photo) {
+        const img = document.createElement('img')
+        img.src = j.photo
+        img.style.cssText = 'width:100%;height:100%;object-fit:cover;border-radius:50%;'
+        img.onerror = () => { avatar.style.background = COULEURS_POSTE[j.poste] || '#333'; avatar.textContent = (j.prenom ? j.prenom[0] : '') + (j.nom ? j.nom[0] : '') }
+        applyPhotoStyle(img, j)
+        avatar.appendChild(img)
+      } else {
+        avatar.style.background = COULEURS_POSTE[j.poste] || '#333'
+        avatar.textContent = (j.prenom ? j.prenom[0] : '') + (j.nom ? j.nom[0] : '')
+      }
+      const nomBlock = document.createElement('div')
+      const nom = document.createElement('div')
+      nom.className = 'alerte-nom'
+      nom.textContent = j.prenom + ' ' + j.nom
+      const poste = document.createElement('div')
+      poste.className = 'alerte-poste'
+      poste.textContent = j.poste || ''
+      nomBlock.appendChild(nom)
+      nomBlock.appendChild(poste)
+      const metrics = document.createElement('div')
+      metrics.className = 'alerte-metrics'
+      const addMetric = (label, value) => {
+        const m = document.createElement('div')
+        m.className = 'alerte-metric'
+        const ml = document.createElement('div')
+        ml.className = 'alerte-metric-label'
+        ml.textContent = label
+        const mv = document.createElement('div')
+        mv.className = 'alerte-metric-value'
+        mv.textContent = value
+        m.appendChild(ml)
+        m.appendChild(mv)
+        metrics.appendChild(m)
+      }
+      addMetric('Score', score.toFixed(1))
+      addMetric('Moyenne', moy.toFixed(1))
+      addMetric('Écart-type', sd.toFixed(2))
+      addMetric('Date', formatFrenchDate(w.date))
+      // Items Hooper problématiques (≤ 3)
+      if (w.hooper) {
+        const badItems = Object.entries(w.hooper).filter(([, v]) => typeof v === 'number' && v <= 3)
+        if (badItems.length) {
+          const itemsDiv = document.createElement('div')
+          itemsDiv.style.cssText = 'grid-column:1/-1;margin-top:6px;display:flex;flex-wrap:wrap;gap:4px;'
+          badItems.forEach(([k, v]) => {
+            const chip = document.createElement('span')
+            chip.style.cssText = 'background:#E24B4A22;color:#E24B4A;border:1px solid #E24B4A44;border-radius:8px;padding:2px 8px;font-size:11px;font-weight:600;'
+            chip.textContent = (HOOPER_LABELS[k] || k) + ': ' + v + '/7'
+            itemsDiv.appendChild(chip)
+          })
+          metrics.appendChild(itemsDiv)
+        }
+      }
+      const badge = document.createElement('span')
+      badge.className = 'alerte-badge ' + (niveau === 'forte' ? 'badge-forte' : 'badge-moderee')
+      badge.textContent = '!'
+      card.appendChild(avatar)
+      card.appendChild(nomBlock)
+      card.appendChild(metrics)
+      card.appendChild(badge)
+      return card
+    }
+
+    function makeTapAlerteCard({ j, w, tapEvol }) {
+      const card = document.createElement('div')
+      card.className = 'alerte-card'
+      card.style.borderColor = tapEvol.color
+      card.onclick = () => ouvrirDetail(j)
+      const avatar = document.createElement('div')
+      avatar.className = 'alerte-avatar'
+      if (j.photo) {
+        const img = document.createElement('img')
+        img.src = j.photo
+        img.style.cssText = 'width:100%;height:100%;object-fit:cover;border-radius:50%;'
+        img.onerror = () => { avatar.style.background = COULEURS_POSTE[j.poste] || '#333'; avatar.textContent = (j.prenom ? j.prenom[0] : '') + (j.nom ? j.nom[0] : '') }
+        applyPhotoStyle(img, j)
+        avatar.appendChild(img)
+      } else {
+        avatar.style.background = COULEURS_POSTE[j.poste] || '#333'
+        avatar.textContent = (j.prenom ? j.prenom[0] : '') + (j.nom ? j.nom[0] : '')
+      }
+      const nomBlock = document.createElement('div')
+      const nom = document.createElement('div')
+      nom.className = 'alerte-nom'
+      nom.textContent = j.prenom + ' ' + j.nom
+      const poste = document.createElement('div')
+      poste.className = 'alerte-poste'
+      poste.textContent = j.poste || ''
+      nomBlock.appendChild(nom)
+      nomBlock.appendChild(poste)
+      const metrics = document.createElement('div')
+      metrics.className = 'alerte-metrics'
+      const addMetric = (label, value, color) => {
+        const m = document.createElement('div')
+        m.className = 'alerte-metric'
+        const ml = document.createElement('div')
+        ml.className = 'alerte-metric-label'
+        ml.textContent = label
+        const mv = document.createElement('div')
+        mv.className = 'alerte-metric-value'
+        mv.style.color = color || '#fff'
+        mv.textContent = value
+        m.appendChild(ml)
+        m.appendChild(mv)
+        metrics.appendChild(m)
+      }
+      addMetric('Tap test', w.tapCount + ' taps')
+      addMetric('Évolution', tapEvol.text, tapEvol.color)
+      addMetric('Date', formatFrenchDate(w.date))
+      card.appendChild(avatar)
+      card.appendChild(nomBlock)
+      card.appendChild(metrics)
+      return card
+    }
+
+    window.switchView = function(view) {
+      currentView = view
+      document.getElementById('wellness-view').style.display = view === 'wellness' ? 'block' : 'none'
+      document.getElementById('alertes-view').style.display = view === 'alertes' ? 'block' : 'none'
+      document.getElementById('nav-wellness').classList.toggle('active', view === 'wellness')
+      document.getElementById('nav-alertes').classList.toggle('active', view === 'alertes')
+      const top = document.getElementById('topbar-title')
+      if (top) top.textContent = view === 'alertes' ? 'Alertes Wellness' : 'Wellness'
+      if (view === 'alertes') renderAlertes()
+      else renderRoster()
+    }
+
+    window.setAlertFilter = function(type, btn) {
+      alertTypeFilter = type
+      document.querySelectorAll('#alert-subtoolbar .filter-btn').forEach(b => b.classList.remove('active'))
+      btn.classList.add('active')
+      if (currentFilter === 'alertes') renderRoster()
+      else renderAlertes()
+    }
+
+    window.setFilter = function(f, btn) {
+      currentFilter = f
+      document.querySelectorAll('#wellness-view .filter-btn:not(.hide-btn):not([id^=btn-mode-])').forEach(b => b.classList.remove('active'))
+      btn.classList.add('active')
+      document.getElementById('alert-subtoolbar').style.display = f === 'alertes' ? 'flex' : 'none'
+      renderRoster()
+    }
+
+    window.toggleHide = function(category) {
+      hiddenFlags[category] = !hiddenFlags[category]
+      document.querySelectorAll(`.hide-btn[data-hide="${category}"]`).forEach(btn => {
+        btn.classList.toggle('active', hiddenFlags[category])
+      })
+      majStats()
+      renderRoster()
+      if (currentView === 'alertes') renderAlertes()
+    }
+
+    window.handleLogout = async function() {
+      await signOut(auth)
+      window.location.href = 'login.html'
+    }
+
+    window.__refresh_wellness = async function() {
+      const content = document.querySelector('.content')
+      const scrollTop = content ? content.scrollTop : 0
+      const prevMode = currentMode
+      const prevDate = selectedDate
+
+      // Re-lire les données en bypassant le cache pour forcer un fetch frais
+      // depuis Supabase — sinon le stale-while-revalidate sert le vieux cache
+      // et on retombe sur le même problème de données pas à jour (comme pour
+      // performances.html / __refresh_performances).
+      try {
+        const [snap, snapWellness, snapAbsences, snapBlessures] = await Promise.all([
+          getDocs(Object.assign(collection(db, 'joueurs'), { __noCache: true })),
+          getDocs(Object.assign(scopedQuery('wellness'), { __noCache: true })),
+          getDocs(Object.assign(collection(db, 'absences'), { __noCache: true })),
+          getDocs(Object.assign(collection(db, 'blessures'), { __noCache: true }))
+        ])
+        joueurs = snap.docs.map(d => ({ id: d.id, ...d.data() })).filter(j => !j.archived)
+        saveCache('wellness_joueurs', joueurs)
+
+        const rawData = snapWellness.docs.map(d => ({ id: d.id, ...d.data() }))
+        absences = snapAbsences.docs.map(d => ({ id: d.id, ...d.data() }))
+        blessures = snapBlessures.docs.map(d => ({ id: d.id, ...d.data() }))
+        saveCache('wellness_wellness', rawData)
+        saveCache('wellness_absences', absences)
+        processWellnessData(rawData)
+      } catch (e) {
+        console.error('[refresh_wellness] Erreur fetch frais, fallback cache:', e)
+        const cachedJoueurs = loadCache('wellness_joueurs')
+        const cachedWellness = loadCache('wellness_wellness')
+        if (cachedJoueurs) joueurs = cachedJoueurs.filter(j => !j.archived)
+        const cachedAbsences = loadCache('wellness_absences') || loadCache('absences_absences') || loadCache('absences')
+        if (cachedAbsences) absences = cachedAbsences
+        if (cachedWellness) processWellnessData(cachedWellness)
+      }
+
+      if (prevMode === 'date' && allDates.includes(prevDate)) {
+        selectedDate = prevDate
+        const select = document.getElementById('select-date')
+        if (select) select.value = selectedDate
+      }
+      updateWellnessActive()
+      if (content) content.scrollTop = scrollTop
+    }
+
+    if (location.hash === '#alertes') window.switchView('alertes')
+  </script>
+</body>
+</html>

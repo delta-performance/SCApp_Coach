@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>iPad App</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 100%; background: #0a0a0a; color: #fff; font-family: -apple-system, BlinkMacSystemFont, sans-serif; overflow: hidden; }
+    header {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      height: 54px;
+      background: #111;
+      border-bottom: 1px solid #222;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: env(safe-area-inset-top, 0) 16px 0;
+      z-index: 100;
+    }
+    .back-btn {
+      background: #222;
+      color: #fff;
+      border: 1px solid #333;
+      border-radius: 8px;
+      padding: 8px 12px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .page-title {
+      font-size: 15px;
+      font-weight: 700;
+      color: #FECC00;
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+      pointer-events: none;
+    }
+    iframe {
+      width: 100%;
+      height: 100%;
+      border: none;
+      padding-top: 54px;
+      background: #0a0a0a;
+    }
+  </style>
+  <script type="module" src="auth.js"></script>
+</head>
+<body>
+  <header>
+    <button class="back-btn" onclick="location.href='index.html'">← Accueil</button>
+    <span class="page-title" id="page-title"></span>
+    <button class="back-btn" onclick="logout()" style="background:none;color:#888;border-color:#333;">Déconnexion</button>
+  </header>
+  <iframe id="page-frame" allow="fullscreen"></iframe>
+
+  <script type="module">
+    const params = new URLSearchParams(location.search)
+    const page = params.get('page') || 'planning.html'
+    const title = page.replace(/\.html$/, '').replace(/-/g, ' ')
+    document.getElementById('page-title').textContent = title.charAt(0).toUpperCase() + title.slice(1)
+    document.getElementById('page-frame').src = `pages/${page}`
+  </script>
+</body>
+</html>

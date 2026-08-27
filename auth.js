@@ -1,6 +1,6 @@
-import { initializeApp } from './firebase-bundle.js'
-import { getAuth, onAuthStateChanged, signOut, setPersistence, browserLocalPersistence } from './firebase-bundle.js'
-import { getFirestore } from './firebase-bundle.js'
+import { initializeApp } from './supabase-adapter.js'
+import { getAuth, onAuthStateChanged, signOut, setPersistence, browserLocalPersistence } from './supabase-adapter.js'
+import { getFirestore } from './supabase-adapter.js'
 
 const firebaseConfig = {
   apiKey: "AIzaSyCvMs-5LX9Ivk3OkzUR3iz9Kk1E5b9_7Vk",
@@ -31,3 +31,6 @@ window.logout = async function() {
 }
 
 export { auth, db }
+
+// Écoute des mises à jour de l'application
+import './update-check.js'

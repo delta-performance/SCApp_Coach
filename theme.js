@@ -69,3 +69,17 @@
     initButtons();
   }
 })();
+
+// Ouvre le sélecteur de date natif au clic dans n'importe quel input type="date"
+(function () {
+  function openDatePicker(e) {
+    const input = e.target.closest('input[type="date"]');
+    if (!input) return;
+    if (typeof input.showPicker === 'function') {
+      try { input.showPicker(); } catch (err) { input.focus(); }
+    } else {
+      input.focus();
+    }
+  }
+  document.addEventListener('click', openDatePicker);
+})();

@@ -40,6 +40,79 @@
     .mode-btn { padding: 5px 12px; border-radius: 6px; border: none; font-size: 12px; font-weight: 500; cursor: pointer; background: none; color: #666; transition: all .15s; white-space: nowrap; }
     .mode-btn.active { background: #FECC00; color: #0f0f0f; }
 
+    /* MATCH HEADER */
+    .match-header { background: #1a1a1a; border: 1px solid #2a2a2a; border-radius: 12px; padding: 14px 18px; margin-bottom: 16px; display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+    .mf { display: flex; flex-direction: column; gap: 3px; }
+    .mf label { font-size: 10px; color: #555; text-transform: uppercase; letter-spacing: .06em; }
+    .mf input, .mf select { padding: 6px 10px; border-radius: 7px; border: 1px solid #2a2a2a; background: #0f0f0f; color: #fff; font-size: 13px; outline: none; }
+    .mf input:focus, .mf select:focus { border-color: #FECC00; }
+    .mf input[type="date"] { color-scheme: dark; }
+
+    /* TERRAIN LAYOUT */
+    .terrain-layout { display: flex; gap: 16px; align-items: flex-start; }
+    .terrain-principal { flex: 1; min-width: 0; }
+    .terrain-side { width: 190px; min-width: 190px; display: flex; flex-direction: column; gap: 10px; }
+
+    /* RUGBY FIELD */
+    .rugby-field { background: #1a1a1a; border: 1px solid #2a2a2a; border-radius: 12px; padding: 14px 10px; text-align: center; }
+    .field-title { font-size: 12px; font-weight: 700; color: #FECC00; text-transform: uppercase; letter-spacing: .08em; margin-bottom: 12px; }
+    .sous-label { font-size: 9px; color: #444; text-transform: uppercase; letter-spacing: .06em; margin-bottom: 5px; margin-top: 2px; }
+    .separateur { height: 1px; background: #2a2a2a; margin: 8px 4px; }
+
+    /* LIGNES JOUEURS */
+    .ligne-rugby { display: flex; justify-content: center; gap: 4px; margin-bottom: 4px; flex-wrap: wrap; }
+    .remplacants-row { display: flex; justify-content: center; gap: 3px; flex-wrap: wrap; margin-bottom: 4px; }
+
+    /* SLOT JOUEUR */
+    .slot-joueur { display: flex; flex-direction: column; align-items: center; gap: 6px; cursor: pointer; min-width: 100px; max-width: 120px; }
+    .slot-joueur.small { min-width: 80px; max-width: 100px; }
+    .slot-cercle { width: 85px; height: 85px; border-radius: 50%; border: 3px solid #2a2a2a; background: #111; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: all .15s; position: relative; overflow: visible; }
+    .slot-joueur.small .slot-cercle { width: 70px; height: 70px; border-width: 2px; }
+    .slot-cercle:hover { border-color: #FECC00; background: #FECC0015; }
+    .slot-cercle.rempli { border-color: #FECC00; background: #FECC0018; }
+    .slot-cercle.remplacant { border-color: #333; }
+    .slot-cercle.remplacant.rempli { border-color: #666; background: #88878018; }
+    .slot-num-cercle { position: absolute; left: -22px; top: 50%; transform: translateY(-50%); font-size: 16px; font-weight: 700; color: #FECC00; background: #111; padding: 5px 10px; border-radius: 12px; border: 2px solid #FECC00; z-index: 10; }
+    .slot-joueur.small .slot-num-cercle { font-size: 14px; left: -18px; padding: 4px 8px; }
+    .slot-cercle.remplacant .slot-num-cercle { color: #666; border-color: #666; }
+    .slot-photo { width: 75px; height: 75px; border-radius: 50%; object-fit: cover; }
+    .slot-joueur.small .slot-photo { width: 60px; height: 60px; }
+    .slot-nom-dessous { font-size: 9px; color: #ccc; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%; }
+    .slot-nom-dessous.vide { color: #2a2a2a; font-style: italic; font-size: 8px; }
+
+    /* TAGS */
+    .slot-tags { display: flex; gap: 2px; justify-content: center; flex-wrap: wrap; }
+    .slot-tag { font-size: 7px; font-weight: 700; padding: 1px 4px; border-radius: 3px; cursor: pointer; transition: opacity .12s; user-select: none; }
+    .slot-tag.inactive { opacity: 0.25; }
+    .slot-tag.active { opacity: 1; }
+    .tag-cap { background: #E24B4A22; color: #E24B4A; border: 1px solid #E24B4A44; }
+    .tag-g { background: #378ADD22; color: #85B7EB; border: 1px solid #378ADD44; }
+    .tag-t { background: #FECC0022; color: #FECC00; border: 1px solid #FECC0044; }
+    .tag-d { background: #1D9E7522; color: #5DCAA5; border: 1px solid #1D9E7544; }
+    .tag-gd { background: #7F77DD22; color: #AFA9EC; border: 1px solid #7F77DD44; }
+
+    /* SIDE PANELS */
+    .side-panel { background: #1a1a1a; border: 1px solid #2a2a2a; border-radius: 10px; overflow: hidden; }
+    .side-panel-header { padding: 7px 10px; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; border-bottom: 1px solid #2a2a2a; }
+    .side-panel-header.hg { background: #E24B4A18; color: #F09595; }
+    .side-panel-header.espoirs { background: #378ADD18; color: #85B7EB; }
+    .side-panel-header.blesses-col { background: #E24B4A18; color: #F09595; }
+    .side-panel-body { padding: 4px 8px; }
+    .side-item { display: flex; align-items: center; gap: 6px; padding: 4px 0; border-bottom: 1px solid #111; font-size: 11px; }
+    .side-item:last-child { border-bottom: none; }
+    .side-num { font-size: 10px; font-weight: 700; min-width: 16px; }
+    .side-nom { flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .side-remove { font-size: 10px; color: #333; cursor: pointer; flex-shrink: 0; }
+    .side-remove:hover { color: #E24B4A; }
+    .side-add { padding: 4px 8px; font-size: 10px; color: #555; cursor: pointer; text-align: center; border-top: 1px solid #111; }
+    .side-add:hover { color: #FECC00; }
+
+    /* STAFF */
+    .staff-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+    .staff-field label { display: block; font-size: 9px; color: #555; margin-bottom: 2px; }
+    .staff-input { width: 100%; padding: 5px 8px; border-radius: 6px; border: 1px solid #2a2a2a; background: #0f0f0f; color: #fff; font-size: 11px; outline: none; }
+    .staff-input:focus { border-color: #FECC00; }
+
     /* ENTRAINEMENT */
     .entrainement-header { background: #1a1a1a; border: 1px solid #2a2a2a; border-radius: 12px; padding: 14px 18px; margin-bottom: 16px; display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
     .ef { display: flex; flex-direction: column; gap: 3px; }
@@ -58,7 +131,7 @@
     .slot-entr { display: flex; flex-direction: column; align-items: center; gap: 2px; min-width: 60px; max-width: 75px; }
     .entr-cercle { width: 44px; height: 44px; border-radius: 50%; border: 2px solid; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; transition: opacity .12s; }
     .entr-cercle:hover { opacity: .8; }
-    .entr-nom { font-size: 9px; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%; color: #fff; }
+    .entr-nom { font-size: 9px; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%; color: #888; }
     .entr-seq { display: flex; gap: 2px; flex-wrap: wrap; justify-content: center; max-width: 70px; }
     .seq-chip { font-size: 8px; padding: 1px 3px; border-radius: 3px; cursor: pointer; border: 1px solid; transition: all .1s; }
     .entr-stats { font-size: 8px; text-align: center; }
@@ -90,6 +163,28 @@
     .vision-seq-table tr:hover td { background: #111; }
     .vision-changement { display: inline-block; padding: 2px 6px; background: #E24B4A; color: #fff; font-size: 9px; border-radius: 4px; margin-left: 8px; }
     .vision-nouveau { display: inline-block; padding: 2px 6px; background: #1D9E75; color: #fff; font-size: 9px; border-radius: 4px; margin-left: 8px; }
+
+    /* STATS */
+    .stats-toolbar { display: flex; gap: 10px; margin-bottom: 16px; flex-wrap: wrap; align-items: center; }
+    .stats-sel { padding: 7px 12px; border-radius: 8px; border: 1px solid #2a2a2a; background: #1a1a1a; color: #fff; font-size: 13px; outline: none; }
+    .feuilles-nav { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 14px; }
+    .feuille-btn { padding: 4px 10px; border-radius: 6px; border: 1px solid #2a2a2a; background: none; color: #555; font-size: 11px; cursor: pointer; }
+    .feuille-btn:hover { color: #fff; border-color: #444; }
+    .feuille-btn.active { background: #FECC00; color: #0f0f0f; border-color: #FECC00; font-weight: 600; }
+
+    .stats-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; margin-bottom: 20px; }
+    .stat-card { background: #1a1a1a; border: 1px solid #2a2a2a; border-radius: 10px; padding: 12px; }
+    .stat-label { font-size: 10px; color: #555; text-transform: uppercase; letter-spacing: .06em; margin-bottom: 5px; }
+    .stat-val { font-size: 22px; font-weight: 700; }
+    .stat-sub { font-size: 10px; color: #555; margin-top: 2px; }
+
+    .joueurs-stats-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+    .joueurs-stats-table th { padding: 8px 10px; text-align: left; font-size: 10px; color: #555; font-weight: 600; text-transform: uppercase; border-bottom: 1px solid #2a2a2a; cursor: pointer; }
+    .joueurs-stats-table th:hover { color: #FECC00; }
+    .joueurs-stats-table td { padding: 8px 10px; border-bottom: 1px solid #111; }
+    .joueurs-stats-table tr:hover td { background: #111; cursor: pointer; }
+    .pct-bar { height: 3px; border-radius: 2px; background: #2a2a2a; margin-top: 3px; }
+    .pct-fill { height: 3px; border-radius: 2px; background: #FECC00; }
 
     /* MODAL */
     .modal-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.75); align-items: center; justify-content: center; z-index: 100; }
@@ -188,10 +283,16 @@
     ============================================================ */
     @media print {
       * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
-      .sidebar, .topbar, .ipad-topbar, .ipad-bottom-nav, .modal-overlay, #fiche-overlay { display: none !important; }
+      .sidebar, .topbar, .mode-toggle, .btn-primary, .btn-ghost, .btn-danger,
+      .slot-tag, .side-remove, .side-add, .entr-empty,
+      #mode-match, #mode-entrainement, #mode-stats, #mode-adversaires,
+      .modal-overlay { display: none !important; }
       body { background: #fff; color: #000; overflow: visible; display: block; margin: 0; padding: 0; font-family: Arial, Helvetica, sans-serif; }
       .main { overflow: visible; display: block; height: auto; }
       .content { overflow: visible; padding: 0; }
+      #print-container { display: block !important; }
+      .print-page { page-break-after: always; }
+      .print-page:last-child { page-break-after: auto; }
     }
 
     /* ============================================================
@@ -313,6 +414,9 @@
     }
     .pm-staff-label { font-size: 7px; text-transform: uppercase; color: #555; letter-spacing: .06em; margin-bottom: 1px; }
     .pm-staff-val { font-size: 10px; font-weight: 700; color: #fff; }
+
+    /* En mode écran : on masque le print-container */
+    #print-container { display: none; }
 
     @media print {
       /* Overrides couleurs pour l'impression */
@@ -440,45 +544,6 @@
       .pg-titre { color: #fff !important; }
       .pg-date { color: #aaa !important; }
     }
-
-    /* ============================================================
-       EQUIPES FG (Fitness Game)
-    ============================================================ */
-    .fg-setup { background: #1a1a1a; border: 1px solid #2a2a2a; border-radius: 12px; padding: 20px; margin-bottom: 16px; }
-    .fg-setup-title { font-size: 14px; font-weight: 700; color: #FECC00; margin-bottom: 16px; text-transform: uppercase; letter-spacing: .06em; }
-    .fg-setup-row { display: flex; align-items: flex-end; gap: 14px; flex-wrap: wrap; margin-bottom: 14px; }
-    .fg-setup-field { display: flex; flex-direction: column; gap: 4px; }
-    .fg-setup-field label { font-size: 10px; color: #555; text-transform: uppercase; letter-spacing: .06em; }
-    .fg-setup-field input, .fg-setup-field select { padding: 8px 12px; border-radius: 8px; border: 1px solid #2a2a2a; background: #0f0f0f; color: #fff; font-size: 14px; outline: none; width: 90px; }
-    .fg-setup-field input:focus { border-color: #FECC00; }
-    .fg-teams-config { display: flex; flex-direction: column; gap: 8px; margin-top: 12px; }
-    .fg-team-config-row { display: flex; align-items: center; gap: 10px; padding: 8px 12px; background: #0f0f0f; border: 1px solid #2a2a2a; border-radius: 8px; }
-    .fg-team-config-row .fg-tc-color { width: 14px; height: 14px; border-radius: 50%; flex-shrink: 0; }
-    .fg-team-config-row .fg-tc-label { font-size: 12px; font-weight: 600; color: #888; min-width: 70px; }
-    .fg-team-config-row input { padding: 5px 10px; border-radius: 6px; border: 1px solid #2a2a2a; background: #0f0f0f; color: #fff; font-size: 13px; outline: none; }
-    .fg-team-config-row input:focus { border-color: #FECC00; }
-    .fg-grid { display: grid; gap: 16px; }
-    .fg-card { background: #1a1a1a; border: 1px solid #2a2a2a; border-radius: 12px; overflow: hidden; }
-    .fg-card-header { padding: 10px 14px; display: flex; align-items: center; gap: 8px; border-bottom: 2px solid; }
-    .fg-card-header input { background: none; border: none; font-size: 14px; font-weight: 700; outline: none; flex: 1; color: #fff; }
-    .fg-card-count { font-size: 11px; color: #555; white-space: nowrap; }
-    .fg-card-body { padding: 10px; }
-    .fg-slot { display: flex; align-items: center; gap: 8px; padding: 10px 12px; border-radius: 8px; margin-bottom: 4px; cursor: pointer; transition: all .12s; border: 1px solid #2a2a2a; background: #0f0f0f; min-height: 44px; }
-    .fg-slot:hover { border-color: #FECC00; background: #FECC0008; }
-    .fg-slot.filled { border-color: #333; }
-    .fg-slot-num { font-size: 11px; font-weight: 700; color: #555; min-width: 20px; text-align: center; }
-    .fg-slot-name { flex: 1; font-size: 13px; color: #ccc; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .fg-slot.empty .fg-slot-name { color: #333; font-style: italic; }
-    .fg-slot-badge { font-size: 8px; font-weight: 700; padding: 2px 5px; border-radius: 3px; background: #FECC00; color: #000; white-space: nowrap; }
-    .fg-slot-badge.trial { background: #378ADD; color: #fff; }
-    .fg-slot-remove { font-size: 16px; color: #444; cursor: pointer; flex-shrink: 0; line-height: 1; }
-    .fg-slot-remove:hover { color: #E24B4A; }
-    .fg-confirm-modal { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8); display: none; align-items: center; justify-content: center; z-index: 200; }
-    .fg-confirm-modal.open { display: flex; }
-    .fg-confirm-box { background: #1a1a1a; border: 1px solid #2a2a2a; border-radius: 16px; padding: 24px; width: 400px; max-width: 90vw; }
-    .fg-confirm-title { font-size: 15px; font-weight: 700; margin-bottom: 10px; }
-    .fg-confirm-text { font-size: 13px; color: #aaa; margin-bottom: 18px; line-height: 1.5; white-space: pre-line; }
-    .fg-confirm-actions { display: flex; gap: 10px; justify-content: flex-end; }
   </style>
 
   <style>
@@ -557,37 +622,8 @@
   /* Modal */
   .modal { width: min(580px, 94vw) !important; max-width: 94vw !important; }
   .modal-box { width: min(500px, 94vw) !important; }
-  /* Bigger training touch targets for iPad/iPhone */
-  .picker-item { padding: 12px 10px !important; min-height: 46px !important; }
-  .picker-nom { font-size: 14px !important; }
-  .slot-entr { min-width: 72px !important; max-width: 86px !important; }
-  .entr-cercle { width: 54px !important; height: 54px !important; }
-  .entr-nom { font-size: 10px !important; }
-  .seq-chip { font-size: 9px !important; padding: 2px 4px !important; }
-  .entr-stats { font-size: 9px !important; }
-  .entr-empty { padding: 20px !important; font-size: 13px !important; }
-  .slot-rempl-entr { min-width: 56px !important; }
-  .rempl-cercle { width: 42px !important; height: 42px !important; }
-  .equipe-card-header { padding: 13px 16px !important; }
-  .equipe-nom-input { font-size: 15px !important; }
-  /* Responsive training grid for phones */
-  @media (max-width: 640px) {
-    .equipes-grid { grid-template-columns: 1fr !important; }
-    .slot-entr { min-width: 78px !important; max-width: 92px !important; }
-    .entr-cercle { width: 58px !important; height: 58px !important; }
-    .entr-nom { font-size: 11px !important; }
-    .entr-stats { font-size: 10px !important; }
-  }
-  /* FG responsive */
-  @media (max-width: 640px) {
-    .fg-grid { grid-template-columns: 1fr !important; }
-    .fg-setup-row { flex-direction: column; align-items: stretch !important; }
-    .fg-setup-field input { width: 100% !important; }
-  }
   </style>
 
-  <link rel="stylesheet" href="theme.css">
-  <script src="theme.js"></script>
 </head>
 <body>
   <!-- iPad TopBar -->
@@ -597,13 +633,7 @@
       <span class="ipad-topbar-sitename">SCA Albi</span>
     </a>
     <div class="ipad-topbar-sep"></div>
-    <div class="ipad-topbar-title">Équipes</div>
-    <div class="mode-toggle" style="margin-left:10px;">
-      <button class="mode-btn active" id="btn-entrainement" onclick="setMode('entrainement')">Entraînement</button>
-      <button class="mode-btn" id="btn-fg" onclick="setMode('fg')">Equipes FG</button>
-    </div>
-    <button class="theme-toggle-btn" onclick="toggleTheme()"><span class="theme-icon">☀️</span></button>
-    <button class="btn-ghost" onclick="logout()" style="margin-left:auto;min-height:36px;font-size:12px;">Déconnexion</button>
+    <div class="ipad-topbar-title">Équipes — Entraînement</div>
   </div>
   <!-- Bottom Nav -->
   <nav class="ipad-bottom-nav">
@@ -615,7 +645,7 @@
       <span class="ipad-nav-icon">🏉</span>
       <span>Séances</span>
     </a>
-    <a class="ipad-nav-item active" href="equipes.html">
+    <a class="ipad-nav-item active" href="equipes.html?mode=entrainement">
       <span class="ipad-nav-icon">👥</span>
       <span>Équipes</span>
     </a>
@@ -647,14 +677,23 @@
     <div class="nav-section">Musculation</div>
     <div class="nav-item" onclick="location.href='seances.html'"><div class="nav-dot"></div> Séances</div>
     <div class="nav-item" onclick="location.href='fiches-seances.html'"><div class="nav-dot"></div> Fiches Séances</div>
+    <div class="nav-item" onclick="location.href='exercices.html'"><div class="nav-dot"></div> Exercices</div>
     <div class="nav-item" onclick="location.href='suivi-poids.html'"><div class="nav-dot"></div> Suivi Poids</div>
     <div class="nav-section">Suivi</div>
+    <div class="nav-item" onclick="location.href='wellness.html'"><div class="nav-dot"></div> Wellness</div>
+    <div class="nav-item" onclick="location.href='performances.html'"><div class="nav-dot"></div> Performances</div>
+    <div class="nav-item" onclick="location.href='medical.html'"><div class="nav-dot"></div> Médical</div>
+    <div class="nav-item" onclick="location.href='absences.html'"><div class="nav-dot"></div> Absences</div>
     <div class="nav-section">Planning</div>
     <div class="nav-item" onclick="location.href='planning.html'"><div class="nav-dot"></div> Planning club</div>
+    <div class="nav-item" onclick="location.href='planning-blesses.html'"><div class="nav-dot"></div> Blessés</div>
     <div class="nav-section">Équipes</div>
     <div class="nav-item active"><div class="nav-dot"></div> Composition équipes</div>
     <div class="nav-section">GPS</div>
+    <div class="nav-item" onclick="location.href='gps.html'"><div class="nav-dot"></div> Données GPS</div>
+    <div class="nav-item" onclick="location.href='gps-match.html'"><div class="nav-dot"></div> Rapport de match</div>
     <div class="nav-item" onclick="location.href='gps-planif.html'"><div class="nav-dot"></div> Planif. charge</div>
+    <div class="nav-item" onclick="location.href='profil-force-vitesse.html'"><div class="nav-dot"></div> Profil F-V</div>
     <div class="sidebar-bottom">
       <div class="user-info" id="user-email"></div>
       <button class="logout-btn" onclick="handleLogout()">Se déconnecter</button>
@@ -663,13 +702,218 @@
 
   <div class="main">
     <div class="topbar">
-      <div class="topbar-title">Entraînement</div>
+      <div class="topbar-title">Équipes</div>
+      <div class="mode-toggle">
+        <button class="mode-btn active" id="btn-match" onclick="setMode('match')">Feuille de match</button>
+        <button class="mode-btn" id="btn-entrainement" onclick="setMode('entrainement')">Entraînement</button>
+        <button class="mode-btn" id="btn-adversaires" onclick="setMode('adversaires')">Adversaires</button>
+        <button class="mode-btn" id="btn-stats" onclick="setMode('stats')">Stats</button>
+      </div>
     </div>
 
     <div class="content">
 
+      <!-- ===== FEUILLE DE MATCH ===== -->
+      <div id="mode-match">
+        <div class="match-header">
+          <div class="mf"><label>Date</label><input type="date" id="match-date" /></div>
+          <div class="mf"><label>Journée</label><input type="text" id="match-journee" placeholder="J 25" style="width:70px;" /></div>
+          <div class="mf" style="flex:1;"><label>SCA Albi vs</label>
+            <div style="display:flex;gap:6px;align-items:center;">
+              <input type="text" id="match-adversaire" placeholder="Adversaire..." style="padding:6px 10px;border-radius:7px;border:1px solid #2a2a2a;background:#0f0f0f;color:#fff;font-size:13px;outline:none;flex:1;" />
+              <select id="match-adversaire-sel" style="padding:6px 8px;border-radius:7px;border:1px solid #2a2a2a;background:#0f0f0f;color:#888;font-size:12px;outline:none;max-width:130px;" onchange="selectionnerAdversaire(this.value)">
+                <option value="">— Club connu —</option>
+              </select>
+              <img id="match-adv-logo-preview" src="" style="height:32px;display:none;border-radius:4px;" />
+            </div>
+          </div>
+          <div class="mf"><label>Compétition</label><select id="match-compet"><option>Nationale</option><option>Pro D2</option><option>Top 14</option><option>Coupe</option><option>Amical</option></select></div>
+          <div class="mf"><label>Lieu</label><select id="match-lieu"><option value="domicile">Domicile</option><option value="exterieur">Extérieur</option></select></div>
+          <button class="btn-ghost" onclick="sauvegarderFeuille()">Sauvegarder</button>
+          <button class="btn-ghost" onclick="chargerFeuille()">Charger</button>
+          <button class="btn-primary" onclick="ouvrirPrintDialog()">Imprimer</button>
+        </div>
+
+        <div class="terrain-layout">
+          <!-- TERRAIN -->
+          <div class="terrain-principal">
+            <div class="rugby-field">
+              <div class="field-title" id="match-titre">SCA Albi</div>
+
+              <div class="sous-label">1ère Ligne</div>
+              <div class="ligne-rugby" id="ligne-1"></div>
+
+              <div class="sous-label">2ème Ligne</div>
+              <div class="ligne-rugby" id="ligne-2"></div>
+
+              <div class="sous-label">3ème Ligne</div>
+              <div class="ligne-rugby" id="ligne-3"></div>
+
+              <div class="separateur"></div>
+
+              <div class="sous-label">Charnières</div>
+              <div class="ligne-rugby" id="ligne-charn"></div>
+
+              <div class="sous-label">Centres</div>
+              <div class="ligne-rugby" id="ligne-centres"></div>
+
+              <div class="sous-label">3/4 Ailiers / Centres</div>
+              <div class="ligne-rugby" id="ligne-34"></div>
+
+              <div class="sous-label">Arrière</div>
+              <div class="ligne-rugby" id="ligne-arriere"></div>
+
+              <div class="separateur"></div>
+
+              <div class="sous-label">Remplaçants (16–23)</div>
+              <div class="remplacants-row" id="ligne-rempl"></div>
+
+              <div class="sous-label" style="margin-top:6px;">Supplément</div>
+              <div class="remplacants-row" id="ligne-suppl"></div>
+            </div>
+
+            <!-- STAFF -->
+            <div class="rugby-field" style="margin-top:12px;">
+              <div class="field-title" style="margin-bottom:10px;">Staff</div>
+              <div class="staff-grid">
+                <div class="staff-field"><label>Entraîneur 1</label><input class="staff-input" id="staff-coach1" placeholder="Nom..." /></div>
+                <div class="staff-field"><label>Entraîneur 2</label><input class="staff-input" id="staff-coach2" placeholder="Nom..." /></div>
+                <div class="staff-field"><label>Adjoint terrain</label><input class="staff-input" id="staff-adjoint" placeholder="Nom..." /></div>
+                <div class="staff-field"><label>Préparateur physique</label><input class="staff-input" id="staff-prepa" placeholder="Nom..." /></div>
+                <div class="staff-field"><label>Kiné</label><input class="staff-input" id="staff-kine" placeholder="Nom..." /></div>
+                <div class="staff-field"><label>Médecin</label><input class="staff-input" id="staff-medecin" placeholder="Nom..." /></div>
+                <div class="staff-field" style="grid-column:1/-1;"><label>Rédacteur</label><input class="staff-input" id="staff-redacteur" placeholder="Nom..." /></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- COLONNES DROITE -->
+          <div class="terrain-side">
+            <div class="side-panel">
+              <div class="side-panel-header hg">Hors groupe</div>
+              <div class="side-panel-body" id="panel-hg"></div>
+              <div class="side-add" onclick="ajouterSide('hg')">+ Ajouter</div>
+            </div>
+            <div class="side-panel">
+              <div class="side-panel-header espoirs">Espoirs</div>
+              <div class="side-panel-body" id="panel-espoirs"></div>
+              <div class="side-add" onclick="ajouterSide('espoirs')">+ Ajouter</div>
+            </div>
+            <div class="side-panel">
+              <div class="side-panel-header blesses-col">Blessés</div>
+              <div class="side-panel-body" id="panel-blesses"></div>
+              <div class="side-add" onclick="ajouterSide('blesses')">+ Ajouter</div>
+            </div>
+            <div class="side-panel">
+              <div class="side-panel-header" style="background:#44444422; color:#888;">Absents</div>
+              <div class="side-panel-body" id="panel-absents"></div>
+              <div class="side-add" onclick="ajouterSide('absents')">+ Ajouter</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== PRINT CONTAINER (caché écran, visible impression) ===== -->
+      <div id="print-container" style="display:none;">
+
+        <!-- PAGE 1 : Feuille de match moderne -->
+        <div class="print-page" id="print-match-content">
+
+          <!-- En-tête match -->
+          <div class="pm-header">
+            <div class="pm-logo-sca">
+              <img src="https://www.sca-albi.fr/wp-content/uploads/2023/10/cropped-SCA-bis.png" alt="SCA Albi" class="pm-logo-img" />
+              <div class="pm-club-name">SCA ALBI</div>
+            </div>
+            <div class="pm-center">
+              <div class="pm-competition" id="print-competition">Nationale</div>
+              <div class="pm-date" id="print-match-date"></div>
+              <div class="pm-journee" id="print-match-journee"></div>
+              <div class="pm-vs">VS</div>
+            </div>
+            <div class="pm-logo-adv">
+              <img id="print-adv-logo" src="" alt="" class="pm-logo-img" style="display:none;" />
+              <div class="pm-club-name" id="print-match-adv-name"></div>
+            </div>
+          </div>
+
+          <!-- Corps : terrain + remplaçants -->
+          <div class="pm-body">
+
+            <!-- Titulaires : disposition terrain -->
+            <div class="pm-terrain">
+              <div class="pm-ligne pm-ligne-prop">
+                <div class="pm-slot" id="pm-p1"><span class="pm-num">1</span><span class="pm-nom"></span></div>
+                <div class="pm-slot" id="pm-p2"><span class="pm-num">2</span><span class="pm-nom"></span></div>
+                <div class="pm-slot" id="pm-p3"><span class="pm-num">3</span><span class="pm-nom"></span></div>
+              </div>
+              <div class="pm-ligne pm-ligne-2L">
+                <div class="pm-slot" id="pm-p4"><span class="pm-num">4</span><span class="pm-nom"></span></div>
+                <div class="pm-slot" id="pm-p5"><span class="pm-num">5</span><span class="pm-nom"></span></div>
+              </div>
+              <div class="pm-ligne pm-ligne-3L">
+                <div class="pm-slot" id="pm-p6"><span class="pm-num">6</span><span class="pm-nom"></span></div>
+                <div class="pm-slot" id="pm-p8"><span class="pm-num">8</span><span class="pm-nom"></span></div>
+                <div class="pm-slot" id="pm-p7"><span class="pm-num">7</span><span class="pm-nom"></span></div>
+              </div>
+              <div class="pm-sep"></div>
+              <div class="pm-ligne pm-ligne-charn">
+                <div class="pm-slot" id="pm-p9"><span class="pm-num">9</span><span class="pm-nom"></span></div>
+                <div class="pm-slot" id="pm-p10"><span class="pm-num">10</span><span class="pm-nom"></span></div>
+              </div>
+              <div class="pm-ligne pm-ligne-34">
+                <div class="pm-slot" id="pm-p11"><span class="pm-num">11</span><span class="pm-nom"></span></div>
+                <div class="pm-slot" id="pm-p12"><span class="pm-num">12</span><span class="pm-nom"></span></div>
+                <div class="pm-slot" id="pm-p13"><span class="pm-num">13</span><span class="pm-nom"></span></div>
+                <div class="pm-slot" id="pm-p14"><span class="pm-num">14</span><span class="pm-nom"></span></div>
+              </div>
+              <div class="pm-ligne pm-ligne-15">
+                <div class="pm-slot pm-slot-15" id="pm-p15"><span class="pm-num">15</span><span class="pm-nom"></span></div>
+              </div>
+            </div>
+
+            <!-- Remplaçants -->
+            <div class="pm-rempl-section">
+              <div class="pm-rempl-title">REMPLAÇANTS</div>
+              <div class="pm-rempl-grid" id="pm-rempl-grid"></div>
+            </div>
+
+            <!-- Staff -->
+            <div class="pm-staff-section">
+              <div class="pm-staff-grid">
+                <div class="pm-staff-cell"><div class="pm-staff-label">Entraîneur 1</div><div class="pm-staff-val" id="pm-staff-coach1"></div></div>
+                <div class="pm-staff-cell"><div class="pm-staff-label">Entraîneur 2</div><div class="pm-staff-val" id="pm-staff-coach2"></div></div>
+                <div class="pm-staff-cell"><div class="pm-staff-label">Adjoint terrain</div><div class="pm-staff-val" id="pm-staff-adjoint"></div></div>
+                <div class="pm-staff-cell"><div class="pm-staff-label">Prép. physique</div><div class="pm-staff-val" id="pm-staff-prepa"></div></div>
+                <div class="pm-staff-cell"><div class="pm-staff-label">Médecin</div><div class="pm-staff-val" id="pm-staff-medecin"></div></div>
+                <div class="pm-staff-cell"><div class="pm-staff-label">Kiné</div><div class="pm-staff-val" id="pm-staff-kine"></div></div>
+                <div class="pm-staff-cell" style="grid-column:1/-1;"><div class="pm-staff-label">Rédacteur</div><div class="pm-staff-val" id="pm-staff-redacteur"></div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- PAGE 2 : Groupe moderne -->
+        <div class="print-page" id="print-groupe-content">
+          <div class="pg-header">
+            <img src="https://www.sca-albi.fr/wp-content/uploads/2023/10/cropped-SCA-bis.png" alt="SCA Albi" style="height:44px;" />
+            <div style="flex:1;text-align:center;">
+              <div class="pg-titre">GROUPE DES JOUEURS</div>
+              <div class="pg-date" id="print-groupe-date"></div>
+            </div>
+            <img id="pg-adv-logo" src="" alt="" style="height:44px;display:none;" />
+          </div>
+          <div class="pg-body">
+            <div class="pg-main" id="pg-groupe-main"></div>
+            <div class="pg-side" id="pg-side"></div>
+          </div>
+        </div>
+
+      </div>
+
+
       <!-- ===== ENTRAÎNEMENT ===== -->
-      <div id="mode-entrainement">
+      <div id="mode-entrainement" style="display:none">
         <div class="entrainement-header">
           <div class="ef"><label>Date</label><input type="date" id="entr-date" /></div>
           <div class="ef"><label>Nb séquences</label><input type="number" id="entr-nb-seq" value="10" min="1" max="20" oninput="renderEntrainement()" /></div>
@@ -699,39 +943,59 @@
         <div class="equipes-grid" id="equipes-grid"></div>
       </div>
 
-      <!-- ===== EQUIPES FG (Fitness Game) ===== -->
-      <div id="mode-fg" style="display:none">
-        <div class="fg-setup">
-          <div class="fg-setup-title">⚙️ Configuration des équipes Fitness Game</div>
-          <div class="fg-setup-row">
-            <div class="fg-setup-field">
-              <label>Nb d'équipes</label>
-              <input type="number" id="fg-nb-teams" value="2" min="1" max="12" onchange="onFGConfigChange()" />
-            </div>
-            <div class="fg-setup-field">
-              <label>Joueurs par défaut</label>
-              <input type="number" id="fg-default-size" value="5" min="1" max="20" onchange="onFGConfigChange()" />
-            </div>
-            <button class="btn-primary" onclick="fgGenerate()">Générer les équipes</button>
-            <button class="btn-ghost" onclick="fgClearAll()">Tout effacer</button>
-          </div>
-          <div class="fg-teams-config" id="fg-teams-config"></div>
+      <!-- ===== ADVERSAIRES ===== -->
+      <div id="mode-adversaires" style="display:none">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+          <div style="font-size:14px;font-weight:600;">Gestion des adversaires</div>
+          <button class="btn-primary" onclick="ajouterAdversaire()">+ Ajouter un adversaire</button>
         </div>
-        <div class="fg-grid" id="fg-grid"></div>
+        <div id="adversaires-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px;"></div>
       </div>
 
-    </div>
-  </div>
-
-  <!-- FG CONFIRM MODAL -->
-  <div class="fg-confirm-modal" id="fg-confirm-modal">
-    <div class="fg-confirm-box">
-      <div class="fg-confirm-title" id="fg-confirm-title">Confirmer l'ajout</div>
-      <div class="fg-confirm-text" id="fg-confirm-text"></div>
-      <div class="fg-confirm-actions">
-        <button class="btn-ghost" onclick="fgCloseConfirm()">Annuler</button>
-        <button class="btn-primary" id="fg-confirm-btn">Forcer l'ajout</button>
+      <!-- MODAL adversaire -->
+      <div class="modal-overlay" id="modal-adversaire" style="z-index:103;">
+        <div class="modal" style="width:420px;">
+          <div class="modal-title" id="adv-modal-title">Ajouter un adversaire</div>
+          <div style="display:flex;flex-direction:column;gap:12px;">
+            <div><label style="font-size:10px;color:#555;text-transform:uppercase;display:block;margin-bottom:4px;">Nom du club</label>
+              <input id="adv-nom-input" style="width:100%;padding:8px 12px;border-radius:8px;border:1px solid #2a2a2a;background:#0f0f0f;color:#fff;font-size:13px;outline:none;" placeholder="ex: Béziers, Vannes..." /></div>
+            <div><label style="font-size:10px;color:#555;text-transform:uppercase;display:block;margin-bottom:4px;">URL du logo</label>
+              <input id="adv-logo-input" style="width:100%;padding:8px 12px;border-radius:8px;border:1px solid #2a2a2a;background:#0f0f0f;color:#fff;font-size:13px;outline:none;" placeholder="https://..." oninput="previewAdvLogo()" /></div>
+            <div style="display:flex;justify-content:center;">
+              <img id="adv-logo-preview" src="" style="height:60px;display:none;border-radius:8px;" />
+            </div>
+          </div>
+          <div class="modal-actions" style="margin-top:16px;">
+            <button class="btn-ghost" onclick="fermerModalAdversaire()">Annuler</button>
+            <button class="btn-primary" onclick="sauvegarderAdversaire()">Enregistrer</button>
+          </div>
+        </div>
       </div>
+
+
+      <div id="mode-stats" style="display:none">
+        <div class="stats-toolbar">
+          <select class="stats-sel" id="stats-joueur-sel" onchange="renderStats()">
+            <option value="">Tous les joueurs</option>
+          </select>
+          <select class="stats-sel" id="stats-compet-sel" onchange="renderStats()">
+            <option value="">Toutes compétitions</option>
+            <option>Nationale</option><option>Pro D2</option><option>Top 14</option><option>Coupe</option><option>Amical</option>
+          </select>
+          <select class="stats-sel" id="stats-lieu-sel" onchange="renderStats()">
+            <option value="">Dom. + Ext.</option>
+            <option value="domicile">Domicile</option>
+            <option value="exterieur">Extérieur</option>
+          </select>
+        </div>
+
+        <!-- Navigation feuilles -->
+        <div style="font-size:11px; color:#555; margin-bottom:6px;">Feuilles sauvegardées :</div>
+        <div class="feuilles-nav" id="feuilles-nav"></div>
+
+        <div id="stats-content"></div>
+      </div>
+
     </div>
   </div>
 
@@ -775,7 +1039,6 @@
       </div>
       <div class="vision-seq-container">
         <div class="vision-seq-header" id="vision-seq-buttons"></div>
-        <div id="vision-seq-alert"></div>
         <div class="vision-seq-content" id="vision-seq-content"></div>
       </div>
       <div class="modal-actions">
@@ -798,6 +1061,49 @@
     </div>
   </div>
 
+  <!-- MODAL PRINT DIALOG -->
+  <div class="modal-overlay" id="modal-print-dialog" style="z-index:102;">
+    <div class="modal" style="width:400px;">
+      <div class="modal-title">Imprimer</div>
+      
+      <div style="margin-bottom:16px;">
+        <div style="font-size:12px;font-weight:600;margin-bottom:10px;color:#888;text-transform:uppercase;letter-spacing:0.05em;">Que voulez-vous imprimer ?</div>
+        <div style="display:flex;flex-direction:column;gap:8px;">
+          <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;padding:8px;border-radius:8px;background:#0f0f0f;border:1px solid #2a2a2a;">
+            <input type="radio" name="print-what" value="match" id="print-what-match" checked style="accent-color:#FECC00;">
+            <span>Feuille de match</span>
+          </label>
+          <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;padding:8px;border-radius:8px;background:#0f0f0f;border:1px solid #2a2a2a;">
+            <input type="radio" name="print-what" value="groupe" id="print-what-groupe" style="accent-color:#FECC00;">
+            <span>Groupe</span>
+          </label>
+          <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;padding:8px;border-radius:8px;background:#0f0f0f;border:1px solid #2a2a2a;">
+            <input type="radio" name="print-what" value="both" id="print-what-both" style="accent-color:#FECC00;">
+            <span>Les deux</span>
+          </label>
+        </div>
+      </div>
+      
+      <div style="margin-bottom:16px;">
+        <div style="font-size:12px;font-weight:600;margin-bottom:10px;color:#888;text-transform:uppercase;letter-spacing:0.05em;">Format de sortie</div>
+        <div style="display:flex;gap:10px;">
+          <button class="btn-ghost" style="flex:1;padding:12px;display:flex;flex-direction:column;align-items:center;gap:6px;border-radius:10px;" onclick="choisirPrintFormat('pdf')">
+            <span style="font-size:24px;">📄</span>
+            <span style="font-size:11px;font-weight:500;">PDF</span>
+          </button>
+          <button class="btn-ghost" style="flex:1;padding:12px;display:flex;flex-direction:column;align-items:center;gap:6px;border-radius:10px;" onclick="choisirPrintFormat('printer')">
+            <span style="font-size:24px;">🖨️</span>
+            <span style="font-size:11px;font-weight:500;">Imprimante</span>
+          </button>
+        </div>
+      </div>
+      
+      <div class="modal-actions" style="justify-content:flex-end;">
+        <button class="btn-ghost" onclick="fermerPrintDialog()">Annuler</button>
+      </div>
+    </div>
+  </div>
+
   <!-- FICHE JOUEUR OVERLAY (style roster) -->
   <div id="fiche-overlay" onclick="if(event.target===this)fermerFicheJoueur()">
     <div id="fiche-panel">
@@ -810,10 +1116,9 @@
   </div>
 
   <script type="module">
-    import { initializeApp } from './supabase-adapter.js'
-    import { getAuth, onAuthStateChanged, signOut, setPersistence, browserLocalPersistence } from './supabase-adapter.js'
-    import { getFirestore, collection, doc, setDoc, getDoc, getDocs, query, where } from './supabase-adapter.js'
-    import('./update-check.js').catch(() => {})
+    import { initializeApp } from './firebase-bundle.js'
+    import { getAuth, onAuthStateChanged, signOut } from './firebase-bundle.js'
+    import { getFirestore, collection, doc, setDoc, getDoc, getDocs, serverTimestamp } from './firebase-bundle.js'
 
     const firebaseConfig = {
       apiKey: "AIzaSyCvMs-5LX9Ivk3OkzUR3iz9Kk1E5b9_7Vk",
@@ -827,39 +1132,33 @@
     const auth = getAuth(fbApp)
     const db = getFirestore(fbApp)
 
-    function getDataScopeStart() {
-      const scope = localStorage.getItem('delta-data-scope') || '30days'
-      if (scope === 'all') return null
-      if (window.__getDataScopeDates) {
-        return window.__getDataScopeDates(scope).start
-      }
-      const d = new Date()
-      d.setDate(d.getDate() - 30)
-      return d.toISOString().split('T')[0]
-    }
-
-    function scopedQuery(name, dateField = 'date') {
-      const start = getDataScopeStart()
-      if (!start) return collection(db, name)
-      return query(collection(db, name), where(dateField, '>=', start))
-    }
-
-    // Auth persistant pour fonctionner hors connexion
-    try { setPersistence(auth, browserLocalPersistence).catch(() => {}) } catch(e) {}
-
-    // Redirection si non authentifié
-    onAuthStateChanged(auth, user => {
-      if (!user) {
-        window.location.href = 'login.html'
-      }
-    })
-
     // ==================== ÉTAT ====================
     let joueurs = []
     let blessures = []
+    let feuillesMatch = []
     let absences = [] // Absences en cours
     let gpsData = [] // Données GPS pour les alertes
     let wellnessData = [] // Données wellness pour les alertes
+
+    const POSTES_PREMIERE_LIGNE = ['Pilier', 'Talonneur']
+
+    // Disposition terrain match
+    const LIGNE1   = [[1,'Pilier G'],[2,'Talonneur'],[3,'Pilier D']]
+    const LIGNE2   = [[4,'2e Ligne'],[5,'2e Ligne']]
+    const LIGNE3   = [[6,'3L Aile G'],[8,'3L Centre'],[7,'3L Aile D']]
+    const CHARN    = [[9,'Demi mêlée'],[10,'Demi ouv.']]
+    const CENTRES  = [[12,'Centre G'],[13,'Centre D']]
+    const TROIS4   = [[11,'Ailier G'],[12,'Centre G'],[13,'Centre D'],[14,'Ailier D']]
+    const ARRIERE  = [[15,'Arrière']]
+
+    // Feuille de match
+    const feuille = {
+      titulaires: Array(15).fill(null),
+      remplacants: Array(8).fill(null),
+      supplement: [],
+      tags: {},
+      hg: [], espoirs: [], blesses: []
+    }
 
     // Équipes entraînement
     // posteRemplacants[ei][posteIdx] = [{ jid, seqs: [1,2,...] }, ...]
@@ -882,7 +1181,7 @@
     let pickerContext = null
     let pickerCurrentJid = null
     let pickerSortMode = 'alpha'
-    let currentMode = 'entrainement'
+    let currentMode = new URLSearchParams(window.location.search).get('mode') || 'match'
 
     // Modal gestion de poste
     let posteModalContext = null // { ei, posteIdx }
@@ -890,20 +1189,50 @@
     onAuthStateChanged(auth, async user => {
       if (!user) { window.location.href = 'login.html'; return }
       document.getElementById('user-email').textContent = user.email
+      document.getElementById('match-date').value = new Date().toISOString().split('T')[0]
       document.getElementById('entr-date').value = new Date().toISOString().split('T')[0]
 
-      const [jSnap, bSnap, aSnap, gpsSnap, wSnap] = await Promise.all([
+      const [jSnap, bSnap, fSnap, aSnap, gpsSnap, wSnap] = await Promise.all([
         getDocs(collection(db, 'joueurs')),
         getDocs(collection(db, 'blessures')),
+        getDocs(collection(db, 'feuillesMatch')),
         getDocs(collection(db, 'absences')),
-        getDocs(scopedQuery('gps')),
-        getDocs(scopedQuery('wellness'))
+        getDocs(collection(db, 'gps')),
+        getDocs(collection(db, 'wellness'))
       ])
-      joueurs = jSnap.docs.map(d => ({ id: d.id, ...d.data() })).filter(j => !j.archived)
+      joueurs = jSnap.docs.map(d => ({ id: d.id, ...d.data() }))
       blessures = bSnap.docs.map(d => ({ id: d.id, ...d.data() }))
+      feuillesMatch = fSnap.docs.map(d => ({ id: d.id, ...d.data() })).sort((a,b) => (b.date||'').localeCompare(a.date||''))
       absences = aSnap.docs.map(d => ({ id: d.id, ...d.data() }))
       gpsData = gpsSnap.docs.map(d => ({ id: d.id, ...d.data() }))
       wellnessData = wSnap.docs.map(d => ({ id: d.id, ...d.data() }))
+
+      // Auto-remplir colonnes (inclure absences en cours)
+      feuille.blesses = joueurs.filter(j => blessures.some(b => b.joueurId === j.id && b.statut !== 'gueri')).map(j => j.id)
+      feuille.espoirs = joueurs.filter(j => j.espoir === true).map(j => j.id)
+      // Auto-détecter les absences en cours
+      mettreAJourAbsencesFeuille()
+
+      // Charger staff depuis localStorage
+      const staffSaved = JSON.parse(localStorage.getItem('sca_staff') || '{}')
+      Object.entries(staffSaved).forEach(([k, v]) => {
+        const el = document.getElementById('staff-' + k)
+        if (el) el.value = v || ''
+      })
+      // Persister staff au changement
+      document.querySelectorAll('.staff-input').forEach(inp => {
+        inp.addEventListener('change', sauvegarderStaffLocal)
+      })
+
+      // Stats joueurs select
+      const selSt = document.getElementById('stats-joueur-sel')
+      joueurs.sort((a,b) => a.nom.localeCompare(b.nom)).forEach(j => selSt.appendChild(new Option(j.nom + ' ' + j.prenom, j.id)))
+
+      renderFeuille()
+      renderEntrainement()
+      refreshAdvSelect()
+      // Auto-mode depuis URL param (?mode=entrainement)
+      if (currentMode !== 'match') { setMode(currentMode) }
 
       // Charger les équipes d'entraînement sauvegardées
       await chargerEquipesEntrainement()
@@ -911,7 +1240,164 @@
       // Charger les objectifs HI individuels depuis la planification GPS
       await chargerObjectifsHI()
       renderEntrainement() // Re-render avec les objectifs chargés
+
+      // Titre match dynamique
+      document.getElementById('match-adversaire').addEventListener('input', () => {
+        const adv = document.getElementById('match-adversaire').value
+        document.getElementById('match-titre').textContent = 'SCA Albi' + (adv ? ' vs ' + adv : '')
+      })
     })
+
+    function sauvegarderStaffLocal() {
+      const keys = ['coach1','coach2','adjoint','prepa','kine','medecin','redacteur']
+      const staff = {}
+      keys.forEach(k => { staff[k] = document.getElementById('staff-'+k)?.value || '' })
+      localStorage.setItem('sca_staff', JSON.stringify(staff))
+    }
+
+    // ==================== MODE ====================
+    // Adversaires stockés en localStorage
+    let adversaires = JSON.parse(localStorage.getItem('sca_adversaires') || '[]')
+    // { id, nom, logo }
+
+    window.setMode = function(mode) {
+      currentMode = mode
+      document.getElementById('mode-match').style.display = mode === 'match' ? 'block' : 'none'
+      document.getElementById('mode-entrainement').style.display = mode === 'entrainement' ? 'block' : 'none'
+      document.getElementById('mode-stats').style.display = mode === 'stats' ? 'block' : 'none'
+      document.getElementById('mode-adversaires').style.display = mode === 'adversaires' ? 'block' : 'none'
+      document.getElementById('btn-match').classList.toggle('active', mode === 'match')
+      document.getElementById('btn-entrainement').classList.toggle('active', mode === 'entrainement')
+      document.getElementById('btn-stats').classList.toggle('active', mode === 'stats')
+      document.getElementById('btn-adversaires').classList.toggle('active', mode === 'adversaires')
+      if (mode === 'stats') renderStats()
+      if (mode === 'entrainement') { renderEntrainement() }
+      if (mode === 'adversaires') renderAdversaires()
+    }
+
+    // ==================== ADVERSAIRES ====================
+    function sauvegarderAdversairesLocal() {
+      localStorage.setItem('sca_adversaires', JSON.stringify(adversaires))
+    }
+
+    function renderAdversaires() {
+      const grid = document.getElementById('adversaires-grid')
+      grid.innerHTML = ''
+      if (!adversaires.length) {
+        grid.innerHTML = '<div style="color:#444;grid-column:1/-1;text-align:center;padding:40px;font-size:13px;">Aucun adversaire enregistré. Cliquez sur "+ Ajouter" pour commencer.</div>'
+        return
+      }
+      adversaires.forEach((adv, idx) => {
+        const card = document.createElement('div')
+        card.style.cssText = 'background:#1a1a1a;border:1px solid #2a2a2a;border-radius:12px;padding:14px;display:flex;flex-direction:column;align-items:center;gap:10px;'
+        card.innerHTML = `
+          ${adv.logo ? `<img src="${adv.logo}" style="height:60px;object-fit:contain;border-radius:6px;" onerror="this.style.display='none'" />` : `<div style="width:60px;height:60px;border-radius:8px;background:#111;border:1px dashed #333;display:flex;align-items:center;justify-content:center;font-size:22px;">🏉</div>`}
+          <div style="font-size:13px;font-weight:700;text-align:center;">${adv.nom}</div>
+          <div style="display:flex;gap:6px;">
+            <button style="padding:4px 10px;border-radius:6px;border:1px solid #2a2a2a;background:none;color:#888;font-size:11px;cursor:pointer;" onclick="editAdversaire(${idx})">Modifier</button>
+            <button style="padding:4px 10px;border-radius:6px;border:none;background:#E24B4A18;color:#E24B4A;font-size:11px;cursor:pointer;" onclick="supprimerAdversaire(${idx})">Supprimer</button>
+          </div>
+        `
+        grid.appendChild(card)
+      })
+      // Mettre à jour le select dans le header match
+      refreshAdvSelect()
+    }
+
+    function refreshAdvSelect() {
+      const sel = document.getElementById('match-adversaire-sel')
+      if (!sel) return
+      sel.innerHTML = '<option value="">— Club connu —</option>'
+      adversaires.forEach((adv, idx) => {
+        const opt = document.createElement('option')
+        opt.value = idx
+        opt.textContent = adv.nom
+        sel.appendChild(opt)
+      })
+    }
+
+    window.selectionnerAdversaire = function(idx) {
+      if (idx === '' || idx === null) return
+      const adv = adversaires[parseInt(idx)]
+      if (!adv) return
+      document.getElementById('match-adversaire').value = adv.nom
+      document.getElementById('match-titre').textContent = 'SCA Albi vs ' + adv.nom
+      const prev = document.getElementById('match-adv-logo-preview')
+      if (adv.logo) { prev.src = adv.logo; prev.style.display = 'block' }
+      else prev.style.display = 'none'
+    }
+
+    let editAdvIdx = null
+    window.ajouterAdversaire = function() {
+      editAdvIdx = null
+      document.getElementById('adv-modal-title').textContent = 'Ajouter un adversaire'
+      document.getElementById('adv-nom-input').value = ''
+      document.getElementById('adv-logo-input').value = ''
+      document.getElementById('adv-logo-preview').style.display = 'none'
+      document.getElementById('modal-adversaire').classList.add('open')
+    }
+
+    window.editAdversaire = function(idx) {
+      editAdvIdx = idx
+      const adv = adversaires[idx]
+      document.getElementById('adv-modal-title').textContent = 'Modifier — ' + adv.nom
+      document.getElementById('adv-nom-input').value = adv.nom
+      document.getElementById('adv-logo-input').value = adv.logo || ''
+      const prev = document.getElementById('adv-logo-preview')
+      if (adv.logo) { prev.src = adv.logo; prev.style.display = 'block' } else prev.style.display = 'none'
+      document.getElementById('modal-adversaire').classList.add('open')
+    }
+
+    window.supprimerAdversaire = function(idx) {
+      if (!confirm('Supprimer cet adversaire ?')) return
+      adversaires.splice(idx, 1)
+      sauvegarderAdversairesLocal()
+      renderAdversaires()
+    }
+
+    window.fermerModalAdversaire = function() {
+      document.getElementById('modal-adversaire').classList.remove('open')
+    }
+
+    window.previewAdvLogo = function() {
+      const url = document.getElementById('adv-logo-input').value.trim()
+      const prev = document.getElementById('adv-logo-preview')
+      if (url) { prev.src = url; prev.style.display = 'block' }
+      else prev.style.display = 'none'
+    }
+
+    window.sauvegarderAdversaire = function() {
+      const nom = document.getElementById('adv-nom-input').value.trim()
+      if (!nom) { alert('Entrez un nom.'); return }
+      const logo = document.getElementById('adv-logo-input').value.trim()
+      if (editAdvIdx !== null) {
+        adversaires[editAdvIdx] = { ...adversaires[editAdvIdx], nom, logo }
+      } else {
+        adversaires.push({ id: Date.now(), nom, logo })
+      }
+      sauvegarderAdversairesLocal()
+      fermerModalAdversaire()
+      renderAdversaires()
+    }
+
+    // ==================== FEUILLE DE MATCH ====================
+    function renderFeuille() {
+      renderLigne('ligne-1', LIGNE1, feuille.titulaires)
+      renderLigne('ligne-2', LIGNE2, feuille.titulaires)
+      renderLigne('ligne-3', LIGNE3, feuille.titulaires)
+      renderLigne('ligne-charn', CHARN, feuille.titulaires)
+      renderLigne('ligne-centres', CENTRES, feuille.titulaires)
+      renderLigne('ligne-34', TROIS4, feuille.titulaires)
+      renderLigne('ligne-arriere', ARRIERE, feuille.titulaires)
+      renderRempl('ligne-rempl', feuille.remplacants, 16)
+      renderSuppl()
+      renderPanel('panel-hg', feuille.hg, '#F09595')
+      renderPanel('panel-espoirs', feuille.espoirs, '#85B7EB')
+      renderPanel('panel-blesses', feuille.blesses, '#F09595')
+      // Mettre à jour les absences et afficher le panel
+      mettreAJourAbsencesFeuille()
+      renderPanel('panel-absents', feuille.absents || [], '#888888')
+    }
 
     function getJ(jid) {
       if (!jid) return null;
@@ -932,7 +1418,7 @@
 
     // Vérifie si un joueur a une absence en cours
     function getAbsenceEnCours(joueurId, dateRef = null) {
-      const refDate = dateRef || document.getElementById('entr-date')?.value || new Date().toISOString().split('T')[0]
+      const refDate = dateRef || document.getElementById('match-date')?.value || new Date().toISOString().split('T')[0]
       return absences.find(a => 
         a.joueurId === joueurId && 
         a.statut === 'encours' &&
@@ -951,33 +1437,223 @@
       return 'ok'
     }
 
+    // Vérifie si un joueur est actuellement absent
+    function estAbsent(joueurId, dateRef = null) {
+      return !!getAbsenceEnCours(joueurId, dateRef)
+    }
+
+    // Met à jour la colonne absences dans la feuille
+    function mettreAJourAbsencesFeuille() {
+      const dateMatch = document.getElementById('match-date')?.value || new Date().toISOString().split('T')[0]
+      // Détecter automatiquement les absents à la date du match
+      const absentsAuto = joueurs.filter(j => estAbsent(j.id, dateMatch)).map(j => j.id)
+      // Fusionner avec les absents manuels existants (si présents)
+      if (!feuille.absents) feuille.absents = []
+      feuille.absents = [...new Set([...feuille.absents, ...absentsAuto])]
+    }
+
+    function renderLigne(cid, disposition, arr) {
+      const c = document.getElementById(cid)
+      c.innerHTML = ''
+      disposition.forEach(([num, label]) => {
+        const jid = arr[num - 1]
+        c.appendChild(makeSlot(num, label, getJ(jid), () => {
+          ouvrirPicker(`Poste ${num} — ${label}`, newJid => { arr[num-1] = newJid; renderFeuille() }, jid)
+        }, false))
+      })
+    }
+
+    function renderRempl(cid, arr, startNum) {
+      const c = document.getElementById(cid)
+      c.innerHTML = ''
+      arr.forEach((jid, i) => {
+        c.appendChild(makeSlot(startNum + i, '', getJ(jid), () => {
+          ouvrirPicker(`Remplaçant ${startNum+i}`, newJid => { arr[i] = newJid; renderFeuille() }, jid)
+        }, false))
+      })
+    }
+
+    function renderSuppl() {
+      const c = document.getElementById('ligne-suppl')
+      c.innerHTML = ''
+      feuille.supplement.forEach((jid, i) => {
+        const j = getJ(jid)
+        const slot = makeSlot(24 + i, '', j, () => {
+          ouvrirPicker(`Supplément ${24+i}`, newJid => { feuille.supplement[i] = newJid; renderFeuille() }, jid)
+        }, false)
+        // Bouton retirer le slot supplément
+        const del = document.createElement('div')
+        del.style.cssText = 'font-size:8px;color:#333;cursor:pointer;text-align:center;'
+        del.textContent = '✕ retirer'
+        del.onclick = e => { e.stopPropagation(); feuille.supplement.splice(i, 1); renderFeuille() }
+        slot.appendChild(del)
+        c.appendChild(slot)
+      })
+      // Bouton +
+      const addBtn = document.createElement('div')
+      addBtn.className = 'slot-joueur'
+      addBtn.onclick = () => {
+        ouvrirPicker('Ajouter un supplément', jid => {
+          if (jid) { feuille.supplement.push(jid); renderFeuille() }
+        })
+      }
+      addBtn.innerHTML = `
+        <div class="slot-cercle" style="border-style:dashed;">
+          <div style="font-size:18px;color:#333;">+</div>
+        </div>
+        <div class="slot-nom-dessous vide">Ajouter</div>
+      `
+      c.appendChild(addBtn)
+    }
+
+    function makeSlot(num, label, j, onClick, small) {
+      const slot = document.createElement('div')
+      slot.className = 'slot-joueur' + (small ? ' small' : '')
+
+      const cercle = document.createElement('div')
+      cercle.className = 'slot-cercle' + (small ? ' remplacant' : '') + (j ? ' rempli' : '')
+      cercle.onclick = onClick
+
+      const numEl = document.createElement('div')
+      numEl.className = 'slot-num-cercle'
+      numEl.textContent = num
+      cercle.appendChild(numEl)
+
+      if (j) {
+        const photo = document.createElement('img')
+        photo.className = 'slot-photo'
+        photo.src = j.photo || ''
+        photo.alt = `${j.prenom} ${j.nom}`
+        photo.onerror = function() { this.style.display = 'none' }
+        cercle.appendChild(photo)
+      }
+      slot.appendChild(cercle)
+
+      const nomEl = document.createElement('div')
+      nomEl.className = 'slot-nom-dessous' + (j ? '' : ' vide')
+      nomEl.textContent = j ? j.nom : (label || '—')
+      nomEl.onclick = onClick
+      slot.appendChild(nomEl)
+
+      // Tags
+      if (j) {
+        const tagsDiv = document.createElement('div')
+        tagsDiv.className = 'slot-tags'
+        const jTags = feuille.tags[j.id] || []
+        const isPremLigne = POSTES_PREMIERE_LIGNE.includes(j.poste)
+
+        // CAP pour tous
+        const tagsCfg = [['cap','CAP','tag-cap']]
+        // G, T, D seulement pour premières lignes
+        if (isPremLigne) {
+          tagsCfg.push(['g','G','tag-g'], ['t','T','tag-t'], ['d','D','tag-d'])
+        }
+
+        tagsCfg.forEach(([key, lbl, cls]) => {
+          const btn = document.createElement('span')
+          btn.className = `slot-tag ${cls} ${jTags.includes(key) ? 'active' : 'inactive'}`
+          btn.textContent = lbl
+          btn.onclick = e => {
+            e.stopPropagation()
+            if (!feuille.tags[j.id]) feuille.tags[j.id] = []
+            const idx = feuille.tags[j.id].indexOf(key)
+            if (idx === -1) {
+              // Si c'est le tag CAP, retirer tous les autres CAP avant d'ajouter
+              if (key === 'cap') {
+                Object.keys(feuille.tags).forEach(jid => {
+                  const capIdx = feuille.tags[jid].indexOf('cap')
+                  if (capIdx !== -1) feuille.tags[jid].splice(capIdx, 1)
+                })
+              }
+              feuille.tags[j.id].push(key)
+            }
+            else feuille.tags[j.id].splice(idx, 1)
+            renderFeuille()
+          }
+          tagsDiv.appendChild(btn)
+        })
+        slot.appendChild(tagsDiv)
+      }
+      return slot
+    }
+
+    function renderPanel(cid, arr, couleur) {
+      const c = document.getElementById(cid)
+      c.innerHTML = ''
+      arr.forEach((jid, i) => {
+        const j = getJ(jid)
+        if (!j) return
+        const item = document.createElement('div')
+        item.className = 'side-item'
+        item.innerHTML = `
+          <span class="side-num" style="color:${couleur}">${i+1}</span>
+          <span class="side-nom">${j.nom} ${j.prenom}</span>
+          <span class="side-remove" onclick="retirerSide('${cid}',${i})">✕</span>
+        `
+        c.appendChild(item)
+      })
+    }
+
+    window.ajouterSide = function(key) {
+      ouvrirPicker('Ajouter', jid => {
+        if (jid && !feuille[key].includes(jid)) { feuille[key].push(jid); renderFeuille() }
+      })
+    }
+
+    window.retirerSide = function(cid, idx) {
+      const key = cid.replace('panel-', '')
+      feuille[key].splice(idx, 1)
+      renderFeuille()
+    }
+
+    window.sauvegarderFeuille = async function() {
+      const date = document.getElementById('match-date').value
+      if (!date) { alert('Renseigne une date.'); return }
+      const keys = ['coach1','coach2','adjoint','prepa','kine','medecin','redacteur']
+      const staff = {}
+      keys.forEach(k => { staff[k] = document.getElementById('staff-'+k)?.value || '' })
+
+      await setDoc(doc(db, 'feuillesMatch', date), {
+        date,
+        adversaire: document.getElementById('match-adversaire').value,
+        journee: document.getElementById('match-journee').value,
+        compet: document.getElementById('match-compet').value,
+        lieu: document.getElementById('match-lieu').value,
+        feuille: JSON.parse(JSON.stringify(feuille)),
+        staff,
+        updatedAt: serverTimestamp()
+      })
+      // Rafraîchir feuillesMatch pour les stats
+      const snap = await getDocs(collection(db, 'feuillesMatch'))
+      feuillesMatch = snap.docs.map(d => ({ id: d.id, ...d.data() })).sort((a,b) => (b.date||'').localeCompare(a.date||''))
+      alert('Feuille sauvegardée !')
+    }
+
+    window.chargerFeuille = async function() {
+      const date = document.getElementById('match-date').value
+      if (!date) { alert('Sélectionne une date.'); return }
+      const snap = await getDoc(doc(db, 'feuillesMatch', date))
+      if (!snap.exists()) { alert('Aucune feuille pour cette date.'); return }
+      const data = snap.data()
+      Object.assign(feuille, data.feuille)
+      document.getElementById('match-adversaire').value = data.adversaire || ''
+      document.getElementById('match-journee').value = data.journee || ''
+      document.getElementById('match-compet').value = data.compet || 'Nationale'
+      document.getElementById('match-lieu').value = data.lieu || 'domicile'
+      document.getElementById('match-titre').textContent = 'SCA Albi' + (data.adversaire ? ' vs ' + data.adversaire : '')
+      if (data.staff) {
+        Object.entries(data.staff).forEach(([k,v]) => { const el = document.getElementById('staff-'+k); if (el) el.value = v||'' })
+      }
+      renderFeuille()
+    }
+
     // ==================== ENTRAÎNEMENT ====================
-    function getTeamTextColor(couleur) {
-      const c = couleur.toLowerCase()
-      if (c === '#fecc00') return '#000'
-      return '#fff'
-    }
-    function getTeamUiColor(couleur) {
-      const c = couleur.toLowerCase()
-      if (c === '#000' || c === '#000000') return '#fff'
-      return couleur
-    }
-    function getTeamSlotBg(couleur) {
-      const c = couleur.toLowerCase()
-      if (c === '#000' || c === '#000000') return '#ffffff20'
-      return `${couleur}18`
-    }
     window.renderEntrainement = function() {
       const c = document.getElementById('equipes-grid')
       c.innerHTML = ''
       const nbSeq = parseInt(document.getElementById('entr-nb-seq').value) || 10
       const distRep = parseFloat(document.getElementById('entr-dist-rep').value) || 35
       const seqNums = Array.from({ length: nbSeq }, (_, i) => i + 1)
-      // Nettoyer les séquences obsolètes qui dépassent nbSeq courant
-      Object.keys(sequencesMap).forEach(key => {
-        sequencesMap[key] = sequencesMap[key].filter(s => s <= nbSeq)
-        if (sequencesMap[key].length === 0) delete sequencesMap[key]
-      })
       // Note: les objectifs HI individuels sont maintenant dans planifObjectifs (chargés depuis Firebase)
 
       equipes.forEach((equipe, ei) => {
@@ -987,17 +1663,17 @@
         // Header - couleur de fond selon l'équipe
         const isYellow = equipe.couleur === '#FECC00' || equipe.couleur.toLowerCase() === '#fecc00'
         const isBlack = equipe.couleur === '#000' || equipe.couleur === '#000000'
-        const textColor = getTeamTextColor(equipe.couleur)
-        const borderColor = isBlack ? '#fff' : equipe.couleur
+        const textColor = isYellow ? '#000' : '#fff'
+        const borderColor = isBlack ? '#444' : equipe.couleur
         const hdr = document.createElement('div')
         hdr.className = 'equipe-card-header'
         hdr.style.borderBottomColor = borderColor
         hdr.style.background = equipe.couleur
         hdr.innerHTML = `
           <input class="equipe-nom-input" style="color:${textColor};" value="${equipe.nom}" onchange="equipes[${ei}].nom=this.value" />
-          <button onclick="ajouterJoueurEquipe(${ei},'titu')" style="padding:7px 12px;border-radius:8px;border:1px solid ${isBlack ? '#666' : equipe.couleur + '44'};background:none;color:${isBlack ? '#aaa' : equipe.couleur};font-size:12px;cursor:pointer;min-height:36px;">+ Titu</button>
-          <button onclick="ajouterJoueurEquipe(${ei},'rempl')" style="padding:7px 12px;border-radius:8px;border:1px solid ${isBlack ? '#555' : equipe.couleur + '33'};background:none;color:${isBlack ? '#888' : equipe.couleur};font-size:12px;cursor:pointer;opacity:.7;min-height:36px;">+ Rempl</button>
-          <button onclick="retirerEquipe(${ei})" style="padding:7px 12px;border-radius:8px;border:none;background:none;color:${isBlack ? '#666' : '#333'};font-size:12px;cursor:pointer;min-height:36px;">✕</button>
+          <button onclick="ajouterJoueurEquipe(${ei},'titu')" style="padding:3px 8px;border-radius:6px;border:1px solid ${isBlack ? '#666' : equipe.couleur + '44'};background:none;color:${isBlack ? '#aaa' : equipe.couleur};font-size:10px;cursor:pointer;">+ Titu</button>
+          <button onclick="ajouterJoueurEquipe(${ei},'rempl')" style="padding:3px 8px;border-radius:6px;border:1px solid ${isBlack ? '#555' : equipe.couleur + '33'};background:none;color:${isBlack ? '#888' : equipe.couleur};font-size:10px;cursor:pointer;opacity:.7;">+ Rempl</button>
+          <button onclick="retirerEquipe(${ei})" style="padding:3px 8px;border-radius:6px;border:none;background:none;color:${isBlack ? '#666' : '#333'};font-size:10px;cursor:pointer;">✕</button>
         `
         card.appendChild(hdr)
 
@@ -1010,7 +1686,7 @@
         const rangees = [
           titus.filter(t => [1,2,3].includes(t.num)),
           titus.filter(t => [4,5].includes(t.num)),
-          titus.filter(t => [6,7,8].includes(t.num)).sort((a,b) => [6,8,7].indexOf(a.num) - [6,8,7].indexOf(b.num)),
+          titus.filter(t => [6,7,8].includes(t.num)),
           titus.filter(t => [9,10].includes(t.num)),
           titus.filter(t => [11,12,13,14].includes(t.num)),
           titus.filter(t => [15].includes(t.num)),
@@ -1053,7 +1729,7 @@
             row.onmouseout = () => row.style.background = ''
             row.onclick = () => ouvrirPosteModal(ei, pi)
             const posteLabel = document.createElement('span')
-            posteLabel.style.cssText = `font-size:10px;font-weight:700;min-width:28px;color:${getTeamUiColor(equipe.couleur)};`
+            posteLabel.style.cssText = `font-size:9px;font-weight:700;min-width:28px;color:${equipe.couleur};`
             posteLabel.textContent = `P${pi+1}`
             row.appendChild(posteLabel)
             const arrowEl = document.createElement('span')
@@ -1070,7 +1746,7 @@
               const rdiff = rhiJ - rhiDone
               const rrepsComp = rdiff > 0 ? Math.ceil(rdiff / distRep) : 0
               const badge = document.createElement('span')
-              badge.style.cssText = `font-size:10px;padding:3px 8px;border-radius:4px;background:${equipe.couleur}22;color:${getTeamUiColor(equipe.couleur)};border:1px solid ${equipe.couleur}44;display:flex;align-items:center;gap:4px;`
+              badge.style.cssText = `font-size:9px;padding:2px 6px;border-radius:4px;background:${equipe.couleur}22;color:${equipe.couleur};border:1px solid ${equipe.couleur}44;display:flex;align-items:center;gap:4px;`
               const compText = rrepsComp > 0 ? `<span style="color:#E24B4A;font-weight:700;">${rrepsComp}rep</span>` : '<span style="color:#1D9E75;">✓</span>'
               badge.innerHTML = `${rj.nom}${rseqs?.length ? ' ['+rseqs.join(',')+']' : ''} ${compText}`
               row.appendChild(badge)
@@ -1089,76 +1765,19 @@
         const allRemplJids = Object.values(prEq).flat().map(r=>r.jid).filter(Boolean)
         const allJoueurs = [...new Set([...allTitus, ...allRemplJids])]
         const repsTotal = allTitus.reduce((a, jid) => {
-          const seqs = (sequencesMap[ei + '_' + jid] || []).filter(s => s <= nbSeq).length
+          const seqs = (sequencesMap[ei + '_' + jid] || []).length
           const hiJ = getObjectifHI(jid) || 500
           const hiDone = (seqs / nbSeq) * hiJ
           const diff = hiJ - hiDone
           return a + (diff > 0 ? Math.ceil(diff / distRep) : 0)
         }, 0)
 
-        // Séquences vides par poste
-        const seqVidesPostes = []
-        for (let pi = 0; pi < 15; pi++) {
-          const tituJidF = equipe.titulaires[pi]
-          const remplsPosteF = (prEq[pi] || []).filter(r => r.jid)
-          if (!tituJidF && remplsPosteF.length === 0) continue
-          const tituSeqsF = tituJidF ? (sequencesMap[ei + '_' + tituJidF] || []).filter(s => s <= nbSeq) : []
-          const covered = new Set()
-          if (tituSeqsF.length === 0 && tituJidF) {
-            seqNums.forEach(n => covered.add(n))
-          } else {
-            tituSeqsF.forEach(n => covered.add(n))
-          }
-          remplsPosteF.forEach(r => {
-            (r.seqs || []).forEach(n => { if (n <= nbSeq) covered.add(n) })
-          })
-          const vides = seqNums.filter(n => !covered.has(n))
-          if (vides.length > 0) {
-            seqVidesPostes.push({ poste: pi + 1, vides })
-          }
-        }
-
-        let videsHtml = ''
-        if (seqVidesPostes.length === 0) {
-          videsHtml = '<span style="color:#1D9E75;">Séq: toutes couvertes ✓</span>'
-        } else {
-          const videsStr = seqVidesPostes.map(p => `P${p.poste}[${p.vides.join(',')}]`).join(' ')
-          videsHtml = `<span style="color:#E24B4A;font-size:10px;" title="Séquences non couvertes par poste">Séq vides: ${videsStr}</span>`
-        }
-
-        // Doublons
-        const doublonsEq = detecterDoublonsSequences(nbSeq, ei)
-        let doublonsHtml = ''
-        if (doublonsEq.length > 0) {
-          const tooltip = doublonsEq.map(d => d.text).join('\n')
-          doublonsHtml = `<span style="color:#E24B4A;font-size:10px;cursor:help;" title="${tooltip.replace(/"/g, '&quot;')}">⚠ ${doublonsEq.length} doublon(s)</span>`
-        }
-
-        // Détection joueurs blessés/absents dans l'équipe
-        const blessesAbsents = []
-        allJoueurs.forEach(jid => {
-          const j = getJ(jid)
-          if (!j) return
-          const st = getEffectiveStatut(j)
-          if (st === 'blesse' || st === 'absent') {
-            blessesAbsents.push({ j, statut: st })
-          }
-        })
-        let alertHtml = ''
-        if (blessesAbsents.length > 0) {
-          const tooltip = blessesAbsents.map(a => `${a.j.nom} ${a.j.prenom} — ${a.statut === 'blesse' ? 'Blessé' : 'Absent'}`).join('\n')
-          alertHtml = `<span style="color:#E24B4A;font-size:10px;cursor:help;" title="${tooltip.replace(/"/g, '&quot;')}">⚠ ${blessesAbsents.length} blessé(s)/absent(s)</span>`
-        }
-
         const footer = document.createElement('div')
         footer.className = 'entr-footer'
         footer.innerHTML = `
           <span>${allJoueurs.length} joueurs</span>
-          <span style="color:${getTeamUiColor(equipe.couleur)};" class="fv">${equipe.nom}</span>
+          <span style="color:${equipe.couleur};" class="fv">${equipe.nom}</span>
           <span style="color:#E24B4A;">${repsTotal} rep. comp. total</span>
-          ${videsHtml}
-          ${doublonsHtml}
-          ${alertHtml}
         `
         card.appendChild(footer)
         c.appendChild(card)
@@ -1171,7 +1790,7 @@
 
       const j = getJ(jid)
       const seqKey = ei + '_' + jid
-      const seqActives = jid ? (sequencesMap[seqKey] || []).filter(s => s <= nbSeq) : []
+      const seqActives = jid ? (sequencesMap[seqKey] || []) : []
       const nbF = seqActives.length
       // Utiliser l'objectif HI individuel du joueur pour aujourd'hui depuis gps-planif
       const hiJ = jid ? (getObjectifHI(jid) || 500) : 500
@@ -1187,8 +1806,7 @@
 
       const cercle = document.createElement('div')
       cercle.className = small ? 'rempl-cercle' : 'entr-cercle'
-      cercle.style.cssText = `border-color:${getTeamUiColor(equipe.couleur)}; background:${getTeamSlotBg(equipe.couleur)}; position:relative;`
-
+      cercle.style.cssText = `border-color:${equipe.couleur}; background:${equipe.couleur}15; position:relative;`
       if (!j) {
         cercle.style.borderStyle = 'dashed'
         cercle.style.borderColor = '#2a2a2a'
@@ -1208,11 +1826,11 @@
           }
         }
       } else {
-        cercle.innerHTML = `<div style="font-size:${small?'9px':'11px'};font-weight:700;color:${getTeamUiColor(equipe.couleur)};">${j.prenom[0]}${j.nom[0]}</div>`
+        cercle.innerHTML = `<div style="font-size:${small?'9px':'11px'};font-weight:700;color:${equipe.couleur};">${j.prenom[0]}${j.nom[0]}</div>`
         // Badge remplaçants
         if (type === 'titu' && remplsPoste.length > 0) {
           const badge = document.createElement('div')
-          badge.style.cssText = `position:absolute;top:-4px;right:-4px;background:${getTeamUiColor(equipe.couleur)};color:${getTeamTextColor(equipe.couleur)};font-size:8px;font-weight:700;width:16px;height:16px;border-radius:50%;display:flex;align-items:center;justify-content:center;`
+          badge.style.cssText = `position:absolute;top:-4px;right:-4px;background:${equipe.couleur};color:#000;font-size:8px;font-weight:700;width:16px;height:16px;border-radius:50%;display:flex;align-items:center;justify-content:center;`
           badge.textContent = remplsPoste.length
           cercle.appendChild(badge)
         }
@@ -1228,13 +1846,6 @@
             }, jid)
           }
         }
-      }
-      // Numéro de poste visible (ajouté après innerHTML pour ne pas être écrasé)
-      if (!small) {
-        const numBadge = document.createElement('div')
-        numBadge.style.cssText = `position:absolute;top:-8px;left:-8px;background:${getTeamUiColor(equipe.couleur)};color:${getTeamTextColor(equipe.couleur)};font-size:9px;font-weight:700;width:18px;height:18px;border-radius:50%;display:flex;align-items:center;justify-content:center;z-index:5;`
-        numBadge.textContent = num
-        cercle.appendChild(numBadge)
       }
       slot.appendChild(cercle)
 
@@ -1254,7 +1865,7 @@
             chip.className = 'seq-chip'
             const isOn = seqActives.includes(n)
             chip.style.cssText = isOn
-              ? `background:${getTeamUiColor(equipe.couleur)}33;border-color:${getTeamUiColor(equipe.couleur)};color:${getTeamUiColor(equipe.couleur)};`
+              ? `background:${equipe.couleur}33;border-color:${equipe.couleur};color:${equipe.couleur};`
               : `border-color:#2a2a2a;color:#333;`
             chip.textContent = n
             chip.onclick = () => {
@@ -1456,7 +2067,7 @@
       // Header
       const titleEl = document.getElementById('poste-modal-title')
       titleEl.textContent = `Poste ${posteIdx+1} — ${titu ? titu.nom + ' ' + titu.prenom : 'Vide'}`
-      titleEl.style.color = getTeamUiColor(couleur)
+      titleEl.style.color = couleur
 
       // Corps : titulaire d'abord
       const body = document.getElementById('poste-modal-body')
@@ -1474,7 +2085,7 @@
       const tituRow = document.createElement('div')
       tituRow.style.cssText = 'display:flex;align-items:center;gap:10px;padding:10px;background:#0f0f0f;border-radius:8px;margin-bottom:4px;'
       const tituCircle = document.createElement('div')
-      tituCircle.style.cssText = `width:42px;height:42px;border-radius:50%;border:2px solid ${getTeamUiColor(couleur)};background:${getTeamSlotBg(couleur)};display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:${getTeamUiColor(couleur)};cursor:pointer;`
+      tituCircle.style.cssText = `width:38px;height:38px;border-radius:50%;border:2px solid ${couleur};background:${couleur}20;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:${couleur};cursor:pointer;`
       if (titu) {
         tituCircle.textContent = titu.prenom[0] + titu.nom[0]
       } else {
@@ -1535,9 +2146,9 @@
         const updateToutBtnStyle = () => {
           const currentAllSelected = seqNums.every(n => (sequencesMap[seqKey] || []).includes(n))
           if (currentAllSelected) {
-            toutCocherBtn.style.cssText = `font-size:11px;padding:5px 8px;border-radius:5px;border:1px solid ${getTeamUiColor(couleur)};background:${getTeamUiColor(couleur)};color:${getTeamTextColor(couleur)};cursor:pointer;margin-right:6px;`
+            toutCocherBtn.style.cssText = `font-size:10px;padding:3px 6px;border-radius:4px;border:1px solid ${couleur};background:${couleur};color:#000;cursor:pointer;margin-right:6px;`
           } else {
-            toutCocherBtn.style.cssText = `font-size:11px;padding:5px 8px;border-radius:5px;border:1px solid #555;background:transparent;color:#888;cursor:pointer;margin-right:6px;`
+            toutCocherBtn.style.cssText = `font-size:10px;padding:3px 6px;border-radius:4px;border:1px solid #555;background:transparent;color:#888;cursor:pointer;margin-right:6px;`
           }
         }
         updateToutBtnStyle()
@@ -1635,7 +2246,7 @@
               chip.className = 'seq-chip'
               const isOn = assign.seqs.includes(n)
               chip.style.cssText = isOn
-                ? `background:${getTeamUiColor(assign.couleur)}33;border-color:${getTeamUiColor(assign.couleur)};color:${getTeamUiColor(assign.couleur)};`
+                ? `background:${assign.couleur}33;border-color:${assign.couleur};color:${assign.couleur};`
                 : `border-color:#0a0a0a;color:#0a0a0a;` // Même couleur que le fond
               chip.textContent = n
               assignSeqContainer.appendChild(chip)
@@ -1680,7 +2291,7 @@
         rRow.style.cssText = 'display:flex;align-items:center;gap:10px;padding:10px;background:#0f0f0f;border-radius:8px;margin-bottom:8px;'
 
         const rCircle = document.createElement('div')
-        rCircle.style.cssText = `width:38px;height:38px;border-radius:50%;border:1px solid ${getTeamUiColor(couleur)}88;background:${getTeamSlotBg(couleur)};display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:${getTeamUiColor(couleur)};flex-shrink:0;`
+        rCircle.style.cssText = `width:34px;height:34px;border-radius:50%;border:1px solid ${couleur}88;background:${couleur}15;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:${couleur};flex-shrink:0;`
         rCircle.textContent = rj.prenom[0] + rj.nom[0]
         rRow.appendChild(rCircle)
 
@@ -1705,9 +2316,9 @@
         const updateToutBtnStyle = () => {
           const currentAllSelected = seqNums.every(n => rempl.seqs.includes(n))
           if (currentAllSelected) {
-            toutBtn.style.cssText = `font-size:11px;padding:5px 8px;border-radius:5px;border:1px solid ${getTeamUiColor(couleur)};background:${getTeamUiColor(couleur)};color:${getTeamTextColor(couleur)};cursor:pointer;margin-right:6px;`
+            toutBtn.style.cssText = `font-size:10px;padding:3px 6px;border-radius:4px;border:1px solid ${couleur};background:${couleur};color:#000;cursor:pointer;margin-right:6px;`
           } else {
-            toutBtn.style.cssText = `font-size:11px;padding:5px 8px;border-radius:5px;border:1px solid #555;background:transparent;color:#888;cursor:pointer;margin-right:6px;`
+            toutBtn.style.cssText = `font-size:10px;padding:3px 6px;border-radius:4px;border:1px solid #555;background:transparent;color:#888;cursor:pointer;margin-right:6px;`
           }
         }
         updateToutBtnStyle()
@@ -1751,7 +2362,7 @@
           chip.className = 'seq-chip'
           const isOn = remplSeqs.includes(n)
           chip.style.cssText = isOn
-            ? `background:${getTeamUiColor(couleur)}33;border-color:${getTeamUiColor(couleur)};color:${getTeamUiColor(couleur)};cursor:pointer;`
+            ? `background:${couleur}33;border-color:${couleur};color:${couleur};cursor:pointer;`
             : `border-color:#2a2a2a;color:#333;cursor:pointer;`
           chip.textContent = n
           chip.title = isOn ? `Séquence ${n} assignée à ce remplaçant` : `Assigner séquence ${n}`
@@ -1829,7 +2440,7 @@
               chip.className = 'seq-chip'
               const isOn = assign.seqs.includes(n)
               chip.style.cssText = isOn
-                ? `background:${getTeamUiColor(assign.couleur)}33;border-color:${getTeamUiColor(assign.couleur)};color:${getTeamUiColor(assign.couleur)};`
+                ? `background:${assign.couleur}33;border-color:${assign.couleur};color:${assign.couleur};`
                 : `border-color:#0a0a0a;color:#0a0a0a;` // Même couleur que le fond
               chip.textContent = n
               assignSeqContainer.appendChild(chip)
@@ -1963,7 +2574,7 @@
     window.chargerObjectifsHI = async function() {
       try {
         // Récupérer toutes les planifications et trouver la plus récente
-        const snap = await getDocs(scopedQuery('planificationsGPS', 'semaine'))
+        const snap = await getDocs(collection(db, 'planificationsGPS'))
         if (snap.empty) return
 
         let latestPlanif = null
@@ -2088,7 +2699,7 @@
     }
 
     // Imprimer les équipes d'entraînement
-    window.imprimerEquipesEntrainement = function(layout = 'landscape') {
+    window.imprimerEquipesEntrainement = function() {
       const nbSeq = parseInt(document.getElementById('entr-nb-seq')?.value) || 10
       const distRep = parseInt(document.getElementById('entr-dist-rep')?.value) || 35
       const showComp = document.getElementById('show-compensations')?.checked !== false
@@ -2153,9 +2764,8 @@
       }
 
       equipes.forEach((eq, ei) => {
-        const headerTextColor = getTeamTextColor(eq.couleur)
-        const headerBgColor = getTeamUiColor(eq.couleur)
-        html += `<div class="team"><div class="team-header" style="border-color:${headerBgColor};background:${headerBgColor};color:${headerTextColor}">${eq.nom}</div><div class="terrain-print">`
+        const headerTextColor = eq.couleur === '#FECC00' || eq.couleur.toLowerCase() === '#fecc00' ? '#000' : '#fff'
+        html += `<div class="team"><div class="team-header" style="border-color:${eq.couleur};background:${eq.couleur};color:${headerTextColor}">${eq.nom}</div><div class="terrain-print">`
 
         // 1ère ligne
         html += `<div class="sous-label-print">1ère Ligne</div>`
@@ -2173,12 +2783,12 @@
         }
         html += `</div>`
 
-        // 3ème ligne (ordre rugby: 6-8-7)
+        // 3ème ligne
         html += `<div class="sous-label-print">3ème Ligne</div>`
-        html += `<div class="ligne-print">`;
-        [5, 7, 6].forEach(i => {
+        html += `<div class="ligne-print">`
+        for (let i = 5; i < 8; i++) {
           html += renderSlotPrint(ei, i, eq, nbSeq, distRep, showComp)
-        })
+        }
         html += `</div>`
 
         html += `<div class="sep-print"></div>`
@@ -2211,30 +2821,19 @@
             rempls.forEach(r => {
               const rj = joueurs.find(j => j.id === r.jid)
               if (rj) {
-                // Calcul compensation sur l'ensemble de la séance
-                const rAllSeqs = new Set()
-                equipes.forEach((eqAll, eiAll) => {
-                  const skAll = eiAll + '_' + r.jid;
-                  (sequencesMap[skAll] || []).filter(s => s <= nbSeq).forEach(s => rAllSeqs.add(s))
-                  const prAll = posteRemplacants[eiAll] || {}
-                  Object.values(prAll).forEach(rList => {
-                    rList.forEach(rx => {
-                      if (rx.jid === r.jid && rx.seqs) rx.seqs.filter(s => s <= nbSeq).forEach(s => rAllSeqs.add(s))
-                    })
-                  })
-                })
-                const rTotalSession = rAllSeqs.size
+                // Calcul compensation pour ce remplaçant
+                const rnbF = r.seqs?.length || 0
                 const rhiJ = getObjectifHI(r.jid) || 500
-                const rhiDone = nbSeq > 0 ? (rTotalSession / nbSeq) * rhiJ : 0
+                const rhiDone = nbSeq > 0 ? (rnbF / nbSeq) * rhiJ : 0
                 const rdiff = rhiJ - rhiDone
                 const rrepsComp = rdiff > 0 ? Math.ceil(rdiff / distRep) : 0
                 const compText = rrepsComp > 0 ? `<span style="color:#c00;font-weight:700;font-size:6px">${rrepsComp}rep</span>` : '<span style="color:#1D9E75;font-size:6px">✓</span>'
 
                 html += `<div class="slot-rempl-print">`
-                html += `<div class="rempl-cercle-print" style="border-color:${getTeamUiColor(eq.couleur)}66">${posteIdx + 1}</div>`
+                html += `<div class="rempl-cercle-print" style="border-color:${eq.couleur}66">${posteIdx + 1}</div>`
                 html += `<div class="rempl-nom-print">${rj.nom}</div>`
                 if (r.seqs && r.seqs.length > 0) {
-                  html += `<div class="slot-seqs-print">${r.seqs.map(s => `<span class="seq-chip-print" style="background:${getTeamUiColor(eq.couleur)}22;border-color:${getTeamUiColor(eq.couleur)};color:${getTeamTextColor(eq.couleur)}">${s}</span>`).join('')}</div>`
+                  html += `<div class="slot-seqs-print">${r.seqs.map(s => `<span class="seq-chip-print" style="background:${eq.couleur}22;border-color:${eq.couleur};color:#000">${s}</span>`).join('')}</div>`
                 }
                 html += `<div style="margin-top:1px">${compText}</div>`
                 html += `</div>`
@@ -2264,23 +2863,10 @@
         }
 
         const seqKey = ei + '_' + jid
-        const seqs = (sequencesMap[seqKey] || []).filter(s => s <= nbSeq)
+        const seqs = sequencesMap[seqKey] || []
         const nbF = seqs.length
-        // Calcul compensation sur l'ensemble de la séance (toutes équipes, titu + rempl)
-        const allSeqsSession = new Set()
-        equipes.forEach((eqAll, eiAll) => {
-          const skAll = eiAll + '_' + jid;
-          (sequencesMap[skAll] || []).filter(s => s <= nbSeq).forEach(s => allSeqsSession.add(s))
-          const prAll = posteRemplacants[eiAll] || {}
-          Object.values(prAll).forEach(rList => {
-            rList.forEach(r => {
-              if (r.jid === jid && r.seqs) r.seqs.filter(s => s <= nbSeq).forEach(s => allSeqsSession.add(s))
-            })
-          })
-        })
-        const totalSeqsSession = allSeqsSession.size
         const hiJ = getObjectifHI(jid) || 500
-        const hiDone = nbSeq > 0 ? (totalSeqsSession / nbSeq) * hiJ : 0
+        const hiDone = nbSeq > 0 ? (nbF / nbSeq) * hiJ : 0
         const diff = hiJ - hiDone
         const repsComp = diff > 0 ? Math.ceil(diff / distRep) : 0
         const pct = nbSeq > 0 ? Math.round((nbF / nbSeq) * 100) : 0
@@ -2290,21 +2876,21 @@
         const photoHtml = j.photo ? `<img src="${j.photo}" style="width:44px;height:44px;border-radius:50%;object-fit:cover;position:absolute;top:0;left:0;" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">` : ''
 
         let html = `<div class="slot-print" style="position:relative;">
-          <span class="slot-num-print" style="background:${getTeamUiColor(equipe.couleur)};color:${getTeamTextColor(equipe.couleur)};position:absolute;left:-8px;top:50%;transform:translateY(-50%);z-index:10;">${posteIdx + 1}</span>
-          <div class="slot-cercle-print filled" style="border-color:${getTeamUiColor(equipe.couleur)};display:flex;align-items:center;justify-content:center;overflow:hidden;position:relative;">
+          <span class="slot-num-print" style="background:${equipe.couleur};color:#000;position:absolute;left:-8px;top:50%;transform:translateY(-50%);z-index:10;">${posteIdx + 1}</span>
+          <div class="slot-cercle-print filled" style="border-color:${equipe.couleur};display:flex;align-items:center;justify-content:center;overflow:hidden;position:relative;">
             ${photoHtml}
-            <span style="font-size:11px;font-weight:700;color:${getTeamUiColor(equipe.couleur)};display:${j.photo ? 'none' : 'flex'};z-index:5;">${initiales}</span>
+            <span style="font-size:11px;font-weight:700;color:${equipe.couleur};display:${j.photo ? 'none' : 'flex'};z-index:5;">${initiales}</span>
           </div>
           <div class="slot-nom-print">${j.nom}</div>`
 
         if (seqs.length > 0) {
-          html += `<div class="slot-seqs-print">${seqs.map(s => `<span class="seq-chip-print" style="background:${getTeamUiColor(equipe.couleur)}22;border-color:${getTeamUiColor(equipe.couleur)};color:${getTeamTextColor(equipe.couleur)}">${s}</span>`).join('')}</div>`
+          html += `<div class="slot-seqs-print">${seqs.map(s => `<span class="seq-chip-print" style="background:${equipe.couleur}22;border-color:${equipe.couleur};color:#000">${s}</span>`).join('')}</div>`
         }
 
         if (showComp) {
-          html += `<div class="slot-stats-print"><span style="color:${getTeamUiColor(equipe.couleur)};font-weight:700">${pct}%</span> ${repsComp > 0 ? `<span class="comp">${repsComp}rep</span>` : '<span style="color:#1D9E75">✓</span>'}</div>`
+          html += `<div class="slot-stats-print"><span style="color:${equipe.couleur};font-weight:700">${pct}%</span> ${repsComp > 0 ? `<span class="comp">${repsComp}rep</span>` : '<span style="color:#1D9E75">✓</span>'}</div>`
         } else {
-          html += `<div class="slot-stats-print"><span style="color:${getTeamUiColor(equipe.couleur)};font-weight:700">${pct}%</span></div>`
+          html += `<div class="slot-stats-print"><span style="color:${equipe.couleur};font-weight:700">${pct}%</span></div>`
         }
 
         html += `</div>`
@@ -2315,6 +2901,153 @@
       printWindow.document.write(html)
       printWindow.document.close()
       printWindow.print()
+    }
+
+    // ==================== STATS ====================
+    window.renderStats = function() {
+      const jidFil = document.getElementById('stats-joueur-sel').value
+      const competFil = document.getElementById('stats-compet-sel').value
+      const lieuFil = document.getElementById('stats-lieu-sel').value
+      const c = document.getElementById('stats-content')
+      c.innerHTML = ''
+
+      // Navigation feuilles
+      const nav = document.getElementById('feuilles-nav')
+      nav.innerHTML = ''
+      feuillesMatch.filter(f => {
+        if (competFil && f.compet !== competFil) return false
+        if (lieuFil && f.lieu !== lieuFil) return false
+        return true
+      }).forEach(f => {
+        const btn = document.createElement('button')
+        btn.className = 'feuille-btn'
+        btn.textContent = `${f.date} — ${f.adversaire || '?'} (${f.compet || '?'})`
+        btn.onclick = () => {
+          // Charger et afficher cette feuille
+          Object.assign(feuille, f.feuille || {})
+          document.getElementById('match-date').value = f.date
+          document.getElementById('match-adversaire').value = f.adversaire || ''
+          document.getElementById('match-journee').value = f.journee || ''
+          document.getElementById('match-compet').value = f.compet || 'Nationale'
+          document.getElementById('match-lieu').value = f.lieu || 'domicile'
+          if (f.staff) Object.entries(f.staff).forEach(([k,v]) => { const el = document.getElementById('staff-'+k); if(el) el.value = v||'' })
+          setMode('match'); renderFeuille()
+        }
+        nav.appendChild(btn)
+      })
+
+      const feuilles = feuillesMatch.filter(f => {
+        if (competFil && f.compet !== competFil) return false
+        if (lieuFil && f.lieu !== lieuFil) return false
+        return true
+      })
+
+      if (!feuilles.length) {
+        c.innerHTML = '<div style="color:#444;text-align:center;padding:40px;">Aucune feuille de match sauvegardée pour ces filtres.</div>'
+        return
+      }
+
+      // Calcul stats
+      const statsJ = {}
+      joueurs.forEach(j => { statsJ[j.id] = { titu: 0, rempl: 0, dom: 0, ext: 0, matchs: [] } })
+
+      feuilles.forEach(f => {
+        const isDom = f.lieu === 'domicile'
+        const titus = f.feuille?.titulaires || []
+        const rempls = [...(f.feuille?.remplacants || []), ...(f.feuille?.supplement || [])]
+
+        joueurs.forEach(j => {
+          const isTitu = titus.includes(j.id)
+          const isRempl = rempls.includes(j.id)
+          if (isTitu || isRempl) {
+            if (isTitu) statsJ[j.id].titu++
+            if (isRempl) statsJ[j.id].rempl++
+            if (isDom) statsJ[j.id].dom++
+            else statsJ[j.id].ext++
+            statsJ[j.id].matchs.push({ date: f.date, adversaire: f.adversaire, type: isTitu ? 'Titu' : 'Rempl', lieu: isDom ? 'Dom.' : 'Ext.' })
+          }
+        })
+      })
+
+      if (jidFil) {
+        // Vue individuelle détaillée
+        const j = joueurs.find(x => x.id === jidFil)
+        const s = statsJ[jidFil]
+        if (!j || !s) return
+        const total = s.titu + s.rempl
+        const pct = total > 0 ? Math.round(s.titu / total * 100) : 0
+
+        const div = document.createElement('div')
+        div.innerHTML = `
+          <div style="background:#1a1a1a;border:1px solid #2a2a2a;border-radius:12px;padding:18px;margin-bottom:14px;">
+            <div style="font-size:15px;font-weight:700;margin-bottom:14px;">${j.nom} ${j.prenom} — ${j.poste||''}</div>
+            <div class="stats-grid">
+              <div class="stat-card"><div class="stat-label">Titulaire</div><div class="stat-val" style="color:#FECC00">${s.titu}</div></div>
+              <div class="stat-card"><div class="stat-label">Remplaçant</div><div class="stat-val" style="color:#888">${s.rempl}</div></div>
+              <div class="stat-card"><div class="stat-label">Total matchs</div><div class="stat-val">${total}</div></div>
+              <div class="stat-card"><div class="stat-label">% Titulaire</div><div class="stat-val" style="color:#1D9E75">${pct}%</div></div>
+              <div class="stat-card"><div class="stat-label">Domicile</div><div class="stat-val" style="color:#378ADD">${s.dom}</div></div>
+              <div class="stat-card"><div class="stat-label">Extérieur</div><div class="stat-val" style="color:#7F77DD">${s.ext}</div></div>
+            </div>
+            <div style="margin-top:14px;">
+              <div style="font-size:10px;color:#555;text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px;">Historique des sélections</div>
+              <div style="display:flex;flex-direction:column;gap:4px;">
+                ${s.matchs.map(m => `
+                  <div style="display:flex;gap:10px;align-items:center;padding:5px 8px;background:#111;border-radius:6px;font-size:11px;">
+                    <span style="color:#555;min-width:90px;">${m.date}</span>
+                    <span style="flex:1;color:#ccc;">${m.adversaire || '—'}</span>
+                    <span style="color:${m.type==='Titu'?'#FECC00':'#888'};font-weight:700;">${m.type}</span>
+                    <span style="color:#555;">${m.lieu}</span>
+                  </div>
+                `).join('')}
+              </div>
+            </div>
+          </div>
+        `
+        c.appendChild(div)
+      } else {
+        // Tableau collectif
+        const joueursAvecMatchs = joueurs.filter(j => statsJ[j.id] && (statsJ[j.id].titu + statsJ[j.id].rempl) > 0)
+          .sort((a,b) => (statsJ[b.id].titu + statsJ[b.id].rempl) - (statsJ[a.id].titu + statsJ[a.id].rempl))
+
+        const table = document.createElement('table')
+        table.className = 'joueurs-stats-table'
+        table.innerHTML = `
+          <thead><tr>
+            <th>Joueur</th><th>Poste</th>
+            <th>Titu</th><th>Rempl.</th><th>Total</th>
+            <th>% Titu</th><th>Dom.</th><th>Ext.</th>
+          </tr></thead>
+        `
+        const tbody = document.createElement('tbody')
+        joueursAvecMatchs.forEach(j => {
+          const s = statsJ[j.id]
+          const total = s.titu + s.rempl
+          const pct = total > 0 ? Math.round(s.titu / total * 100) : 0
+          const tr = document.createElement('tr')
+          tr.onclick = () => { document.getElementById('stats-joueur-sel').value = j.id; renderStats() }
+          tr.innerHTML = `
+            <td style="font-weight:600;">${j.nom} ${j.prenom[0]}.</td>
+            <td style="color:#555;font-size:11px;">${j.poste||'—'}</td>
+            <td style="color:#FECC00;font-weight:700;">${s.titu}</td>
+            <td style="color:#888;">${s.rempl}</td>
+            <td style="font-weight:700;">${total}</td>
+            <td>
+              <div style="font-weight:700;color:${pct>=70?'#1D9E75':pct>=40?'#EF9F27':'#888'};">${pct}%</div>
+              <div class="pct-bar"><div class="pct-fill" style="width:${pct}%;"></div></div>
+            </td>
+            <td style="color:#378ADD;">${s.dom}</td>
+            <td style="color:#7F77DD;">${s.ext}</td>
+          `
+          tbody.appendChild(tr)
+        })
+        table.appendChild(tbody)
+        c.appendChild(table)
+
+        if (!joueursAvecMatchs.length) {
+          c.innerHTML = '<div style="color:#444;text-align:center;padding:40px;">Aucun joueur sélectionné dans ces feuilles.</div>'
+        }
+      }
     }
 
     // ==================== PICKER ====================
@@ -2673,20 +3406,30 @@
         `
       }
     }
-    // Récupère tous les IDs de joueurs déjà présents dans les équipes d'entraînement
+    // Récupère tous les IDs de joueurs déjà présents sur la page selon le mode
 function getUsedIds() {
   const used = new Set();
-  equipes.forEach((eq, ei) => {
-    if (eq.titulaires) {
-      eq.titulaires.forEach(id => { if (id) used.add(id); });
-    }
-    const prEq = posteRemplacants[ei] || {};
-    Object.values(prEq).forEach(remplList => {
-      if (remplList) {
-        remplList.forEach(r => { if (r.jid) used.add(r.jid); });
-      }
+  
+  if (currentMode === 'match') {
+    // On scanne toute la feuille de match (Titus, Banc, HG, Blessés, Espoirs, Absents)
+    [...feuille.titulaires, ...feuille.remplacants, ...feuille.supplement, 
+     ...feuille.hg, ...feuille.espoirs, ...feuille.blesses, ...(feuille.absents || [])].forEach(id => {
+      if (id) used.add(id);
     });
-  });
+  } else if (currentMode === 'entrainement') {
+    // On scanne toutes les équipes du mode entraînement (titulaires et remplaçants)
+    equipes.forEach((eq, ei) => {
+      if (eq.titulaires) {
+        eq.titulaires.forEach(id => { if (id) used.add(id); });
+      }
+      const prEq = posteRemplacants[ei] || {};
+      Object.values(prEq).forEach(remplList => {
+        if (remplList) {
+          remplList.forEach(r => { if (r.jid) used.add(r.jid); });
+        }
+      });
+    });
+  }
   return used;
 }
 
@@ -2760,36 +3503,16 @@ window.setPickerSort = function(mode) {
   customOpt.className = 'picker-item';
   customOpt.innerHTML = '<span style="color:#FECC00;font-style:italic;">+ Joueur personnalisé (sans nom)...</span>';
   customOpt.onclick = () => {
-    customOpt.innerHTML = '';
-    customOpt.style.gap = '6px';
-    const input = document.createElement('input');
-    input.type = 'text';
-    input.placeholder = 'Nom du joueur...';
-    input.style.cssText = 'flex:1;padding:6px 10px;border-radius:6px;border:1px solid #2a2a2a;background:#0f0f0f;color:#fff;font-size:16px;outline:none;';
-    input.onkeydown = (e) => {
-      if (e.key === 'Enter') { e.preventDefault(); confirmCustom(); }
-      if (e.key === 'Escape') { fermerPicker(); }
-    };
-    customOpt.appendChild(input);
-    const btn = document.createElement('button');
-    btn.textContent = '✓';
-    btn.className = 'btn-primary';
-    btn.style.cssText = 'padding:5px 10px;font-size:13px;';
-    const confirmCustom = () => {
-      const val = input.value.trim() || 'Joueur personnalisé';
-      const customId = 'custom_' + encodeURIComponent(val);
-      if (pickerCallback) pickerCallback(customId);
-      fermerPicker();
-    };
-    btn.onclick = confirmCustom;
-    customOpt.appendChild(btn);
-    input.focus();
+    const customName = prompt('Nom du joueur personnalisé (laisser vide pour "Joueur personnalisé") :') || 'Joueur personnalisé';
+    const customId = 'custom_' + encodeURIComponent(customName);
+    if (pickerCallback) pickerCallback(customId);
+    fermerPicker();
   };
   c.appendChild(customOpt);
 
   // En mode entraînement avec no-double-seq, récupérer les séquences déjà prises
   let usedSeqs = new Set();
-  if (true && noDoubleSeq && pickerContext) {
+  if (currentMode === 'entraînement' && noDoubleSeq && pickerContext) {
     const { ei, excludeJid } = pickerContext;
     equipes[ei].titulaires.concat(equipes[ei].remplacants).forEach(jid => {
       if (jid && jid !== excludeJid) {
@@ -2802,12 +3525,11 @@ window.setPickerSort = function(mode) {
 
   // Filtrer les joueurs selon la recherche et no-double-seq
   const filteredJoueurs = joueurs.filter(j => {
-    if (j.archived) return false;
     const matchNom = (j.nom + ' ' + j.prenom).toLowerCase().includes(q);
     
     // Si no-double-seq activé, vérifier que le joueur n'a pas de séquences en commun
     let seqDisponible = true;
-    if (true && noDoubleSeq && pickerContext) {
+    if (currentMode === 'entraînement' && noDoubleSeq && pickerContext) {
       const { ei } = pickerContext;
       const seqKey = ei + '_' + j.id;
       const seqs = sequencesMap[seqKey] || [];
@@ -2928,54 +3650,293 @@ window.setPickerSort = function(mode) {
       window.location.href = 'login.html'
     }
 
-    // Détecter les doublons de séquences (même joueur, même séquence, plusieurs postes)
-    function detecterDoublonsSequences(nbSeq, filterEi) {
-      const doublons = []
-      const playerSeqs = {}
-      equipes.forEach((eq, ei) => {
-        eq.titulaires.forEach((jid, pi) => {
-          if (!jid) return
-          const seqs = (sequencesMap[ei + '_' + jid] || []).filter(s => s <= nbSeq)
-          seqs.forEach(n => {
-            if (!playerSeqs[jid]) playerSeqs[jid] = []
-            playerSeqs[jid].push({ seq: n, ei, posteIdx: pi, type: 'titu', equipe: eq.nom })
-          })
-        })
-        const prEqD = posteRemplacants[ei] || {}
-        Object.entries(prEqD).forEach(([pi, remplList]) => {
-          remplList.forEach(r => {
-            if (!r.jid || !r.seqs) return
-            r.seqs.filter(s => s <= nbSeq).forEach(n => {
-              if (!playerSeqs[r.jid]) playerSeqs[r.jid] = []
-              playerSeqs[r.jid].push({ seq: n, ei, posteIdx: parseInt(pi), type: 'rempl', equipe: eq.nom })
+    // ==================== IMPRESSION ====================
+    const nativePrint = window.print.bind(window)  // Sauvegarder la fonction native
+    
+    window.ouvrirPrintDialog = function() {
+      document.getElementById('modal-print-dialog').classList.add('open')
+    }
+
+    window.fermerPrintDialog = function() {
+      document.getElementById('modal-print-dialog').classList.remove('open')
+    }
+
+    window.choisirPrintFormat = async function(format) {
+      const what = document.querySelector('input[name="print-what"]:checked').value
+      fermerPrintDialog()
+      
+      // Préparer l'impression selon le choix
+      preparerImpression(what)
+      
+      if (format === 'pdf') {
+        // PDF via Electron
+        if (window.electronAPI && window.electronAPI.showSaveDialog) {
+          try {
+            const date = document.getElementById('match-date').value || new Date().toISOString().split('T')[0]
+            const result = await window.electronAPI.showSaveDialog({
+              defaultPath: `Feuille_${date}.pdf`,
+              filters: [{ name: 'PDF', extensions: ['pdf'] }]
             })
-          })
-        })
-      })
-      Object.entries(playerSeqs).forEach(([jid, assignments]) => {
-        const bySeq = {}
-        assignments.forEach(a => {
-          if (!bySeq[a.seq]) bySeq[a.seq] = []
-          bySeq[a.seq].push(a)
-        })
-        Object.entries(bySeq).forEach(([seq, locs]) => {
-          if (locs.length > 1) {
-            const filteredLocs = filterEi !== undefined ? locs.filter(l => l.ei === filterEi) : locs
-            if (filteredLocs.length > 1 || (filterEi !== undefined && locs.length > 1)) {
-              const j = getJ(jid)
-              const nom = j ? j.nom + ' ' + j.prenom : jid
-              const locsStr = locs.map(l => `${l.equipe} P${l.posteIdx + 1}(${l.type})`).join(', ')
-              doublons.push({ jid, nom, seq: parseInt(seq), locs, text: `${nom} — séquence ${seq}: ${locsStr}` })
+            if (!result.canceled && result.filePath) {
+              await genererPDF(result.filePath)
             }
+          } catch (e) {
+            console.error('Erreur dialog:', e)
+            nativePrint()
           }
-        })
+        } else {
+          // Fallback: impression navigateur
+          setTimeout(() => nativePrint(), 300)
+        }
+      } else {
+        // Imprimante directe
+        setTimeout(() => nativePrint(), 300)
+      }
+    }
+
+    async function genererPDF(filePath) {
+      if (window.electronAPI && window.electronAPI.printToPDF) {
+        try {
+          const result = await window.electronAPI.printToPDF(filePath)
+          if (result.success) {
+            alert('PDF généré avec succès !')
+          } else {
+            alert('Erreur lors de la génération du PDF: ' + (result.error || 'inconnue'))
+          }
+        } catch (e) {
+          console.error('Erreur PDF:', e)
+          alert('Erreur lors de la génération du PDF')
+        } finally {
+          // Cacher le conteneur d'impression
+          document.getElementById('print-container').style.display = 'none'
+        }
+      }
+    }
+    
+    window.preparerImpression = function(what = 'match') {
+      // Afficher le conteneur d'impression
+      const printContainer = document.getElementById('print-container')
+      const printMatch = document.getElementById('print-match-content')
+      const printGroupe = document.getElementById('print-groupe-content')
+      
+      printContainer.style.display = 'block'
+      
+      // Masquer tout par défaut
+      printMatch.style.display = 'none'
+      printGroupe.style.display = 'none'
+      
+      // Afficher selon le choix
+      if (what === 'match' || what === 'both') {
+        remplirPrintMatch()
+        printMatch.style.display = 'block'
+      }
+      
+      if (what === 'groupe' || what === 'both') {
+        remplirPrintGroupe()
+        printGroupe.style.display = 'block'
+        if (what === 'both') {
+          printGroupe.style.pageBreakBefore = 'always'
+        }
+      }
+    }
+
+    function remplirPrintMatch() {
+      // Header
+      const date = document.getElementById('match-date').value
+      const dateFormattee = date ? new Date(date).toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }) : ''
+      document.getElementById('print-match-date').textContent = dateFormattee
+      document.getElementById('print-match-journee').textContent = document.getElementById('match-journee').value || ''
+      document.getElementById('print-competition').textContent = document.getElementById('match-compet').value || 'Nationale'
+
+      // Adversaire + logo
+      const advNom = document.getElementById('match-adversaire').value || ''
+      document.getElementById('print-match-adv-name').textContent = advNom
+      // Forcer l'affichage du VS
+      document.querySelector('.pm-vs').style.display = 'block'
+      // Chercher le logo dans adversaires
+      const advObj = adversaires.find(a => a.nom === advNom)
+      const advLogoEl = document.getElementById('print-adv-logo')
+      if (advObj && advObj.logo) {
+        advLogoEl.src = advObj.logo
+        advLogoEl.style.display = 'block'
+      } else {
+        // Essayer la preview du header
+        const prevSrc = document.getElementById('match-adv-logo-preview')?.src
+        if (prevSrc && prevSrc !== window.location.href) {
+          advLogoEl.src = prevSrc
+          advLogoEl.style.display = 'block'
+        } else {
+          advLogoEl.style.display = 'none'
+        }
+      }
+
+      // Titulaires — remplir les pm-nom dans chaque pm-slot
+      for (let num = 1; num <= 15; num++) {
+        const slotEl = document.getElementById('pm-p' + num)
+        if (!slotEl) continue
+        const nomEl = slotEl.querySelector('.pm-nom')
+        const jid = feuille.titulaires[num - 1]
+        const j = getJ(jid)
+        if (j) {
+          let nomText = j.nom + ' ' + j.prenom
+          // Ajouter tag CAP si capitaine
+          const tags = feuille.tags[jid] || []
+          if (tags.includes('cap')) nomText += ' (C)'
+          // Ajouter tags G/T/D pour premières lignes (postes 1, 2, 3)
+          if ([1, 2, 3].includes(num)) {
+            const posTags = []
+            if (tags.includes('g')) posTags.push('G')
+            if (tags.includes('t')) posTags.push('T')
+            if (tags.includes('d')) posTags.push('D')
+            if (posTags.length > 0) nomText += ' [' + posTags.join('') + ']'
+          }
+          nomEl.textContent = nomText
+          nomEl.classList.remove('pm-nom-vide')
+        } else {
+          nomEl.textContent = '—'
+          nomEl.classList.add('pm-nom-vide')
+        }
+      }
+
+      // Remplaçants — construire la grille dynamiquement
+      const remplGrid = document.getElementById('pm-rempl-grid')
+      remplGrid.innerHTML = ''
+      const allRempl = [...feuille.remplacants, ...feuille.supplement]
+      allRempl.forEach((jid, i) => {
+        const j = getJ(jid)
+        const num = 16 + i
+        let nomText = j ? j.nom + ' ' + j.prenom : '—'
+        // Ajouter tag CAP si capitaine
+        if (j) {
+          const tags = feuille.tags[jid] || []
+          if (tags.includes('cap')) nomText += ' (C)'
+          // Ajouter tags G/T/D pour remplaçants de première ligne
+          if (j && ['Pilier', 'Talonneur'].some(p => j.poste?.includes(p))) {
+            const posTags = []
+            if (tags.includes('g')) posTags.push('G')
+            if (tags.includes('t')) posTags.push('T')
+            if (tags.includes('d')) posTags.push('D')
+            if (posTags.length > 0) nomText += ' [' + posTags.join('') + ']'
+          }
+        }
+        const slot = document.createElement('div')
+        slot.className = 'pm-rempl-slot'
+        slot.innerHTML = `
+          <span class="pm-rempl-num">${num}</span>
+          <span class="pm-rempl-nom">${nomText}</span>
+        `
+        remplGrid.appendChild(slot)
       })
-      return doublons
+
+      // Staff
+      ;['coach1','coach2','adjoint','prepa','kine','medecin','redacteur'].forEach(k => {
+        const el = document.getElementById('pm-staff-' + k)
+        if (el) el.textContent = document.getElementById('staff-' + k)?.value || ''
+      })
+    }
+
+    function getTagsHTML(jid, small = false) {
+      const tags = feuille.tags[jid] || []
+      const isCap = tags.includes('cap')
+      const posteTag = tags.find(t => ['g','t','d'].includes(t))
+      let html = ''
+      if (isCap) html += '<span class="tag-cap">CAP</span>'
+      if (posteTag) {
+        const className = small ? 'tags-rempl' : 'tags-joueur'
+        html += `<span class="tag-${posteTag}">${posteTag.toUpperCase()}</span>`
+      }
+      return html
+    }
+
+    function remplirPrintGroupe() {
+      const date = document.getElementById('match-date').value || document.getElementById('entr-date').value
+      const dateFormattee = date ? new Date(date).toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }) : ''
+      document.getElementById('print-groupe-date').textContent = dateFormattee
+
+      // Logo adversaire
+      const advNom = document.getElementById('match-adversaire').value || ''
+      const advObj = adversaires.find(a => a.nom === advNom)
+      const pgAdvLogo = document.getElementById('pg-adv-logo')
+      if (advObj && advObj.logo) { pgAdvLogo.src = advObj.logo; pgAdvLogo.style.display = 'block' }
+      else pgAdvLogo.style.display = 'none'
+
+      // Joueurs du groupe = titulaires + remplaçants feuille de match
+      const groupeIds = [...feuille.titulaires, ...feuille.remplacants, ...feuille.supplement].filter(Boolean)
+      const groupeJoueurs = groupeIds.map(jid => getJ(jid)).filter(Boolean).sort((a,b) => a.nom.localeCompare(b.nom))
+
+      // Construire la section principale (grille 2 col)
+      const main = document.getElementById('pg-groupe-main')
+      main.innerHTML = ''
+
+      const titleEl = document.createElement('div')
+      titleEl.className = 'pg-section-title green'
+      titleEl.textContent = `GROUPE DES JOUEURS (${groupeJoueurs.length})`
+      main.appendChild(titleEl)
+
+      const grid = document.createElement('div')
+      grid.className = 'pg-cards-grid'
+      groupeJoueurs.forEach((j, idx) => {
+        const card = document.createElement('div')
+        card.className = 'pg-card'
+        card.innerHTML = `
+          <span class="pg-card-num">${idx + 1}</span>
+          <span class="pg-card-maillot">${j.numero || ''}</span>
+          <span class="pg-card-nom">${j.nom} ${j.prenom}</span>
+        `
+        grid.appendChild(card)
+      })
+      main.appendChild(grid)
+
+      // Côté droit : HG, Espoirs, Blessés
+      const side = document.getElementById('pg-side')
+      side.innerHTML = ''
+
+      const sideGroups = [
+        { key: 'hg',      label: 'HORS GROUPE',   cls: 'yellow', couleur: '#b8960a', arr: feuille.hg },
+        { key: 'espoirs', label: 'ESPOIRS MERCREDI SOIR', cls: 'blue',   couleur: '#1a5fa8', arr: feuille.espoirs },
+        { key: 'blesses', label: 'JOUEURS BLESSÉS', cls: 'red',    couleur: '#a82020', arr: feuille.blesses },
+        { key: 'absents', label: 'JOUEURS ABSENTS', cls: 'red',    couleur: '#888888', arr: feuille.absents || [] },
+      ]
+
+      sideGroups.forEach(({ label, cls, couleur, arr }) => {
+        const joueurs = arr.map(jid => getJ(jid)).filter(Boolean).sort((a,b) => a.nom.localeCompare(b.nom))
+        if (!joueurs.length) return
+
+        const section = document.createElement('div')
+        section.className = 'pg-side-section'
+
+        const t = document.createElement('div')
+        t.className = `pg-section-title ${cls}`
+        t.textContent = `${label} (${joueurs.length})`
+        section.appendChild(t)
+
+        const cards = document.createElement('div')
+        cards.className = 'pg-side-cards'
+        joueurs.forEach((j, idx) => {
+          const card = document.createElement('div')
+          card.className = 'pg-side-card'
+          card.innerHTML = `
+            <span class="pg-side-card-num" style="color:${couleur};">${idx + 1}</span>
+            <span class="pg-side-card-nom">${j.nom} ${j.prenom}</span>
+          `
+          cards.appendChild(card)
+        })
+        section.appendChild(cards)
+        side.appendChild(section)
+      })
+    }
+
+    // Override window.print pour préparer l'impression
+    window.print = function() {
+      if (currentMode === 'match') {
+        preparerImpression()
+      } else {
+        nativePrint()
+      }
     }
 
     // ==================== VISION SEQUENCES ====================
     let visionSeqMode = 'rotations'
-    const DISPLAY_ORDER = [0,1,2, 3,4, 5,7,6, 8,9, 10,11,12,13, 14]
 
     window.setVisionMode = function(mode) {
       visionSeqMode = mode
@@ -3008,58 +3969,10 @@ window.setPickerSort = function(mode) {
       document.getElementById('modal-vision-seq').classList.remove('open')
     }
 
-    function renderVisionSeqAlert(seqNum) {
-      const alertEl = document.getElementById('vision-seq-alert')
-      if (!alertEl) return
-      const prevSeq = seqNum > 1 ? seqNum - 1 : null
-      const alerts = []
-      equipes.forEach((equipe, ei) => {
-        const prEq = (posteRemplacants[ei] || {})
-        DISPLAY_ORDER.forEach(posteIdx => {
-          const tituJid = equipe.titulaires[posteIdx]
-          if (!tituJid) return
-          const tituSeqs = sequencesMap[ei + '_' + tituJid] || []
-          const tituActif = tituSeqs.length === 0 || tituSeqs.includes(seqNum)
-          const remplsPoste = prEq[posteIdx] || []
-          const remplActif = remplsPoste.find(r => r.seqs && r.seqs.includes(seqNum))
-          const joueurSurTerrain = remplActif ? remplActif.jid : (tituActif ? tituJid : null)
-          if (!joueurSurTerrain) return
-          const prevJoueur = getPrevJoueurPosteNew(ei, posteIdx, prevSeq)
-          const isEntrant = !prevSeq || !prevJoueur || prevJoueur !== joueurSurTerrain
-          if (!isEntrant) return
-          const j = getJ(joueurSurTerrain)
-          if (!j) return
-          const effectiveStatut = getEffectiveStatut(j)
-          if (effectiveStatut === 'blesse' || effectiveStatut === 'absent') {
-            alerts.push({ j, equipe, posteIdx, effectiveStatut, isRempl: !!remplActif })
-          }
-        })
-      })
-      if (alerts.length === 0) {
-        alertEl.innerHTML = ''
-        return
-      }
-      alertEl.innerHTML = `<div style="margin-bottom:12px;padding:10px 14px;background:#E24B4A18;border:1px solid #E24B4A44;border-radius:10px;">
-        <div style="font-size:11px;font-weight:700;color:#E24B4A;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.05em;">⚠ Joueurs blessés / absents sur le terrain (seq ${seqNum})</div>
-        ${alerts.map(a => {
-          const teamColor = getTeamUiColor(a.equipe.couleur)
-          const statusColor = a.effectiveStatut === 'blesse' ? '#E24B4A' : '#888'
-          const statusLabel = a.effectiveStatut === 'blesse' ? 'BLESSÉ' : 'ABSENT'
-          return `<div style="display:flex;align-items:center;gap:8px;padding:3px 0;font-size:11px;">
-            <span style="font-weight:700;color:${teamColor};min-width:20px;">${a.posteIdx+1}</span>
-            <span style="font-weight:600;flex:1;">${a.j.nom} ${a.j.prenom}</span>
-            <span style="color:${teamColor};font-size:10px;">${a.equipe.nom}${a.isRempl ? ' (rempl)' : ''}</span>
-            <span style="background:${statusColor}22;color:${statusColor};font-size:9px;font-weight:700;padding:2px 6px;border-radius:4px;border:1px solid ${statusColor}44;">${statusLabel}</span>
-          </div>`
-        }).join('')}
-      </div>`
-    }
-
     function afficherVisionSeq(seqNum) {
       document.querySelectorAll('.vision-seq-btn').forEach((btn, idx) => {
         btn.classList.toggle('active', idx + 1 === seqNum)
       })
-      renderVisionSeqAlert(seqNum)
       if (visionSeqMode === 'equipe') {
         afficherVisionEquipe(seqNum)
       } else {
@@ -3078,8 +3991,8 @@ window.setPickerSort = function(mode) {
         
         const header = document.createElement('div')
         header.className = 'vision-seq-equipe-header'
-        header.style.background = getTeamUiColor(equipe.couleur) + '22'
-        header.style.color = getTeamUiColor(equipe.couleur)
+        header.style.background = equipe.couleur + '22'
+        header.style.color = equipe.couleur
         header.textContent = equipe.nom + ' — Rotations séquence ' + seqNum
         equipeDiv.appendChild(header)
         
@@ -3090,8 +4003,7 @@ window.setPickerSort = function(mode) {
         table.appendChild(thead)
         const tbody = document.createElement('tbody')
 
-        DISPLAY_ORDER.forEach(posteIdx => {
-          const tituJid = equipe.titulaires[posteIdx]
+        equipe.titulaires.forEach((tituJid, posteIdx) => {
           if (!tituJid) return
           const tituSeqKey = ei + '_' + tituJid
           const tituSeqs = sequencesMap[tituSeqKey] || []
@@ -3125,17 +4037,7 @@ window.setPickerSort = function(mode) {
           else statut = prevActive ? 'En jeu' : '<span class="vision-nouveau">ENTRANT</span>'
 
           let info = ''
-          if (isChange && prevJoueur) {
-            const prevJ = getJ(prevJoueur)
-            const dest = findJoueurInSeq(prevJoueur, seqNum, ei, posteIdx)
-            if (dest) {
-              const destEq = equipes[dest.ei]
-              const destColor = getTeamUiColor(destEq.couleur)
-              info = `<span style="color:${destColor};font-size:9px;">→ ${prevJ ? prevJ.nom : '?'} change en ${dest.posteIdx+1} ${destEq.nom}</span>`
-            } else {
-              info = `<span style="color:#E24B4A;font-size:9px;">↓ ${prevJ ? prevJ.nom : '?'} sort</span>`
-            }
-          } else if (remplActif) {
+          if (remplActif) {
             const tituJ = getJ(tituJid)
             info = `<span style="color:#888;font-size:9px;">↩ remplace ${tituJ ? tituJ.nom : '?'}</span>`
           }
@@ -3143,7 +4045,7 @@ window.setPickerSort = function(mode) {
           const tr = document.createElement('tr')
           if (isChange) tr.style.background = '#1D9E7508'
           tr.innerHTML = `
-            <td style="font-weight:700;color:${getTeamUiColor(equipe.couleur)}">${posteIdx+1}</td>
+            <td style="font-weight:700;color:${equipe.couleur}">${posteIdx+1}</td>
             <td style="font-weight:600;">${j ? j.nom + ' ' + j.prenom : '?'}${isChange ? ' <span class="vision-nouveau">↑</span>' : ''}</td>
             <td>${statut}</td>
             <td style="font-size:10px;">${info}</td>
@@ -3158,92 +4060,9 @@ window.setPickerSort = function(mode) {
         }
 
         table.appendChild(tbody)
-
-        // Section Sortants / Changements
-        if (prevSeq) {
-          const sortants = collecterSortants(ei, prevSeq, seqNum)
-          if (sortants.length > 0) {
-            const sortDiv = document.createElement('div')
-            sortDiv.style.cssText = 'margin-top:10px;padding:8px 10px;background:#111;border:1px solid #2a2a2a;border-radius:8px;'
-            const sortTitle = document.createElement('div')
-            sortTitle.style.cssText = 'font-size:10px;font-weight:700;color:#E24B4A;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.05em;'
-            sortTitle.textContent = `Sortants / Changements (seq ${prevSeq} → ${seqNum})`
-            sortDiv.appendChild(sortTitle)
-
-            sortants.forEach(s => {
-              const row = document.createElement('div')
-              row.style.cssText = 'display:flex;align-items:center;gap:8px;padding:4px 0;font-size:11px;'
-              const j = getJ(s.jid)
-              const replJ = getJ(s.replacedBy)
-              const replName = replJ ? replJ.nom + ' ' + replJ.prenom : null
-              if (s.dest) {
-                const destEq = equipes[s.dest.ei]
-                const destColor = getTeamUiColor(destEq.couleur)
-                row.innerHTML = `<span style="color:#888;min-width:80px;">${s.fromPoste+1} →</span><span style="font-weight:600;flex:1;">${j ? j.nom + ' ' + j.prenom : '?'}</span><span style="color:${destColor};font-size:10px;">→ ${s.dest.posteIdx+1} ${destEq.nom}${replName ? `<span style="color:#888;"> (pour ${replName})</span>` : ''}</span>`
-              } else {
-                row.innerHTML = `<span style="color:#888;min-width:80px;">${s.fromPoste+1} →</span><span style="font-weight:600;flex:1;">${j ? j.nom + ' ' + j.prenom : '?'}</span><span style="color:#E24B4A;font-size:10px;">sort${replName ? ` pour ${replName}` : ''}</span>`
-              }
-              sortDiv.appendChild(row)
-            })
-            equipeDiv.appendChild(sortDiv)
-          }
-        }
-
         equipeDiv.appendChild(table)
         content.appendChild(equipeDiv)
       })
-    }
-
-    function findJoueurInSeq(jid, seqNum, excludeEi, excludePosteIdx) {
-      for (let e = 0; e < equipes.length; e++) {
-        const eq = equipes[e]
-        const prEq = posteRemplacants[e] || {}
-        for (let p = 0; p < eq.titulaires.length; p++) {
-          if (e === excludeEi && p === excludePosteIdx) continue
-          const tituJid = eq.titulaires[p]
-          if (!tituJid) continue
-          const tituSeqs = sequencesMap[e + '_' + tituJid] || []
-          const remplsPoste = prEq[p] || []
-          const remplActif = remplsPoste.find(r => r.seqs && r.seqs.includes(seqNum))
-          if (remplActif && remplActif.jid === jid) return { ei: e, posteIdx: p, type: 'rempl' }
-          if (!remplActif && (tituSeqs.length === 0 || tituSeqs.includes(seqNum)) && tituJid === jid) return { ei: e, posteIdx: p, type: 'titu' }
-        }
-      }
-      return null
-    }
-
-    function collecterSortants(ei, prevSeq, seqNum) {
-      const equipe = equipes[ei]
-      const prEq = posteRemplacants[ei] || {}
-      const sortants = []
-      const seen = new Set()
-
-      for (let p = 0; p < equipe.titulaires.length; p++) {
-        const tituJid = equipe.titulaires[p]
-        if (!tituJid) continue
-
-        // Who was on the field at this position in prevSeq?
-        const prevRempl = (prEq[p] || []).find(r => r.seqs && r.seqs.includes(prevSeq))
-        const prevJoueur = prevRempl ? prevRempl.jid : null
-        const tituSeqs = sequencesMap[ei + '_' + tituJid] || []
-        const tituWasActive = !prevRempl && (tituSeqs.length === 0 || tituSeqs.includes(prevSeq))
-        const prevOnField = prevJoueur || (tituWasActive ? tituJid : null)
-
-        if (!prevOnField || seen.has(prevOnField)) continue
-
-        // Who is on the field at this position in seqNum?
-        const currRempl = (prEq[p] || []).find(r => r.seqs && r.seqs.includes(seqNum))
-        const currTituActive = !currRempl && (tituSeqs.length === 0 || tituSeqs.includes(seqNum))
-        const currOnField = currRempl ? currRempl.jid : (currTituActive ? tituJid : null)
-
-        // If the previous player is no longer at this position
-        if (prevOnField !== currOnField) {
-          seen.add(prevOnField)
-          const dest = findJoueurInSeq(prevOnField, seqNum, ei, p)
-          sortants.push({ jid: prevOnField, fromPoste: p, dest, replacedBy: currOnField })
-        }
-      }
-      return sortants
     }
 
     function afficherVisionEquipe(seqNum) {
@@ -3256,89 +4075,51 @@ window.setPickerSort = function(mode) {
 
         const header = document.createElement('div')
         header.className = 'vision-seq-equipe-header'
-        header.style.background = getTeamUiColor(equipe.couleur) + '22'
-        header.style.color = getTeamUiColor(equipe.couleur)
+        header.style.background = equipe.couleur + '22'
+        header.style.color = equipe.couleur
         header.textContent = `${equipe.nom} — Équipe séquence ${seqNum}`
         equipeDiv.appendChild(header)
 
-        // Terrain layout identique à la création d'équipe (sans edit/séquences)
+        // Construire l'équipe pour cette séquence
+        const POSTES_NOM = ['Pilier G','Talonneur','Pilier D','2e Ligne G','2e Ligne D','3L Aile G','3L Aile D','3L Centre','Demi mêlée','Demi ouv.','Ailier G','Centre G','Centre D','Ailier D','Arrière']
         const prEq = posteRemplacants[ei] || {}
-        const teamColor = getTeamUiColor(equipe.couleur)
-        const teamTextColor = getTeamTextColor(equipe.couleur)
 
-        function makeVisionCell(posteIdx) {
-          const tituJid = equipe.titulaires[posteIdx]
+        const terrain = document.createElement('div')
+        terrain.style.cssText = 'display:grid;grid-template-columns:repeat(3,1fr);gap:6px;padding:8px;'
+
+        equipe.titulaires.forEach((tituJid, posteIdx) => {
           const remplsPoste = prEq[posteIdx] || []
           const remplActif = remplsPoste.find(r => r.seqs && r.seqs.includes(seqNum))
           const tituSeqs = tituJid ? (sequencesMap[ei + '_' + tituJid] || []) : []
           const tituActif = tituJid && (tituSeqs.length === 0 || tituSeqs.includes(seqNum)) && !remplActif
+
           const joueurJid = remplActif ? remplActif.jid : (tituActif ? tituJid : null)
           const j = getJ(joueurJid)
           const isRemplacement = remplActif != null
 
           const cell = document.createElement('div')
-          cell.style.cssText = 'display:flex;flex-direction:column;align-items:center;gap:2px;min-width:60px;max-width:75px;'
+          cell.style.cssText = `padding:8px 10px;border-radius:8px;background:${joueurJid ? (isRemplacement ? equipe.couleur+'18' : '#111') : '#0a0a0a'};border:1px solid ${isRemplacement ? equipe.couleur+'44' : '#1a1a1a'};`
 
-          const cercle = document.createElement('div')
-          cercle.style.cssText = `width:44px;height:44px;border-radius:50%;border:2px solid ${joueurJid ? teamColor : '#2a2a2a'};background:${joueurJid ? (isRemplacement ? teamColor+'18' : getTeamSlotBg(equipe.couleur)) : 'transparent'};display:flex;align-items:center;justify-content:center;position:relative;${!joueurJid ? 'border-style:dashed;' : ''}`
+          const numLabel = document.createElement('div')
+          numLabel.style.cssText = `font-size:9px;font-weight:700;color:${equipe.couleur};margin-bottom:2px;`
+          numLabel.textContent = `${posteIdx+1} · ${POSTES_NOM[posteIdx] || ''}`
+          cell.appendChild(numLabel)
 
-          const numBadge = document.createElement('div')
-          numBadge.style.cssText = `position:absolute;top:-8px;left:-8px;background:${teamColor};color:${teamTextColor};font-size:9px;font-weight:700;width:18px;height:18px;border-radius:50%;display:flex;align-items:center;justify-content:center;z-index:5;`
-          numBadge.textContent = posteIdx + 1
-          cercle.appendChild(numBadge)
-
-          if (j) {
-            if (j.photo) {
-              const img = document.createElement('img')
-              img.src = j.photo
-              img.style.cssText = 'width:100%;height:100%;border-radius:50%;object-fit:cover;'
-              img.onerror = () => { img.style.display = 'none'; cercle.querySelector('.init-span').style.display = 'flex' }
-              cercle.appendChild(img)
-            }
-            const init = document.createElement('span')
-            init.className = 'init-span'
-            init.style.cssText = `font-size:11px;font-weight:700;color:${teamColor};display:${j.photo ? 'none' : 'flex'};`
-            init.textContent = j.prenom[0] + j.nom[0]
-            cercle.appendChild(init)
-          } else {
-            const dash = document.createElement('span')
-            dash.style.cssText = 'color:#333;font-size:14px;'
-            dash.textContent = '—'
-            cercle.appendChild(dash)
-          }
-          cell.appendChild(cercle)
-
-          const nomEl = document.createElement('div')
-          nomEl.style.cssText = 'font-size:9px;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;width:100%;color:#fff;'
-          nomEl.textContent = j ? j.nom : '—'
-          cell.appendChild(nomEl)
+          const nomLabel = document.createElement('div')
+          nomLabel.style.cssText = `font-size:12px;font-weight:600;color:${joueurJid ? '#fff' : '#333'};`
+          nomLabel.textContent = j ? j.nom + ' ' + j.prenom : '—'
+          cell.appendChild(nomLabel)
 
           if (isRemplacement && tituJid) {
             const tituJ = getJ(tituJid)
-            const replEl = document.createElement('div')
-            replEl.style.cssText = 'font-size:8px;color:#E24B4A;text-align:center;'
-            replEl.textContent = `↩ ${tituJ ? tituJ.nom : '?'}`
-            cell.appendChild(replEl)
+            const replLabel = document.createElement('div')
+            replLabel.style.cssText = 'font-size:9px;color:#E24B4A;margin-top:2px;'
+            replLabel.textContent = `↩ ${tituJ ? tituJ.nom : '?'}`
+            cell.appendChild(replLabel)
           }
 
-          return cell
-        }
-
-        function makeLigneEl(posteIdxs) {
-          const ligne = document.createElement('div')
-          ligne.className = 'ligne-entr'
-          posteIdxs.forEach(p => ligne.appendChild(makeVisionCell(p)))
-          return ligne
-        }
-
-        const terrain = document.createElement('div')
-        terrain.className = 'terrain-entr'
-        terrain.appendChild(makeLigneEl([0,1,2]))
-        terrain.appendChild(makeLigneEl([3,4]))
-        terrain.appendChild(makeLigneEl([5,7,6]))
-        terrain.appendChild(makeLigneEl([8,9]))
-        terrain.appendChild(makeLigneEl([10,11,12,13]))
-        terrain.appendChild(makeLigneEl([14]))
+          terrain.appendChild(cell)
+        })
 
         equipeDiv.appendChild(terrain)
         content.appendChild(equipeDiv)
@@ -3359,343 +4140,7 @@ window.setPickerSort = function(mode) {
       return null
     }
 
-    window.logout = async function() {
-      try { await signOut(auth) } catch(e) {}
-      window.location.href = 'login.html'
-    }
 
-    // ==================== MODE TOGGLE ====================
-    window.setMode = function(mode) {
-      currentMode = mode
-      document.getElementById('mode-entrainement').style.display = mode === 'entrainement' ? 'block' : 'none'
-      document.getElementById('mode-fg').style.display = mode === 'fg' ? 'block' : 'none'
-      document.getElementById('btn-entrainement').classList.toggle('active', mode === 'entrainement')
-      document.getElementById('btn-fg').classList.toggle('active', mode === 'fg')
-      if (mode === 'fg') fgRender()
-    }
-
-    // ==================== EQUIPES FG (Fitness Game) ====================
-    const FG_COLORS = ['#FECC00','#E24B4A','#378ADD','#1D9E75','#7F77DD','#FF8C42','#00CED1','#FF69B4','#9ACD32','#FF6347','#40E0D0','#DA70D6']
-    let fgEquipes = []
-    let fgPickerCtx = null
-    let fgConfirmCb = null
-
-    function fgLoad() {
-      try {
-        const saved = JSON.parse(localStorage.getItem('sca_fg_equipes') || '[]')
-        if (saved.length) fgEquipes = saved
-      } catch(e) {}
-    }
-    function fgSave() {
-      localStorage.setItem('sca_fg_equipes', JSON.stringify(fgEquipes))
-    }
-
-    window.onFGConfigChange = function() {
-      const nb = parseInt(document.getElementById('fg-nb-teams').value) || 1
-      const defaultSize = parseInt(document.getElementById('fg-default-size').value) || 5
-      const cfg = document.getElementById('fg-teams-config')
-      cfg.innerHTML = ''
-      for (let i = 0; i < nb; i++) {
-        const row = document.createElement('div')
-        row.className = 'fg-team-config-row'
-        const color = FG_COLORS[i % FG_COLORS.length]
-        const existing = fgEquipes[i]
-        const teamName = existing?.nom || ('Équipe ' + (i + 1))
-        const teamSize = existing?.joueurs?.length || defaultSize
-        row.innerHTML = `
-          <div class="fg-tc-color" style="background:${color};"></div>
-          <span class="fg-tc-label">Équipe ${i + 1}</span>
-          <input type="text" value="${teamName}" placeholder="Nom" oninput="fgEquipes[${i}] ? (fgEquipes[${i}].nom=this.value, fgSave()) : null" style="width:140px;" />
-          <span style="font-size:10px;color:#555;">Nb joueurs:</span>
-          <input type="number" value="${teamSize}" min="1" max="20" onchange="fgUpdateTeamSize(${i}, this.value)" style="width:60px;" />
-        `
-        cfg.appendChild(row)
-      }
-    }
-
-    window.fgGenerate = function() {
-      const nb = parseInt(document.getElementById('fg-nb-teams').value) || 1
-      const defaultSize = parseInt(document.getElementById('fg-default-size').value) || 5
-      const oldEquipes = [...fgEquipes]
-      fgEquipes = []
-      for (let i = 0; i < nb; i++) {
-        const old = oldEquipes[i]
-        const size = old?.joueurs?.length || defaultSize
-        fgEquipes.push({
-          nom: old?.nom || ('Équipe ' + (i + 1)),
-          couleur: FG_COLORS[i % FG_COLORS.length],
-          joueurs: old?.joueurs || new Array(size).fill(null)
-        })
-      }
-      fgSave()
-      onFGConfigChange()
-      fgRender()
-    }
-
-    window.fgUpdateTeamSize = function(i, val) {
-      if (!fgEquipes[i]) return
-      const newSize = parseInt(val) || 1
-      const arr = fgEquipes[i].joueurs
-      if (newSize > arr.length) {
-        while (arr.length < newSize) arr.push(null)
-      } else {
-        arr.length = newSize
-      }
-      fgSave()
-      fgRender()
-    }
-
-    window.fgClearAll = function() {
-      if (!confirm('Effacer toutes les équipes FG ?')) return
-      fgEquipes = []
-      fgSave()
-      onFGConfigChange()
-      fgRender()
-    }
-
-    function fgGetUsedIds() {
-      const used = {}
-      fgEquipes.forEach((eq, ei) => {
-        (eq.joueurs || []).forEach(jid => {
-          if (jid) {
-            if (!used[jid]) used[jid] = []
-            used[jid].push(ei)
-          }
-        })
-      })
-      return used
-    }
-
-    function fgGetJ(jid) {
-      if (!jid) return null
-      if (typeof jid === 'string' && jid.startsWith('trial_')) {
-        const name = decodeURIComponent(jid.substring(6))
-        return { id: jid, nom: name, prenom: '', poste: '', trial: true }
-      }
-      return joueurs.find(j => j.id === jid) || null
-    }
-
-    window.fgRender = function() {
-      if (!fgEquipes.length) {
-        fgLoad()
-      }
-      if (!fgEquipes.length) {
-        onFGConfigChange()
-      }
-      const grid = document.getElementById('fg-grid')
-      grid.innerHTML = ''
-      if (!fgEquipes.length) {
-        grid.innerHTML = '<div style="text-align:center;padding:40px;color:#444;font-size:14px;">Configurez le nombre d\'équipes et cliquez sur "Générer les équipes"</div>'
-        return
-      }
-
-      const usedIds = fgGetUsedIds()
-      const nbTeams = fgEquipes.length
-      let cols = 2
-      if (nbTeams <= 2) cols = 2
-      else if (nbTeams <= 4) cols = 2
-      else if (nbTeams <= 6) cols = 3
-      else cols = 4
-      grid.style.gridTemplateColumns = `repeat(${cols}, 1fr)`
-
-      fgEquipes.forEach((eq, ei) => {
-        const card = document.createElement('div')
-        card.className = 'fg-card'
-        const header = document.createElement('div')
-        header.className = 'fg-card-header'
-        header.style.borderColor = eq.couleur
-        const filled = (eq.joueurs || []).filter(Boolean).length
-        header.innerHTML = `
-          <input type="text" value="${eq.nom}" oninput="fgEquipes[${ei}].nom=this.value; fgSave()" />
-          <span class="fg-card-count">${filled}/${eq.joueurs.length}</span>
-        `
-        card.appendChild(header)
-
-        const body = document.createElement('div')
-        body.className = 'fg-card-body'
-        ;(eq.joueurs || []).forEach((jid, pi) => {
-          const slot = document.createElement('div')
-          slot.className = 'fg-slot' + (jid ? ' filled' : ' empty')
-          const j = fgGetJ(jid)
-          const num = document.createElement('span')
-          num.className = 'fg-slot-num'
-          num.textContent = (pi + 1)
-          slot.appendChild(num)
-
-          const name = document.createElement('span')
-          name.className = 'fg-slot-name'
-          if (j) {
-            name.textContent = j.nom + (j.prenom ? ' ' + j.prenom : '')
-          } else {
-            name.textContent = '+ Ajouter un joueur'
-          }
-          slot.appendChild(name)
-
-          if (j && j.trial) {
-            const badge = document.createElement('span')
-            badge.className = 'fg-slot-badge trial'
-            badge.textContent = 'ESSAI'
-            slot.appendChild(badge)
-          } else if (jid && usedIds[jid] && usedIds[jid].length > 1) {
-            const badge = document.createElement('span')
-            badge.className = 'fg-slot-badge'
-            badge.textContent = '×' + usedIds[jid].length
-            slot.appendChild(badge)
-          }
-
-          if (jid) {
-            const rm = document.createElement('span')
-            rm.className = 'fg-slot-remove'
-            rm.textContent = '✕'
-            rm.onclick = (e) => { e.stopPropagation(); fgEquipes[ei].joueurs[pi] = null; fgSave(); fgRender() }
-            slot.appendChild(rm)
-          }
-
-          slot.onclick = () => {
-            fgPickerCtx = { ei, pi }
-            ouvrirPicker('Équipe ' + eq.nom + ' — Slot ' + (pi + 1), (pickedId) => {
-              if (pickedId === null) {
-                fgEquipes[ei].joueurs[pi] = null
-                fgSave()
-                fgRender()
-                return
-              }
-              const usedIn = usedIds[pickedId] || []
-              if (usedIn.length > 0) {
-                const jName = fgGetJ(pickedId)
-                const nameStr = jName ? (jName.nom + (jName.prenom ? ' ' + jName.prenom : '')) : pickedId
-                const teamNames = usedIn.map(t => fgEquipes[t].nom).join(', ')
-                fgShowConfirm(
-                  'Joueur déjà ajouté',
-                  `"${nameStr}" est déjà dans: ${teamNames}.\nVoulez-vous l'ajouter aussi à "${eq.nom}" ?`,
-                  () => {
-                    fgEquipes[ei].joueurs[pi] = pickedId
-                    fgSave()
-                    fgRender()
-                  }
-                )
-              } else {
-                fgEquipes[ei].joueurs[pi] = pickedId
-                fgSave()
-                fgRender()
-              }
-            }, jid)
-          }
-          body.appendChild(slot)
-        })
-        card.appendChild(body)
-        grid.appendChild(card)
-      })
-    }
-
-    window.fgShowConfirm = function(title, text, onConfirm) {
-      document.getElementById('fg-confirm-title').textContent = title
-      document.getElementById('fg-confirm-text').textContent = text
-      fgConfirmCb = onConfirm
-      const btn = document.getElementById('fg-confirm-btn')
-      btn.onclick = () => { if (fgConfirmCb) fgConfirmCb(); fgCloseConfirm() }
-      document.getElementById('fg-confirm-modal').classList.add('open')
-    }
-
-    window.fgCloseConfirm = function() {
-      document.getElementById('fg-confirm-modal').classList.remove('open')
-      fgConfirmCb = null
-    }
-
-    // Override filtrerPicker to support FG mode
-    const _origFiltrerPicker = window.filtrerPicker
-    window.filtrerPicker = function() {
-      if (currentMode !== 'fg') { _origFiltrerPicker(); return }
-      const q = (document.getElementById('picker-search').value || '').toLowerCase()
-      const c = document.getElementById('picker-list')
-      c.innerHTML = ''
-
-      const usedIds = fgGetUsedIds()
-
-      // Vider
-      const vide = document.createElement('div')
-      vide.className = 'picker-item'
-      vide.innerHTML = '<span style="color:#555;font-style:italic;">— Vider le slot —</span>'
-      vide.onclick = () => { if (pickerCallback) pickerCallback(null); fermerPicker() }
-      c.appendChild(vide)
-
-      // Joueur personnalisé (inline input)
-      const customOpt = document.createElement('div')
-      customOpt.className = 'picker-item'
-      customOpt.innerHTML = '<span style="color:#FECC00;font-style:italic;">+ Joueur personnalisé...</span>'
-      customOpt.onclick = () => {
-        customOpt.innerHTML = ''
-        customOpt.style.gap = '6px'
-        const input = document.createElement('input')
-        input.type = 'text'
-        input.placeholder = 'Nom du joueur...'
-        input.style.cssText = 'flex:1;padding:6px 10px;border-radius:6px;border:1px solid #2a2a2a;background:#0f0f0f;color:#fff;font-size:16px;outline:none;'
-        input.onkeydown = (e) => {
-          if (e.key === 'Enter') { e.preventDefault(); confirmCustom() }
-          if (e.key === 'Escape') { fermerPicker() }
-        }
-        customOpt.appendChild(input)
-        const btn = document.createElement('button')
-        btn.textContent = '✓'
-        btn.className = 'btn-primary'
-        btn.style.cssText = 'padding:5px 10px;font-size:13px;'
-        const confirmCustom = () => {
-          const val = input.value.trim() || 'Joueur personnalisé'
-          const customId = 'custom_' + encodeURIComponent(val)
-          if (pickerCallback) pickerCallback(customId)
-          fermerPicker()
-        }
-        btn.onclick = confirmCustom
-        customOpt.appendChild(btn)
-        input.focus()
-      }
-      c.appendChild(customOpt)
-
-      const filtered = joueurs.filter(j => (j.nom + ' ' + j.prenom).toLowerCase().includes(q))
-      const dejaAjoutes = filtered.filter(j => usedIds[j.id] && usedIds[j.id].length > 0)
-      const disponibles = filtered.filter(j => !usedIds[j.id])
-
-      const createCatHeader = (title, color) => {
-        const h = document.createElement('div')
-        h.style.cssText = `padding: 8px 10px; font-size: 11px; font-weight: 600; color: ${color}; text-transform: uppercase; letter-spacing: 0.08em; border-bottom: 1px solid #2a2a2a; margin-top: 4px;`
-        h.textContent = `-- ${title} --`
-        return h
-      }
-
-      const createItem = (j, isUsed) => {
-        const item = document.createElement('div')
-        item.className = 'picker-item'
-        const teamsIn = usedIds[j.id] || []
-        const usedBadge = isUsed ? `<span style="background:#FECC00;font-size:9px;padding:2px 5px;border-radius:3px;color:#000;margin-left:5px;font-weight:600;">${teamsIn.length > 1 ? '×' + teamsIn.length : 'DÉJÀ'}</span>` : ''
-        item.innerHTML = `
-          <div style="width:8px;height:8px;border-radius:50%;background:#1D9E75;flex-shrink:0;"></div>
-          <div class="picker-nom">${j.nom} ${j.prenom}${usedBadge}</div>
-          <div class="picker-poste">${j.poste||''}</div>
-        `
-        if (isUsed) { item.style.opacity = '0.7'; item.style.background = '#252518' }
-        item.onclick = () => { if (pickerCallback) pickerCallback(j.id); fermerPicker() }
-        return item
-      }
-
-      const sortFn = (arr) => {
-        if (pickerSortMode === 'poste') {
-          return arr.sort((a,b) => { const d = getPosteIndex(a.poste) - getPosteIndex(b.poste); return d !== 0 ? d : a.nom.localeCompare(b.nom) })
-        }
-        return arr.sort((a,b) => a.nom.localeCompare(b.nom))
-      }
-
-      if (disponibles.length > 0) {
-        c.appendChild(createCatHeader('dispo', '#1D9E75'))
-        sortFn(disponibles).forEach(j => c.appendChild(createItem(j, false)))
-      }
-      if (dejaAjoutes.length > 0) {
-        c.appendChild(createCatHeader('déjà ajouté', '#FECC00'))
-        sortFn(dejaAjoutes).forEach(j => c.appendChild(createItem(j, true)))
-      }
-    }
-
-    // Init FG on load
-    fgLoad()
   </script>
 </body>
 </html>

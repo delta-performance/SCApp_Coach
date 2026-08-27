@@ -1,0 +1,162 @@
+[
+  {
+    "file": "absences.html",
+    "title": "SCA Albi — Absences",
+    "icon": "🚫",
+    "color": "#FECC00",
+    "group": "planning",
+    "sub": ""
+  },
+  {
+    "file": "energetique.html",
+    "title": "SCA Albi — Énergétique",
+    "icon": "🏃",
+    "color": "#4CAF8F",
+    "group": null,
+    "sub": ""
+  },
+  {
+    "file": "equipes.html",
+    "title": "SCA Albi — Équipes",
+    "icon": "👥",
+    "color": "#5B9CF6",
+    "group": "equipes",
+    "sub": ""
+  },
+  {
+    "file": "exercices.html",
+    "title": "SCA Albi — Exercices",
+    "icon": "📝",
+    "color": "#F08055",
+    "group": "muscu",
+    "sub": ""
+  },
+  {
+    "file": "fiches-seances.html",
+    "title": "SCA Albi — Fiches Séances",
+    "icon": "🏉",
+    "color": "#C778DD",
+    "group": "fiches",
+    "sub": ""
+  },
+  {
+    "file": "gps-match.html",
+    "title": "SCA Albi — Rapport de match GPS",
+    "icon": "🏆",
+    "color": "#378ADD",
+    "group": "gps",
+    "sub": ""
+  },
+  {
+    "file": "gps-planif.html",
+    "title": "SCA Albi — Planification Charge GPS",
+    "icon": "📡",
+    "color": "#E24B4A",
+    "group": "gps",
+    "sub": ""
+  },
+  {
+    "file": "gps.html",
+    "title": "SCA Albi — Données GPS",
+    "icon": "📊",
+    "color": "#9CCC65",
+    "group": "gps",
+    "sub": ""
+  },
+  {
+    "file": "index.html",
+    "title": "SCA Albi — Performance",
+    "icon": "👤",
+    "color": "#FF8A65",
+    "group": "roster",
+    "sub": ""
+  },
+  {
+    "file": "jeux.html",
+    "title": "SCA Albi — Jeux",
+    "icon": "▶",
+    "color": "#FECC00",
+    "group": null,
+    "sub": ""
+  },
+  {
+    "file": "medical.html",
+    "title": "SCA Albi — Médical",
+    "icon": "🏥",
+    "color": "#4CAF8F",
+    "group": "medical",
+    "sub": ""
+  },
+  {
+    "file": "performances.html",
+    "title": "SCA Albi — Performances",
+    "icon": "⚡",
+    "color": "#5B9CF6",
+    "group": "muscu",
+    "sub": ""
+  },
+  {
+    "file": "planification-muscu.html",
+    "title": "SCA Albi — Planification Muscu",
+    "icon": "▶",
+    "color": "#F08055",
+    "group": null,
+    "sub": ""
+  },
+  {
+    "file": "planning-blesses.html",
+    "title": "SCA Albi — Planning Blessés",
+    "icon": "🩺",
+    "color": "#C778DD",
+    "group": "medical",
+    "sub": ""
+  },
+  {
+    "file": "planning.html",
+    "title": "SCA Albi — Planning",
+    "icon": "📅",
+    "color": "#378ADD",
+    "group": "planning",
+    "sub": ""
+  },
+  {
+    "file": "profil-force-vitesse.html",
+    "title": "SCA Albi — Profil Force-Vitesse",
+    "icon": "📈",
+    "color": "#E24B4A",
+    "group": "muscu",
+    "sub": ""
+  },
+  {
+    "file": "seances.html",
+    "title": "SCA Albi — Séances",
+    "icon": "🏋️",
+    "color": "#9CCC65",
+    "group": "muscu",
+    "sub": ""
+  },
+  {
+    "file": "suivi-poids.html",
+    "title": "SCA Albi — Suivi Poids",
+    "icon": "⚖️",
+    "color": "#FF8A65",
+    "group": "wellness",
+    "sub": ""
+  },
+  {
+    "file": "tv.html",
+    "title": "SCA Albi — Vue TV",
+    "icon": "📺",
+    "color": "#FECC00",
+    "group": null,
+    "sub": ""
+  },
+  {
+    "file": "wellness.html",
+    "title": "SCA Albi — Wellness",
+    "icon": "💚",
+    "color": "#4CAF8F",
+    "group": "wellness",
+    "sub": ""
+  }
+]

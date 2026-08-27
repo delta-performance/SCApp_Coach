@@ -9,7 +9,7 @@
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #0f0f0f; color: #fff; display: flex; height: 100vh; overflow: hidden; }
-    
+
     /* iPad TopBar */
     .ipad-topbar { position: fixed; top: 0; left: 0; right: 0; height: 44px; background: #111; border-bottom: 1px solid #2a2a2a; display: flex; align-items: center; padding: 0 12px; z-index: 50; }
     .ipad-topbar-home { display: flex; align-items: center; gap: 8px; text-decoration: none; color: inherit; }
@@ -24,107 +24,165 @@
     .ipad-nav-item.active { color: #FECC00; }
     .ipad-nav-icon { font-size: 22px; line-height: 1; }
 
-    /* MAIN - Full width sans sidebar */
     .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; margin-top: 44px; margin-bottom: 64px; }
-    .topbar { height: 56px; border-bottom: 1px solid #2a2a2a; display: flex; align-items: center; padding: 0 24px; gap: 8px; flex-shrink: 0; flex-wrap: wrap; background: #0f0f0f; }
+    .topbar { height: 56px; border-bottom: 1px solid #2a2a2a; display: flex; align-items: center; padding: 0 12px; gap: 8px; flex-shrink: 0; flex-wrap: wrap; background: #0f0f0f; }
     .topbar-title { font-size: 15px; font-weight: 600; flex: 1; }
-    .content { flex: 1; overflow-y: auto; padding: 20px 24px; }
+    .content { flex: 1; overflow-y: auto; padding: 12px; }
 
-    /* BOUTONS */
     .btn-primary { padding: 7px 14px; border-radius: 8px; border: none; background: #FECC00; color: #0f0f0f; font-size: 12px; font-weight: 600; cursor: pointer; white-space: nowrap; }
     .btn-primary:hover { opacity: .88; }
     .btn-ghost { padding: 6px 12px; border-radius: 8px; border: 1px solid #2a2a2a; background: none; color: #888; font-size: 12px; cursor: pointer; white-space: nowrap; }
     .btn-ghost:hover { color: #fff; border-color: #444; }
+    .btn-icon { padding: 6px 8px; border-radius: 6px; border: 1px solid #2a2a2a; background: none; color: #888; font-size: 12px; cursor: pointer; }
+    .btn-icon:hover { color: #fff; border-color: #444; }
 
-    /* TABLEAU STYLE */
-    .fiches-container { background: #1a1a1a; border: 1px solid #2a2a2a; border-radius: 12px; overflow: hidden; }
-    .fiches-header { display: grid; grid-template-columns: 100px 1fr 80px 60px 70px; gap: 8px; padding: 12px 16px; background: #222; border-bottom: 1px solid #2a2a2a; font-size: 10px; font-weight: 700; color: #666; text-transform: uppercase; letter-spacing: .04em; }
-    .fiches-row { display: grid; grid-template-columns: 100px 1fr 80px 60px 70px; gap: 8px; padding: 10px 16px; border-bottom: 1px solid #1a1a1a; align-items: center; transition: background .15s; cursor: pointer; }
+    .filters-bar { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+    .filter-select { padding: 6px 10px; border-radius: 6px; border: 1px solid #2a2a2a; background: #1a1a1a; color: #fff; font-size: 12px; outline: none; cursor: pointer; }
+    .filter-select:focus { border-color: #FECC00; }
+    .search-input { padding: 6px 10px; border-radius: 6px; border: 1px solid #2a2a2a; background: #1a1a1a; color: #fff; font-size: 12px; outline: none; min-width: 140px; }
+    .search-input:focus { border-color: #FECC00; }
+
+    .empty-state { color: #444; font-size: 13px; text-align: center; padding: 60px 20px; }
+
+    .fiches-tree { display: flex; flex-direction: column; gap: 10px; }
+    .folder-group { border: 1px solid #2a2a2a; border-radius: 10px; overflow: hidden; background: #1a1a1a; }
+    .folder-header { display: flex; align-items: center; gap: 10px; padding: 12px 14px; background: #222; cursor: pointer; font-size: 13px; font-weight: 600; color: #FECC00; transition: background .15s; }
+    .folder-header:hover { background: #2a2a2a; }
+    .folder-toggle { width: 14px; height: 14px; display: flex; align-items: center; justify-content: center; color: #888; font-size: 11px; transition: transform .15s; }
+    .folder-group.open > .folder-header .folder-toggle { transform: rotate(90deg); }
+    .folder-content { display: none; padding: 0 8px 8px; }
+    .folder-group.open > .folder-content { display: block; }
+    .folder-badge { margin-left: auto; font-size: 10px; color: #666; font-weight: 500; }
+
+    .subfolder-group { margin: 8px 0 8px 16px; border-left: 2px solid #2a2a2a; }
+    .subfolder-header { display: flex; align-items: center; gap: 8px; padding: 8px 10px; cursor: pointer; font-size: 12px; font-weight: 600; color: #aaa; }
+    .subfolder-header:hover { color: #fff; }
+    .subfolder-group.open > .subfolder-header .folder-toggle { transform: rotate(90deg); }
+    .subfolder-content { display: none; }
+    .subfolder-group.open > .subfolder-content { display: block; }
+
+    .date-group { margin: 6px 0; }
+    .date-header { display: flex; align-items: center; gap: 8px; padding: 6px 10px; cursor: pointer; font-size: 12px; color: #888; font-weight: 600; }
+    .date-group.open > .date-header .folder-toggle { transform: rotate(90deg); }
+    .date-content { display: none; }
+    .date-group.open > .date-content { display: block; }
+
+    .fiches-row { display: grid; grid-template-columns: 1fr 90px 70px 80px; gap: 8px; padding: 10px 12px; border-bottom: 1px solid #1a1a1a; align-items: center; transition: background .15s; cursor: pointer; background: #141414; margin: 2px 0; border-radius: 6px; }
     .fiches-row:hover { background: #222; }
     .fiches-row:last-child { border-bottom: none; }
-    
-    .fiche-date { font-size: 12px; font-weight: 600; color: #FECC00; }
-    .fiche-theme { font-size: 12px; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .fiche-duree { font-size: 11px; color: #666; text-align: center; }
-    .fiche-blocs { font-size: 11px; color: #666; text-align: center; }
+    .fiche-theme { font-size: 13px; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .fiche-meta { font-size: 11px; color: #666; }
+    .fiche-duree { font-size: 12px; color: #888; text-align: center; }
+    .fiche-blocs { font-size: 12px; color: #888; text-align: center; }
     .fiche-actions { display: flex; gap: 4px; justify-content: flex-end; }
-    
-    .action-btn { padding: 4px 8px; border-radius: 5px; border: 1px solid #2a2a2a; background: none; color: #555; font-size: 11px; cursor: pointer; transition: all .15s; }
+    .action-btn { padding: 4px 6px; border-radius: 5px; border: 1px solid #2a2a2a; background: none; color: #555; font-size: 11px; cursor: pointer; transition: all .15s; }
     .action-btn:hover { color: #fff; border-color: #444; }
     .action-btn.delete:hover { color: #E24B4A; border-color: #E24B4A44; }
 
-    /* FILTERS */
-    .filters-bar { display: flex; gap: 10px; margin-bottom: 16px; flex-wrap: wrap; align-items: center; }
-    .filter-select { padding: 6px 12px; border-radius: 6px; border: 1px solid #2a2a2a; background: #1a1a1a; color: #fff; font-size: 12px; outline: none; cursor: pointer; }
-    .filter-select:focus { border-color: #FECC00; }
-    .search-input { padding: 6px 12px; border-radius: 6px; border: 1px solid #2a2a2a; background: #1a1a1a; color: #fff; font-size: 12px; outline: none; min-width: 180px; }
-    .search-input:focus { border-color: #FECC00; }
-
-    /* EMPTY STATE */
-    .empty-state { color: #444; font-size: 13px; text-align: center; padding: 60px 20px; }
-
-    /* MODAL */
-    .modal-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.85); align-items: center; justify-content: center; z-index: 200; padding: 20px; }
+    .modal-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.85); align-items: center; justify-content: center; z-index: 200; padding: 12px; }
     .modal-overlay.open { display: flex; }
-    .modal { background: #1a1a1a; border: 1px solid #2a2a2a; border-radius: 12px; padding: 20px; width: 100%; max-width: 1000px; max-height: 90vh; overflow-y: auto; }
+    .modal { background: #1a1a1a; border: 1px solid #2a2a2a; border-radius: 12px; padding: 16px; width: 100%; max-width: 1480px; max-height: 92vh; overflow-y: auto; }
     .modal-title { font-size: 16px; font-weight: 700; margin-bottom: 16px; color: #FECC00; }
-    
-    /* MODAL LAYOUT - iPad responsive */
-    .modal-layout { display: flex; flex-direction: column; gap: 20px; }
+    .modal.small { max-width: 420px; }
+    .modal-actions { display: flex; gap: 10px; margin-top: 16px; padding-top: 14px; border-top: 1px solid #2a2a2a; justify-content: flex-end; }
+
+    .modal-layout { display: flex; flex-direction: column; gap: 16px; }
     @media (min-width: 900px) {
-      .modal-layout { display: grid; grid-template-columns: 300px 1fr; gap: 24px; }
+      .modal-layout { display: grid; grid-template-columns: 230px 1fr; gap: 18px; }
     }
     .modal-left { display: flex; flex-direction: column; gap: 12px; }
     .modal-right { display: flex; flex-direction: column; gap: 12px; }
-    
-    /* FORM GROUPS */
+
     .form-group { margin-bottom: 0; }
     .form-label { display: block; font-size: 10px; color: #555; margin-bottom: 4px; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; }
     .form-input { width: 100%; padding: 8px 10px; border-radius: 6px; border: 1px solid #2a2a2a; background: #0f0f0f; color: #fff; font-size: 13px; outline: none; transition: border-color .15s; }
     .form-input:focus { border-color: #FECC00; }
     .form-textarea { width: 100%; padding: 8px 10px; border-radius: 6px; border: 1px solid #2a2a2a; background: #0f0f0f; color: #fff; font-size: 13px; outline: none; resize: vertical; min-height: 60px; }
     .form-textarea:focus { border-color: #FECC00; }
-    
-    /* SECTION TITLES */
     .section-title { font-size: 11px; font-weight: 700; color: #FECC00; text-transform: uppercase; letter-spacing: .04em; margin-bottom: 10px; padding-bottom: 6px; border-bottom: 1px solid #2a2a2a; }
-    
-    /* BLOCS TABLE - iPad scrollable */
-    .blocs-container { background: #141414; border: 1px solid #1e1e1e; border-radius: 8px; overflow-x: auto; }
-    .blocs-header { display: grid; grid-template-columns: 50px 45px 120px 1fr 50px 50px 50px 40px; gap: 4px; padding: 10px 12px; background: #1c1c1c; border-bottom: 1px solid #1e1e1e; font-size: 8px; font-weight: 700; color: #666; text-transform: uppercase; letter-spacing: .02em; min-width: 500px; }
-    .bloc-row { display: grid; grid-template-columns: 50px 45px 120px 1fr 50px 50px 50px 40px; gap: 4px; padding: 8px 12px; border-bottom: 1px solid #1a1a1a; align-items: center; transition: background .12s; min-width: 500px; }
-    .bloc-row:hover { background: #1a1a1a; }
-    .bloc-row:last-child { border-bottom: none; }
-    
-    .bloc-time { font-size: 10px; color: #FECC00; font-weight: 600; text-align: center; }
-    .bloc-duree-input { padding: 3px 4px; border-radius: 4px; border: 1px solid #2a2a2a; background: #0f0f0f; color: #fff; font-size: 11px; text-align: center; outline: none; width: 100%; }
-    .bloc-duree-input:focus { border-color: #FECC00; }
-    .bloc-categorie-select { padding: 3px 4px; border-radius: 4px; border: 1px solid #2a2a2a; background: #0f0f0f; color: #fff; font-size: 9px; outline: none; width: 100%; }
-    .bloc-categorie-select:focus { border-color: #FECC00; }
-    .bloc-contenu-input { padding: 3px 6px; border-radius: 4px; border: 1px solid #2a2a2a; background: #0f0f0f; color: #fff; font-size: 11px; outline: none; width: 100%; }
-    .bloc-contenu-input:focus { border-color: #FECC00; }
-    .bloc-resp-input { padding: 3px 4px; border-radius: 4px; border: 1px solid #2a2a2a; background: #0f0f0f; color: #fff; font-size: 11px; text-align: center; outline: none; width: 100%; }
-    .bloc-resp-input:focus { border-color: #FECC00; }
-    .bloc-intensity-input { padding: 3px 4px; border-radius: 4px; border: 1px solid #2a2a2a; background: #0f0f0f; color: #fff; font-size: 11px; text-align: center; outline: none; width: 100%; }
-    .bloc-intensity-input:focus { border-color: #FECC00; }
-    .bloc-delete-btn { padding: 4px 6px; border-radius: 4px; border: 1px solid #2a2a2a; background: none; color: #555; font-size: 11px; cursor: pointer; transition: all .15s; }
-    .bloc-delete-btn:hover { color: #E24B4A; border-color: #E24B4A44; }
-    
+    .total-duration { background: #FECC0011; border: 1px solid #FECC0033; border-radius: 6px; padding: 8px 12px; font-size: 12px; color: #FECC00; font-weight: 600; text-align: center; }
+
+    .seance-table-wrap { overflow-x: auto; border: 1px solid #1e1e1e; border-radius: 8px; background: #141414; }
+    .seance-table { width: 100%; border-collapse: collapse; font-size: 12px; min-width: 800px; }
+    .seance-table th { background: #222; color: #888; padding: 10px 6px; text-align: center; font-size: 10px; text-transform: uppercase; border-bottom: 1px solid #1e1e1e; }
+    .seance-table td { padding: 6px; border-bottom: 1px solid #1a1a1a; vertical-align: top; }
+    .seance-table tr:last-child td { border-bottom: none; }
+    .seance-table input, .seance-table select, .seance-table textarea { width: 100%; background: #0f0f0f; border: 1px solid #2a2a2a; color: #fff; border-radius: 4px; padding: 6px; font-size: 12px; outline: none; }
+    .seance-table input:focus, .seance-table select:focus, .seance-table textarea:focus { border-color: #FECC00; }
+    .seance-table textarea { resize: vertical; min-height: 38px; }
+    .time-cell { width: 60px; text-align: center; color: #FECC00; font-weight: 600; }
+    .duree-cell { width: 55px; }
+    .activite-cell { min-width: 160px; }
+    .int-cell { width: 60px; text-align: center; }
+    .int-select { text-align: center; font-weight: 600; }
+    .info-cell { min-width: 140px; }
+    .coach-cell { width: 70px; }
+    .note-cell { min-width: 120px; }
+    .terrain-cell { width: 85px; text-align: center; }
+    .terrain-btn { padding: 5px 6px; border-radius: 5px; border: 1px solid #2a2a2a; background: #1a1a1a; color: #888; font-size: 11px; cursor: pointer; }
+    .terrain-btn:hover { border-color: #FECC00; color: #FECC00; }
+    .terrain-btn.has-items { color: #FECC00; border-color: #FECC0033; background: #FECC0011; }
+    .int-0 { color: #888; }
+    .int-1 { background: #4caf50; color: #000; }
+    .int-2 { background: #8bc34a; color: #000; }
+    .int-3 { background: #ff9800; color: #000; }
+    .int-4 { background: #ff5722; color: #fff; }
+    .int-5 { background: #f44336; color: #fff; }
     .add-bloc-btn { width: 100%; padding: 10px; border-radius: 6px; border: 1px dashed #2a2a2a; background: none; color: #666; font-size: 12px; cursor: pointer; transition: all .15s; margin-top: 8px; }
     .add-bloc-btn:hover { border-color: #FECC00; color: #FECC00; }
-    
-    /* TOTAL DURATION DISPLAY */
-    .total-duration { background: #FECC0011; border: 1px solid #FECC0033; border-radius: 6px; padding: 8px 12px; font-size: 12px; color: #FECC00; font-weight: 600; text-align: center; }
-    
-    .modal-actions { display: flex; gap: 10px; margin-top: 20px; padding-top: 16px; border-top: 1px solid #2a2a2a; justify-content: flex-end; }
+    .bloc-delete-btn { padding: 4px 6px; border-radius: 4px; border: 1px solid #2a2a2a; background: none; color: #555; font-size: 12px; cursor: pointer; transition: all .15s; }
+    .bloc-delete-btn:hover { color: #E24B4A; border-color: #E24B4A44; }
 
-    /* Responsive adjustments */
-    @media (max-width: 768px) {
-      .sidebar { display: none; }
-      .main { margin-left: 0; }
-      .fiches-header { grid-template-columns: 80px 1fr 60px 50px 60px; font-size: 9px; }
-      .fiches-row { grid-template-columns: 80px 1fr 60px 50px 60px; }
-    }
+    .terrain-editor { display: flex; flex-direction: column; gap: 12px; }
+    .terrain-canvas { background: #1a9c4a; border: 3px solid #fff; border-radius: 0; width: 100%; aspect-ratio: 120/70; position: relative; overflow: hidden; cursor: crosshair; }
+    .terrain-canvas.eraser-tool { cursor: url('data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' width=\'28\' height=\'28\' viewBox=\'0 0 28 28\'><text x=\'0\' y=\'22\' font-size=\'22\'>🧽</text></svg>') 14 14, pointer; }
+    .terrain-lines { position: absolute; inset: 0; pointer-events: none; }
+    .terrain-line { position: absolute; background: #fff; pointer-events: none; }
+    .terrain-line.h { height: 2px; left: 0; right: 0; }
+    .terrain-line.h.dashed { background: repeating-linear-gradient(to right, #fff 0, #fff 6px, transparent 6px, transparent 12px); }
+    .terrain-line.h.short { left: 8.333%; right: 8.333%; }
+    .terrain-line.h.touch { height: 3px; }
+    .terrain-line.v { width: 2px; top: 0; bottom: 0; }
+    .terrain-line.v.dashed { background: repeating-linear-gradient(to bottom, #fff 0, #fff 6px, transparent 6px, transparent 12px); }
+    .terrain-line.v.goal { width: 3px; }
+    .terrain-tee { position: absolute; background: #fff; pointer-events: none; }
+    .terrain-tee.h { width: 14px; height: 2px; }
+    .terrain-tee.v { width: 2px; height: 14px; }
+    .terrain-goal-post { position: absolute; height: 4px; background: #fff; border-radius: 2px; pointer-events: none; box-shadow: 0 0 2px rgba(0,0,0,0.5); z-index: 2; }
+    .terrain-crossbar { position: absolute; width: 4px; background: #fff; border-radius: 2px; pointer-events: none; box-shadow: 0 0 2px rgba(0,0,0,0.5); z-index: 2; }
+    .terrain-line-label { position: absolute; color: #fff; font-size: 11px; font-weight: 700; pointer-events: none; text-shadow: 0 1px 2px rgba(0,0,0,0.3); }
+    .terrain-line-label.vertical { writing-mode: vertical-rl; transform: rotate(180deg); }
+    .terrain-item { position: absolute; cursor: grab; user-select: none; display: flex; align-items: center; justify-content: center; font-size: 10px; color: #000; font-weight: 700; }
+    .terrain-canvas.eraser-tool .terrain-item { cursor: url('data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' width=\'28\' height=\'28\' viewBox=\'0 0 28 28\'><text x=\'0\' y=\'22\' font-size=\'22\'>🧽</text></svg>') 14 14, pointer !important; }
+    .terrain-item.selected { outline: 2px dashed #fff; z-index: 100; }
+    .terrain-item.dragging { cursor: grabbing; opacity: 0.8; }
+    .terrain-item.plot { width: 12px; height: 12px; border-radius: 50%; background: #FECC00; }
+    .terrain-item.piquet { width: 4px; height: 28px; background: #fff; border-radius: 1px; }
+    .terrain-item.surface { background: rgba(255,255,255,0.18); border: 1px dashed #fff; border-radius: 2px; }
+    .terrain-item.surface .surface-label { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: #fff; font-size: 10px; font-weight: 700; text-shadow: 0 1px 2px rgba(0,0,0,0.7); white-space: nowrap; pointer-events: none; }
+    .terrain-item.surface .surface-resize { position: absolute; width: 12px; height: 12px; background: #FECC00; border-radius: 50%; cursor: nwse-resize; display: none; z-index: 101; }
+    .terrain-item.surface.selected .surface-resize { display: block; }
+    .surface-resize.tl { top: -6px; left: -6px; cursor: nwse-resize; }
+    .surface-resize.tr { top: -6px; right: -6px; cursor: nesw-resize; }
+    .surface-resize.bl { bottom: -6px; left: -6px; cursor: nesw-resize; }
+    .surface-resize.br { bottom: -6px; right: -6px; cursor: nwse-resize; }
+    .terrain-item.boudin { width: 40px; height: 14px; border-radius: 7px; background: #ff5722; }
+    .terrain-item.bouclier { width: 28px; height: 28px; border-radius: 4px; background: #2196f3; }
+    .terrain-toolbar { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+    .terrain-tool { padding: 6px 8px; border-radius: 6px; border: 1px solid #2a2a2a; background: #1a1a1a; color: #888; font-size: 11px; cursor: pointer; display: flex; align-items: center; gap: 4px; }
+    .terrain-tool.active { border-color: #FECC00; color: #FECC00; background: #222; }
+    .terrain-help { font-size: 10px; color: #666; }
+    .terrain-item-delete { position: absolute; top: -8px; right: -8px; width: 16px; height: 16px; border-radius: 50%; background: #E24B4A; color: #fff; font-size: 10px; display: none; align-items: center; justify-content: center; cursor: pointer; }
+    .terrain-item.selected .terrain-item-delete { display: flex; }
+    .terrain-properties { display: none; align-items: center; gap: 6px; padding: 5px 8px; background: #222; border: 1px solid #2a2a2a; border-radius: 6px; }
+    .terrain-properties.visible { display: flex; }
+    .terrain-properties label { font-size: 10px; color: #888; }
+    .terrain-properties input { width: 45px; background: #0f0f0f; border: 1px solid #2a2a2a; color: #fff; border-radius: 4px; padding: 4px 5px; font-size: 11px; }
+    .terrain-line-label { position: absolute; color: rgba(255,255,255,0.75); font-size: 9px; font-weight: 700; pointer-events: none; text-shadow: 0 1px 2px rgba(0,0,0,0.5); }
   </style>
+  <link rel="manifest" href="../manifest.json">
+  <link rel="stylesheet" href="theme.css">
+  <script src="theme.js"></script>
 </head>
 <body>
   <!-- iPad TopBar -->
@@ -135,6 +193,8 @@
     </a>
     <div class="ipad-topbar-sep"></div>
     <div class="ipad-topbar-title">Fiches Séances</div>
+    <button class="theme-toggle-btn" onclick="toggleTheme()"><span class="theme-icon">☀️</span></button>
+    <button class="btn-ghost" onclick="logout()" style="margin-left:auto;min-height:36px;font-size:12px;">Déconnexion</button>
   </div>
 
   <!-- iPad Bottom Nav -->
@@ -147,7 +207,7 @@
       <span class="ipad-nav-icon">�</span>
       <span>Séances</span>
     </a>
-    <a class="ipad-nav-item" href="equipes.html?mode=entrainement">
+    <a class="ipad-nav-item" href="equipes.html">
       <span class="ipad-nav-icon">👥</span>
       <span>Équipes</span>
     </a>
@@ -187,27 +247,17 @@
     </div>
 
     <div class="content">
-      <div class="fiches-container">
-        <div class="fiches-header">
-          <span>Date</span>
-          <span>Thème</span>
-          <span>Durée</span>
-          <span>Blocs</span>
-          <span>Actions</span>
-        </div>
-        <div id="fiches-list">
-          <div class="empty-state">Aucune fiche de séance pour le moment</div>
-        </div>
+      <div id="fiches-list">
+        <div class="empty-state">Aucune fiche de séance pour le moment</div>
       </div>
     </div>
   </div>
 
-  <!-- MODAL NOUVELLE FICHE -->
+  <!-- MODAL FICHE -->
   <div class="modal-overlay" id="modal-fiche">
     <div class="modal">
       <div class="modal-title" id="modal-title">Nouvelle fiche de séance</div>
       <div class="modal-layout">
-        <!-- COLONNE GAUCHE: INFOS GÉNÉRALES -->
         <div class="modal-left">
           <div class="section-title">Informations Générales</div>
           <div class="form-group">
@@ -216,7 +266,7 @@
           </div>
           <div class="form-group">
             <label class="form-label">Heure de début</label>
-            <input type="time" class="form-input" id="fiche-heure-debut" value="14:00">
+            <input type="time" class="form-input" id="fiche-heure-debut" value="10:15">
           </div>
           <div class="form-group">
             <label class="form-label">Groupe / Équipe</label>
@@ -230,48 +280,104 @@
           </div>
           <div class="form-group">
             <label class="form-label">Thème de la séance *</label>
-            <input type="text" class="form-input" id="fiche-theme" placeholder="Ex: Travail défensif, Force max...">
+            <input type="text" class="form-input" id="fiche-theme" placeholder="Ex: Séparé Terrain 1, Défense...">
           </div>
           <div class="form-group">
             <label class="form-label">Objectifs de la séance</label>
             <textarea class="form-textarea" id="fiche-objectifs" placeholder="Objectifs principaux..." style="min-height: 60px;"></textarea>
           </div>
-          
           <div class="total-duration" id="total-duration-display">Durée totale: 0 min</div>
         </div>
-        
-        <!-- COLONNE DROITE: PLAN DE SÉANCE -->
+
         <div class="modal-right">
           <div class="section-title">Plan de Séance</div>
-          <div class="blocs-container">
-            <div class="blocs-header">
-              <span>Heure</span>
-              <span>Durée</span>
-              <span>Catégorie</span>
-              <span>Contenu</span>
-              <span>Resp.</span>
-              <span>Int.C</span>
-              <span>Int.Ct</span>
-              <span></span>
-            </div>
-            <div id="blocs-list">
-              <!-- Les blocs seront ajoutés dynamiquement ici -->
-            </div>
+          <div class="seance-table-wrap">
+            <table class="seance-table">
+              <thead>
+                <tr>
+                  <th>Durée</th>
+                  <th>Heure</th>
+                  <th>Activité</th>
+                  <th>Intensité courue</th>
+                  <th>Intensité combattu</th>
+                  <th>Info</th>
+                  <th>Coach</th>
+                  <th>Note staff</th>
+                  <th>Terrain</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id="blocs-list">
+              </tbody>
+            </table>
           </div>
-          <button class="add-bloc-btn" onclick="addBloc()">+ Ajouter un bloc / exercice</button>
+          <button class="add-bloc-btn" onclick="addBloc()">+ Ajouter un créneau</button>
         </div>
       </div>
       <div class="modal-actions">
+        <button class="btn-ghost" onclick="duplicateCurrentFiche()">📋 Dupliquer vers...</button>
+        <div style="flex:1"></div>
         <button class="btn-ghost" onclick="closeModal()">Annuler</button>
         <button class="btn-primary" onclick="saveFiche()">Enregistrer</button>
       </div>
     </div>
   </div>
 
+  <!-- MODAL ÉDITEUR DE TERRAIN -->
+  <div class="modal-overlay" id="modal-terrain">
+    <div class="modal">
+      <div class="modal-title" id="terrain-title">Terrain — Créneau</div>
+      <div class="terrain-editor">
+        <div class="terrain-toolbar">
+          <button class="terrain-tool active" data-tool="select" onclick="setTerrainTool('select')">🔧 Sélectionner</button>
+          <button class="terrain-tool" data-tool="plot" onclick="setTerrainTool('plot')">🟡 Plot</button>
+          <button class="terrain-tool" data-tool="piquet" onclick="setTerrainTool('piquet')">⚪ Piquet</button>
+          <button class="terrain-tool" data-tool="surface" onclick="setTerrainTool('surface')">▢ Surface</button>
+          <button class="terrain-tool" data-tool="boudin" onclick="setTerrainTool('boudin')">🟠 Boudin</button>
+          <button class="terrain-tool" data-tool="bouclier" onclick="setTerrainTool('bouclier')">🔵 Bouclier</button>
+          <button class="terrain-tool" data-tool="eraser" onclick="setTerrainTool('eraser')">🧽 Gomme</button>
+          <div class="terrain-properties" id="terrain-properties">
+            <label>Largeur (m)</label>
+            <input type="number" id="surface-width" min="1" max="120" step="0.5" onchange="updateSelectedSurfaceSize()">
+            <label>Hauteur (m)</label>
+            <input type="number" id="surface-height" min="1" max="70" step="0.5" onchange="updateSelectedSurfaceSize()">
+          </div>
+          <div class="terrain-help">Cliquez pour poser · Sélectionner · Glisser · Suppr</div>
+        </div>
+        <div class="terrain-canvas" id="terrain-canvas" onmousedown="onTerrainCanvasMouseDown(event)" ontouchstart="onTerrainCanvasMouseDown(event)">
+          <div class="terrain-lines"></div>
+        </div>
+      </div>
+      <div class="modal-actions">
+        <button class="btn-ghost" onclick="closeTerrainModal()">Fermer</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL DUPLIQUER -->
+  <div class="modal-overlay" id="modal-duplicate">
+    <div class="modal small">
+      <div class="modal-title">Dupliquer la fiche</div>
+      <div class="form-group">
+        <label class="form-label">Nouvelle date</label>
+        <input type="date" class="form-input" id="duplicate-date">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Nouveau thème (optionnel)</label>
+        <input type="text" class="form-input" id="duplicate-theme" placeholder="Laisser vide pour garder le même">
+      </div>
+      <div class="modal-actions">
+        <button class="btn-ghost" onclick="closeDuplicateModal()">Annuler</button>
+        <button class="btn-primary" onclick="confirmDuplicate()">Dupliquer</button>
+      </div>
+    </div>
+  </div>
+
   <script type="module">
-    import { initializeApp } from './firebase-bundle.js';
-    import { getFirestore, collection, addDoc, getDocs, updateDoc, deleteDoc, doc, query, orderBy } from './firebase-bundle.js';
-    import { getAuth, onAuthStateChanged, signOut } from './firebase-bundle.js';
+    import { initializeApp } from './supabase-adapter.js';
+    import { getFirestore, collection, addDoc, getDocs, updateDoc, deleteDoc, doc, query, orderBy } from './supabase-adapter.js';
+    import { getAuth, onAuthStateChanged, signOut, setPersistence, browserLocalPersistence } from './supabase-adapter.js';
+    import './update-check.js'
 
     const firebaseConfig = {
       apiKey: "AIzaSyCvMs-5LX9Ivk3OkzUR3iz9Kk1E5b9_7Vk",
@@ -290,16 +396,6 @@
     let editingId = null;
     let currentBlocs = [];
     let blocIdCounter = 0;
-
-    const categories = [
-      'Échauffement',
-      'Clarté / Lancement',
-      'Vitesse / Skills',
-      'Rugby Collectif',
-      'Cellules Avants / ¾',
-      'Séquence de jeu',
-      'Rangement / Bilan'
-    ];
 
     onAuthStateChanged(auth, (user) => {
       if (user) {
@@ -320,37 +416,26 @@
       }
     }
 
-    function renderFiches(filteredFiches = null) {
-      const list = document.getElementById('fiches-list');
-      const toRender = filteredFiches || fiches;
-
-      if (toRender.length === 0) {
-        list.innerHTML = '<div class="empty-state">Aucune fiche de séance trouvée</div>';
-        return;
-      }
-
-      list.innerHTML = toRender.map(fiche => {
-        const totalDuree = calculateTotalDuree(fiche.blocs || []);
-        const nbBlocs = (fiche.blocs || []).length;
-        return `
-        <div class="fiches-row" onclick="editFiche('${fiche.id}')">
-          <div class="fiche-date">${formatDate(fiche.date)}</div>
-          <div class="fiche-theme">${fiche.theme || '-'}</div>
-          <div class="fiche-duree">${totalDuree > 0 ? totalDuree + ' min' : '-'}</div>
-          <div class="fiche-blocs">${nbBlocs}</div>
-          <div class="fiche-actions">
-            <button class="action-btn" onclick="event.stopPropagation(); editFiche('${fiche.id}')">✏️</button>
-            <button class="action-btn delete" onclick="event.stopPropagation(); deleteFiche('${fiche.id}')">🗑️</button>
-          </div>
-        </div>
-      `;
-      }).join('');
+    // ============ HELPERS DATES & DOSSIERS ============
+    function getWeekNumber(d) {
+      const date = new Date(d.getTime());
+      date.setHours(0, 0, 0, 0);
+      date.setDate(date.getDate() + 4 - (date.getDay() || 7));
+      const yearStart = new Date(date.getFullYear(), 0, 1);
+      const weekNo = Math.ceil(((date - yearStart) / 86400000 + 1) / 7);
+      return { year: date.getFullYear(), week: weekNo };
     }
 
     function formatDate(dateStr) {
       if (!dateStr) return '-';
       const date = new Date(dateStr + 'T00:00:00');
-      return date.toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: '2-digit' });
+      return date.toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' });
+    }
+
+    function getDayName(dateStr) {
+      if (!dateStr) return '-';
+      const date = new Date(dateStr + 'T00:00:00');
+      return date.toLocaleDateString('fr-FR', { weekday: 'long' });
     }
 
     function calculateTotalDuree(blocs) {
@@ -370,6 +455,98 @@
       return totalDate.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
     }
 
+    // ============ ARBORESCENCE MOIS / SEMAINE / DATE ============
+    function renderFiches(filteredFiches = null) {
+      const list = document.getElementById('fiches-list');
+      const toRender = filteredFiches || fiches;
+
+      if (toRender.length === 0) {
+        list.innerHTML = '<div class="empty-state">Aucune fiche de séance trouvée</div>';
+        return;
+      }
+
+      const groups = {};
+      toRender.forEach(fiche => {
+        const d = new Date((fiche.date || '') + 'T00:00:00');
+        if (isNaN(d)) return;
+        const yearMonth = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+        const monthLabel = d.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
+        const week = getWeekNumber(d);
+        const weekKey = `${week.year}-W${String(week.week).padStart(2, '0')}`;
+        const weekLabel = `Semaine ${week.week}`;
+        const dateKey = fiche.date;
+        if (!groups[yearMonth]) groups[yearMonth] = { label: monthLabel, weeks: {} };
+        if (!groups[yearMonth].weeks[weekKey]) groups[yearMonth].weeks[weekKey] = { label: weekLabel, dates: {} };
+        if (!groups[yearMonth].weeks[weekKey].dates[dateKey]) groups[yearMonth].weeks[weekKey].dates[dateKey] = [];
+        groups[yearMonth].weeks[weekKey].dates[dateKey].push(fiche);
+      });
+
+      const monthKeys = Object.keys(groups).sort().reverse();
+
+      list.innerHTML = '<div class="fiches-tree">' + monthKeys.map(monthKey => {
+        const month = groups[monthKey];
+        const weekKeys = Object.keys(month.weeks).sort().reverse();
+        return `
+        <div class="folder-group open" data-folder="${monthKey}">
+          <div class="folder-header" onclick="toggleFolder(this)">
+            <span class="folder-toggle">▶</span>
+            <span>${month.label.charAt(0).toUpperCase() + month.label.slice(1)}</span>
+            <span class="folder-badge">${weekKeys.length} semaine(s)</span>
+          </div>
+          <div class="folder-content">
+            ${weekKeys.map(weekKey => {
+              const week = month.weeks[weekKey];
+              const dateKeys = Object.keys(week.dates).sort().reverse();
+              return `
+              <div class="subfolder-group open" data-folder="${weekKey}">
+                <div class="subfolder-header" onclick="toggleFolder(this)">
+                  <span class="folder-toggle">▶</span>
+                  <span>${week.label}</span>
+                  <span class="folder-badge">${dateKeys.length} jour(s)</span>
+                </div>
+                <div class="subfolder-content">
+                  ${dateKeys.map(dateKey => {
+                    const fichesJour = week.dates[dateKey].sort((a, b) => (a.heureDebut || '').localeCompare(b.heureDebut || ''));
+                    return `
+                    <div class="date-group open" data-folder="${dateKey}">
+                      <div class="date-header" onclick="toggleFolder(this)">
+                        <span class="folder-toggle">▶</span>
+                        <span>${getDayName(dateKey)} ${formatDate(dateKey)}</span>
+                        <span class="folder-badge">${fichesJour.length}</span>
+                      </div>
+                      <div class="date-content">
+                        ${fichesJour.map(fiche => renderFicheRow(fiche)).join('')}
+                      </div>
+                    </div>
+                    `;
+                  }).join('')}
+                </div>
+              </div>
+              `;
+            }).join('')}
+          </div>
+        </div>
+        `;
+      }).join('') + '</div>';
+    }
+
+    function renderFicheRow(fiche) {
+      const totalDuree = calculateTotalDuree(fiche.blocs || []);
+      const nbBlocs = (fiche.blocs || []).length;
+      return `
+        <div class="fiches-row" onclick="editFiche('${fiche.id}')">
+          <div class="fiche-theme">${fiche.theme || '-'}<div class="fiche-meta">${fiche.groupe || ''} · ${fiche.heureDebut || ''}</div></div>
+          <div class="fiche-duree">${totalDuree > 0 ? totalDuree + ' min' : '-'}</div>
+          <div class="fiche-blocs">${nbBlocs} créneau(x)</div>
+          <div class="fiche-actions">
+            <button class="action-btn" onclick="event.stopPropagation(); duplicateFiche('${fiche.id}')" title="Dupliquer">📋</button>
+            <button class="action-btn" onclick="event.stopPropagation(); editFiche('${fiche.id}')" title="Modifier">✏️</button>
+            <button class="action-btn delete" onclick="event.stopPropagation(); deleteFiche('${fiche.id}')" title="Supprimer">🗑️</button>
+          </div>
+        </div>
+      `;
+    }
+
     function filterFiches() {
       const periodeFilter = document.getElementById('filter-periode').value;
       const searchQuery = document.getElementById('search-input').value.toLowerCase();
@@ -377,7 +554,7 @@
       let filtered = fiches;
 
       if (searchQuery) {
-        filtered = filtered.filter(f => 
+        filtered = filtered.filter(f =>
           (f.theme && f.theme.toLowerCase().includes(searchQuery)) ||
           (f.objectifs && f.objectifs.toLowerCase().includes(searchQuery))
         );
@@ -386,7 +563,8 @@
       if (periodeFilter) {
         const now = new Date();
         filtered = filtered.filter(f => {
-          const ficheDate = new Date(f.date + 'T00:00:00');
+          const ficheDate = new Date((f.date || '') + 'T00:00:00');
+          if (isNaN(ficheDate)) return false;
           if (periodeFilter === 'week') {
             const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
             return ficheDate >= weekAgo;
@@ -404,13 +582,18 @@
       renderFiches(filtered);
     }
 
+    window.toggleFolder = function(header) {
+      const group = header.closest('.folder-group, .subfolder-group, .date-group');
+      if (group) group.classList.toggle('open');
+    }
+
     function openModal() {
       editingId = null;
       currentBlocs = [];
       blocIdCounter = 0;
       document.getElementById('modal-title').textContent = 'Nouvelle fiche de séance';
       document.getElementById('fiche-date').value = new Date().toISOString().split('T')[0];
-      document.getElementById('fiche-heure-debut').value = '14:00';
+      document.getElementById('fiche-heure-debut').value = '10:15';
       document.getElementById('fiche-heure-debut').onchange = () => renderBlocs();
       document.getElementById('fiche-groupe').value = 'Pro';
       document.getElementById('fiche-theme').value = '';
@@ -422,20 +605,23 @@
 
     function closeModal() {
       document.getElementById('modal-fiche').classList.remove('open');
+      document.getElementById('modal-terrain').classList.remove('open');
+      closeDuplicateModal();
     }
 
     function addBloc() {
       const blocId = ++blocIdCounter;
-      const bloc = {
+      currentBlocs.push({
         id: blocId,
-        duree: 15,
-        categorie: categories[0],
-        contenu: '',
-        responsable: '',
-        intensiteCourse: 0,
-        intensiteContact: 0
-      };
-      currentBlocs.push(bloc);
+        duree: 4,
+        activite: '',
+        intensiteCourse: 1,
+        intensiteContact: 1,
+        info: '',
+        coach: '',
+        noteStaff: '',
+        terrainItems: []
+      });
       renderBlocs();
       updateTotalDuration();
     }
@@ -460,29 +646,31 @@
     function renderBlocs() {
       const container = document.getElementById('blocs-list');
       const heureDebut = document.getElementById('fiche-heure-debut').value;
-      
+
       container.innerHTML = currentBlocs.map((bloc, index) => {
         const heure = calculateBlocHeure(heureDebut, currentBlocs, index);
+        const itemCount = (bloc.terrainItems || []).length;
         return `
-        <div class="bloc-row" data-bloc-id="${bloc.id}">
-          <div class="bloc-time">${heure}</div>
-          <input type="number" class="bloc-duree-input" value="${bloc.duree}" 
-                 onchange="updateBloc(${bloc.id}, 'duree', this.value)" min="1" max="180">
-          <select class="bloc-categorie-select" onchange="updateBloc(${bloc.id}, 'categorie', this.value)">
-            ${categories.map(cat => `<option value="${cat}" ${bloc.categorie === cat ? 'selected' : ''}>${cat}</option>`).join('')}
-          </select>
-          <input type="text" class="bloc-contenu-input" value="${bloc.contenu}" 
-                 placeholder="Description..." onchange="updateBloc(${bloc.id}, 'contenu', this.value)">
-          <input type="text" class="bloc-resp-input" value="${bloc.responsable}" 
-                 placeholder="Init." maxlength="3" onchange="updateBloc(${bloc.id}, 'responsable', this.value)">
-          <select class="bloc-intensity-input" onchange="updateBloc(${bloc.id}, 'intensiteCourse', this.value)">
-            ${[0,1,2,3,4,5].map(val => `<option value="${val}" ${bloc.intensiteCourse == val ? 'selected' : ''}>${val}</option>`).join('')}
-          </select>
-          <select class="bloc-intensity-input" onchange="updateBloc(${bloc.id}, 'intensiteContact', this.value)">
-            ${[0,1,2,3,4,5].map(val => `<option value="${val}" ${bloc.intensiteContact == val ? 'selected' : ''}>${val}</option>`).join('')}
-          </select>
-          <button class="bloc-delete-btn" onclick="removeBloc(${bloc.id})">🗑️</button>
-        </div>
+        <tr data-bloc-id="${bloc.id}">
+          <td class="duree-cell"><input type="number" class="bloc-duree-input" value="${bloc.duree}" onchange="updateBloc(${bloc.id}, 'duree', this.value)" min="1" max="180"></td>
+          <td class="time-cell">${heure}</td>
+          <td class="activite-cell"><input type="text" value="${bloc.activite || ''}" placeholder="Activité..." onchange="updateBloc(${bloc.id}, 'activite', this.value)"></td>
+          <td class="int-cell">
+            <select class="int-select int-${bloc.intensiteCourse || 0}" onchange="updateBloc(${bloc.id}, 'intensiteCourse', this.value); this.className='int-select int-'+this.value">
+              ${[0,1,2,3,4,5].map(val => `<option value="${val}" ${(bloc.intensiteCourse || 0) == val ? 'selected' : ''}>${val}</option>`).join('')}
+            </select>
+          </td>
+          <td class="int-cell">
+            <select class="int-select int-${bloc.intensiteContact || 0}" onchange="updateBloc(${bloc.id}, 'intensiteContact', this.value); this.className='int-select int-'+this.value">
+              ${[0,1,2,3,4,5].map(val => `<option value="${val}" ${(bloc.intensiteContact || 0) == val ? 'selected' : ''}>${val}</option>`).join('')}
+            </select>
+          </td>
+          <td class="info-cell"><textarea placeholder="Infos..." onchange="updateBloc(${bloc.id}, 'info', this.value)">${bloc.info || ''}</textarea></td>
+          <td class="coach-cell"><input type="text" value="${bloc.coach || ''}" placeholder="Coach" maxlength="4" onchange="updateBloc(${bloc.id}, 'coach', this.value)"></td>
+          <td class="note-cell"><textarea placeholder="Note staff..." onchange="updateBloc(${bloc.id}, 'noteStaff', this.value)">${bloc.noteStaff || ''}</textarea></td>
+          <td class="terrain-cell"><button class="terrain-btn ${itemCount ? 'has-items' : ''}" onclick="openTerrainModal(${bloc.id})">Terrain ${itemCount ? '(' + itemCount + ')' : ''}</button></td>
+          <td><button class="bloc-delete-btn" onclick="removeBloc(${bloc.id})">🗑️</button></td>
+        </tr>
       `;
       }).join('');
     }
@@ -513,11 +701,13 @@
           objectifs,
           blocs: currentBlocs.map(b => ({
             duree: parseInt(b.duree),
-            categorie: b.categorie,
-            contenu: b.contenu,
-            responsable: b.responsable,
+            activite: b.activite || '',
             intensiteCourse: parseInt(b.intensiteCourse) || 0,
-            intensiteContact: parseInt(b.intensiteContact) || 0
+            intensiteContact: parseInt(b.intensiteContact) || 0,
+            info: b.info || '',
+            coach: b.coach || '',
+            noteStaff: b.noteStaff || '',
+            terrainItems: b.terrainItems || []
           })),
           dureeTotale: calculateTotalDuree(currentBlocs),
           updatedAt: new Date().toISOString()
@@ -526,6 +716,7 @@
         if (editingId) {
           await updateDoc(doc(db, 'fiches_seances', editingId), data);
         } else {
+          data.createdAt = new Date().toISOString();
           await addDoc(collection(db, 'fiches_seances'), data);
         }
 
@@ -544,29 +735,31 @@
       editingId = id;
       currentBlocs = [];
       blocIdCounter = 0;
-      
+
       document.getElementById('modal-title').textContent = 'Modifier la fiche';
       document.getElementById('fiche-date').value = fiche.date || '';
-      document.getElementById('fiche-heure-debut').value = fiche.heureDebut || '14:00';
+      document.getElementById('fiche-heure-debut').value = fiche.heureDebut || '10:15';
       document.getElementById('fiche-heure-debut').onchange = () => renderBlocs();
       document.getElementById('fiche-groupe').value = fiche.groupe || 'Pro';
       document.getElementById('fiche-theme').value = fiche.theme || '';
       document.getElementById('fiche-objectifs').value = fiche.objectifs || '';
-      
+
       if (fiche.blocs && fiche.blocs.length > 0) {
         fiche.blocs.forEach(bloc => {
           currentBlocs.push({
             id: ++blocIdCounter,
-            duree: bloc.duree || 15,
-            categorie: bloc.categorie || categories[0],
-            contenu: bloc.contenu || '',
-            responsable: bloc.responsable || '',
+            duree: bloc.duree || 4,
+            activite: bloc.activite || bloc.contenu || '',
             intensiteCourse: bloc.intensiteCourse || 0,
-            intensiteContact: bloc.intensiteContact || 0
+            intensiteContact: bloc.intensiteContact || 0,
+            info: bloc.info || '',
+            coach: bloc.coach || bloc.responsable || '',
+            noteStaff: bloc.noteStaff || '',
+            terrainItems: bloc.terrainItems || []
           });
         });
       }
-      
+
       renderBlocs();
       updateTotalDuration();
       document.getElementById('modal-fiche').classList.add('open');
@@ -583,6 +776,481 @@
       }
     }
 
+    // ============ ÉDITEUR DE TERRAIN ============
+    let currentTerrainBlocId = null;
+    let terrainItems = [];
+    let currentTerrainTool = 'select';
+    let selectedTerrainItemId = null;
+    let draggingItem = null;
+    let dragOffsetX = 0, dragOffsetY = 0;
+
+    function openTerrainModal(blocId) {
+      currentTerrainBlocId = blocId;
+      const bloc = currentBlocs.find(b => b.id === blocId);
+      terrainItems = JSON.parse(JSON.stringify(bloc && bloc.terrainItems ? bloc.terrainItems : []));
+      selectedTerrainItemId = null;
+      currentTerrainTool = 'select';
+      document.getElementById('terrain-title').textContent = 'Terrain — Créneau';
+      document.getElementById('modal-terrain').classList.add('open');
+      renderTerrain();
+      updateTerrainToolButtons();
+    }
+
+    function closeTerrainModal() {
+      if (currentTerrainBlocId !== null) {
+        const bloc = currentBlocs.find(b => b.id === currentTerrainBlocId);
+        if (bloc) bloc.terrainItems = terrainItems;
+        currentTerrainBlocId = null;
+      }
+      document.getElementById('modal-terrain').classList.remove('open');
+      renderBlocs();
+    }
+
+    function setTerrainTool(tool) {
+      currentTerrainTool = tool;
+      selectedTerrainItemId = null;
+      updateTerrainToolButtons();
+      const canvas = document.getElementById('terrain-canvas');
+      if (canvas) canvas.classList.toggle('eraser-tool', tool === 'eraser');
+      renderTerrain();
+    }
+
+    function updateTerrainToolButtons() {
+      document.querySelectorAll('.terrain-tool').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.tool === currentTerrainTool);
+      });
+    }
+
+    function getEventPos(event) {
+      if (event.touches && event.touches.length > 0) {
+        return { x: event.touches[0].clientX, y: event.touches[0].clientY };
+      }
+      return { x: event.clientX, y: event.clientY };
+    }
+
+    function drawRugbyField(canvas) {
+      // Terrain de rugby 120m x 70m (100m jeu + 2x10m en-buts)
+      const goalL = 8.333, goalR = 91.667;
+      const goalW = 5.6 / 70 * 100; // 5.6m entre poteaux en % de la largeur
+
+      function addHLine(top, cls) {
+        const el = document.createElement('div');
+        el.className = 'terrain-line h ' + (cls || '');
+        el.style.top = 'calc(' + top + '% - 1px)';
+        canvas.appendChild(el);
+      }
+      function addVLine(left, cls) {
+        const el = document.createElement('div');
+        el.className = 'terrain-line v ' + (cls || '');
+        el.style.left = 'calc(' + left + '% - 1px)';
+        canvas.appendChild(el);
+      }
+      function addTee(left, top, cls) {
+        const el = document.createElement('div');
+        el.className = 'terrain-tee ' + (cls || 'h');
+        if (cls === 'v') {
+          el.style.left = 'calc(' + left + '% - 1px)';
+          el.style.top = top === 0 ? '0px' : 'calc(100% - 14px)';
+        } else {
+          el.style.left = 'calc(' + left + '% - 7px)';
+          el.style.top = 'calc(' + top + '% - 1px)';
+        }
+        canvas.appendChild(el);
+      }
+      function addLabel(text, left, top, vertical) {
+        const el = document.createElement('div');
+        el.className = 'terrain-line-label' + (vertical ? ' vertical' : '');
+        el.textContent = text;
+        el.style.left = left;
+        el.style.top = top;
+        canvas.appendChild(el);
+      }
+
+      // === LIGNES VERTICALES (le long du terrain) ===
+      // Lignes de but (pleines, épaisses)
+      addVLine(goalL, 'goal');
+      addVLine(goalR, 'goal');
+      // Lignes 5m (pointillées)
+      addVLine(12.5, 'dashed');
+      addVLine(87.5, 'dashed');
+      // Lignes 22m (pleines)
+      addVLine(26.667, '');
+      addVLine(73.333, '');
+      // Lignes 40m (pointillées)
+      addVLine(41.667, 'dashed');
+      addVLine(58.333, 'dashed');
+      // Ligne médiane 50m (pleine)
+      addVLine(50, '');
+
+      // === LIGNES HORIZONTALES (largeur du terrain) ===
+      // Lignes de touche (pleines, épaisses, pleine largeur)
+      addHLine(0, 'touch');
+      addHLine(100, 'touch');
+      // Lignes 5m des touches (pointillées, entre les lignes de but)
+      addHLine(7.143, 'short dashed');
+      addHLine(92.857, 'short dashed');
+      // Lignes 15m des touches (pointillées, entre les lignes de but)
+      addHLine(21.429, 'short dashed');
+      addHLine(78.571, 'short dashed');
+
+      // === T MARKS ===
+      // T sur les lignes de touche (haut/bas) pour 22m, 40m, 50m
+      [26.667, 41.667, 50, 58.333, 73.333].forEach(x => {
+        addTee(x, 0, 'v');
+        addTee(x, 100, 'v');
+      });
+      // T sur les lignes de but (gauche/droite) pour 5m et 15m
+      [7.143, 21.429, 78.571, 92.857].forEach(y => {
+        addTee(goalL, y, 'h');
+        addTee(goalR, y, 'h');
+      });
+
+      // === LABELS ===
+      // 22, 40, 50 sur les lignes correspondantes, près de la touche du haut
+      const labels = [
+        { x: 26.667, t: '22' }, { x: 41.667, t: '40' }, { x: 50, t: '50' },
+        { x: 58.333, t: '40' }, { x: 73.333, t: '22' }
+      ];
+      labels.forEach(l => {
+        addLabel(l.t, 'calc(' + l.x + '% + 4px)', '4px', false);
+      });
+
+      // === POTEAUX (H horizontal, partant de la ligne de but vers l'extérieur) ===
+      const postLen = 5;
+      [goalL, goalR].forEach(gl => {
+        const half = goalW / 2;
+        const dir = gl === goalL ? -1 : 1;
+
+        const crossbar = document.createElement('div');
+        crossbar.className = 'terrain-crossbar';
+        crossbar.style.height = goalW + '%';
+        crossbar.style.width = '4px';
+        crossbar.style.left = 'calc(' + (gl + dir * postLen * 0.4) + '% - 2px)';
+        crossbar.style.top = 'calc(50% - ' + half + '%)';
+        canvas.appendChild(crossbar);
+
+        const postTop = document.createElement('div');
+        postTop.className = 'terrain-goal-post';
+        postTop.style.width = postLen + '%';
+        postTop.style.left = dir < 0 ? 'calc(' + (gl - postLen) + '% - 2px)' : 'calc(' + gl + '% - 2px)';
+        postTop.style.top = 'calc(50% - ' + half + '% - 2px)';
+        canvas.appendChild(postTop);
+
+        const postBot = document.createElement('div');
+        postBot.className = 'terrain-goal-post';
+        postBot.style.width = postLen + '%';
+        postBot.style.left = dir < 0 ? 'calc(' + (gl - postLen) + '% - 2px)' : 'calc(' + gl + '% - 2px)';
+        postBot.style.top = 'calc(50% + ' + half + '% - 2px)';
+        canvas.appendChild(postBot);
+      });
+    }
+
+    function renderTerrain() {
+      const canvas = document.getElementById('terrain-canvas');
+      canvas.querySelectorAll('.terrain-item, .terrain-line, .terrain-goal-post, .terrain-line-label, .terrain-crossbar, .terrain-tee, .terrain-mark').forEach(el => el.remove());
+      drawRugbyField(canvas);
+
+      terrainItems.forEach(item => {
+        const el = document.createElement('div');
+        el.className = 'terrain-item ' + item.type + (item.id === selectedTerrainItemId ? ' selected' : '');
+        el.style.left = item.x + '%';
+        el.style.top = item.y + '%';
+        el.dataset.id = item.id;
+        if (item.type === 'surface') {
+          el.style.width = (item.w || 12) + '%';
+          el.style.height = (item.h || 8) + '%';
+          const label = document.createElement('div');
+          label.className = 'surface-label';
+          label.textContent = formatSurfaceSize(item);
+          el.appendChild(label);
+          ['tl', 'tr', 'bl', 'br'].forEach(corner => {
+            const resize = document.createElement('div');
+            resize.className = 'surface-resize ' + corner;
+            resize.onmousedown = function(e) {
+              e.stopPropagation();
+              e.preventDefault();
+              startSurfaceResize(e, item.id, corner);
+            };
+            resize.ontouchstart = function(e) {
+              e.stopPropagation();
+              e.preventDefault();
+              startSurfaceResize(e, item.id, corner);
+            };
+            el.appendChild(resize);
+          });
+        }
+        el.onmousedown = function(e) {
+          if (currentTerrainTool === 'eraser') {
+            e.stopPropagation();
+            e.preventDefault();
+            removeTerrainItem(item.id);
+            return;
+          }
+          e.stopPropagation();
+          selectTerrainItem(item.id);
+          startItemDrag(e, item.id);
+        };
+        el.ontouchstart = function(e) {
+          if (currentTerrainTool === 'eraser') {
+            e.stopPropagation();
+            e.preventDefault();
+            removeTerrainItem(item.id);
+            return;
+          }
+          e.preventDefault();
+          e.stopPropagation();
+          selectTerrainItem(item.id);
+          startItemDrag(e, item.id);
+        };
+        const del = document.createElement('div');
+        del.className = 'terrain-item-delete';
+        del.textContent = '×';
+        del.onmousedown = function(e) {
+          e.stopPropagation();
+          e.preventDefault();
+          removeTerrainItem(item.id);
+        };
+        del.ontouchstart = function(e) {
+          e.stopPropagation();
+          e.preventDefault();
+          removeTerrainItem(item.id);
+        };
+        el.appendChild(del);
+        canvas.appendChild(el);
+      });
+
+      updateSurfacePropertiesPanel();
+    }
+
+    function formatSurfaceSize(item) {
+      const w = (item.w || 12) / 100 * 120;
+      const h = (item.h || 8) / 100 * 70;
+      return w.toFixed(1) + '×' + h.toFixed(1) + 'm';
+    }
+
+    function selectTerrainItem(id) {
+      selectedTerrainItemId = id;
+      renderTerrain();
+    }
+
+    function removeTerrainItem(id) {
+      terrainItems = terrainItems.filter(i => i.id !== id);
+      if (selectedTerrainItemId === id) selectedTerrainItemId = null;
+      renderTerrain();
+    }
+
+    function updateSurfacePropertiesPanel() {
+      const panel = document.getElementById('terrain-properties');
+      const widthInput = document.getElementById('surface-width');
+      const heightInput = document.getElementById('surface-height');
+      const item = terrainItems.find(i => i.id === selectedTerrainItemId);
+      if (item && item.type === 'surface') {
+        panel.classList.add('visible');
+        widthInput.value = ((item.w || 12) / 100 * 120).toFixed(1);
+        heightInput.value = ((item.h || 8) / 100 * 70).toFixed(1);
+      } else {
+        panel.classList.remove('visible');
+      }
+    }
+
+    function updateSelectedSurfaceSize() {
+      const item = terrainItems.find(i => i.id === selectedTerrainItemId);
+      if (!item || item.type !== 'surface') return;
+      const widthM = parseFloat(document.getElementById('surface-width').value);
+      const heightM = parseFloat(document.getElementById('surface-height').value);
+      if (widthM > 0 && heightM > 0) {
+        item.w = Math.min(120, widthM / 120 * 100);
+        item.h = Math.min(70, heightM / 70 * 100);
+        renderTerrain();
+      }
+    }
+
+    let resizingSurface = null;
+    let resizeStartX = 0, resizeStartY = 0, resizeStartW = 0, resizeStartH = 0;
+    let resizeStartItemX = 0, resizeStartItemY = 0;
+    let resizeCorner = 'br';
+
+    function startSurfaceResize(event, itemId, corner) {
+      event.preventDefault();
+      resizingSurface = terrainItems.find(i => i.id === itemId);
+      if (!resizingSurface) return;
+      resizeCorner = corner || 'br';
+      const pos = getEventPos(event);
+      resizeStartX = pos.x;
+      resizeStartY = pos.y;
+      resizeStartW = resizingSurface.w || 12;
+      resizeStartH = resizingSurface.h || 8;
+      resizeStartItemX = resizingSurface.x;
+      resizeStartItemY = resizingSurface.y;
+      window.addEventListener('mousemove', onSurfaceResizeMove);
+      window.addEventListener('mouseup', onSurfaceResizeEnd);
+      window.addEventListener('touchmove', onSurfaceResizeMove, { passive: false });
+      window.addEventListener('touchend', onSurfaceResizeEnd);
+    }
+
+    function onSurfaceResizeMove(event) {
+      if (!resizingSurface) return;
+      event.preventDefault();
+      const canvas = document.getElementById('terrain-canvas');
+      const rect = canvas.getBoundingClientRect();
+      const pos = getEventPos(event);
+      const dx = ((pos.x - resizeStartX) / rect.width) * 100;
+      const dy = ((pos.y - resizeStartY) / rect.height) * 100;
+      if (resizeCorner === 'br') {
+        resizingSurface.w = Math.max(2, Math.min(100, resizeStartW + dx));
+        resizingSurface.h = Math.max(2, Math.min(100, resizeStartH + dy));
+      } else if (resizeCorner === 'tl') {
+        const newW = Math.max(2, Math.min(100, resizeStartW - dx));
+        const newH = Math.max(2, Math.min(100, resizeStartH - dy));
+        resizingSurface.x = resizeStartItemX + (resizeStartW - newW);
+        resizingSurface.y = resizeStartItemY + (resizeStartH - newH);
+        resizingSurface.w = newW;
+        resizingSurface.h = newH;
+      } else if (resizeCorner === 'tr') {
+        const newW = Math.max(2, Math.min(100, resizeStartW + dx));
+        const newH = Math.max(2, Math.min(100, resizeStartH - dy));
+        resizingSurface.y = resizeStartItemY + (resizeStartH - newH);
+        resizingSurface.w = newW;
+        resizingSurface.h = newH;
+      } else if (resizeCorner === 'bl') {
+        const newW = Math.max(2, Math.min(100, resizeStartW - dx));
+        const newH = Math.max(2, Math.min(100, resizeStartH + dy));
+        resizingSurface.x = resizeStartItemX + (resizeStartW - newW);
+        resizingSurface.w = newW;
+        resizingSurface.h = newH;
+      }
+      renderTerrain();
+    }
+
+    function onSurfaceResizeEnd() {
+      resizingSurface = null;
+      window.removeEventListener('mousemove', onSurfaceResizeMove);
+      window.removeEventListener('mouseup', onSurfaceResizeEnd);
+      window.removeEventListener('touchmove', onSurfaceResizeMove);
+      window.removeEventListener('touchend', onSurfaceResizeEnd);
+    }
+
+    function onTerrainCanvasMouseDown(event) {
+      const itemEl = event.target.closest('.terrain-item');
+      if (itemEl) {
+        if (currentTerrainTool === 'eraser') {
+          event.preventDefault();
+          event.stopPropagation();
+          removeTerrainItem(itemEl.dataset.id);
+        }
+        return;
+      }
+      if (event.touches && event.touches.length > 0) event.preventDefault();
+      const pos = getEventPos(event);
+      if (currentTerrainTool === 'select') {
+        selectedTerrainItemId = null;
+        renderTerrain();
+      } else if (currentTerrainTool !== 'eraser') {
+        addTerrainItemAt(pos);
+      }
+    }
+
+    function addTerrainItemAt(pos) {
+      const canvas = document.getElementById('terrain-canvas');
+      const rect = canvas.getBoundingClientRect();
+      const x = ((pos.x - rect.left) / rect.width) * 100;
+      const y = ((pos.y - rect.top) / rect.height) * 100;
+      const id = Date.now() + Math.random().toString(36).substr(2, 5);
+      const defaults = {
+        plot: { w: 0, h: 0 },
+        piquet: { w: 0, h: 0 },
+        surface: { w: 12, h: 8 },
+        boudin: { w: 0, h: 0 },
+        bouclier: { w: 0, h: 0 }
+      };
+      const def = defaults[currentTerrainTool];
+      terrainItems.push({ id, type: currentTerrainTool, x, y, w: def.w, h: def.h });
+      renderTerrain();
+    }
+
+    function startItemDrag(event, itemId) {
+      if (event.touches && event.touches.length > 0) event.preventDefault();
+      draggingItem = terrainItems.find(i => i.id === itemId);
+      if (!draggingItem) return;
+      const canvas = document.getElementById('terrain-canvas');
+      const rect = canvas.getBoundingClientRect();
+      const pos = getEventPos(event);
+      dragOffsetX = pos.x - (draggingItem.x / 100 * rect.width);
+      dragOffsetY = pos.y - (draggingItem.y / 100 * rect.height);
+      window.addEventListener('mousemove', onItemDragMove);
+      window.addEventListener('mouseup', onItemDragEnd);
+      window.addEventListener('touchmove', onItemDragMove, { passive: false });
+      window.addEventListener('touchend', onItemDragEnd);
+    }
+
+    function onItemDragMove(event) {
+      if (!draggingItem) return;
+      if (event.touches && event.touches.length > 0) event.preventDefault();
+      const canvas = document.getElementById('terrain-canvas');
+      const rect = canvas.getBoundingClientRect();
+      const pos = getEventPos(event);
+      let x = ((pos.x - dragOffsetX) / rect.width) * 100;
+      let y = ((pos.y - dragOffsetY) / rect.height) * 100;
+      draggingItem.x = Math.max(0, Math.min(100, x));
+      draggingItem.y = Math.max(0, Math.min(100, y));
+      renderTerrain();
+    }
+
+    function onItemDragEnd() {
+      draggingItem = null;
+      window.removeEventListener('mousemove', onItemDragMove);
+      window.removeEventListener('mouseup', onItemDragEnd);
+      window.removeEventListener('touchmove', onItemDragMove);
+      window.removeEventListener('touchend', onItemDragEnd);
+    }
+
+    document.addEventListener('keydown', function(e) {
+      if ((e.key === 'Delete' || e.key === 'Backspace') && selectedTerrainItemId && document.getElementById('modal-terrain').classList.contains('open')) {
+        e.preventDefault();
+        removeTerrainItem(selectedTerrainItemId);
+      }
+    });
+
+    // ============ DUPLIQUER ============
+    let duplicateSourceId = null;
+    function duplicateFiche(id) {
+      duplicateSourceId = id;
+      const fiche = fiches.find(f => f.id === id);
+      if (!fiche) return;
+      document.getElementById('duplicate-date').value = '';
+      document.getElementById('duplicate-theme').value = fiche.theme || '';
+      document.getElementById('modal-duplicate').classList.add('open');
+    }
+
+    function duplicateCurrentFiche() {
+      if (editingId) duplicateFiche(editingId);
+    }
+
+    function closeDuplicateModal() {
+      document.getElementById('modal-duplicate').classList.remove('open');
+      duplicateSourceId = null;
+    }
+
+    async function confirmDuplicate() {
+      if (!duplicateSourceId) return;
+      const fiche = fiches.find(f => f.id === duplicateSourceId);
+      if (!fiche) return;
+      const newDate = document.getElementById('duplicate-date').value;
+      if (!newDate) { alert('Veuillez choisir une date'); return; }
+      const newTheme = document.getElementById('duplicate-theme').value || fiche.theme;
+      try {
+        const data = { ...fiche, date: newDate, theme: newTheme, createdAt: new Date().toISOString() };
+        delete data.id;
+        await addDoc(collection(db, 'fiches_seances'), data);
+        closeDuplicateModal();
+        closeModal();
+        loadFiches();
+      } catch (error) {
+        console.error('Erreur duplication:', error);
+        alert('Erreur lors de la duplication');
+      }
+    }
+
     function exportFiches() {
       if (fiches.length === 0) {
         alert('Aucune fiche à exporter');
@@ -590,10 +1258,10 @@
       }
 
       const csv = [
-        ['Date', 'Heure', 'Groupe', 'Thème', 'Durée Totale (min)', 'Nb Blocs', 'Détail Blocs'],
+        ['Date', 'Heure', 'Groupe', 'Thème', 'Durée Totale (min)', 'Nb Créneaux', 'Détail Créneaux'],
         ...fiches.map(f => {
-          const blocsDetail = (f.blocs || []).map((b, i) => 
-            `B${i+1}: ${b.duree}min - ${b.categorie} - ${b.contenu} - ${b.responsable} - Int.Course: ${b.intensiteCourse}/5 - Int.Contact: ${b.intensiteContact}/5`
+          const blocsDetail = (f.blocs || []).map((b, i) =>
+            `C${i+1}: ${b.duree}min - ${b.activite || b.contenu || ''} - Coach:${b.coach || b.responsable || ''} - Int.C:${b.intensiteCourse || 0}/5 - Int.Ct:${b.intensiteContact || 0}/5 - Terrain:${(b.terrainItems || []).length}obj`
           ).join(' | ');
           return [
             f.date || '',
@@ -624,6 +1292,20 @@
     window.addBloc = addBloc;
     window.removeBloc = removeBloc;
     window.updateBloc = updateBloc;
-  </script>
+    window.openTerrainModal = openTerrainModal;
+    window.closeTerrainModal = closeTerrainModal;
+    window.setTerrainTool = setTerrainTool;
+    window.onTerrainCanvasMouseDown = onTerrainCanvasMouseDown;
+    window.updateSelectedSurfaceSize = updateSelectedSurfaceSize;
+    window.duplicateFiche = duplicateFiche;
+    window.duplicateCurrentFiche = duplicateCurrentFiche;
+    window.closeDuplicateModal = closeDuplicateModal;
+    window.confirmDuplicate = confirmDuplicate;
+
+    window.logout = async function() {
+      try { await signOut(auth) } catch(e) {}
+      window.location.href = 'login.html';
+    }
+</script>
 </body>
 </html>

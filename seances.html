@@ -436,6 +436,8 @@
   </style>
 
   <link rel="manifest" href="../manifest.json">
+  <link rel="stylesheet" href="theme.css">
+  <script src="theme.js"></script>
 </head>
 <body>
   <!-- iPad TopBar -->
@@ -446,6 +448,7 @@
     </a>
     <div class="ipad-topbar-sep"></div>
     <div class="ipad-topbar-title">Séances</div>
+    <button class="theme-toggle-btn" onclick="toggleTheme()"><span class="theme-icon">☀️</span></button>
     <button class="btn-ghost" onclick="logout()" style="margin-left:auto;min-height:36px;font-size:12px;">Déconnexion</button>
   </div>
   <!-- Bottom Nav -->
@@ -756,14 +759,32 @@
   </div>
 
   <script type="module">
-    import { initializeApp } from './firebase-bundle.js'
-    import { getAuth, onAuthStateChanged, signOut, setPersistence, browserLocalPersistence } from './firebase-bundle.js'
-    import { getFirestore, collection, doc, setDoc, getDoc, getDocs, onSnapshot, deleteDoc, serverTimestamp } from './firebase-bundle.js'
+    import { initializeApp } from './supabase-adapter.js'
+    import { getAuth, onAuthStateChanged, signOut, setPersistence, browserLocalPersistence } from './supabase-adapter.js'
+    import { getFirestore, collection, doc, setDoc, getDoc, getDocs, onSnapshot, deleteDoc, serverTimestamp, query, where } from './supabase-adapter.js'
+    import './update-check.js'
 
     const firebaseConfig = { apiKey:"AIzaSyCvMs-5LX9Ivk3OkzUR3iz9Kk1E5b9_7Vk",authDomain:"delta-rugby-app.firebaseapp.com",projectId:"delta-rugby-app",storageBucket:"delta-rugby-app.firebasestorage.app",messagingSenderId:"61187079762",appId:"1:61187079762:web:56cd1eaa8beb9e1a2ee98b" }
     const fbApp = initializeApp(firebaseConfig)
     const auth = getAuth(fbApp)
     const db = getFirestore(fbApp)
+
+    function getDataScopeStart() {
+      const scope = localStorage.getItem('delta-data-scope') || '30days'
+      if (scope === 'all') return null
+      if (window.__getDataScopeDates) {
+        return window.__getDataScopeDates(scope).start
+      }
+      const d = new Date()
+      d.setDate(d.getDate() - 30)
+      return d.toISOString().split('T')[0]
+    }
+
+    function scopedQuery(name, dateField = 'date') {
+      const start = getDataScopeStart()
+      if (!start) return collection(db, name)
+      return query(collection(db, name), where(dateField, '>=', start))
+    }
 
     const POSTES_AVANTS = ['Pilier','Talonneur','2e Ligne','3e Ligne']
     const POSTES_3_4 = ['Demi de mêlée',"Demi d'ouverture",'Centre','Ailier','Arrière']
@@ -781,7 +802,9 @@
       const val = parseFloat(intensityVal); if (!val) return null
       let pct = 0
       if (unit==='%') pct=val
-      else if (unit==='Vitesse (m/s)') { pct=Math.round(100-((val-0.2)/(1.3-0.2))*70); pct=Math.max(10,Math.min(100,pct)) }
+      else if (unit==='Vitesse (m/s)'||unit==='VITESSE') { pct=Math.round(100-((val-0.2)/(1.3-0.2))*70); pct=Math.max(10,Math.min(100,pct)) }
+      else if (unit==='PDC') return null
+      else if (unit==='% PDC') pct=val
       else pct=val*10
       const nom=(exoNom||'').toUpperCase().trim()
       let oneRM=maxTestes?.[exoNom]||maxTestes?.[nom]
@@ -794,7 +817,19 @@
       }
       return oneRM ? Math.round(oneRM*pct/100) : null
     }
-    function labelCharge(exoNom,iv,reps,mx,rat,unit){const kg=calculerCharge(exoNom,iv,reps,mx,rat,unit);return kg?`${kg} kg`:'---'}
+    function labelCharge(exoNom,iv,reps,mx,rat,unit,poids){
+      const u=unit||'RPE'
+      if(u==='% PDC'){
+        if(poids&&poids>0)return `${Math.round(poids*iv/100)} kg`
+        return iv+'% PDC'
+      }
+      const kg=calculerCharge(exoNom,iv,reps,mx,rat,u)
+      if(kg)return `${kg} kg`
+      if(u==='%')return iv+'%'
+      if(u==='Vitesse (m/s)'||u==='VITESSE')return iv+' m/s'
+      if(u==='PDC')return 'PDC'
+      return 'RPE '+iv
+    }
     
     // Fonction pour calculer la charge preview en kg quand l'intensité est en %
     function chargePreviewPct(exercice, pct, maxTestes, ratiosData) {
@@ -845,7 +880,7 @@
         l.innerHTML=`<input type="checkbox" value="${p}" style="accent-color:#FECC00;"/> ${p}`;wrap.appendChild(l)
       })
 
-      onSnapshot(collection(db,'seances'),snap=>{
+      onSnapshot(scopedQuery('seances'),snap=>{
         seances=snap.docs.map(d=>({...d.data(),id:d.id}))
         seances.sort((a,b)=>(b.date||'').localeCompare(a.date||''))
         renderPlanification()
@@ -1461,7 +1496,7 @@
       const dataToSave=JSON.parse(JSON.stringify(seanceEnCours))
       dataToSave.blocs?.forEach(b=>delete b._activeGroupe)
       delete dataToSave.id
-      await setDoc(ref,{...dataToSave,updatedAt:serverTimestamp()})
+      await setDoc(ref,{...dataToSave,updatedAt:serverTimestamp()},{merge:true})
       renderListe();alert('Séance enregistrée !')
     }
 
@@ -1522,14 +1557,14 @@
                 previewHtml = `<div style="font-size:8px;color:#444;margin-top:1px;">${chargeKg} kg</div>`;
               }
             }
-            ed.innerHTML+=`<div class="vue-exo-nom">${e.isSuperset?'↳ ':''}${e.numExo}. ${e.exercice||'—'}</div><div class="vue-exo-params">${e.nbSets}×${e.nbReps} · ${u} ${e.rpe}${e.recup?' · '+e.recup:''}</div>${previewHtml}`
+            ed.innerHTML+=`<div class="vue-exo-nom">${e.isSuperset?'↳ ':''}${e.numExo}. ${e.exercice||'—'}</div><div class="vue-exo-params">${e.nbSets}×${e.nbReps} · ${u==='Vitesse (m/s)'?'m/s':u} ${e.rpe}${e.recup?' · '+e.recup:''}</div>${previewHtml}`
           })
           col.appendChild(ed)
           const jd=document.createElement('div');jd.className='vue-joueurs'
           groupe.joueurs?.forEach(jid=>{
             const j=joueurs.find(x=>x.id===jid);if(!j)return
             const chargesHtml=(groupe.exercices||[]).map(e=>{
-              const ch=labelCharge(e.exercice,e.rpe,e.nbReps,j.maxTestes||{},ratios,e.intensityUnit)
+              const ch=labelCharge(e.exercice,e.rpe,e.nbReps,j.maxTestes||{},ratios,e.intensityUnit,j.poids||null)
               // Ajouter preview si % et 1RM connu pour ce joueur
               let previewBadge = '';
               const u=e.intensityUnit||'RPE';
@@ -1579,7 +1614,7 @@
         const bd=document.createElement('div');bd.className='indiv-bloc'
         bd.innerHTML=`<div class="indiv-bloc-title">${bloc.nom} — ${gJ.nom}</div>`
         gJ.exercices?.forEach(exo=>{
-          const charge=labelCharge(exo.exercice,exo.rpe,exo.nbReps,j.maxTestes||{},ratios,exo.intensityUnit)
+          const charge=labelCharge(exo.exercice,exo.rpe,exo.nbReps,j.maxTestes||{},ratios,exo.intensityUnit,j.poids||null)
           const ed=document.createElement('div');ed.className='indiv-exo'
           const u=exo.intensityUnit||'RPE'
           // Calculer preview charge si % et 1RM connu

@@ -1,0 +1,611 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <base href="../renderer/">
+  <meta charset="UTF-8">
+  <title>SCA Albi — Absences</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #0f0f0f; color: #fff; display: flex; height: 100vh; overflow: hidden; }
+    .sidebar { width: 220px; min-width: 220px; background: #1a1a1a; border-right: 1px solid #2a2a2a; display: flex; flex-direction: column; padding: 20px 0; }
+    .sidebar-logo { display: flex; align-items: center; gap: 10px; padding: 0 20px 24px; border-bottom: 1px solid #2a2a2a; }
+    .sidebar-logo img { width: 36px; }
+    .sidebar-logo span { font-size: 15px; font-weight: 700; color: #FECC00; }
+    .nav-section { padding: 16px 12px 8px; font-size: 10px; font-weight: 600; color: #444; letter-spacing: .08em; text-transform: uppercase; }
+    .nav-item { display: flex; align-items: center; gap: 10px; padding: 9px 20px; font-size: 13px; color: #888; cursor: pointer; border-left: 2px solid transparent; transition: all .15s; }
+    .nav-item:hover { color: #fff; background: #222; }
+    .nav-item.active { color: #FECC00; border-left-color: #FECC00; background: #222; }
+    .nav-dot { width: 7px; height: 7px; border-radius: 50%; background: currentColor; opacity: 0.6; }
+    .sidebar-bottom { margin-top: auto; padding: 16px 20px; border-top: 1px solid #2a2a2a; }
+    .user-info { font-size: 12px; color: #555; margin-bottom: 8px; }
+    .logout-btn { font-size: 12px; color: #555; cursor: pointer; background: none; border: none; }
+    .logout-btn:hover { color: #E24B4A; }
+    .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+    .topbar { height: 56px; border-bottom: 1px solid #2a2a2a; display: flex; align-items: center; padding: 0 28px; gap: 12px; }
+    .topbar-title { font-size: 15px; font-weight: 600; flex: 1; }
+    .content { flex: 1; overflow-y: auto; padding: 24px 28px; }
+
+    .tabs { display: flex; gap: 4px; background: #1a1a1a; border: 1px solid #2a2a2a; border-radius: 8px; padding: 3px; width: fit-content; margin-bottom: 20px; }
+    .tab-btn { padding: 6px 16px; border-radius: 6px; border: none; font-size: 12px; font-weight: 500; cursor: pointer; background: none; color: #666; transition: all .15s; }
+    .tab-btn.active { background: #FECC00; color: #0f0f0f; }
+
+    /* ABSENCE CARDS */
+    .absence-card { background: #1a1a1a; border: 1px solid #2a2a2a; border-radius: 12px; padding: 16px 20px; margin-bottom: 10px; display: flex; align-items: center; gap: 16px; cursor: pointer; transition: border-color .15s; }
+    .absence-card:hover { border-color: #FECC00; }
+    .absence-avatar { width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 700; color: #fff; flex-shrink: 0; }
+    .absence-nom { font-size: 14px; font-weight: 700; }
+    .absence-poste { font-size: 11px; color: #555; }
+    .absence-motif { font-size: 13px; color: #EF9F27; font-weight: 500; flex: 1; }
+    .absence-duree { font-size: 12px; color: #888; }
+    .absence-statut { padding: 3px 10px; border-radius: 12px; font-size: 11px; font-weight: 600; }
+    .statut-encours { background: #EF9F2722; color: #EF9F27; border: 1px solid #EF9F2744; }
+    .statut-termine { background: #1D9E7522; color: #1D9E75; border: 1px solid #1D9E7544; }
+
+    /* BOUTON NOUVEAU */
+    .btn-primary { padding: 8px 16px; border-radius: 8px; border: none; background: #FECC00; color: #0f0f0f; font-size: 13px; font-weight: 600; cursor: pointer; }
+    .btn-ghost { padding: 8px 14px; border-radius: 8px; border: 1px solid #2a2a2a; background: none; color: #888; font-size: 13px; cursor: pointer; }
+    .btn-ghost:hover { color: #fff; border-color: #444; }
+
+    /* MODAL ABSENCE */
+    .modal-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.75); align-items: center; justify-content: center; z-index: 100; }
+    .modal-overlay.open { display: flex; }
+    .modal { background: #1a1a1a; border: 1px solid #2a2a2a; border-radius: 16px; padding: 28px; width: 520px; max-height: 85vh; overflow-y: auto; }
+    .modal-title { font-size: 15px; font-weight: 700; margin-bottom: 20px; }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
+    .form-field label { display: block; font-size: 11px; color: #555; margin-bottom: 5px; }
+    .form-field input, .form-field select, .form-field textarea {
+      width: 100%; padding: 8px 10px; border-radius: 8px;
+      border: 1px solid #2a2a2a; background: #0f0f0f;
+      color: #fff; font-size: 13px; outline: none;
+    }
+    .form-field textarea { resize: vertical; min-height: 60px; }
+    .form-field input:focus, .form-field select:focus, .form-field textarea:focus { border-color: #FECC00; }
+    .form-full { grid-column: 1 / -1; }
+    .modal-actions { display: flex; gap: 10px; margin-top: 20px; }
+
+    /* HISTORIQUE TABLE */
+    .abs-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    .abs-table th { padding: 8px 12px; text-align: left; font-size: 11px; color: #555; font-weight: 600; text-transform: uppercase; border-bottom: 1px solid #2a2a2a; }
+    .abs-table td { padding: 10px 12px; border-bottom: 1px solid #1a1a1a; }
+    .abs-table tr:hover td { background: #1a1a1a; }
+
+    /* STATS */
+    .abs-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 20px; }
+    .stat-card { background: #1a1a1a; border: 1px solid #2a2a2a; border-radius: 10px; padding: 14px 16px; }
+    .stat-label { font-size: 11px; color: #555; margin-bottom: 6px; text-transform: uppercase; letter-spacing: .06em; }
+    .stat-value { font-size: 24px; font-weight: 700; }
+    .stat-sub { font-size: 11px; color: #555; margin-top: 3px; }
+  </style>
+  <link rel="manifest" href="../manifest.json">
+  <script type="module" src="../auth-guard.js"></script>
+</head>
+<body>
+  <div class="sidebar">
+    <div class="sidebar-logo">
+      <img src="https://www.sca-albi.fr/wp-content/uploads/2023/10/cropped-SCA-bis.png">
+      <span>SCA Albi</span>
+    </div>
+    <div class="nav-section">Effectif</div>
+    <div class="nav-item" onclick="location.href='index.html'">
+      <div class="nav-dot"></div> Roster
+    </div>
+    <div class="nav-section">Entraînement</div>
+    <div class="nav-item" onclick="location.href='seances.html'">
+  <div class="nav-dot"></div> Séances
+    </div>
+    <div class="nav-item" onclick="location.href='exercices.html'"><div class="nav-dot"></div> Exercices</div>
+    <div class="nav-section">Suivi</div>
+    <div class="nav-item" onclick="location.href='wellness.html'">
+      <div class="nav-dot"></div> Wellness
+    </div>
+    <div class="nav-item" onclick="location.href='performances.html'">
+      <div class="nav-dot"></div> Performances
+    </div>
+    <div class="nav-item" onclick="location.href='medical.html'">
+      <div class="nav-dot"></div> Médical
+    </div>
+    <div class="nav-item active" onclick="location.href='absences.html'">
+      <div class="nav-dot"></div> Absences
+    </div>
+    <div class="nav-item" onclick="location.href='suivi-poids.html'">
+      <div class="nav-dot"></div> Suivi Poids
+    </div>
+    <div class="nav-section">Planning</div>
+    <div class="nav-item" onclick="location.href='planning.html'">
+      <div class="nav-dot"></div> Planning club
+    </div>
+    <div class="nav-item" onclick="location.href='planning-blesses.html'">
+      <div class="nav-dot"></div> Planning Blessés
+    </div>
+    <div class="nav-item" onclick="location.href='fiches-seances.html'">
+      <div class="nav-dot"></div> Fiches Séances
+    </div>
+    <div class="nav-section">Équipes</div>
+    <div class="nav-item" onclick="location.href='equipes.html'">
+  <div class="nav-dot"></div> Composition équipes
+    </div>
+    <div class="nav-section">GPS</div>
+    <div class="nav-item" onclick="location.href='gps.html'">
+  <div class="nav-dot"></div> Données GPS
+    </div>
+    <div class="nav-item" onclick="location.href='gps-match.html'">
+      <div class="nav-dot"></div> Rapport de match
+    </div>
+    <div class="nav-item" onclick="location.href='gps-planif.html'">
+      <div class="nav-dot"></div> Planif. charge
+    </div>
+    <div class="nav-item" onclick="location.href='profil-force-vitesse.html'"><div class="nav-dot"></div> Profil F-V</div>
+    <div class="sidebar-bottom">
+      <div class="user-info" id="user-email"></div>
+      <button class="logout-btn" onclick="handleLogout()">Se déconnecter</button>
+    </div>
+  </div>
+
+  <div class="main">
+    <div class="topbar">
+      <div class="topbar-title">Absences</div>
+      <button class="btn-primary" onclick="ouvrirModal()">+ Déclarer une absence</button>
+    </div>
+    <div class="content">
+      <div class="tabs">
+        <button class="tab-btn active" onclick="setTab('actifs',this)">Absences actives</button>
+        <button class="tab-btn" onclick="setTab('historique',this)">Historique</button>
+        <button class="tab-btn" onclick="setTab('stats',this)">Statistiques</button>
+      </div>
+
+      <!-- ABSENCES ACTIVES -->
+      <div id="tab-actifs">
+        <div id="absences-actives-list"></div>
+      </div>
+
+      <!-- HISTORIQUE -->
+      <div id="tab-historique" style="display:none">
+        <table class="abs-table">
+          <thead>
+            <tr><th>Joueur</th><th>Motif</th><th>Début</th><th>Fin</th><th>Durée</th><th>Statut</th></tr>
+          </thead>
+          <tbody id="histo-abs-body"></tbody>
+        </table>
+      </div>
+
+      <!-- STATISTIQUES -->
+      <div id="tab-stats" style="display:none">
+        <div class="abs-stats" id="abs-stats"></div>
+        <div style="font-size:12px; color:#555; margin-bottom:8px; text-transform:uppercase; letter-spacing:.06em;">Absences par motif</div>
+        <div id="motif-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 10px;"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL ABSENCE -->
+  <div class="modal-overlay" id="modal-absence">
+    <div class="modal">
+      <div class="modal-title" id="modal-absence-title">Déclarer une absence</div>
+      <div class="form-row">
+        <div class="form-field">
+          <label>Joueur *</label>
+          <select id="a-joueur"></select>
+        </div>
+        <div class="form-field">
+          <label>Date de début *</label>
+          <input type="date" id="a-debut" />
+        </div>
+        <div class="form-field">
+          <label>Période de début *</label>
+          <select id="a-debut-periode">
+            <option value="matin">Matin</option>
+            <option value="apres-midi">Après-midi</option>
+            <option value="journee">Journée entière</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-field">
+          <label>Date de fin</label>
+          <input type="date" id="a-fin" />
+        </div>
+        <div class="form-field">
+          <label>Période de fin</label>
+          <select id="a-fin-periode">
+            <option value="matin">Matin</option>
+            <option value="apres-midi">Après-midi</option>
+            <option value="journee">Journée entière</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-field">
+          <label>Type d'absence *</label>
+          <select id="a-type">
+            <option value="maladie">Maladie</option>
+            <option value="blessure">Blessure (non-sportive)</option>
+            <option value="personnel">Motif personnel</option>
+            <option value="travail">Obligations professionnelles</option>
+            <option value="etudes">Études/Examens</option>
+            <option value="suspendu">Suspendu</option>
+            <option value="autre">Autre</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-field">
+          <label>Motif détaillé</label>
+          <input type="text" id="a-motif" placeholder="Ex: Grippe, famille, entretien..." />
+        </div>
+        <div class="form-field">
+          <label>Statut</label>
+          <select id="a-statut">
+            <option value="encours">En cours</option>
+            <option value="termine">Terminé</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-field form-full">
+          <label>Notes / Commentaire</label>
+          <textarea id="a-notes" placeholder="Informations complémentaires, justificatif, etc..."></textarea>
+        </div>
+      </div>
+      <div class="modal-actions">
+        <button class="btn-ghost" onclick="fermerModal()">Annuler</button>
+        <button class="btn-ghost" id="btn-del-absence" style="display:none; border-color:#E24B4A33; color:#E24B4A;" onclick="supprimerAbsence()">Supprimer</button>
+        <button class="btn-primary" onclick="sauvegarderAbsence()">Enregistrer</button>
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from '../renderer/supabase-adapter.js'
+    import { getAuth, onAuthStateChanged, signOut } from '../renderer/supabase-adapter.js'
+    import { getFirestore, collection, doc, setDoc, deleteDoc, getDocs, serverTimestamp, query, where } from '../renderer/supabase-adapter.js'
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyCvMs-5LX9Ivk3OkzUR3iz9Kk1E5b9_7Vk",
+      authDomain: "delta-rugby-app.firebaseapp.com",
+      projectId: "delta-rugby-app",
+      storageBucket: "delta-rugby-app.firebasestorage.app",
+      messagingSenderId: "61187079762",
+      appId: "1:61187079762:web:56cd1eaa8beb9e1a2ee98b"
+    }
+
+    const COULEURS_POSTE = { 'Pilier':'#8B3A3A','Talonneur':'#6B3A8B','2e Ligne':'#3A6B8B','3e Ligne':'#3A8B6B','Demi de mêlée':'#8B6B3A',"Demi d'ouverture":'#6B8B3A','Centre':'#3A4A8B','Ailier':'#8B3A6B','Arrière':'#2A6B5B' }
+
+    const fbApp = initializeApp(firebaseConfig)
+    const auth = getAuth(fbApp)
+    const db = getFirestore(fbApp)
+
+    function getDataScopeStart(monthsFor30days = 1) {
+      const scope = localStorage.getItem('delta-data-scope') || '30days'
+      if (scope === 'all') return null
+      if (scope === '30days') {
+        const d = new Date()
+        d.setMonth(d.getMonth() - monthsFor30days)
+        return d.toISOString().split('T')[0]
+      }
+      if (window.__getDataScopeDates) {
+        return window.__getDataScopeDates(scope).start
+      }
+      const d = new Date()
+      d.setDate(d.getDate() - 30)
+      return d.toISOString().split('T')[0]
+    }
+
+    function scopedQuery(name, dateField = 'date', monthsFor30days = 1) {
+      const start = getDataScopeStart(monthsFor30days)
+      if (!start) return collection(db, name)
+      return query(collection(db, name), where(dateField, '>=', start))
+    }
+
+    let joueurs = []
+    let absences = []
+    let editingAbsenceId = null
+    // ==================== CACHE LOCAL (clés partagées avec le shell) ====================
+    function loadCache(key) {
+      try {
+        const r = JSON.parse(localStorage.getItem('cache_' + key) || 'null')
+        return r ? (r.data !== undefined ? r.data : null) : null
+      } catch(e) { return null }
+    }
+    function saveCache(key, data) {
+      try { localStorage.setItem('cache_' + key, JSON.stringify({ ts: Date.now(), data })) } catch(e) {}
+    }
+
+
+    // ======= CACHE SYNCHRONE (avant auth) =======
+    ;(function() {
+      try {
+      // requestAnimationFrame garantit que le DOM est peint avant de render
+      requestAnimationFrame(function() { try {
+      const cachedJoueurs = loadCache('absences_joueurs')
+      const cachedAbsences = loadCache('absences_absences')
+      if (cachedJoueurs) joueurs = cachedJoueurs.filter(j => !j.archived)
+      if (cachedAbsences) {
+        absences = cachedAbsences
+        renderActifs(); renderHistorique(); renderStats()
+        if (window.__shellContentReady) window.__shellContentReady()
+        if (window.__pageReady) window.__pageReady('absences.html')
+      }
+      } catch(e2) { console.warn('Cache render error:', e2) } }); // end rAF
+      } catch(e) { console.warn("Cache sync error:", e) }
+    })()
+
+    onAuthStateChanged(auth, async user => {
+      if (!user) { window.location.href = 'login.html'; return }
+      document.getElementById('user-email').textContent = user.email
+
+      try {
+        // Refresh Firestore en parallèle
+        const [snap, snapAbsences] = await Promise.all([
+          getDocs(collection(db, 'joueurs')),
+          getDocs(scopedQuery('absences', 'debut', 12))
+        ])
+        joueurs = snap.docs.map(d => ({ id: d.id, ...d.data() })).filter(j => !j.archived)
+        saveCache('absences_joueurs', joueurs)
+
+        const sel = document.getElementById('a-joueur')
+        sel.innerHTML = '<option value="">— Choisir —</option>'
+        joueurs.sort((a, b) => (a.nom || '').localeCompare(b.nom || '')).forEach(j => {
+          sel.appendChild(new Option((j.nom||'') + ' ' + (j.prenom||''), j.id))
+        })
+
+        document.getElementById('a-debut').value = new Date().toISOString().split('T')[0]
+
+        absences = snapAbsences.docs.map(d => ({ id: d.id, ...d.data() }))
+        absences.sort((a, b) => (b.debut || '').localeCompare(a.debut || ''))
+        saveCache('absences_absences', absences)
+        renderActifs()
+        renderHistorique()
+        renderStats()
+      } catch(err) {
+        console.error('[absences] Erreur chargement données:', err)
+      }
+      if (window.__shellContentReady) window.__shellContentReady()
+      if (window.__pageReady) window.__pageReady('absences.html')
+    })
+
+    window.setTab = function(tab, btn) {
+      ['actifs','historique','stats'].forEach(t => {
+        document.getElementById('tab-' + t).style.display = t === tab ? 'block' : 'none'
+      })
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'))
+      btn.classList.add('active')
+    }
+
+    // Calculer la durée en demi-journées
+    function calculerDureeAbsence(absence) {
+      if (!absence.debut) return 0
+      
+      const debut = new Date(absence.debut)
+      const fin = absence.fin ? new Date(absence.fin) : null
+      const debutPeriode = absence.debutPeriode || 'journee'
+      const finPeriode = absence.finPeriode || 'journee'
+      
+      // Si pas de date de fin, calculer depuis le début jusqu'à aujourd'hui
+      if (!fin) {
+        const aujourdhui = new Date()
+        const jours = Math.max(0, Math.round((aujourdhui - debut) / 86400000))
+        return jours + (debutPeriode === 'journee' ? 0 : 0.5)
+      }
+      
+      // Si même jour
+      if (debut.toDateString() === fin.toDateString()) {
+        if (debutPeriode === 'journee' || finPeriode === 'journee') return 1
+        if (debutPeriode === finPeriode) return 0.5
+        return 1 // matin + après-midi
+      }
+      
+      // Jours complets entre les dates
+      const joursComplets = Math.max(0, Math.round((fin - debut) / 86400000) - 1)
+      
+      // Ajouter les demi-journées de début et fin
+      let demiJours = 0
+      if (debutPeriode === 'journee') demiJours += 1
+      else if (debutPeriode === 'matin' || debutPeriode === 'apres-midi') demiJours += 0.5
+      
+      if (finPeriode === 'journee') demiJours += 1
+      else if (finPeriode === 'matin' || finPeriode === 'apres-midi') demiJours += 0.5
+      
+      return joursComplets + demiJours
+    }
+
+    function renderActifs() {
+      const c = document.getElementById('absences-actives-list')
+      c.innerHTML = ''
+      const actifs = absences.filter(a => a.statut === 'encours')
+      if (!actifs.length) {
+        c.innerHTML = '<div style="color:#555; text-align:center; padding:40px;">Aucune absence active.</div>'; return
+      }
+      actifs.forEach(a => {
+        const j = joueurs.find(x => x.id === a.joueurId)
+        if (!j) return
+        const duree = calculerDureeAbsence(a)
+        const periodeText = a.debutPeriode === 'matin' ? ' (matin)' : a.debutPeriode === 'apres-midi' ? ' (après-midi)' : ''
+        const periodeTextFin = a.finPeriode === 'matin' ? ' (matin)' : a.finPeriode === 'apres-midi' ? ' (après-midi)' : ''
+        const finText = a.fin ? ` au ${a.fin}${periodeTextFin}` : ' — indéterminé'
+        const dureeText = a.fin 
+          ? (duree === Math.floor(duree) ? duree + ' jour(s)' : duree + ' jour(s)')
+          : (duree === Math.floor(duree) ? duree + ' jour(s)' : duree + ' jour(s)') + ' (en cours)'
+
+        const card = document.createElement('div')
+        card.className = 'absence-card'
+        card.onclick = () => ouvrirModal(a)
+        card.innerHTML = `
+          <div class="absence-avatar" style="background:${COULEURS_POSTE[j.poste] || '#333'}">${j.prenom[0]}${j.nom[0]}</div>
+          <div style="min-width:120px">
+            <div class="absence-nom">${j.prenom} ${j.nom}</div>
+            <div class="absence-poste">${j.poste || ''}</div>
+          </div>
+          <div class="absence-motif">${a.motif || a.type || '—'}<br><span style="font-size:11px; color:#888;">Du ${a.debut || '—'}${periodeText}${finText}</span></div>
+          <div class="absence-duree">${dureeText}<br><span style="font-size:11px; color:#555;">d'absence</span></div>
+          <span class="absence-statut statut-encours">En cours</span>
+        `
+        c.appendChild(card)
+      })
+    }
+
+    function renderHistorique() {
+      const tbody = document.getElementById('histo-abs-body')
+      tbody.innerHTML = ''
+      absences.forEach(a => {
+        const j = joueurs.find(x => x.id === a.joueurId)
+        const duree = calculerDureeAbsence(a)
+        const dureeText = duree === Math.floor(duree) ? duree + 'j' : duree + 'j'
+        const statutClass = a.statut === 'encours' ? 'statut-encours' : 'statut-termine'
+        const statutLabel = a.statut === 'encours' ? 'En cours' : 'Terminé'
+        const periodeText = a.debutPeriode === 'matin' ? ' (matin)' : a.debutPeriode === 'apres-midi' ? ' (apm)' : ''
+        const periodeTextFin = a.fin ? (a.finPeriode === 'matin' ? ' (matin)' : a.finPeriode === 'apres-midi' ? ' (apm)' : '') : ''
+
+        const tr = document.createElement('tr')
+        tr.style.cursor = 'pointer'
+        tr.onclick = () => ouvrirModal(a)
+        tr.innerHTML = `
+          <td>${j ? j.nom + ' ' + j.prenom[0] + '.' : '—'}</td>
+          <td>${a.motif || a.type || '—'}</td>
+          <td>${a.debut || '—'}${periodeText}</td>
+          <td>${a.fin || '— indéterminé'}${periodeTextFin}</td>
+          <td>${dureeText}</td>
+          <td><span class="absence-statut ${statutClass}">${statutLabel}</span></td>
+        `
+        tbody.appendChild(tr)
+      })
+    }
+
+    function renderStats() {
+      const total = absences.length
+      const actifs = absences.filter(a => a.statut === 'encours').length
+      const longues = absences.filter(a => {
+        if (!a.debut || !a.fin) return false
+        const jours = Math.round((new Date(a.fin) - new Date(a.debut)) / 86400000) + 1
+        return jours > 7
+      }).length
+
+      const statsEl = document.getElementById('abs-stats')
+      statsEl.innerHTML = `
+        <div class="stat-card"><div class="stat-label">Total absences</div><div class="stat-value" style="color:#EF9F27">${total}</div><div class="stat-sub">depuis le début</div></div>
+        <div class="stat-card"><div class="stat-label">Actives</div><div class="stat-value" style="color:#FECC00">${actifs}</div><div class="stat-sub">en cours</div></div>
+        <div class="stat-card"><div class="stat-label">Longues (>7j)</div><div class="stat-value" style="color:#EF9F27">${longues}</div><div class="stat-sub">absences prolongées</div></div>
+        <div class="stat-card"><div class="stat-label">Joueurs concernés</div><div class="stat-value">${new Set(absences.map(a => a.joueurId)).size}</div><div class="stat-sub">joueurs distincts</div></div>
+      `
+
+      // Par type/motif
+      const motifs = {}
+      absences.forEach(a => {
+        const motif = a.type || 'Autre'
+        motifs[motif] = (motifs[motif] || 0) + 1
+      })
+      const maxMotif = Math.max(...Object.values(motifs), 1)
+      const motifGrid = document.getElementById('motif-grid')
+      motifGrid.innerHTML = ''
+      Object.entries(motifs).sort((a, b) => b[1] - a[1]).forEach(([motif, count]) => {
+        const pct = Math.round(count / total * 100)
+        const card = document.createElement('div')
+        card.className = 'zone-card'
+        card.style.cssText = 'background: #1a1a1a; border: 1px solid #2a2a2a; border-radius: 10px; padding: 12px;'
+        card.innerHTML = `
+          <div style="font-size: 12px; font-weight: 700; color: #ccc; margin-bottom: 6px;">${motif}</div>
+          <div style="font-size: 22px; font-weight: 700; color: #EF9F27;">${count}</div>
+          <div style="font-size: 11px; color: #555;">${pct}% des absences</div>
+          <div style="height: 4px; border-radius: 2px; background: #2a2a2a; margin-top: 6px;">
+            <div style="height: 4px; border-radius: 2px; background: #EF9F27; width: ${Math.round(count/maxMotif*100)}%;"></div>
+          </div>
+        `
+        motifGrid.appendChild(card)
+      })
+    }
+
+    window.ouvrirModal = function(a = null) {
+      editingAbsenceId = a?.id || null
+      document.getElementById('modal-absence-title').textContent = a ? 'Modifier l\'absence' : 'Déclarer une absence'
+      document.getElementById('btn-del-absence').style.display = a ? 'block' : 'none'
+      if (a) {
+        document.getElementById('a-joueur').value = a.joueurId || ''
+        document.getElementById('a-debut').value = a.debut || ''
+        document.getElementById('a-fin').value = a.fin || ''
+        document.getElementById('a-debut-periode').value = a.debutPeriode || 'journee'
+        document.getElementById('a-fin-periode').value = a.finPeriode || 'journee'
+        document.getElementById('a-type').value = a.type || 'maladie'
+        document.getElementById('a-motif').value = a.motif || ''
+        document.getElementById('a-statut').value = a.statut || 'encours'
+        document.getElementById('a-notes').value = a.notes || ''
+      } else {
+        document.getElementById('a-debut').value = new Date().toISOString().split('T')[0]
+        document.getElementById('a-fin').value = ''
+        document.getElementById('a-debut-periode').value = 'journee'
+        document.getElementById('a-fin-periode').value = 'journee'
+        document.getElementById('a-motif').value = ''
+        document.getElementById('a-notes').value = ''
+        document.getElementById('a-statut').value = 'encours'
+        document.getElementById('a-type').value = 'maladie'
+      }
+      document.getElementById('modal-absence').classList.add('open')
+    }
+
+    window.fermerModal = function() {
+      document.getElementById('modal-absence').classList.remove('open')
+      editingAbsenceId = null
+    }
+
+    window.sauvegarderAbsence = async function() {
+      const joueurId = document.getElementById('a-joueur').value
+      const debut = document.getElementById('a-debut').value
+      const fin = document.getElementById('a-fin').value
+      const debutPeriode = document.getElementById('a-debut-periode').value
+      const finPeriode = document.getElementById('a-fin-periode').value
+      
+      if (!joueurId || !debut) { alert('Joueur et date de début obligatoires.'); return }
+
+      const data = {
+        joueurId,
+        type: document.getElementById('a-type').value,
+        motif: document.getElementById('a-motif').value.trim(),
+        debut,
+        fin: fin || null,
+        debutPeriode,
+        finPeriode: fin ? finPeriode : null,
+        statut: document.getElementById('a-statut').value,
+        notes: document.getElementById('a-notes').value,
+        updatedAt: serverTimestamp()
+      }
+
+      const id = editingAbsenceId || `${joueurId}_${Date.now()}`
+      await (window.setDoc || setDoc)(doc(db, 'absences', id), data, { merge: true })
+
+      // Mettre à jour le tableau local et le cache immédiatement
+      const { updatedAt, ...localData } = data
+      const localAbsence = { ...localData, id }
+      const idx = absences.findIndex(a => a.id === id)
+      if (idx !== -1) {
+        absences[idx] = localAbsence
+      } else {
+        absences.push(localAbsence)
+      }
+      absences.sort((a, b) => (b.debut || '').localeCompare(a.debut || ''))
+      saveCache('absences_absences', absences)
+
+      fermerModal()
+      renderActifs(); renderHistorique(); renderStats()
+    }
+
+    window.supprimerAbsence = async function() {
+      if (!editingAbsenceId) return
+      if (!confirm('Supprimer cette absence ?')) return
+      const deletingId = editingAbsenceId
+      await (window.deleteDoc || deleteDoc)(doc(db, 'absences', deletingId))
+
+      // Mettre à jour le tableau local et le cache immédiatement
+      absences = absences.filter(a => a.id !== deletingId)
+      saveCache('absences_absences', absences)
+
+      fermerModal()
+      renderActifs(); renderHistorique(); renderStats()
+    }
+
+    window.handleLogout = async function() {
+      await signOut(auth)
+      window.location.href = 'login.html'
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,795 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <base href="../renderer/">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SCA Albi — Performance</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #0f0f0f;
+      color: #fff;
+      display: flex;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    /* SIDEBAR */
+    .sidebar {
+      width: 220px;
+      min-width: 220px;
+      background: #1a1a1a;
+      border-right: 1px solid #2a2a2a;
+      display: flex;
+      flex-direction: column;
+      padding: 20px 0;
+    }
+    .sidebar-logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 0 20px 24px;
+      border-bottom: 1px solid #2a2a2a;
+    }
+    .sidebar-logo img { width: 36px; }
+    .sidebar-logo span {
+      font-size: 15px;
+      font-weight: 700;
+      color: #FECC00;
+    }
+    .nav-section {
+      padding: 16px 12px 8px;
+      font-size: 10px;
+      font-weight: 600;
+      color: #444;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+    }
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 9px 20px;
+      font-size: 13px;
+      color: #888;
+      cursor: pointer;
+      border-radius: 0;
+      transition: all .15s;
+      border-left: 2px solid transparent;
+    }
+    .nav-item:hover { color: #fff; background: #222; }
+    .nav-item.active { color: #FECC00; border-left-color: #FECC00; background: #222; }
+    .nav-dot {
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      background: currentColor;
+      opacity: 0.6;
+    }
+    .sidebar-bottom {
+      margin-top: auto;
+      padding: 16px 20px;
+      border-top: 1px solid #2a2a2a;
+    }
+    .user-info { font-size: 12px; color: #555; margin-bottom: 8px; }
+    .logout-btn {
+      font-size: 12px;
+      color: #555;
+      cursor: pointer;
+      background: none;
+      border: none;
+      padding: 0;
+    }
+    .logout-btn:hover { color: #E24B4A; }
+
+    /* MAIN */
+    .main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    .topbar {
+      height: 56px;
+      border-bottom: 1px solid #2a2a2a;
+      display: flex;
+      align-items: center;
+      padding: 0 28px;
+      gap: 12px;
+      background: #0f0f0f;
+    }
+    .topbar-title {
+      font-size: 15px;
+      font-weight: 600;
+      color: #fff;
+      flex: 1;
+    }
+    .topbar-date { font-size: 12px; color: #555; }
+    .content {
+      flex: 1;
+      overflow-y: auto;
+      padding: 28px;
+    }
+
+    /* ROSTER */
+    .toolbar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+    .filter-btn {
+      padding: 5px 14px;
+      border-radius: 20px;
+      border: 1px solid #2a2a2a;
+      background: #1a1a1a;
+      color: #888;
+      font-size: 12px;
+      cursor: pointer;
+      transition: all .15s;
+    }
+    .filter-btn:hover { color: #fff; border-color: #444; }
+    .filter-btn.active { background: #FECC00; color: #0f0f0f; border-color: #FECC00; font-weight: 600; }
+    .add-btn {
+      margin-left: auto;
+      padding: 7px 16px;
+      border-radius: 8px;
+      border: none;
+      background: #FECC00;
+      color: #0f0f0f;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: opacity .15s;
+    }
+    .add-btn:hover { opacity: 0.88; }
+
+    .poste-section { margin-bottom: 24px; }
+    .poste-label {
+      font-size: 11px;
+      font-weight: 600;
+      color: #555;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+      margin-bottom: 10px;
+    }
+    .players-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .player-card {
+      width: 120px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+      position: relative;
+    }
+    .player-circle {
+      width: 85px;
+      height: 85px;
+      border-radius: 50%;
+      border: 3px solid #2a2a2a;
+      background: #111;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all .15s;
+      position: relative;
+      overflow: visible;
+    }
+    .player-card:hover .player-circle { border-color: #FECC00; background: #FECC0015; transform: scale(1.03); }
+    .player-photo {
+      width: 75px;
+      height: 75px;
+      border-radius: 50%;
+      object-fit: cover;
+    }
+    .player-photo-clip {
+      width: 75px;
+      height: 75px;
+      border-radius: 50%;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .player-photo-clip .player-photo {
+      width: 100%;
+      height: 100%;
+    }
+    .player-initials {
+      width: 75px;
+      height: 75px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      font-weight: 700;
+      color: #fff;
+      background: #333;
+    }
+    .player-num {
+      position: absolute;
+      left: -18px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 14px;
+      font-weight: 700;
+      color: #FECC00;
+      background: #111;
+      padding: 4px 8px;
+      border-radius: 10px;
+      border: 2px solid #FECC00;
+      z-index: 10;
+    }
+    .player-info { padding: 7px 8px 8px; }
+    .player-name {
+      font-size: 11px;
+      font-weight: 600;
+      color: #fff;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .player-wellness-bar {
+      height: 3px;
+      border-radius: 2px;
+      background: #2a2a2a;
+      margin: 5px 0 3px;
+    }
+    .player-wellness-fill { height: 3px; border-radius: 2px; }
+    .player-score { font-size: 10px; color: #555; }
+    .player-pictos {
+      position: absolute;
+      top: 5px;
+      right: 5px;
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+    .picto {
+      width: 18px; height: 18px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 10px;
+      font-weight: 700;
+    }
+    .picto-blesse { background: #E24B4A; color: #fff; }
+    .picto-absent { background: #444; color: #fff; }
+    .picto-alerte { background: #EF9F27; color: #fff; }
+    .picto-espoir { background: #378ADD; color: #fff; }
+    .picto-cdf { background: #00ddff; color: #fff; }
+    .adapt-badge {
+      background: rgba(186,117,23,0.92);
+      border-radius: 4px;
+      font-size: 9px;
+      color: #FAEEDA;
+      text-align: center;
+      padding: 2px 3px;
+      font-weight: 600;
+      align-self: stretch;
+      margin: -6px 8px 0;
+      z-index: 2;
+    }
+
+    /* MODAL */
+    .modal-overlay {
+      display: none;
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.7);
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+    }
+    .modal-overlay.open { display: flex; }
+    .modal {
+      background: #1a1a1a;
+      border: 1px solid #2a2a2a;
+      border-radius: 16px;
+      padding: 32px;
+      width: 420px;
+      max-height: 80vh;
+      overflow-y: auto;
+    }
+    .modal-title {
+      font-size: 16px;
+      font-weight: 700;
+      margin-bottom: 24px;
+      color: #fff;
+    }
+    .modal label {
+      display: block;
+      font-size: 11px;
+      color: #888;
+      margin-bottom: 5px;
+      font-weight: 500;
+      margin-top: 14px;
+    }
+    .modal label:first-of-type { margin-top: 0; }
+    .modal input, .modal select {
+      width: 100%;
+      padding: 9px 12px;
+      background: #0f0f0f;
+      border: 1px solid #2a2a2a;
+      border-radius: 8px;
+      color: #fff;
+      font-size: 13px;
+      outline: none;
+    }
+    .modal select option { background: #1a1a1a; }
+    .modal input:focus, .modal select:focus { border-color: #FECC00; }
+    .modal-actions {
+      display: flex;
+      gap: 10px;
+      margin-top: 24px;
+    }
+    .btn-save {
+      flex: 1;
+      padding: 10px;
+      background: #FECC00;
+      border: none;
+      border-radius: 8px;
+      color: #0f0f0f;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .btn-save:hover { opacity: 0.88; }
+    .btn-cancel {
+      padding: 10px 16px;
+      background: none;
+      border: 1px solid #2a2a2a;
+      border-radius: 8px;
+      color: #888;
+      font-size: 13px;
+      cursor: pointer;
+    }
+    .btn-cancel:hover { border-color: #444; color: #fff; }
+    .btn-delete {
+      padding: 10px 16px;
+      background: none;
+      border: 1px solid #E24B4A;
+      border-radius: 8px;
+      color: #E24B4A;
+      font-size: 13px;
+      cursor: pointer;
+    }
+    .btn-delete:hover { background: #E24B4A22; }
+
+    .page { display: none; }
+    .page.active { display: block; }
+
+    /* LOADING SCREEN */
+    #loading-screen {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: #0f0f0f;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+      transition: opacity 0.3s ease-out;
+    }
+    #loading-screen.hidden {
+      display: none;
+    }
+    .loading-logo {
+      width: 80px;
+      height: 80px;
+      margin-bottom: 24px;
+      animation: pulse 1.5s ease-in-out infinite;
+    }
+    .loading-text {
+      font-size: 14px;
+      color: #666;
+      letter-spacing: 0.1em;
+    }
+    .loading-spinner {
+      width: 40px;
+      height: 40px;
+      border: 3px solid #2a2a2a;
+      border-top-color: #FECC00;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin-top: 20px;
+    }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.7; transform: scale(0.95); }
+    }
+  </style>
+  <link rel="manifest" href="../manifest.json">
+  <script type="module" src="../auth-guard.js"></script>
+</head>
+<body>
+  <!-- LOADING SCREEN -->
+  <div id="loading-screen">
+    <img src="https://www.sca-albi.fr/wp-content/uploads/2023/10/cropped-SCA-bis.png" class="loading-logo" alt="SCA Logo">
+    <div class="loading-text">CHARGEMENT...</div>
+    <div class="loading-spinner"></div>
+  </div>
+
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+    <div class="sidebar-logo" id="sidebar-logo">
+      <img src="https://www.sca-albi.fr/wp-content/uploads/2023/10/cropped-SCA-bis.png">
+      <span>SCA Albi</span>
+    </div>
+    <div class="nav-section">Effectif</div>
+    <div class="nav-item active" onclick="showPage('roster')">
+      <div class="nav-dot"></div> Roster
+    </div>
+    <div class="nav-section">Entraînement</div>
+    <div class="nav-item" onclick="location.href='seances.html'">
+  <div class="nav-dot"></div> Séances
+    </div>
+    <div class="nav-item" onclick="location.href='exercices.html'"><div class="nav-dot"></div> Exercices</div>
+    <div class="nav-section">Suivi</div>
+    <div class="nav-item" onclick="location.href='wellness.html'">
+      <div class="nav-dot"></div> Wellness
+    </div>
+    <div class="nav-item" onclick="location.href='performances.html'">
+      <div class="nav-dot"></div> Performances
+    </div>
+    <div class="nav-item" onclick="location.href='medical.html'">
+      <div class="nav-dot"></div> Médical
+    </div>
+    <div class="nav-item" onclick="location.href='absences.html'">
+      <div class="nav-dot"></div> Absences
+    </div>
+    <div class="nav-item" onclick="location.href='suivi-poids.html'">
+      <div class="nav-dot"></div> Suivi Poids
+    </div>
+    <div class="nav-section">Planning</div>
+    <div class="nav-item" onclick="location.href='planning.html'">
+      <div class="nav-dot"></div> Planning club
+    </div>
+    <div class="nav-item" onclick="location.href='planning-blesses.html'">
+      <div class="nav-dot"></div> Planning Blessés
+    </div>
+    <div class="nav-item" onclick="location.href='fiches-seances.html'">
+      <div class="nav-dot"></div> Fiches Séances
+    </div>
+    <div class="nav-section">Équipes</div>
+    <div class="nav-item" onclick="location.href='equipes.html'">
+  <div class="nav-dot"></div> Composition équipes
+    </div>
+    <div class="nav-section">GPS</div>
+    <div class="nav-item" onclick="location.href='gps.html'">
+  <div class="nav-dot"></div> Données GPS
+    </div>
+    <div class="nav-item" onclick="location.href='gps-match.html'">
+  <div class="nav-dot"></div> Rapport de match
+    </div>
+    <div class="nav-item" onclick="location.href='gps-planif.html'">
+  <div class="nav-dot"></div> Planif. charge
+    </div>
+    <div class="nav-item" onclick="location.href='profil-force-vitesse.html'"><div class="nav-dot"></div> Profil F-V</div>
+    <div class="sidebar-bottom">
+      <div class="user-info" id="user-email"></div>
+      <button class="logout-btn" onclick="handleLogout()">Se déconnecter</button>
+    </div>
+  </div>
+
+  <!-- MAIN -->
+  <div class="main">
+    <div class="topbar">
+      <div class="topbar-title" id="page-title">Roster</div>
+      <div class="topbar-date" id="topbar-date"></div>
+    </div>
+    <div class="content">
+
+      <!-- PAGE ROSTER -->
+      <div class="page active" id="page-roster">
+        <div class="toolbar">
+          <button class="filter-btn active" data-filter="tous" onclick="setFilter('tous', this)">Tous</button>
+          <button class="filter-btn" data-filter="disponibles" onclick="setFilter('disponibles', this)">Disponibles</button>
+          <button class="filter-btn" data-filter="blesses" onclick="setFilter('blesses', this)">Blessés</button>
+          <button class="filter-btn" data-filter="absents" onclick="setFilter('absents', this)">Absents</button>
+          <button class="filter-btn" data-filter="espoirs" onclick="setFilter('espoirs', this)">Espoirs</button>
+          <button class="filter-btn" data-filter="archives" onclick="setFilter('archives', this)">Archivés</button>
+          <button class="filter-btn" data-filter="connexions" onclick="setFilter('connexions', this)">Connexions App</button>
+          <button class="add-btn" onclick="openModal()">+ Ajouter un joueur</button>
+          <button class="add-btn" onclick="window.ouvrirModalCriteresNotes()" id="btn-criteres-notes" style="background:#1a1a1a;border:1px solid #FECC0044;color:#FECC00;">🎯 Critères notes</button>
+        </div>
+        <div id="roster-date-bar"></div>
+        <div id="roster-day-tabs"></div>
+        <div id="roster-container"></div>
+      </div>
+
+      <!-- PAGES À VENIR -->
+      <div class="page" id="page-seances"><p style="color:#555">Séances — à venir</p></div>
+      <div class="page" id="page-wellness"><p style="color:#555">Wellness — à venir</p></div>
+      <div class="page" id="page-perfs"><p style="color:#555">Performances — à venir</p></div>
+      <div class="page" id="page-medical"><p style="color:#555">Médical — à venir</p></div>
+      <div class="page" id="page-planning"><p style="color:#555">Planning club — à venir</p></div>
+      <div class="page" id="page-blesses"><p style="color:#555">Gestion blessés — à venir</p></div>
+      <div class="page" id="page-equipes"><p style="color:#555">Composition équipes — à venir</p></div>
+<div class="page" id="page-gps"><p style="color:#555">Données GPS — à venir</p></div>
+<div class="page" id="page-charge-gps"><p style="color:#555">Planification charge GPS — à venir</p></div>
+      
+    </div>
+  </div>
+
+  <!-- MODAL JOUEUR -->
+  <div class="modal-overlay" id="modal-overlay">
+    <div class="modal">
+      <div class="modal-title" id="modal-title">Ajouter un joueur</div>
+      <label>Nom</label>
+      <input type="text" id="f-nom" placeholder="DUPONT" />
+      <label>Prénom</label>
+      <input type="text" id="f-prenom" placeholder="Antoine" />
+      <label>Poste principal</label>
+      <select id="f-poste">
+        <optgroup label="Avants — 1ère ligne">
+          <option value="Pilier gauche">Pilier gauche</option>
+          <option value="Talonneur">Talonneur</option>
+          <option value="Pilier droit">Pilier droit</option>
+        </optgroup>
+        <optgroup label="Avants — 2e ligne">
+          <option value="2e Ligne">2e Ligne</option>
+        </optgroup>
+        <optgroup label="Avants — 3e ligne">
+          <option value="N8">N8 (Numéro 8)</option>
+          <option value="3e Ligne aile">3e Ligne aile</option>
+        </optgroup>
+        <optgroup label="Arrières">
+          <option value="Demi de mêlée">Demi de mêlée</option>
+          <option value="Demi d'ouverture">Demi d'ouverture</option>
+          <option value="Centre">Centre</option>
+          <option value="Ailier">Ailier</option>
+          <option value="Arrière">Arrière</option>
+        </optgroup>
+      </select>
+      <label>Postes secondaires <span style="font-size:10px;color:#444;font-weight:400;">(polyvalence)</span></label>
+      <div id="f-postes-secondaires-wrap" style="display:flex;flex-wrap:wrap;gap:6px;padding:8px;background:#0f0f0f;border:1px solid #2a2a2a;border-radius:8px;">
+        <label style="margin:0;display:flex;align-items:center;gap:4px;font-size:11px;color:#666;cursor:pointer;" data-poste="Pilier gauche"><input type="checkbox" value="Pilier gauche" class="cb-poste-sec" style="accent-color:#FECC00;" /> PIL G</label>
+        <label style="margin:0;display:flex;align-items:center;gap:4px;font-size:11px;color:#666;cursor:pointer;" data-poste="Talonneur"><input type="checkbox" value="Talonneur" class="cb-poste-sec" style="accent-color:#FECC00;" /> Talonneur</label>
+        <label style="margin:0;display:flex;align-items:center;gap:4px;font-size:11px;color:#666;cursor:pointer;" data-poste="Pilier droit"><input type="checkbox" value="Pilier droit" class="cb-poste-sec" style="accent-color:#FECC00;" /> PIL D</label>
+        <label style="margin:0;display:flex;align-items:center;gap:4px;font-size:11px;color:#666;cursor:pointer;" data-poste="2e Ligne"><input type="checkbox" value="2e Ligne" class="cb-poste-sec" style="accent-color:#FECC00;" /> 2e Ligne</label>
+        <label style="margin:0;display:flex;align-items:center;gap:4px;font-size:11px;color:#666;cursor:pointer;" data-poste="N8"><input type="checkbox" value="N8" class="cb-poste-sec" style="accent-color:#FECC00;" /> N8</label>
+        <label style="margin:0;display:flex;align-items:center;gap:4px;font-size:11px;color:#666;cursor:pointer;" data-poste="3e Ligne aile"><input type="checkbox" value="3e Ligne aile" class="cb-poste-sec" style="accent-color:#FECC00;" /> 3L Aile</label>
+        <label style="margin:0;display:flex;align-items:center;gap:4px;font-size:11px;color:#666;cursor:pointer;" data-poste="Demi de mêlée"><input type="checkbox" value="Demi de mêlée" class="cb-poste-sec" style="accent-color:#FECC00;" /> Demi mêlée</label>
+        <label style="margin:0;display:flex;align-items:center;gap:4px;font-size:11px;color:#666;cursor:pointer;" data-poste="Demi d'ouverture"><input type="checkbox" value="Demi d'ouverture" class="cb-poste-sec" style="accent-color:#FECC00;" /> Demi ouv.</label>
+        <label style="margin:0;display:flex;align-items:center;gap:4px;font-size:11px;color:#666;cursor:pointer;" data-poste="Centre"><input type="checkbox" value="Centre" class="cb-poste-sec" style="accent-color:#FECC00;" /> Centre</label>
+        <label style="margin:0;display:flex;align-items:center;gap:4px;font-size:11px;color:#666;cursor:pointer;" data-poste="Ailier"><input type="checkbox" value="Ailier" class="cb-poste-sec" style="accent-color:#FECC00;" /> Ailier</label>
+        <label style="margin:0;display:flex;align-items:center;gap:4px;font-size:11px;color:#666;cursor:pointer;" data-poste="Arrière"><input type="checkbox" value="Arrière" class="cb-poste-sec" style="accent-color:#FECC00;" /> Arrière</label>
+      </div>
+      <script>
+        // Sync poste principal → désactiver la même case dans secondaires
+        document.getElementById('f-poste').addEventListener('change', function() {
+          document.querySelectorAll('.cb-poste-sec').forEach(cb => {
+            const lbl = cb.closest('label')
+            if (cb.value === this.value) { cb.checked = false; cb.disabled = true; lbl.style.opacity='0.3' }
+            else { cb.disabled = false; lbl.style.opacity='1' }
+          })
+        })
+      </script>
+      <label>Ligne</label>
+      <select id="f-ligne">
+        <option value="Avants">Avants</option>
+        <option value="3/4 arrière">3/4 arrière</option>
+      </select>
+      <label>Statut</label>
+      <select id="f-statut">
+        <option value="ok">Disponible</option>
+        <option value="blesse">Blessé</option>
+        <option value="absent">Absent</option>
+      </select>
+      <label>Adaptation</label>
+      <select id="f-adapte">
+        <option value="">Aucune</option>
+        <option value="Sans contact">Sans contact</option>
+        <option value="Séparé seult">Séparé seulement</option>
+        <option value="Muscu seult">Muscu seulement</option>
+        <option value="Collectif seult">Collectif seulement</option>
+        <option value="En reprise">En reprise</option>
+      </select>
+      <label>Espoirs</label>
+      <select id="f-espoir">
+        <option value="false">Non</option>
+        <option value="simple">Espoir</option>
+        <option value="navette">Espoir Navette</option>
+      </select>
+      <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer;">
+        <input type="checkbox" id="f-cdf" style="accent-color:#E24B4A;" />
+        <span>CDF (Centre de Formation)</span>
+      </label>
+      <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer;margin-top:8px;">
+        <input type="checkbox" id="f-archived" style="accent-color:#EF9F27;" />
+        <span>Archiver ce joueur (Masquer des listes actives)</span>
+      </label>
+      <label>Athlete ID (GPS)</label>
+        <input type="text" id="f-athlete-id" placeholder="ID athlete CATAPULT" />
+      <label>Photo URL (optionnel)</label>
+      <input type="text" id="f-photo" placeholder="https://..." oninput="updatePhotoPreview()" />
+      <div id="photo-settings" style="margin-top:10px;padding:12px;background:#0f0f0f;border:1px solid #2a2a2a;border-radius:10px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+          <span style="font-size:12px;font-weight:600;color:#FECC00;">Réglages photo</span>
+          <button type="button" onclick="resetPhotoSettings()" style="background:none;border:1px solid #2a2a2a;color:#888;font-size:10px;padding:3px 8px;border-radius:6px;cursor:pointer;">Réinitialiser</button>
+        </div>
+        <div style="display:flex;gap:12px;align-items:center;">
+          <div id="photo-preview-wrap" style="width:64px;height:64px;border-radius:50%;overflow:hidden;border:2px solid #2a2a2a;flex-shrink:0;background:#111;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;color:#555;">
+            <span>—</span>
+          </div>
+          <div style="flex:1;display:flex;flex-direction:column;gap:8px;">
+            <div style="display:flex;align-items:center;gap:8px;">
+              <span style="font-size:10px;color:#888;width:42px;flex-shrink:0;">Zoom</span>
+              <input type="range" id="f-photo-zoom" min="1" max="3" step="0.05" value="1" oninput="updatePhotoPreview()" style="flex:1;accent-color:#FECC00;padding:0;height:4px;background:none;border:none;border-radius:0;width:auto;" />
+              <span id="f-photo-zoom-val" style="font-size:10px;color:#666;width:36px;text-align:right;flex-shrink:0;">1.00</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px;">
+              <span style="font-size:10px;color:#888;width:42px;flex-shrink:0;">Pos X</span>
+              <input type="range" id="f-photo-posx" min="0" max="100" step="1" value="50" oninput="updatePhotoPreview()" style="flex:1;accent-color:#FECC00;padding:0;height:4px;background:none;border:none;border-radius:0;width:auto;" />
+              <span id="f-photo-posx-val" style="font-size:10px;color:#666;width:36px;text-align:right;flex-shrink:0;">50%</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px;">
+              <span style="font-size:10px;color:#888;width:42px;flex-shrink:0;">Pos Y</span>
+              <input type="range" id="f-photo-posy" min="0" max="100" step="1" value="50" oninput="updatePhotoPreview()" style="flex:1;accent-color:#FECC00;padding:0;height:4px;background:none;border:none;border-radius:0;width:auto;" />
+              <span id="f-photo-posy-val" style="font-size:10px;color:#666;width:36px;text-align:right;flex-shrink:0;">50%</span>
+            </div>
+          </div>
+        </div>
+        <label style="margin-top:12px;">Appliquer les réglages à</label>
+        <select id="f-photo-scope">
+          <option value="player">Ce joueur seulement</option>
+          <option value="all">Tous les joueurs</option>
+        </select>
+      </div>
+      <label>Date de naissance</label>
+      <input type="date" id="f-date-naissance" />
+      <div class="modal-actions">
+        <button class="btn-cancel" onclick="closeModal()">Annuler</button>
+        <button class="btn-delete" id="btn-delete" style="display:none" onclick="deleteJoueur()">Supprimer</button>
+        <button class="btn-save" onclick="saveJoueur()">Enregistrer</button>
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+    // Cache loader pour données instantanées (même préfixe que les autres pages)
+    function loadCache(key) {
+      try {
+        const r = JSON.parse(localStorage.getItem('cache_' + key) || 'null')
+        return r ? (r.data !== undefined ? r.data : null) : null
+      } catch(e) { return null }
+    }
+    // ── Invalider le cache joueurs (fix adapte) sans le supprimer ──
+    // On garde les données (photos !) mais on force le refresh en arrière-plan
+    // en mettant le timestamp à 0 → stale-while-revalidate va re-fetcher
+    if (localStorage.getItem('_joueursCacheVersion') !== '2025-01-15-adapte-fix') {
+      try {
+        const raw = localStorage.getItem('cache_joueurs')
+        if (raw) {
+          const parsed = JSON.parse(raw)
+          parsed.ts = 0  // force stale → background refresh
+          localStorage.setItem('cache_joueurs', JSON.stringify(parsed))
+        }
+        const raw2 = localStorage.getItem('cache_roster_joueurs')
+        if (raw2) {
+          const parsed2 = JSON.parse(raw2)
+          parsed2.ts = 0
+          localStorage.setItem('cache_roster_joueurs', JSON.stringify(parsed2))
+        }
+      } catch(e) {}
+      localStorage.setItem('_joueursCacheVersion', '2025-01-15-adapte-fix')
+      console.log('[index] Cache joueurs marqué stale (fix adapte, photos préservées)')
+    }
+    // Exposer les données du cache globalement pour roster.js
+    window.__cachedRosterData = {
+      joueurs: loadCache('roster_joueurs'),
+      absences: loadCache('roster_absences'),
+      blessures: loadCache('roster_blessures')
+    }
+
+    // Flag pour indiquer que le loading screen doit être caché
+    window.__rosterShouldHide = false
+
+    // Fonction pour indiquer que le roster est prêt
+    window.__rosterReady = function() {
+      console.log('__rosterReady appelé')
+      window.__rosterShouldHide = true
+      // Essayer de cacher le loading screen immédiatement
+      hideLoadingScreen()
+    }
+
+    // Fonction pour cacher le loading screen
+    function hideLoadingScreen() {
+      // Mode standalone : l'élément #loading-screen est dans index.html
+      const loadingScreen = document.getElementById('loading-screen')
+      if (loadingScreen) {
+        loadingScreen.style.display = 'none'
+        loadingScreen.classList.add('hidden')
+        return true
+      }
+      // Mode shell : l'overlay est créé dynamiquement avec l'id 'loading-index'
+      const shellOverlay = document.getElementById('loading-index')
+      if (shellOverlay) {
+        shellOverlay.remove()
+        return true
+      }
+      // Déléguer à __pageReady du shell si disponible (fallback)
+      if (window.__pageReady) {
+        window.__pageReady('index.html')
+        return true
+      }
+      return false
+    }
+
+    // Attendre que le DOM soit chargé
+    document.addEventListener('DOMContentLoaded', () => {
+      // Si le cache a des données, cacher le loading screen immédiatement
+      if (window.__cachedRosterData.joueurs && window.__cachedRosterData.joueurs.length > 0) {
+        window.__rosterReady()
+      }
+
+      // Vérifier régulièrement si le loading screen doit être caché
+      const checkInterval = setInterval(() => {
+        if (window.__rosterShouldHide) {
+          if (hideLoadingScreen()) {
+            clearInterval(checkInterval)
+          }
+        }
+      }, 100)
+
+      // Fallback : cacher le loading screen après 2 secondes maximum
+      setTimeout(() => {
+        clearInterval(checkInterval)
+        hideLoadingScreen()
+      }, 2000)
+    })
+  </script>
+  <script type="module" src="roster.js"></script>
+  <script>
+    // 5 clics sur le logo → recalcul des scores
+    ;(function() {
+      let n = 0, t = null
+      document.addEventListener('DOMContentLoaded', () => {
+        const logo = document.getElementById('sidebar-logo')
+        if (!logo) return
+        logo.style.cursor = 'pointer'
+        logo.style.userSelect = 'none'
+        logo.style.webkitUserSelect = 'none'
+        logo.addEventListener('mousedown', () => {
+          n++
+          clearTimeout(t)
+          logo.style.opacity = '0.6'
+          setTimeout(() => logo.style.opacity = '1', 120)
+          t = setTimeout(() => { n = 0 }, 3000)
+          if (n >= 5) { n = 0; clearTimeout(t); window.__demanderRecalculScores?.() }
+        })
+      })
+    })()
+
+    window.showPage = function(page) {
+  const routes = {
+    wellness: 'wellness.html',
+    perfs: 'performances.html',
+    medical: 'medical.html',
+    seances: 'seances.html'
+  }
+  if (routes[page]) { location.href = routes[page]; return }
+  // Pour les pages pas encore créées, garder l'ancien comportement
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'))
+  document.getElementById('page-' + page)?.classList.add('active')
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'))
+  event.currentTarget.classList.add('active')
+  const titles = { roster: 'Roster', planning: 'Planning club', blesses: 'Gestion blessés', equipes: 'Composition équipes', gps: 'Données GPS', 'charge-gps': 'Planification charge' }
+  document.getElementById('page-title').textContent = titles[page] || page
+}
+  </script>
+</body>

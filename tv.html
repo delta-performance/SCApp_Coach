@@ -375,6 +375,8 @@
   </style>
 
   <link rel="manifest" href="../manifest.json">
+  <link rel="stylesheet" href="theme.css">
+  <script src="theme.js"></script>
 </head>
 <body>
 
@@ -437,6 +439,7 @@
     <button class="joueurs-filter-btn" id="btn-filtre-joueurs" onclick="ouvrirModalJoueurs()">Joueurs ▼</button>
     <button onclick="synchroniserGlobale()" id="tv-global-sync" class="tv-btn" style="padding:4px 8px;" title="Synchroniser">↻</button>
     <a class="tv-btn" href="index.html" style="text-decoration:none;display:inline-flex;align-items:center;padding:4px 8px;">⌂ Accueil</a>
+    <button class="theme-toggle-btn" onclick="toggleTheme()" style="padding:4px 10px;"><span class="theme-icon">☀️</span></button>
     <button class="tv-btn" onclick="logout()" style="padding:4px 8px;">Déconnexion</button>
     <div class="tv-date" id="tv-date"></div>
     <div class="tv-clock" id="tv-clock"></div>
@@ -480,15 +483,16 @@
   </div>
 
   <script type="module">
-    import { initializeApp } from './firebase-bundle.js'
-    import { getAuth, onAuthStateChanged, signOut, setPersistence, browserLocalPersistence } from './firebase-bundle.js'
-    import { getFirestore, collection, doc, setDoc, getDoc, getDocs, onSnapshot, serverTimestamp } from './firebase-bundle.js'
+    import { initializeApp } from './supabase-adapter.js'
+    import { getAuth, onAuthStateChanged, signOut, setPersistence, browserLocalPersistence } from './supabase-adapter.js'
+    import { getFirestore, collection, doc, setDoc, getDoc, getDocs, onSnapshot, serverTimestamp, query, where } from './supabase-adapter.js'
+    import './update-check.js'
 
     // Fonctions inline de seances-charges.js pour éviter les erreurs CORS
     function rpeToPercent(rpe) { return rpe / 10 }
     function arrondir(charge) { return Math.round(charge / 2.5) * 2.5 }
     
-    function chargePredicte(exercice, rpe, nbReps, maxTestes = {}, ratios = {}, intensityUnit = 'RPE') {
+    function chargePredicte(exercice, rpe, nbReps, maxTestes = {}, ratios = {}, intensityUnit = 'RPE', poids = null) {
       let pct = 0
       const val = parseFloat(rpe)
       if (!val) return null
@@ -499,6 +503,13 @@
         let pctVal = Math.round(100 - ((val - 0.2) / (1.3 - 0.2)) * 70)
         pctVal = Math.max(10, Math.min(100, pctVal))
         pct = pctVal / 100
+      } else if (intensityUnit === 'PDC' || intensityUnit === 'kg' || intensityUnit === 'W') {
+        return null
+      } else if (intensityUnit === '% PDC') {
+        if (poids && poids > 0) {
+          return arrondir(poids * val / 100)
+        }
+        return null
       } else {
         pct = val / 10
       }
@@ -582,14 +593,22 @@
       return arrondir(charge)
     }
     
-    function labelCharge(exercice, rpe, nbReps, maxTestes = {}, ratios = {}, intensityUnit = 'RPE') {
-      const c = chargePredicte(exercice, rpe, nbReps, maxTestes, ratios, intensityUnit)
+    function labelCharge(exercice, rpe, nbReps, maxTestes = {}, ratios = {}, intensityUnit = 'RPE', poids = null) {
+      const c = chargePredicte(exercice, rpe, nbReps, maxTestes, ratios, intensityUnit, poids)
       if (c !== null) return c + ' kg'
       
       if (intensityUnit === 'PCT' || intensityUnit === '%') {
         return rpe + '%'
       } else if (intensityUnit === 'VITESSE') {
         return rpe + ' m/s'
+      } else if (intensityUnit === 'PDC') {
+        return 'PDC'
+      } else if (intensityUnit === '% PDC') {
+        return rpe + '% PDC'
+      } else if (intensityUnit === 'kg') {
+        return rpe + ' kg'
+      } else if (intensityUnit === 'W') {
+        return rpe + ' W'
       }
       return 'RPE ' + rpe
     }
@@ -606,6 +625,23 @@
     const fbApp = initializeApp(firebaseConfig)
     const auth = getAuth(fbApp)
     const db = getFirestore(fbApp)
+
+    function getDataScopeStart() {
+      const scope = localStorage.getItem('delta-data-scope') || '30days'
+      if (scope === 'all') return null
+      if (window.__getDataScopeDates) {
+        return window.__getDataScopeDates(scope).start
+      }
+      const d = new Date()
+      d.setDate(d.getDate() - 30)
+      return d.toISOString().split('T')[0]
+    }
+
+    function scopedQuery(name, dateField = 'date') {
+      const start = getDataScopeStart()
+      if (!start) return collection(db, name)
+      return query(collection(db, name), where(dateField, '>=', start))
+    }
 
     // Auth persistant pour fonctionner hors connexion
     try { setPersistence(auth, browserLocalPersistence).catch(() => {}) } catch(e) {}
@@ -630,6 +666,23 @@
     let voirTousBlocs = false // Mode "voir tous les blocs"
     let selectedJoueursIds = [] // IDs des joueurs sélectionnés manuellement
     let ligneFilterActive = 'all' // Filtre ligne actif
+    let tvListeners = [] // Listeners onSnapshot actifs
+
+    // Fusionner blocs valides et blocs blessés par nom pour affichage TV
+    // Ex: bloc 1 valide + bloc 1 blessé → un seul bloc 1 avec tous les groupes
+    function getAllBlocs(seance) {
+      if (!seance) return []
+      const merged = (seance.blocs || []).map(b => JSON.parse(JSON.stringify(b)))
+      ;(seance.blocsBlesses || []).forEach(bBlesse => {
+        const existing = merged.find(b => b.nom === bBlesse.nom)
+        if (existing) {
+          existing.groupes = [...(existing.groupes || []), ...(bBlesse.groupes || [])]
+        } else {
+          merged.push(JSON.parse(JSON.stringify(bBlesse)))
+        }
+      })
+      return merged
+    }
 
     // Horloge
     function majHorloge() {
@@ -677,11 +730,11 @@
       }
 
       // Écoute séances en temps réel
-      onSnapshot(collection(db, 'seances'), snap => {
+      tvListeners.push(onSnapshot(scopedQuery('seances'), snap => {
         seances = snap.docs.map(d => ({ id: d.id, ...d.data() }))
         seances.sort((a, b) => (b.date || '').localeCompare(a.date || ''))
         remplirSelect()
-      })
+      }))
     }) // <-- C'est cette parenthèse/accolade de fermeture qui manquait !
 
     function remplirSelect() {
@@ -729,16 +782,14 @@
           if (snap.exists()) {
             seanceActive = { id: snap.id, ...snap.data() }
           }
-          // Recharger toutes les charges réelles
+          // Recharger toutes les charges réelles (valides + blessés)
           chargesReelles = {}
-          const tousJoueurs = [...new Set(seanceActive.blocs?.flatMap(b =>
-            b.groupes?.flatMap(g => g.joueurs || []) || []) || [])]
-          await Promise.all(tousJoueurs.map(async jid => {
-            try {
-              const snap = await getDoc(doc(db, 'chargesReelles', `${seanceActive.id}_${jid}`))
-              if (snap.exists()) Object.assign(chargesReelles, snap.data())
-            } catch(e) {}
-          }))
+          try {
+            const crSnap = await getDocs(query(collection(db, 'chargesReelles'), where('seance_id', '==', seanceActive.id)))
+            crSnap.docs.forEach(d => {
+              if (d.exists()) Object.assign(chargesReelles, d.data())
+            })
+          } catch(e) { console.warn('chargesReelles batch fetch error:', e) }
         }
 
         // Re-render
@@ -760,16 +811,21 @@
       seanceActive = seances.find(s => s.id === id)
       if (!seanceActive) return
 
-      // Charger charges réelles existantes
+      // Charger charges réelles existantes (valides + blessés)
       chargesReelles = {}
-      const tousJoueurs = [...new Set(seanceActive.blocs?.flatMap(b =>
-        b.groupes?.flatMap(g => g.joueurs || []) || []) || [])]
-      await Promise.all(tousJoueurs.map(async jid => {
-        try {
-          const snap = await getDoc(doc(db, 'chargesReelles', `${seanceActive.id}_${jid}`))
-          if (snap.exists()) Object.assign(chargesReelles, snap.data())
-        } catch(e) {}
-      }))
+      console.log('[chargerSeance] Loading chargesReelles for seanceId:', seanceActive.id)
+      try {
+        const crSnap = await getDocs(query(collection(db, 'chargesReelles'), where('seance_id', '==', seanceActive.id)))
+        console.log('[chargerSeance] chargesReelles docs count:', crSnap.docs?.length || 0, 'empty:', crSnap.empty)
+        crSnap.docs.forEach(d => {
+          if (d.exists()) {
+            const data = d.data()
+            console.log('[chargerSeance] doc id:', d.id, 'keys:', Object.keys(data).slice(0, 10))
+            Object.assign(chargesReelles, data)
+          }
+        })
+        console.log('[chargerSeance] total chargesReelles keys:', Object.keys(chargesReelles).length)
+      } catch(e) { console.warn('chargesReelles batch fetch error:', e) }
 
       const tvTitle = document.getElementById('tv-title')
       if (tvTitle) {
@@ -786,7 +842,7 @@
       selectIndiv.innerHTML = '<option value="">Choisir un joueur...</option>'
       if (!seanceActive) return
       
-      const ids = [...new Set(seanceActive.blocs?.flatMap(b => b.groupes?.flatMap(g => g.joueurs || []) || []) || [])]
+      const ids = [...new Set(getAllBlocs(seanceActive).flatMap(b => b.groupes?.flatMap(g => g.joueurs || []) || []))]
       // Trier les joueurs par nom
       const joueursSession = joueurs.filter(j => ids.includes(j.id)).sort((a, b) => (a.nom || '').localeCompare(b.nom || ''))
       
@@ -811,7 +867,7 @@
       if (vue === 'individuelle') {
         remplirSelectIndivJoueurs()
         if (!joueurActif && seanceActive) {
-          const ids = [...new Set(seanceActive.blocs?.flatMap(b => b.groupes?.flatMap(g => g.joueurs || []) || []) || [])]
+          const ids = [...new Set(getAllBlocs(seanceActive).flatMap(b => b.groupes?.flatMap(g => g.joueurs || []) || []))]
           if (ids.length > 0) {
             joueurActif = ids[0]
             const selectIndiv = document.getElementById('tv-indiv-joueur-select')
@@ -826,9 +882,10 @@
 
     // ==================== NAVIGATION BLOCS ====================
     window.changeBloc = function(direction) {
-      if (!seanceActive?.blocs?.length) return
-      const maxIndex = seanceActive.blocs.length - 1
-      currentBlocIndex = Math.max(0, Math.min(maxIndex, currentBlocIndex + direction))
+      const allBlocs = getAllBlocs(seanceActive)
+      if (!allBlocs.length) return
+      const maxIndex = allBlocs.length - 1
+      currentBlocIndex = Math.max(-1, Math.min(maxIndex, currentBlocIndex + direction))
       renderCollectif()
     }
     
@@ -909,21 +966,219 @@
       const btnPrev = document.getElementById('btn-bloc-prev')
       const btnNext = document.getElementById('btn-bloc-next')
       
-      if (!seanceActive?.blocs?.length || seanceActive.blocs.length <= 1) {
+      const allBlocs = getAllBlocs(seanceActive)
+      if (!allBlocs.length || allBlocs.length <= 1) {
         navContainer.style.display = 'none'
         return
       }
-      
+
       navContainer.style.display = 'flex'
-      counter.textContent = `Bloc ${currentBlocIndex + 1}/${seanceActive.blocs.length}`
-      
+      counter.textContent = `Bloc ${currentBlocIndex + 1}/${allBlocs.length}`
+
       if (voirTousBlocs) {
         counter.textContent = `Tous les blocs`
         btnPrev.disabled = true
         btnNext.disabled = true
       } else {
-        btnPrev.disabled = currentBlocIndex === 0
-        btnNext.disabled = currentBlocIndex >= seanceActive.blocs.length - 1
+        counter.textContent = currentBlocIndex === -1 ? `Bloc 0/${allBlocs.length}` : `Bloc ${currentBlocIndex + 1}/${allBlocs.length}`
+        btnPrev.disabled = currentBlocIndex === -1
+        btnNext.disabled = currentBlocIndex >= allBlocs.length - 1
+      }
+    }
+
+    // ==================== VUE D'ENSEMBLE ====================
+    function renderOverview() {
+      const c = document.getElementById('blocs-scroll')
+      c.innerHTML = ''
+      const container = document.createElement('div')
+      container.style.cssText = 'display:flex;flex-direction:column;gap:16px;padding:8px 0;'
+
+      getAllBlocs(seanceActive).forEach((bloc, blocIdx) => {
+        const blocCard = document.createElement('div')
+        blocCard.style.cssText = 'background:#111;border:1px solid #222;border-radius:12px;overflow:hidden;'
+
+        const blocHdr = document.createElement('div')
+        blocHdr.style.cssText = 'padding:14px 18px;background:#1a1a1a;border-bottom:1px solid #222;display:flex;align-items:center;gap:10px;'
+        blocHdr.innerHTML = `<span style="color:#FECC00;font-weight:800;font-size:18px;">Bloc ${blocIdx + 1}</span><span style="color:#fff;font-size:18px;font-weight:600;">${bloc.nom}</span>${bloc.comment ? `<span style="color:#888;font-size:13px;font-style:italic;">· ${bloc.comment}</span>` : ''}`
+        blocCard.appendChild(blocHdr)
+
+        const body = document.createElement('div')
+        body.style.cssText = 'padding:14px 18px;display:flex;flex-direction:column;gap:14px;'
+
+        bloc.groupes?.forEach(groupe => {
+          const grpDiv = document.createElement('div')
+          const isBlesse = groupe.autoType === 'blesse'
+          grpDiv.style.cssText = `padding:12px 14px;border-radius:10px;background:${isBlesse ? '#E24B4A11' : '#0f0f0f'};border:1px solid ${isBlesse ? '#E24B4A33' : '#1a1a1a'};`
+
+          const grpHdr = document.createElement('div')
+          grpHdr.style.cssText = `font-size:15px;font-weight:700;color:${isBlesse ? '#E24B4A' : '#FECC00'};margin-bottom:10px;`
+          const nbJoueurs = groupe.joueurs?.length || 0
+          grpHdr.innerHTML = `${isBlesse ? ' ' : ''}${groupe.nom} <span style="color:#888;font-weight:400;">· ${nbJoueurs} joueur${nbJoueurs > 1 ? 's' : ''}</span>${groupe.comment ? ` <span style="color:#666;font-weight:400;font-style:italic;">· ${groupe.comment}</span>` : ''}`
+          grpDiv.appendChild(grpHdr)
+
+          const exoList = document.createElement('div')
+          exoList.style.cssText = 'display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:10px;'
+
+          groupe.exercices?.forEach((exo, exoIdx) => {
+            const iu = exo.intensityUnit || exo.intensityType || 'RPE'
+            const typeLabel = iu === '%' || iu === 'PCT' ? '%' : iu === 'Vitesse (m/s)' || iu === 'VITESSE' ? 'm/s' : iu === 'PDC' ? 'PDC' : iu === '% PDC' ? '% PDC' : iu === 'kg' ? 'kg' : iu === 'W' ? 'W' : 'RPE'
+            const isTrac = isTractionTV(exo.exercice)
+            const exoDB = exercicesDB.find(e => e.nom?.toLowerCase() === exo.exercice?.toLowerCase())
+            const exoCard = document.createElement('div')
+            const borderColor = isTrac ? '#FECC0044' : (iu === 'RPE' || iu === 'kg' || iu === 'W' || iu === 'PDC' ? '#2a2a2a' : '#FECC0044')
+            const bgColor = isTrac ? '#FECC0008' : (iu === 'RPE' || iu === 'kg' || iu === 'W' || iu === 'PDC' ? 'transparent' : '#FECC0008')
+            exoCard.style.cssText = `padding:12px 14px;border-radius:10px;background:${bgColor};border:1px solid ${borderColor};display:flex;align-items:center;gap:12px;`
+            const photoHtml = exoDB?.photo
+              ? `<img src="${exoDB.photo}" style="width:48px;height:48px;border-radius:8px;object-fit:cover;border:1px solid #2a2a2a;flex-shrink:0;" onerror="this.style.display='none'" />`
+              : `<div style="width:48px;height:48px;border-radius:8px;background:#1a1a1a;border:1px solid #2a2a2a;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:20px;">🏋️</div>`
+            const label = supersetLabel(exo, groupe)
+            const numHtml = `<span style="color:#FECC00;font-weight:800;font-size:16px;min-width:28px;">${label}</span>`
+            const intensityText = iu === 'PDC' ? 'PDC' : iu === '%' || iu === 'PCT' ? exo.rpe + '%' : iu === 'VITESSE' || iu === 'Vitesse (m/s)' ? exo.rpe + ' m/s' : iu === '% PDC' ? exo.rpe + '% PDC' : iu === 'kg' ? exo.rpe + ' kg' : iu === 'W' ? exo.rpe + ' W' : 'RPE ' + exo.rpe;
+            exoCard.innerHTML = `${photoHtml}${numHtml}<div style="flex:1;min-width:0;"><div style="font-size:15px;font-weight:700;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${exo.isSuperset ? '↳ ' : ''}${exo.exercice || '—'}</div><div style="font-size:13px;color:#888;margin-top:3px;">${exo.nbSets || 1}×${exo.nbReps || ''} · ${intensityText}${exo.recup ? ' · ' + exo.recup : ''}${exo.tempo ? ' · Tempo ' + exo.tempo : ''}${exo.comment ? ' · ' + exo.comment : ''}</div></div>`
+            exoList.appendChild(exoCard)
+          })
+
+          if (!groupe.exercices?.length) {
+            exoList.innerHTML = '<span style="color:#555;font-size:14px;">Aucun exercice</span>'
+          }
+
+          grpDiv.appendChild(exoList)
+          body.appendChild(grpDiv)
+        })
+
+        if (!bloc.groupes?.length) {
+          body.innerHTML = '<span style="color:#555;font-size:14px;">Aucun groupe</span>'
+        }
+
+        blocCard.appendChild(body)
+        container.appendChild(blocCard)
+      })
+
+      c.appendChild(container)
+    }
+
+    // ==================== TRACTION MODAL ====================
+    window._tractionExosTV = {}
+    function isTractionTV(nom) { const n = (nom || '').toLowerCase(); return n.includes('traction') || n.includes('dips') || n.includes('dip ') }
+    function supersetLabel(exo, groupe) {
+      if (!exo.isSuperset) return exo.numExo
+      const supersetExos = (groupe?.exercices || []).filter(x => x.numExo === exo.numExo && x.isSuperset)
+      const idx = supersetExos.findIndex(x => x.id === exo.id)
+      if (idx !== -1) {
+        const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+        return `${exo.numExo}${letters[idx]}`
+      }
+      return exo.numExo
+    }
+    window.ouvrirModalTractionTV = function(seanceId, clefBase, nbSets, joueurId, exoKey, isAllSeries) {
+      const exo = window._tractionExosTV[exoKey]
+      if (!exo) return
+      const j = joueurs.find(x => x.id === joueurId)
+      const poidsJoueur = j?.poids || null
+
+      const overlay = document.createElement('div')
+      overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:300;display:flex;align-items:center;justify-content:center;'
+      const box = document.createElement('div')
+      box.style.cssText = 'background:#141414;border-radius:16px;width:90%;max-width:400px;padding:0 0 20px;'
+      box.innerHTML = `
+        <div style="padding:14px 18px;border-bottom:1px solid #222;display:flex;align-items:center;gap:10px;">
+          <div style="font-size:15px;font-weight:700;color:#FECC00;flex:1;">${exo.exercice}</div>
+          <button onclick="this.closest('[data-trac-overlay]').remove()" style="background:none;border:none;color:#888;font-size:18px;cursor:pointer;">✕</button>
+        </div>
+        <div style="padding:16px 18px;">
+          <div style="font-size:12px;color:#888;margin-bottom:14px;">Comment le joueur a-t-il réalisé cet exercice ?</div>
+          <div style="display:flex;flex-direction:column;gap:8px;">
+            <button data-mode="pdc" style="padding:12px;border-radius:10px;border:1px solid #2a2a2a;background:#1a1a1a;color:#fff;font-size:13px;font-weight:600;cursor:pointer;text-align:left;display:flex;align-items:center;gap:10px;">
+              <span style="font-size:18px;">🏋️</span><div><div>PDC (Poids du corps)</div><div style="font-size:11px;color:#888;font-weight:400;">${poidsJoueur ? poidsJoueur + ' kg' : 'Poids non renseigné'}</div></div>
+            </button>
+            <button data-mode="leste" style="padding:12px;border-radius:10px;border:1px solid #2a2a2a;background:#1a1a1a;color:#fff;font-size:13px;font-weight:600;cursor:pointer;text-align:left;display:flex;align-items:center;gap:10px;">
+              <span style="font-size:18px;">➕</span><div><div>Lesté</div><div style="font-size:11px;color:#888;font-weight:400;">PDC + poids additionnel</div></div>
+            </button>
+            <button data-mode="deleste" style="padding:12px;border-radius:10px;border:1px solid #2a2a2a;background:#1a1a1a;color:#fff;font-size:13px;font-weight:600;cursor:pointer;text-align:left;display:flex;align-items:center;gap:10px;">
+              <span style="font-size:18px;">➖</span><div><div>Délesté (assistance)</div><div style="font-size:11px;color:#888;font-weight:400;">Combien de reps ont été faites ?</div></div>
+            </button>
+          </div>
+          <div id="trac-input-zone" style="display:none;margin-top:12px;">
+            <div id="trac-pdc-missing-zone" style="display:none;margin-bottom:10px;">
+              <label style="font-size:12px;color:#E24B4A;display:block;margin-bottom:6px;">⚠️ Poids du corps du joueur non renseigné — entrez-le ici :</label>
+              <input id="trac-pdc-val" type="number" inputmode="decimal" placeholder="ex: 90" style="width:100%;padding:10px;border-radius:8px;border:1px solid #E24B4A55;background:#0f0f0f;color:#fff;font-size:16px;font-weight:700;text-align:center;outline:none;" />
+            </div>
+            <label id="trac-input-label" style="font-size:12px;color:#888;display:block;margin-bottom:6px;"></label>
+            <input id="trac-input-val" type="number" placeholder="0" style="width:100%;padding:10px;border-radius:8px;border:1px solid #2a2a2a;background:#0f0f0f;color:#FECC00;font-size:16px;font-weight:700;text-align:center;outline:none;" />
+          </div>
+          <button id="trac-confirm" style="width:100%;padding:12px;border-radius:10px;border:none;background:#FECC00;color:#0f0f0f;font-size:14px;font-weight:700;cursor:pointer;margin-top:12px;display:none;">✓ Confirmer</button>
+        </div>`
+      overlay.appendChild(box)
+      overlay.setAttribute('data-trac-overlay', '')
+      document.body.appendChild(overlay)
+      overlay.onclick = e => { if (e.target === overlay) overlay.remove() }
+
+      let selectedMode = null
+      const choices = box.querySelectorAll('[data-mode]')
+      const inputZone = box.querySelector('#trac-input-zone')
+      const inputLabel = box.querySelector('#trac-input-label')
+      const inputVal = box.querySelector('#trac-input-val')
+      const pdcMissingZone = box.querySelector('#trac-pdc-missing-zone')
+      const pdcValInput = box.querySelector('#trac-pdc-val')
+      const confirmBtn = box.querySelector('#trac-confirm')
+
+      choices.forEach(btn => {
+        btn.onclick = () => {
+          selectedMode = btn.dataset.mode
+          choices.forEach(b => { b.style.borderColor = '#2a2a2a'; b.style.background = '#1a1a1a' })
+          btn.style.borderColor = '#FECC00'; btn.style.background = '#1a1a00'
+          if (selectedMode === 'pdc') {
+            inputZone.style.display = 'none'
+            confirmBtn.style.display = 'block'
+          } else {
+            inputZone.style.display = 'block'
+            if (selectedMode === 'leste') {
+              inputLabel.textContent = 'Poids additionnel (kg) :'
+              inputVal.placeholder = 'ex: 10'
+              inputVal.step = '0.5'
+              pdcMissingZone.style.display = poidsJoueur ? 'none' : 'block'
+            } else {
+              pdcMissingZone.style.display = 'none'
+              inputLabel.textContent = 'Nombre de reps fait :'
+              inputVal.placeholder = 'ex: 8'
+              inputVal.step = '1'
+            }
+            confirmBtn.style.display = 'block'
+          }
+        }
+      })
+
+      confirmBtn.onclick = async () => {
+        if (!selectedMode) return
+        let valeur = 0
+        if (selectedMode !== 'pdc') {
+          valeur = parseFloat(inputVal.value) || 0
+          if (valeur <= 0) { inputVal.style.borderColor = '#E24B4A'; return }
+        }
+        let pdc = poidsJoueur || 0
+        if (selectedMode === 'leste' && !pdc) {
+          pdc = parseFloat(String(pdcValInput?.value || '').replace(',', '.')) || 0
+          if (!pdc) { if (pdcValInput) pdcValInput.style.borderColor = '#E24B4A'; return }
+        }
+        let charge = pdc
+        if (selectedMode === 'leste') charge = pdc + valeur
+
+        for (let s = 1; s <= nbSets; s++) {
+          const clefSerie = isAllSeries ? `${clefBase}_s${s}` : (s === 1 ? clefBase : `${clefBase.replace('_s1', '_s' + s)}`)
+          chargesReelles[clefSerie] = String(charge)
+          const meta = { [clefSerie]: String(charge), [clefSerie + '_mode']: selectedMode, updatedAt: serverTimestamp() }
+          if (selectedMode === 'leste') meta[clefSerie + '_leste'] = String(valeur)
+          if (selectedMode === 'deleste') meta[clefSerie + '_reps'] = String(valeur)
+          await setDoc(doc(db, 'chargesReelles', `${seanceId}_${joueurId}`), meta, { merge: true })
+        }
+
+        const primaryClef = isAllSeries ? `${clefBase}_s1` : clefBase
+        const repsForPerf = selectedMode === 'deleste' ? Math.round(valeur) : (exo.nbReps || 1)
+        await sauvegarderSerie(primaryClef, seanceId, joueurId, String(charge), { exercice: exo.exercice, nbReps: repsForPerf, intensityUnit: exo.intensityUnit || exo.intensityType || 'RPE' })
+
+        overlay.remove()
+        renderCollectif()
+        if (joueurActif) renderIndividu(joueurActif)
       }
     }
 
@@ -931,7 +1186,7 @@
     function renderCollectif() {
       const c = document.getElementById('blocs-scroll')
       c.innerHTML = ''
-      if (!seanceActive?.blocs?.length) {
+      if (!getAllBlocs(seanceActive).length) {
         c.innerHTML = '<div class="empty-state">Aucun bloc dans cette séance.</div>'
         document.getElementById('bloc-nav-container').style.display = 'none'
         return
@@ -939,6 +1194,12 @@
 
       // Mettre à jour la navigation
       updateBlocNav()
+
+      // Mode vue d'ensemble (bloc 0) : résumé compact sans joueurs
+      if (currentBlocIndex === -1) {
+        renderOverview()
+        return
+      }
 
       // Récupérer les filtres sélectionnés
       const filterValue = document.getElementById('tv-filter-blesses')?.value || 'all'
@@ -961,10 +1222,11 @@
         return true
       }
       
-      // Déterminer quels blocs afficher
-      const blocsToRender = voirTousBlocs 
-        ? seanceActive.blocs 
-        : [seanceActive.blocs[currentBlocIndex]].filter(Boolean)
+      // Déterminer quels blocs afficher (valides + blessés)
+      const allBlocs = getAllBlocs(seanceActive)
+      const blocsToRender = voirTousBlocs
+        ? allBlocs
+        : [allBlocs[currentBlocIndex]].filter(Boolean)
 
       blocsToRender.forEach(bloc => {
         const groupesAvecJoueurs = []
@@ -1038,8 +1300,8 @@
               : `<div class="tv-exo-photo-placeholder"></div>`
             
             item.innerHTML = `
-              <div class="tv-exo-nom">${photoHtml}${exo.isSuperset ? '↳ ' : ''}${exo.numExo}. ${exo.exercice || '—'}</div>
-              <div class="tv-exo-params">${exo.nbSets}×${exo.nbReps} · RPE ${exo.rpe}${exo.recup ? ' · ' + exo.recup : ''}${exo.commentaire ? ' · ' + exo.commentaire : ''}</div>
+              <div class="tv-exo-nom">${photoHtml}${exo.isSuperset ? '↳ ' : ''}${supersetLabel(exo, groupe)}. ${exo.exercice || '—'}</div>
+              <div class="tv-exo-params">${exo.nbSets}×${exo.nbReps} · ${exo.intensityUnit === 'PCT' || exo.intensityUnit === '%' ? exo.rpe + '%' : exo.intensityUnit === 'VITESSE' || exo.intensityUnit === 'Vitesse (m/s)' ? exo.rpe + ' m/s' : exo.intensityUnit === 'PDC' ? 'PDC' : exo.intensityUnit === '% PDC' ? exo.rpe + '% PDC' : 'RPE ' + exo.rpe}${exo.recup ? ' · ' + exo.recup : ''}${exo.commentaire ? ' · ' + exo.commentaire : ''}</div>
             `
             exosDiv.appendChild(item)
           })
@@ -1071,8 +1333,9 @@
             
             // Afficher une pill pour CHAQUE exercice du groupe
             groupe.exercices?.forEach((exo, exoIndex) => {
-              const chargePrescrite = labelCharge(exo.exercice, exo.rpe, exo.nbReps, j.maxTestes || {}, ratios, exo.intensityUnit || exo.intensityType)
-              const typeLabel = exo.intensityType === 'PCT' ? '%' : exo.intensityType === 'VITESSE' ? 'm/s' : 'RPE';
+              const chargePrescrite = labelCharge(exo.exercice, exo.rpe, exo.nbReps, j.maxTestes || {}, ratios, exo.intensityUnit || exo.intensityType, j.poids || null)
+              const iu = exo.intensityUnit || exo.intensityType || 'RPE';
+              const typeLabel = iu === '%' || iu === 'PCT' ? '%' : iu === 'Vitesse (m/s)' || iu === 'VITESSE' ? 'm/s' : iu === 'PDC' ? 'PDC' : iu === '% PDC' ? '% PDC' : iu === 'kg' ? 'kg' : iu === 'W' ? 'W' : 'RPE';
               
               // Calculer le max des charges déjà remplies pour cet exercice
               let maxChargeReelle = null;
@@ -1089,12 +1352,10 @@
               }
               
               const pill = document.createElement('div')
-              pill.style.cssText = `
-                background: #FECC0022; border: 1px solid #FECC0044; border-radius: 8px;
-                padding: 4px 6px; min-width: 70px; flex-shrink: 0;
-                display: flex; flex-direction: column; align-items: center;
-                position: relative;
-              `;
+              const isRpeNoTrac = (iu === 'RPE' || iu === 'kg' || iu === 'W' || iu === 'PDC') && !isTractionTV(exo.exercice)
+              pill.style.cssText = isRpeNoTrac
+                ? `background: transparent; border: 1px solid #2a2a2a; border-radius: 8px; padding: 4px 6px; min-width: 70px; flex-shrink: 0; display: flex; flex-direction: column; align-items: center; position: relative;`
+                : `background: #FECC0022; border: 1px solid #FECC0044; border-radius: 8px; padding: 4px 6px; min-width: 70px; flex-shrink: 0; display: flex; flex-direction: column; align-items: center; position: relative;`;
               
               // Si toutes les séries sont remplies → vert
               const allCompleted = hasAnyCharge && (maxChargeReelle !== null);
@@ -1106,7 +1367,7 @@
               // INTENSITÉ EN HAUT (RPE 7)
               const intensiteTop = document.createElement('div')
               intensiteTop.style.cssText = 'font-size: 9px; color: #888; text-transform: uppercase; font-weight: 600;';
-              intensiteTop.textContent = `${typeLabel}${exo.rpe}`;
+              intensiteTop.textContent = iu === 'PDC' ? 'PDC' : (iu === '%' || iu === 'PCT' ? exo.rpe + '%' : iu === 'VITESSE' || iu === 'Vitesse (m/s)' ? exo.rpe + ' m/s' : iu === '% PDC' ? exo.rpe + '% PDC' : iu === 'kg' ? exo.rpe + ' kg' : iu === 'W' ? exo.rpe + ' W' : 'RPE ' + exo.rpe);
               pill.appendChild(intensiteTop);
               
               // PREVIEW CHARGE CALCULÉE (si % et 1RM connu)
@@ -1124,7 +1385,18 @@
                 }
               }
               
-              // INPUT CHARGE AU MILIEU (plus petit)
+              // INPUT CHARGE AU MILIEU — masqué si RPE/kg/W/PDC, bouton si traction/dips
+              const isTrac = isTractionTV(exo.exercice)
+              if ((iu !== 'RPE' && iu !== 'kg' && iu !== 'W' && iu !== 'PDC') || isTrac) {
+              if (isTrac) {
+                const tracBtn = document.createElement('button')
+                tracBtn.style.cssText = `width: 55px; background: transparent; border: none; border-bottom: 1px solid #444; color: ${maxChargeReelle !== null ? '#1D9E75' : '#FECC00'}; font-size: 12px; font-weight: 700; text-align: center; padding: 2px 0; margin: 2px 0; cursor: pointer;`
+                tracBtn.textContent = maxChargeReelle !== null ? maxChargeReelle + ' kg' : 'Remplir'
+                const exoKey = 'trac_' + Math.random().toString(36).slice(2)
+                window._tractionExosTV[exoKey] = exo
+                tracBtn.onclick = (e) => { e.stopPropagation(); ouvrirModalTractionTV(seanceActive.id, `${seanceActive.id}_${bloc.id}_${groupe.id}_${exo.id}_${jid}`, exo.nbSets || 1, jid, exoKey, true) }
+                pill.appendChild(tracBtn)
+              } else {
               const chargeInput = document.createElement('input')
               chargeInput.type = 'text'
               chargeInput.style.cssText = `
@@ -1157,35 +1429,52 @@
                     { [clefSerie]: val, updatedAt: serverTimestamp() }, { merge: true });
                 }
                 
-                // Calculer et enregistrer le 1RM dans dataPerf
-                const oneRM = calcOneRM(chargeNum, reps);
-                const j = joueurs.find(x => x.id === jid);
-                const poids = j?.poids || null;
-                const ratioPDC = poids ? parseFloat((oneRM / poids).toFixed(2)) : null;
                 const date = seanceActive.date || new Date().toISOString().split('T')[0];
                 const exerciceNom = exo.exercice || 'Exercice';
-                
                 const perfId = `${jid}_${exerciceNom}_${date}_${Date.now()}`;
-                await setDoc(doc(db, 'dataPerf', perfId), {
-                  joueurId: jid,
-                  exercice: exerciceNom,
-                  date: date,
-                  charge: chargeNum,
-                  reps: reps,
-                  unite: 'kg',
-                  oneRM: oneRM,
-                  ratioPDC: ratioPDC,
-                  seanceId: seanceActive.id,
-                  createdAt: serverTimestamp()
-                });
-                
-                // Mettre à jour maxTestes si nouveau PR
-                const maxSnap = await getDoc(doc(db, 'maxTestes', jid));
-                const maxTestes = maxSnap.exists() ? maxSnap.data() : {};
-                const maxActuel = maxTestes[exerciceNom] || 0;
-                if (oneRM > maxActuel) {
-                  await setDoc(doc(db, 'maxTestes', jid), 
-                    { [exerciceNom]: oneRM }, { merge: true });
+
+                if (iu === '% PDC') {
+                  // %PDC : charge réelle en historique, pas de calcul de 1RM ni de max
+                  await setDoc(doc(db, 'dataPerf', perfId), {
+                    joueurId: jid,
+                    exercice: exerciceNom,
+                    date: date,
+                    charge: chargeNum,
+                    reps: reps,
+                    unite: 'kg',
+                    oneRM: 0,
+                    ratioPDC: null,
+                    seanceId: seanceActive.id,
+                    createdAt: serverTimestamp()
+                  });
+                } else {
+                  // Calculer et enregistrer le 1RM dans dataPerf
+                  const oneRM = calcOneRM(chargeNum, reps);
+                  const j = joueurs.find(x => x.id === jid);
+                  const poids = j?.poids || null;
+                  const ratioPDC = poids ? parseFloat((oneRM / poids).toFixed(2)) : null;
+                  
+                  await setDoc(doc(db, 'dataPerf', perfId), {
+                    joueurId: jid,
+                    exercice: exerciceNom,
+                    date: date,
+                    charge: chargeNum,
+                    reps: reps,
+                    unite: 'kg',
+                    oneRM: oneRM,
+                    ratioPDC: ratioPDC,
+                    seanceId: seanceActive.id,
+                    createdAt: serverTimestamp()
+                  });
+                  
+                  // Mettre à jour maxTestes si nouveau PR
+                  const maxSnap = await getDoc(doc(db, 'maxTestes', jid));
+                  const maxTestes = maxSnap.exists() ? maxSnap.data() : {};
+                  const maxActuel = maxTestes[exerciceNom] || 0;
+                  if (oneRM > maxActuel) {
+                    await setDoc(doc(db, 'maxTestes', jid), 
+                      { [exerciceNom]: oneRM }, { merge: true });
+                  }
                 }
                 
                 // Mettre à jour l'affichage
@@ -1198,6 +1487,8 @@
               chargeInput.onclick = (e) => e.stopPropagation();
               
               pill.appendChild(chargeInput);
+              } // end else input normal
+              } // end if not RPE or traction
               
               // EXERCICE EN BAS (Box squat)
               const exoName = document.createElement('div')
@@ -1265,7 +1556,7 @@
       const blocsDiv = document.getElementById('indiv-blocs')
       blocsDiv.innerHTML = ''
 
-      seanceActive.blocs.forEach(bloc => {
+      getAllBlocs(seanceActive).forEach(bloc => {
         const groupeJ = bloc.groupes?.find(g => g.joueurs?.includes(jid))
         if (!groupeJ) return
 
@@ -1282,7 +1573,7 @@
 
         groupeJ.exercices?.forEach(exo => {
           const intensityUnitIndiv = exo.intensityUnit || exo.intensityType || 'RPE';
-          const charge = labelCharge(exo.exercice, exo.rpe, exo.nbReps, j.maxTestes || {}, ratios, intensityUnitIndiv)
+          const charge = labelCharge(exo.exercice, exo.rpe, exo.nbReps, j.maxTestes || {}, ratios, intensityUnitIndiv, j.poids || null)
           
           // Chercher la photo de l'exercice dans la base
           const exoDB = exercicesDB.find(e => e.nom?.toLowerCase() === exo.exercice?.toLowerCase())
@@ -1303,9 +1594,9 @@
           const exoCard = document.createElement('div')
           exoCard.className = 'indiv-exo-card'
           exoCard.innerHTML = `
-            <div class="indiv-exo-nom" style="display:flex;align-items:center;">${photoHtml}${exo.isSuperset ? '↳ ' : ''}${exo.numExo}. ${exo.exercice || '—'}${chargePreviewHtml}</div>
+            <div class="indiv-exo-nom" style="display:flex;align-items:center;">${photoHtml}${exo.isSuperset ? '↳ ' : ''}${supersetLabel(exo, groupeJ)}. ${exo.exercice || '—'}${chargePreviewHtml}</div>
             <div class="indiv-exo-params">
-              ${exo.nbSets} séries × ${exo.nbReps} reps · ${intensityUnitIndiv === 'PCT' || intensityUnitIndiv === '%' ? exo.rpe + '%' : intensityUnitIndiv === 'VITESSE' ? exo.rpe + ' m/s' : 'RPE ' + exo.rpe}
+              ${exo.nbSets} séries × ${exo.nbReps} reps · ${intensityUnitIndiv === 'PCT' || intensityUnitIndiv === '%' ? exo.rpe + '%' : intensityUnitIndiv === 'VITESSE' || intensityUnitIndiv === 'Vitesse (m/s)' ? exo.rpe + ' m/s' : intensityUnitIndiv === 'PDC' ? 'PDC' : intensityUnitIndiv === '% PDC' ? exo.rpe + '% PDC' : 'RPE ' + exo.rpe}
               ${exo.tempo ? '· Tempo ' + exo.tempo : ''}
               ${exo.recup ? '· ' + exo.recup : ''}
               ${exo.commentaire ? '· ' + exo.commentaire : ''}
@@ -1315,7 +1606,38 @@
           const seriesDiv = document.createElement('div')
           seriesDiv.className = 'indiv-series'
 
-          if (saisieUniqueMode) {
+          if (isTractionTV(exo.exercice)) {
+            // Traction → bouton qui ouvre le modal
+            const clefBase = `${seanceActive.id}_${bloc.id}_${groupeJ.id}_${exo.id}_${jid}`
+            const clefS1 = `${clefBase}_s1`
+            const box = document.createElement('div')
+            box.className = 'serie-box'
+            box.style.minWidth = '140px'
+            const chargeAffichee = charge.includes('kg') ? charge : ''
+            const valAffichee = chargesReelles[clefS1] || ''
+            box.innerHTML = `
+              <div class="serie-label" style="font-weight: bold; color: #FECC00;">Toutes séries (1-${exo.nbSets})</div>
+              <button class="serie-input" style="font-size: 20px; cursor: pointer; width: 100%; background: none; border: 1px solid #2a2a2a; border-radius: 6px; color: ${valAffichee ? '#1D9E75' : '#FECC00'};">${valAffichee ? valAffichee + ' kg' : 'Remplir'}</button>
+              <div class="serie-prescrit">${chargeAffichee ? 'Préco : ' + chargeAffichee : 'PDC'}</div>
+            `
+            const exoKey = 'trac_' + Math.random().toString(36).slice(2)
+            window._tractionExosTV[exoKey] = exo
+            box.querySelector('button').onclick = () => {
+              ouvrirModalTractionTV(seanceActive.id, clefBase, exo.nbSets || 1, jid, exoKey, true)
+            }
+            seriesDiv.appendChild(box)
+          } else if (intensityUnitIndiv === 'RPE' || intensityUnitIndiv === 'kg' || intensityUnitIndiv === 'W' || intensityUnitIndiv === 'PDC') {
+            // RPE/kg/W: pas de saisie de charge, afficher la valeur en grand
+            const rpeBox = document.createElement('div')
+            rpeBox.className = 'serie-box'
+            rpeBox.style.minWidth = '120px'
+            rpeBox.innerHTML = `
+              <div class="serie-label" style="font-weight: bold; color: #FECC00;">${intensityUnitIndiv === 'kg' ? 'kg' : intensityUnitIndiv === 'W' ? 'W' : intensityUnitIndiv === 'PDC' ? 'PDC' : 'RPE'}</div>
+              <div style="font-size: 28px; font-weight: 800; color: #FECC00; text-align: center; padding: 4px 0;">${intensityUnitIndiv === 'PDC' ? '—' : exo.rpe}</div>
+              <div class="serie-prescrit">${intensityUnitIndiv === 'kg' ? exo.rpe + ' kg' : intensityUnitIndiv === 'W' ? exo.rpe + ' W' : intensityUnitIndiv === 'PDC' ? 'PDC' : 'RPE ' + exo.rpe}</div>
+            `
+            seriesDiv.appendChild(rpeBox)
+          } else if (saisieUniqueMode) {
             const clefBase = `${seanceActive.id}_${bloc.id}_${groupeJ.id}_${exo.id}_${jid}`
             const clefS1 = `${clefBase}_s1`
             const box = document.createElement('div')
@@ -1329,8 +1651,8 @@
                 style="font-size: 20px;"
                 placeholder="${chargeAffichee || exo.rpe}"
                 value="${chargesReelles[clefS1] || ''}"
-                onchange="sauvegarderToutesLesSeries('${clefBase}', ${exo.nbSets}, '${seanceActive.id}', '${jid}', this.value, {exercice:'${exo.exercice}', nbReps:${exo.nbReps}})" />
-              <div class="serie-prescrit">${chargeAffichee ? 'Préco : ' + chargeAffichee : (intensityUnitIndiv === 'PCT' || intensityUnitIndiv === '%' ? exo.rpe + '%' : 'RPE ' + exo.rpe)}</div>
+                onchange="sauvegarderToutesLesSeries('${clefBase}', ${exo.nbSets}, '${seanceActive.id}', '${jid}', this.value, {exercice:'${exo.exercice}', nbReps:${exo.nbReps}, intensityUnit:'${intensityUnitIndiv}'})" />
+              <div class="serie-prescrit">${chargeAffichee ? 'Préco : ' + chargeAffichee : (intensityUnitIndiv === 'PCT' || intensityUnitIndiv === '%' ? exo.rpe + '%' : intensityUnitIndiv === 'PDC' ? 'PDC' : intensityUnitIndiv === '% PDC' ? exo.rpe + '% PDC' : 'RPE ' + exo.rpe)}</div>
             `
             seriesDiv.appendChild(box)
           } else {
@@ -1345,8 +1667,8 @@
                 <input class="serie-input"
                   placeholder="${chargeAffichee || exo.rpe}"
                   value="${chargesReelles[clef] || ''}"
-                  onchange="sauvegarderSerie('${clef}','${seanceActive.id}','${jid}',this.value,{exercice:'${exo.exercice}',nbReps:${exo.nbReps}})" />
-                <div class="serie-prescrit">${chargeAffichee ? 'Préco : ' + chargeAffichee : (intensityUnitIndiv === 'PCT' || intensityUnitIndiv === '%' ? exo.rpe + '%' : 'RPE ' + exo.rpe)}</div>
+                  onchange="sauvegarderSerie('${clef}','${seanceActive.id}','${jid}',this.value,{exercice:'${exo.exercice}',nbReps:${exo.nbReps},intensityUnit:'${intensityUnitIndiv}'})" />
+                <div class="serie-prescrit">${chargeAffichee ? 'Préco : ' + chargeAffichee : (intensityUnitIndiv === 'PCT' || intensityUnitIndiv === '%' ? exo.rpe + '%' : intensityUnitIndiv === 'PDC' ? 'PDC' : intensityUnitIndiv === '% PDC' ? exo.rpe + '% PDC' : 'RPE ' + exo.rpe)}</div>
               `
               seriesDiv.appendChild(box)
             }
@@ -1369,33 +1691,50 @@
       // Si on a les données de l'exercice, calculer et enregistrer le 1RM
       if (exoData && seanceActive) {
         const reps = exoData.nbReps || 1;
-        const oneRM = calcOneRM(chargeNum, reps);
-        const j = joueurs.find(x => x.id === joueurId);
-        const poids = j?.poids || null;
-        const ratioPDC = poids ? parseFloat((oneRM / poids).toFixed(2)) : null;
         const date = seanceActive.date || new Date().toISOString().split('T')[0];
-        
         const perfId = `${joueurId}_${exoData.exercice}_${date}_${Date.now()}`;
-        await setDoc(doc(db, 'dataPerf', perfId), {
-          joueurId: joueurId,
-          exercice: exoData.exercice,
-          date: date,
-          charge: chargeNum,
-          reps: reps,
-          unite: 'kg',
-          oneRM: oneRM,
-          ratioPDC: ratioPDC,
-          seanceId: seanceActive.id,
-          createdAt: serverTimestamp()
-        });
-        
-        // Mettre à jour maxTestes si nouveau PR
-        const maxSnap = await getDoc(doc(db, 'maxTestes', joueurId));
-        const maxTestes = maxSnap.exists() ? maxSnap.data() : {};
-        const maxActuel = maxTestes[exoData.exercice] || 0;
-        if (oneRM > maxActuel) {
-          await setDoc(doc(db, 'maxTestes', joueurId), 
-            { [exoData.exercice]: oneRM }, { merge: true });
+
+        if (exoData.intensityUnit === '% PDC') {
+          // %PDC : charge réelle en historique, pas de calcul de 1RM ni de max
+          await setDoc(doc(db, 'dataPerf', perfId), {
+            joueurId: joueurId,
+            exercice: exoData.exercice,
+            date: date,
+            charge: chargeNum,
+            reps: reps,
+            unite: 'kg',
+            oneRM: 0,
+            ratioPDC: null,
+            seanceId: seanceActive.id,
+            createdAt: serverTimestamp()
+          });
+        } else {
+          const oneRM = calcOneRM(chargeNum, reps);
+          const j = joueurs.find(x => x.id === joueurId);
+          const poids = j?.poids || null;
+          const ratioPDC = poids ? parseFloat((oneRM / poids).toFixed(2)) : null;
+          
+          await setDoc(doc(db, 'dataPerf', perfId), {
+            joueurId: joueurId,
+            exercice: exoData.exercice,
+            date: date,
+            charge: chargeNum,
+            reps: reps,
+            unite: 'kg',
+            oneRM: oneRM,
+            ratioPDC: ratioPDC,
+            seanceId: seanceActive.id,
+            createdAt: serverTimestamp()
+          });
+          
+          // Mettre à jour maxTestes si nouveau PR
+          const maxSnap = await getDoc(doc(db, 'maxTestes', joueurId));
+          const maxTestes = maxSnap.exists() ? maxSnap.data() : {};
+          const maxActuel = maxTestes[exoData.exercice] || 0;
+          if (oneRM > maxActuel) {
+            await setDoc(doc(db, 'maxTestes', joueurId), 
+              { [exoData.exercice]: oneRM }, { merge: true });
+          }
         }
       }
     }
@@ -1428,39 +1767,62 @@
       // Si on a les données de l'exercice, calculer et enregistrer le 1RM
       if (exoData && seanceActive) {
         const reps = exoData.nbReps || 1;
-        const oneRM = calcOneRM(chargeNum, reps);
-        const j = joueurs.find(x => x.id === joueurId);
-        const poids = j?.poids || null;
-        const ratioPDC = poids ? parseFloat((oneRM / poids).toFixed(2)) : null;
         const date = seanceActive.date || new Date().toISOString().split('T')[0];
-        
         const perfId = `${joueurId}_${exoData.exercice}_${date}_${Date.now()}`;
-        await setDoc(doc(db, 'dataPerf', perfId), {
-          joueurId: joueurId,
-          exercice: exoData.exercice,
-          date: date,
-          charge: chargeNum,
-          reps: reps,
-          unite: 'kg',
-          oneRM: oneRM,
-          ratioPDC: ratioPDC,
-          seanceId: seanceActive.id,
-          createdAt: serverTimestamp()
-        });
-        
-        // Mettre à jour maxTestes si nouveau PR
-        const maxSnap = await getDoc(doc(db, 'maxTestes', joueurId));
-        const maxTestes = maxSnap.exists() ? maxSnap.data() : {};
-        const maxActuel = maxTestes[exoData.exercice] || 0;
-        if (oneRM > maxActuel) {
-          await setDoc(doc(db, 'maxTestes', joueurId), 
-            { [exoData.exercice]: oneRM }, { merge: true });
+
+        if (exoData.intensityUnit === '% PDC') {
+          // %PDC : charge réelle en historique, pas de calcul de 1RM ni de max
+          await setDoc(doc(db, 'dataPerf', perfId), {
+            joueurId: joueurId,
+            exercice: exoData.exercice,
+            date: date,
+            charge: chargeNum,
+            reps: reps,
+            unite: 'kg',
+            oneRM: 0,
+            ratioPDC: null,
+            seanceId: seanceActive.id,
+            createdAt: serverTimestamp()
+          });
+        } else {
+          const oneRM = calcOneRM(chargeNum, reps);
+          const j = joueurs.find(x => x.id === joueurId);
+          const poids = j?.poids || null;
+          const ratioPDC = poids ? parseFloat((oneRM / poids).toFixed(2)) : null;
+          
+          await setDoc(doc(db, 'dataPerf', perfId), {
+            joueurId: joueurId,
+            exercice: exoData.exercice,
+            date: date,
+            charge: chargeNum,
+            reps: reps,
+            unite: 'kg',
+            oneRM: oneRM,
+            ratioPDC: ratioPDC,
+            seanceId: seanceActive.id,
+            createdAt: serverTimestamp()
+          });
+          
+          // Mettre à jour maxTestes si nouveau PR
+          const maxSnap = await getDoc(doc(db, 'maxTestes', joueurId));
+          const maxTestes = maxSnap.exists() ? maxSnap.data() : {};
+          const maxActuel = maxTestes[exoData.exercice] || 0;
+          if (oneRM > maxActuel) {
+            await setDoc(doc(db, 'maxTestes', joueurId), 
+              { [exoData.exercice]: oneRM }, { merge: true });
+          }
         }
       }
     }
   
 
+    function stopTVLiveListeners() {
+      tvListeners.forEach(unsubscribe => unsubscribe())
+      tvListeners = []
+    }
+
     window.logout = async function() {
+      stopTVLiveListeners()
       try { await signOut(auth) } catch(e) {}
       window.location.href = 'login.html'
     }

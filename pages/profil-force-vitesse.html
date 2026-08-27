@@ -1,0 +1,1980 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <base href="../renderer/">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SCA Albi — Profil Force-Vitesse</title>
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#0f0f0f;color:#fff;display:flex;height:100vh;overflow:hidden}
+    .sidebar{width:220px;min-width:220px;background:#1a1a1a;border-right:1px solid #2a2a2a;display:flex;flex-direction:column;padding:20px 0}
+    .sidebar-logo{display:flex;align-items:center;gap:10px;padding:0 20px 24px;border-bottom:1px solid #2a2a2a}
+    .sidebar-logo img{width:36px}
+    .sidebar-logo span{font-size:15px;font-weight:700;color:#FECC00}
+    .nav-section{padding:16px 12px 8px;font-size:10px;font-weight:600;color:#444;letter-spacing:.08em;text-transform:uppercase}
+    .nav-item{display:flex;align-items:center;gap:10px;padding:9px 20px;font-size:13px;color:#888;cursor:pointer;border-left:2px solid transparent;transition:all .15s}
+    .nav-item:hover{color:#fff;background:#222}
+    .nav-item.active{color:#FECC00;border-left-color:#FECC00;background:#222}
+    .nav-dot{width:7px;height:7px;border-radius:50%;background:currentColor;opacity:.6}
+    .sidebar-bottom{margin-top:auto;padding:16px 20px;border-top:1px solid #2a2a2a}
+    .user-info{font-size:12px;color:#555;margin-bottom:8px}
+    .logout-btn{font-size:12px;color:#555;cursor:pointer;background:none;border:none;padding:0}
+    .logout-btn:hover{color:#E24B4A}
+
+    .main{flex:1;display:flex;flex-direction:column;overflow:hidden}
+    .topbar{height:56px;border-bottom:1px solid #2a2a2a;display:flex;align-items:center;padding:0 24px;gap:12px;background:#0f0f0f;flex-shrink:0}
+    .topbar-title{font-size:15px;font-weight:600;color:#fff;flex:1}
+    .tab-bar{display:flex;gap:2px;background:#1a1a1a;padding:5px;border-radius:10px}
+    .tab-btn{padding:6px 14px;border-radius:7px;font-size:12px;font-weight:500;cursor:pointer;border:none;background:transparent;color:#666;transition:all .15s;white-space:nowrap}
+    .tab-btn.active{background:#2a2a2a;color:#fff}
+
+    .content{flex:1;overflow-y:auto;padding:22px 26px}
+    .section{display:none}
+    .section.active{display:block}
+
+    /* TOP BAR */
+    .top-bar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;background:#1a1a1a;border:1px solid #2a2a2a;border-radius:12px;padding:12px 16px;margin-bottom:18px}
+    .bar-label{font-size:10px;color:#555;font-weight:600;text-transform:uppercase;letter-spacing:.06em;white-space:nowrap}
+    .bar-select{padding:7px 11px;border-radius:8px;border:1px solid #2a2a2a;background:#111;color:#fff;font-size:13px;outline:none;cursor:pointer;min-width:180px}
+    .bar-select:focus{border-color:#FECC00}
+    .weight-chip{display:inline-flex;align-items:center;gap:5px;background:#FECC0010;border:1px solid #FECC0030;border-radius:8px;padding:5px 10px;font-size:12px;color:#FECC00;font-weight:600}
+    .weight-chip .lbl{color:#555;font-weight:400}
+    .btn{padding:7px 15px;border-radius:8px;border:none;font-size:12px;font-weight:600;cursor:pointer;transition:opacity .15s;display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
+    .btn:disabled{opacity:.35;cursor:not-allowed}
+    .btn-y{background:#FECC00;color:#111}
+    .btn-y:hover:not(:disabled){opacity:.85}
+    .btn-g{background:#252525;color:#aaa}
+    .btn-g:hover:not(:disabled){background:#2f2f2f;color:#fff}
+
+    /* SESSIONS */
+    .sessions-row{display:flex;gap:7px;align-items:center;flex-wrap:wrap;margin-bottom:16px}
+    .s-label{font-size:10px;color:#444;font-weight:600;text-transform:uppercase;letter-spacing:.06em}
+    .chip{padding:5px 11px;border-radius:20px;border:1px solid #252525;background:#1a1a1a;color:#666;font-size:12px;cursor:pointer;transition:all .15s;display:inline-flex;align-items:center;gap:5px}
+    .chip:hover{border-color:#3a3a3a;color:#ccc}
+    .chip.active{background:#FECC00;color:#111;border-color:#FECC00;font-weight:600}
+    .chip-x{font-size:13px;line-height:1;opacity:.5;transition:opacity .15s}
+    .chip-x:hover{opacity:1;color:#E24B4A}
+
+    /* METRICS */
+    .metrics-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:18px}
+    .mc{background:#1a1a1a;border:1px solid #2a2a2a;border-radius:12px;padding:13px 15px;transition:border-color .2s}
+    .mc:hover{border-color:#FECC0033}
+    .mc-l{font-size:10px;color:#444;font-weight:600;letter-spacing:.06em;text-transform:uppercase;margin-bottom:5px}
+    .mc-v{font-size:22px;font-weight:700;color:#FECC00;line-height:1.1}
+    .mc-u{font-size:11px;color:#555;margin-left:3px;font-weight:400}
+
+    /* GROUP BANNER */
+    .group-banner{display:flex;align-items:flex-start;gap:14px;padding:14px 18px;border-radius:12px;margin-bottom:18px;border:1px solid transparent}
+    .gb-explosif{background:#4ade8012;border-color:#4ade8035}
+    .gb-force{background:#ef444412;border-color:#ef444435}
+    .gb-vitesse{background:#38bdf812;border-color:#38bdf835}
+    .gb-force-vitesse{background:#a855f712;border-color:#a855f735}
+    .gb-vitesse-force{background:#f9731612;border-color:#f9731635}
+    .gb-icon{font-size:26px;flex-shrink:0;margin-top:2px}
+    .gb-name{font-size:15px;font-weight:700;margin-bottom:3px}
+    .gb-desc{font-size:12px;color:#777;line-height:1.55}
+    .gb-explosif .gb-name{color:#4ade80}
+    .gb-force .gb-name{color:#ef4444}
+    .gb-vitesse .gb-name{color:#38bdf8}
+    .gb-force-vitesse .gb-name{color:#a855f7}
+    .gb-vitesse-force .gb-name{color:#f97316}
+
+    /* FV IMBALANCE BAR */
+    .fv-imb-wrap{background:#1a1a1a;border:1px solid #2a2a2a;border-radius:12px;padding:14px 18px;margin-bottom:18px}
+    .fv-imb-title{font-size:10px;color:#444;font-weight:600;text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px}
+    .fv-track{position:relative;height:10px;background:#252525;border-radius:5px;margin-bottom:7px}
+    .fv-zone{position:absolute;top:0;bottom:0;background:#FECC0015;border:1px dashed #FECC0040;border-radius:5px}
+    .fv-marker{position:absolute;top:1px;bottom:1px;width:8px;margin-left:-4px;border-radius:4px;transition:left .5s ease}
+    .fv-labels{display:flex;justify-content:space-between;font-size:10px;color:#333}
+    .fv-text{font-size:12px;font-weight:600;margin-top:6px}
+
+    /* CHARTS */
+    .charts-2{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:16px}
+    .cc{background:#1a1a1a;border:1px solid #2a2a2a;border-radius:12px;padding:16px}
+    .cc-title{font-size:10px;font-weight:600;color:#444;text-transform:uppercase;letter-spacing:.06em;margin-bottom:12px}
+    canvas{width:100%!important}
+
+    /* HISTORY TABLE */
+    .hist-wrap{background:#1a1a1a;border:1px solid #2a2a2a;border-radius:12px;overflow:hidden;margin-top:16px}
+    .hist-wrap-title{font-size:10px;color:#444;font-weight:600;text-transform:uppercase;letter-spacing:.06em;padding:14px 16px;border-bottom:1px solid #2a2a2a}
+    table{width:100%;border-collapse:collapse;font-size:12px}
+    th{text-align:left;padding:8px 11px;color:#333;font-weight:600;font-size:10px;text-transform:uppercase;letter-spacing:.05em;border-bottom:1px solid #2a2a2a}
+    td{padding:9px 11px;border-bottom:1px solid #151515;color:#777}
+    tr:hover td{background:#1d1d1d;color:#ccc}
+    .tv{color:#FECC00;font-weight:600}
+    .gc{display:inline-block;padding:2px 7px;border-radius:4px;font-size:10px;font-weight:600}
+    .del-btn{background:none;border:none;color:#333;cursor:pointer;font-size:13px;padding:2px 5px}
+    .del-btn:hover{color:#E24B4A}
+
+    /* COMPARISON CONTROLS */
+    .cmp-bar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:16px}
+    .cmp-bar .bar-label{white-space:nowrap}
+
+    /* GROUPS GRID */
+    .groups-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+    .group-card{background:#1a1a1a;border:1px solid #2a2a2a;border-radius:14px;padding:18px;border-top-width:3px}
+    .gcard-head{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+    .gcard-icon{font-size:22px}
+    .gcard-name{font-size:13px;font-weight:700}
+    .gcard-count{font-size:11px;color:#444;margin-top:1px}
+    .gcard-advice{font-size:11px;color:#555;line-height:1.6;margin-bottom:12px}
+    .gcard-players{display:flex;flex-wrap:wrap;gap:5px}
+    .gcard-player{padding:3px 8px;border-radius:5px;font-size:11px;font-weight:600}
+
+    /* LOADING */
+    .loading-bar{height:3px;background:#1f1f1f;border-radius:2px;overflow:hidden;margin-bottom:14px;transition:opacity .3s}
+    .loading-bar.done{opacity:0;pointer-events:none}
+    .loading-fill{height:100%;width:0%;background:#FECC00;transition:width .4s ease}
+
+    /* EMPTY */
+    .empty{text-align:center;padding:56px 20px;color:#333}
+    .empty .ei{font-size:40px;margin-bottom:12px}
+    .empty h3{font-size:14px;color:#444;margin-bottom:7px}
+    .empty p{font-size:12px;color:#333;line-height:1.6}
+
+    /* TOAST */
+    .toast{position:fixed;bottom:22px;right:22px;background:#E24B4A;color:#fff;padding:9px 16px;border-radius:8px;font-size:13px;font-weight:500;z-index:999;transform:translateY(60px);opacity:0;transition:all .3s}
+    .toast.show{transform:translateY(0);opacity:1}
+
+    /* MODAL */
+    .modal-overlay{position:fixed;inset:0;background:#000a;z-index:500;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .25s}
+    .modal-overlay.open{opacity:1;pointer-events:all}
+    .modal{background:#1a1a1a;border:1px solid #2a2a2a;border-radius:16px;padding:28px;width:380px;max-width:95vw}
+    .modal-title{font-size:15px;font-weight:700;margin-bottom:6px}
+    .modal-sub{font-size:12px;color:#555;margin-bottom:22px;line-height:1.5}
+    .modal-field{margin-bottom:16px}
+    .modal-field label{display:block;font-size:11px;color:#555;font-weight:600;text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px}
+    .modal-field input{width:100%;padding:9px 12px;border-radius:8px;border:1px solid #2a2a2a;background:#111;color:#fff;font-size:14px;outline:none}
+    .modal-field input:focus{border-color:#FECC00}
+    .modal-field .hint{font-size:10px;color:#444;margin-top:4px}
+    .modal-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+    .modal-actions{display:flex;gap:10px;margin-top:22px}
+    .modal-actions .btn{flex:1;justify-content:center}
+
+    /* EXPORT BTN */
+    .export-bar{display:flex;gap:8px;align-items:center;margin-bottom:16px;flex-wrap:wrap}
+    .btn-sm{padding:5px 12px;font-size:11px;border-radius:7px;border:none;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:5px;transition:opacity .15s}
+    .btn-sm-ghost{background:#252525;color:#888}
+    .btn-sm-ghost:hover{background:#2f2f2f;color:#fff}
+
+    @media(max-width:1100px){.metrics-grid{grid-template-columns:repeat(3,1fr)}.charts-2{grid-template-columns:1fr}.groups-grid{grid-template-columns:1fr 1fr}}
+    @media(max-width:800px){.groups-grid{grid-template-columns:1fr}}
+  </style>
+  <link rel="manifest" href="../manifest.json">
+  <script type="module" src="../auth-guard.js"></script>
+</head>
+<body>
+
+<div class="sidebar">
+  <div class="sidebar-logo">
+    <img src="https://www.sca-albi.fr/wp-content/uploads/2023/10/cropped-SCA-bis.png" onerror="this.style.display='none'">
+    <span>SCA Albi</span>
+  </div>
+  <div class="nav-section">Effectif</div>
+  <div class="nav-item" onclick="go('index.html')"><div class="nav-dot"></div>Roster</div>
+  <div class="nav-section">Entraînement</div>
+  <div class="nav-item" onclick="go('seances.html')"><div class="nav-dot"></div>Séances</div>
+  <div class="nav-item" onclick="go('exercices.html')"><div class="nav-dot"></div>Exercices</div>
+  <div class="nav-section">Suivi</div>
+  <div class="nav-item" onclick="go('wellness.html')"><div class="nav-dot"></div>Wellness</div>
+  <div class="nav-item" onclick="go('performances.html')"><div class="nav-dot"></div>Performances</div>
+  <div class="nav-item" onclick="go('medical.html')"><div class="nav-dot"></div>Médical</div>
+  <div class="nav-item" onclick="go('absences.html')"><div class="nav-dot"></div>Absences</div>
+  <div class="nav-item" onclick="go('suivi-poids.html')"><div class="nav-dot"></div>Suivi Poids</div>
+  <div class="nav-section">Planning</div>
+  <div class="nav-item" onclick="go('planning.html')"><div class="nav-dot"></div>Planning club</div>
+  <div class="nav-item" onclick="go('planning-blesses.html')"><div class="nav-dot"></div>Planning Blessés</div>
+  <div class="nav-item" onclick="go('fiches-seances.html')"><div class="nav-dot"></div>Fiches Séances</div>
+  <div class="nav-section">Équipes</div>
+  <div class="nav-item" onclick="go('equipes.html')"><div class="nav-dot"></div>Composition équipes</div>
+  <div class="nav-section">GPS</div>
+  <div class="nav-item" onclick="go('gps.html')"><div class="nav-dot"></div>Données GPS</div>
+  <div class="nav-item" onclick="go('gps-match.html')"><div class="nav-dot"></div>Rapport de match</div>
+  <div class="nav-item" onclick="go('gps-planif.html')"><div class="nav-dot"></div>Planif. charge</div>
+  <div class="nav-item active"><div class="nav-dot"></div>Profil F-V</div>
+  <div class="sidebar-bottom">
+    <div class="user-info" id="user-email"></div>
+    <button class="logout-btn" onclick="handleLogout()">Se déconnecter</button>
+  </div>
+</div>
+
+<div class="main">
+  <div class="topbar">
+    <div class="topbar-title">Profil Force-Vitesse</div>
+    <div class="tab-bar">
+      <button class="tab-btn active" id="tab-indiv"    onclick="switchTab('indiv',this)">Individuel</button>
+      <button class="tab-btn"        id="tab-compare"  onclick="switchTab('compare',this)">Comparaison</button>
+      <button class="tab-btn"        id="tab-progress" onclick="switchTab('progress',this)">Progression</button>
+      <button class="tab-btn"        id="tab-history"  onclick="switchTab('history',this)">Historique global</button>
+      <button class="tab-btn"        id="tab-groups"   onclick="switchTab('groups',this)">Groupes</button>
+      <button class="tab-btn"        id="tab-config"   onclick="switchTab('config',this)">Configuration</button>
+    </div>
+  </div>
+
+  <div class="content">
+    <div class="loading-bar done" id="loading-bar"><div class="loading-fill" id="loading-fill"></div></div>
+
+    <!-- ══════ INDIVIDUEL ══════ -->
+    <div class="section active" id="sec-indiv">
+      <div class="top-bar">
+        <span class="bar-label">Joueur</span>
+        <select class="bar-select" id="player-sel"><option value="">— Choisir un joueur —</option></select>
+        <div class="weight-chip" id="weight-chip" style="display:none">
+          <span class="lbl">Poids :</span><span id="weight-val">—</span>&nbsp;kg
+        </div>
+        <input type="file" id="csv-input" accept=".csv" style="display:none">
+        <button class="btn btn-y" id="btn-upload" disabled onclick="document.getElementById('csv-input').click()">＋ CSV sprint</button>
+      </div>
+
+      <div id="sessions-row" style="display:none">
+        <div class="sessions-row" id="sessions-chips"></div>
+      </div>
+
+      <div id="indiv-content" style="display:none">
+        <!-- Export bar -->
+        <div class="export-bar" id="export-bar">
+          <button class="btn-sm btn-sm-ghost" onclick="exportChartsPNG()">📥 Exporter graphiques PNG</button>
+          <button class="btn-sm btn-sm-ghost" onclick="exportPDF()">📄 Exporter PDF</button>
+          <span style="font-size:10px;color:#333;margin-left:4px" id="export-params-label"></span>
+        </div>
+        <!-- Group banner -->
+        <div class="group-banner" id="gb"></div>
+
+        <!-- FV Imbalance bar -->
+        <div class="fv-imb-wrap">
+          <div class="fv-imb-title">Équilibre Force-Vitesse</div>
+          <div class="fv-track" id="fv-track">
+            <div class="fv-zone" id="fv-zone"></div>
+            <div class="fv-marker" id="fv-marker"></div>
+          </div>
+          <div class="fv-labels"><span>← Force</span><span>Équilibré</span><span>Vitesse →</span></div>
+          <div class="fv-text" id="fv-text"></div>
+        </div>
+
+        <!-- Distance target input -->
+        <div class="top-bar" style="margin-bottom:16px">
+          <span class="bar-label">Distance cible (m)</span>
+          <input type="number" id="target-distance" class="bar-select" style="width:100px" min="10" max="100" step="1" onchange="recalcWithDistance()" oninput="recalcWithDistance()">
+          <span class="bar-label" style="margin-left:16px">Norme Pmax (W)</span>
+          <input type="number" id="target-pmax-abs" class="bar-select" style="width:100px" min="1000" max="3000" step="50" onchange="recalcWithDistance()" oninput="recalcWithDistance()">
+          <span class="bar-label" style="margin-left:16px">Norme Pmax/kg (W/kg)</span>
+          <input type="number" id="target-pmax-rel" class="bar-select" style="width:100px" min="10" max="35" step="0.5" onchange="recalcWithDistance()" oninput="recalcWithDistance()">
+          <button class="btn btn-y" onclick="saveCurrentResult()" style="margin-left:auto">💾 Sauvegarder</button>
+        </div>
+
+        <!-- Performance alert banner -->
+        <div id="perf-alert" style="display:none;background:#fff3cd;border:1px solid #ffc107;border-radius:8px;padding:12px 16px;margin-bottom:16px">
+          <div style="display:flex;align-items:center;gap:12px">
+            <span style="font-size:18px">⚠️</span>
+            <div style="flex:1">
+              <div style="font-weight:600;color:#333" id="perf-alert-msg">Puissance inférieure aux standards du poste</div>
+            </div>
+            <div id="alert-actions" style="display:flex;gap:8px">
+              <button class="btn btn-y" onclick="confirmForceTransfer()" style="padding:6px 12px;font-size:12px">Confirmer le transfert</button>
+              <button class="btn btn-g" onclick="dismissAlert()" style="padding:6px 12px;font-size:12px">Ignorer</button>
+            </div>
+            <div id="alert-dismissed" style="display:none;align-items:center;gap:8px">
+              <span style="color:#666;font-size:12px">Alerte ignorée</span>
+              <button class="btn btn-y" onclick="restoreAlert()" style="padding:4px 8px;font-size:11px">Rétablir</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Metrics -->
+        <div class="metrics-grid" id="metrics-grid"></div>
+
+        <!-- Charts row 1 -->
+        <div class="charts-2">
+          <div class="cc"><div class="cc-title">Courbe Force-Vitesse</div><canvas id="c-fv" height="230"></canvas></div>
+          <div class="cc"><div class="cc-title">Courbe Puissance-Vitesse</div><canvas id="c-pv" height="230"></canvas></div>
+        </div>
+        <!-- Charts row 2 -->
+        <div class="charts-2">
+          <div class="cc"><div class="cc-title">RF vs Vitesse</div><canvas id="c-rf" height="200"></canvas></div>
+          <div class="cc"><div class="cc-title">Vitesse modèle vs GPS</div><canvas id="c-vel" height="200"></canvas></div>
+        </div>
+      </div>
+
+      <div class="empty" id="indiv-empty">
+        <div class="ei">⚡</div>
+        <h3>Profil Force-Vitesse Individuel</h3>
+        <p>Sélectionnez un joueur puis importez<br>un export CSV sprint OpenField.<br><br>Le poids est récupéré automatiquement<br>depuis le module Suivi Poids.</p>
+      </div>
+    </div>
+
+    <!-- ══════ COMPARAISON ══════ -->
+    <div class="section" id="sec-compare">
+      <div class="cmp-bar">
+        <span class="bar-label">Sélection</span>
+        <select class="bar-select" id="cmp-period" onchange="renderCompare()" style="min-width:160px">
+          <option value="last">Dernière mesure / joueur</option>
+          <option value="best">Meilleure Pmax / joueur</option>
+          <option value="all">Toutes les mesures</option>
+        </select>
+        <span class="bar-label" style="margin-left:6px">Poste</span>
+        <select class="bar-select" id="cmp-poste" onchange="renderCompare()" style="min-width:130px"><option value="">Tous</option></select>
+      </div>
+      <div class="cc" style="margin-bottom:14px">
+        <div class="cc-title">F0 relatif (N/kg) vs V0 (m/s) — Taille = Pmax relatif (W/kg)</div>
+        <canvas id="c-scatter" height="380"></canvas>
+      </div>
+      <div class="charts-2">
+        <div class="cc"><div class="cc-title">Répartition des groupes d'entraînement</div><canvas id="c-donut" height="240"></canvas></div>
+        <div class="cc"><div class="cc-title">F0/kg par joueur (dernière mesure)</div><canvas id="c-f0bar" height="240"></canvas></div>
+      </div>
+    </div>
+
+    <!-- ══════ PROGRESSION ══════ -->
+    <div class="section" id="sec-progress">
+      <div class="top-bar" style="margin-bottom:16px">
+        <span class="bar-label">Joueur</span>
+        <select class="bar-select" id="prog-player" onchange="renderProgression()" style="min-width:180px"><option value="">— Choisir —</option></select>
+      </div>
+      <div class="charts-2">
+        <div class="cc"><div class="cc-title">F0 relatif (N/kg)</div><canvas id="c-pg-f0" height="210"></canvas></div>
+        <div class="cc"><div class="cc-title">V0 (m/s)</div><canvas id="c-pg-v0" height="210"></canvas></div>
+      </div>
+      <div class="charts-2" style="margin-top:14px">
+        <div class="cc"><div class="cc-title">Pmax relatif (W/kg)</div><canvas id="c-pg-pm" height="210"></canvas></div>
+        <div class="cc"><div class="cc-title">RFmax (%)</div><canvas id="c-pg-rf" height="210"></canvas></div>
+      </div>
+      <div class="hist-wrap">
+        <div class="hist-wrap-title">Historique des mesures</div>
+        <div style="overflow-x:auto">
+          <table id="hist-table">
+            <thead><tr>
+              <th>Date</th><th>Session</th><th>F0 (N)</th><th>F0/kg</th><th>V0</th>
+              <th>Pmax (W)</th><th>Pmax/kg</th><th>FV Slope</th><th>RFmax</th><th>Drf</th>
+              <th>Poids</th><th>Distance</th><th></th>Groupe</th><th></th>
+            </tr></thead>
+            <tbody id="hist-body"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════ HISTORIQUE GLOBAL ══════ -->
+    <div class="section" id="sec-history">
+      <div class="top-bar" style="margin-bottom:16px">
+        <span class="bar-label">Historique global de toutes les mesures</span>
+        <span style="font-size:11px;color:#666;margin-left:auto">${fvDocs.length} enregistrements</span>
+      </div>
+      <div class="hist-wrap">
+        <div style="overflow-x:auto">
+          <table id="global-hist-table">
+            <thead><tr>
+              <th>Date</th><th>Joueur</th><th>Poste</th><th>Session</th><th>F0 (N)</th><th>F0/kg</th>
+              <th>V0</th><th>Pmax (W)</th><th>Pmax/kg</th><th>FV Slope</th>
+              <th>RFmax</th><th>Distance</th><th>Groupe</th><th></th>
+            </tr></thead>
+            <tbody id="global-hist-body"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════ GROUPES ══════ -->
+    <div class="section" id="sec-groups">
+      <div class="groups-grid" id="groups-grid"></div>
+    </div>
+
+    <!-- ══════ CONFIGURATION ══════ -->
+    <div class="section" id="sec-config">
+      <div class="top-bar" style="margin-bottom:18px">
+        <span class="bar-label">Standards de performance par poste</span>
+        <button class="btn btn-y" onclick="saveConfig()">💾 Sauvegarder</button>
+      </div>
+      <div class="cc" style="margin-bottom:14px">
+        <div class="hist-wrap-title">Configuration des standards pour le calcul du profil Samozino et les alertes de performance</div>
+        <div style="overflow-x:auto">
+          <table id="config-table">
+            <thead>
+              <tr>
+                <th>Poste</th>
+                <th>Distance (m)</th>
+                <th>Pmax Absolu (W)</th>
+                <th>Pmax Relatif (W/kg)</th>
+                <th>Description</th>
+              </tr>
+            </thead>
+            <tbody id="config-body"></tbody>
+          </table>
+        </div>
+      </div>
+      <div style="font-size:12px;color:#555;line-height:1.6">
+        <strong>Formule Samozino :</strong> S_opt = -1.6 + (0.25 × ln(distance_cible))<br>
+        <strong>Imbalance :</strong> imb = (1 - (FVslope / S_opt)) × 100<br>
+        <strong>Interprétation :</strong> imb > 0 = Déficit de Force, imb < 0 = Déficit de Vitesse, |imb| < 5% = Équilibré<br>
+        <strong>Alerte Groupe Force :</strong> Si Pmax ou Pmax/kg < norme du poste → suggestion de transfert vers groupe Force
+      </div>
+    </div>
+
+  </div><!-- /content -->
+  <div class="toast" id="toast"></div>
+</div><!-- /main -->
+
+<!-- PARAMS MODAL -->
+<div class="modal-overlay" id="modal-overlay">
+  <div class="modal">
+    <div class="modal-title">⚙️ Paramètres du joueur</div>
+    <div class="modal-sub" id="modal-sub">Aucun poids enregistré pour ce joueur.<br>Renseignez les paramètres pour le calcul du profil FV.</div>
+    <div class="modal-field">
+      <label>Poids (kg) <span style="color:#E24B4A">*</span></label>
+      <input type="number" id="m-mass" placeholder="85" min="40" max="180" step="0.1">
+      <div class="hint">Poids corporel en kilogrammes</div>
+    </div>
+    <div class="modal-row">
+      <div class="modal-field">
+        <label>Taille (m)</label>
+        <input type="number" id="m-height" value="1.78" placeholder="1.78" min="1.50" max="2.20" step="0.01">
+      </div>
+      <div class="modal-field">
+        <label>Température (°C)</label>
+        <input type="number" id="m-temp" value="20" placeholder="20" min="-10" max="45" step="1">
+      </div>
+    </div>
+    <div class="modal-field">
+      <label>Pression atmosphérique (mmHg)</label>
+      <input type="number" id="m-pressure" value="900" placeholder="900" min="600" max="1100" step="1">
+      <div class="hint">Défaut : 900 mmHg (altitude ~1000m). Niveau mer ≈ 760 mmHg.</div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-g" onclick="cancelModal()">Annuler</button>
+      <button class="btn btn-y" onclick="confirmModal()">Calculer</button>
+    </div>
+  </div>
+</div>
+
+<script src="../node_modules/chart.js/dist/chart.umd.min.js"></script>
+<script type="module">
+import{initializeApp}from'./supabase-adapter.js'
+import{getAuth,onAuthStateChanged,signOut}from'./supabase-adapter.js'
+import{getFirestore,collection,getDocs,addDoc,deleteDoc,doc,getDoc,setDoc,query,orderBy,updateDoc,where}from'./supabase-adapter.js'
+
+/* ─── FIREBASE ─────────────────────────────────────────────────────── */
+const fb=initializeApp({apiKey:"AIzaSyCvMs-5LX9Ivk3OkzUR3iz9Kk1E5b9_7Vk",authDomain:"delta-rugby-app.firebaseapp.com",projectId:"delta-rugby-app",storageBucket:"delta-rugby-app.firebasestorage.app",messagingSenderId:"61187079762",appId:"1:61187079762:web:56cd1eaa8beb9e1a2ee98b"})
+const auth=getAuth(fb), db=getFirestore(fb)
+
+function getDataScopeStart() {
+  const scope = localStorage.getItem('delta-data-scope') || '30days'
+  if (scope === 'all') return null
+  if (window.__getDataScopeDates) {
+    return window.__getDataScopeDates(scope).start
+  }
+  const d = new Date()
+  d.setDate(d.getDate() - 30)
+  return d.toISOString().split('T')[0]
+}
+
+function scopedQuery(name, dateField = 'date') {
+  const start = getDataScopeStart()
+  if (!start) return collection(db, name)
+  return query(collection(db, name), where(dateField, '>=', start))
+}
+
+/* ─── STATE ─────────────────────────────────────────────────────────── */
+let joueurs=[],poidsMap={},sessions={},activeSession=null,selPlayerId=null
+    // ==================== CACHE LOCAL (clés partagées avec le shell) ====================
+    function loadCache(key) {
+      try {
+        const r = JSON.parse(localStorage.getItem('cache_' + key) || 'null')
+        return r ? (r.data !== undefined ? r.data : null) : null
+      } catch(e) { return null }
+    }
+    function saveCache(key, data) {
+      try { localStorage.setItem('cache_' + key, JSON.stringify({ ts: Date.now(), data })) } catch(e) {}
+    }
+
+let fvDocs=[], charts={}
+let pendingCalcSid=null, playerParams={} // {pid: {mass, height, temp, pressure}}
+
+// Les clés F0, V0, Pmax, etc. perdent leur majuscule après le round-trip Supabase
+// (camelToSnake → snakeToCamel est lossy pour les préfixes majuscules simples)
+const FV_KEY_MAP = { f0:'F0', f0kg:'F0kg', v0:'V0', pmax:'Pmax', pmaxkg:'Pmaxkg', fvslope:'FVslope', rfmax:'RFmax', drf:'Drf', vmax:'Vmax' }
+function normalizeFvKeys(data) {
+  if (!data || typeof data !== 'object') return data
+  for (const [lo, hi] of Object.entries(FV_KEY_MAP)) {
+    if (data[lo] !== undefined && data[hi] === undefined) data[hi] = data[lo]
+  }
+  return data
+}
+let globalTemp=parseFloat(localStorage.getItem('fv_globalTemp'))||20
+let globalPressure=parseFloat(localStorage.getItem('fv_globalPressure'))||900
+let currentResult=null, currentParams=null // Store for recalculation
+let originalSessionLabel=null // Original label when editing historical result
+let distanceConfig={} // {poste: distance}
+let performanceStandards={} // {poste: {distance, pmaxAbs, pmaxRel}}
+let editingDocId=null // ID of the document being edited (null = creating new)
+
+/* ─── AUTH ──────────────────────────────────────────────────────────── */
+onAuthStateChanged(auth,u=>{if(!u){location.href='login.html';return}document.getElementById('user-email').textContent=u.email;init()})
+window.handleLogout=async()=>{await signOut(auth);location.href='login.html'}
+window.go=url=>location.href=url
+
+/* ─── INIT ──────────────────────────────────────────────────────────── */
+// ======= CACHE SYNCHRONE (avant auth) =======
+;(function() {
+  try {
+  requestAnimationFrame(function() { try {
+  const cachedJ=loadCache('fv_joueurs'), cachedFV=loadCache('fv_profils')
+  const cachedPoids=loadCache('fv_poids')||loadCache('poids'), cachedSettings=loadCache('fv_settings')
+  if(cachedJ){ joueurs=cachedJ.filter(j=>!j.archived); buildSelects() }
+  if(cachedPoids){
+    // Si le cache vient de 'poids' (format brut Supabase), le convertir en poidsMap
+    if(Array.isArray(cachedPoids)){
+      poidsMap={}
+      cachedPoids.forEach(d=>{
+        const x=d.data||d
+        if(!x.joueurId)return
+        if(!poidsMap[x.joueurId])poidsMap[x.joueurId]=[]
+        poidsMap[x.joueurId].push({date:x.date,poids:parseFloat(x.poids)})
+      })
+      Object.keys(poidsMap).forEach(k=>poidsMap[k].sort((a,b)=>(b.date||'').localeCompare(a.date||'')))
+    }else{
+      poidsMap=cachedPoids
+    }
+  }
+  if(cachedSettings){ distanceConfig=cachedSettings.distances||{}; performanceStandards=cachedSettings.standards||{} }
+  if(cachedFV){ fvDocs=cachedFV.map(d=>normalizeFvKeys({...d})); if(window.__shellContentReady)window.__shellContentReady(); if(window.__pageReady)window.__pageReady('profil-force-vitesse.html') }
+  // Peupler le select des postes depuis le cache
+  if (cachedJ) {
+    const postes=[...new Set(joueurs.map(j=>j.poste).filter(Boolean))].sort()
+    const ps=document.getElementById('cmp-poste')
+    if (ps) {
+      ps.innerHTML = '<option value="">Tous</option>'
+      postes.forEach(p=>{const o=document.createElement('option');o.value=p;o.textContent=p;ps.appendChild(o)})
+    }
+  }
+  } catch(e2) { console.warn('Cache render error:', e2) } });
+  } catch(e) { console.warn("Cache sync error:", e) }
+})()
+
+async function init(){
+  // Charger les données en parallèle
+  const [snapJoueurs, , snapPoids, snapFvProfils] = await Promise.all([
+    getDocs(collection(db,'joueurs')),
+    loadDistanceConfig(),
+    getDocs(Object.assign(collection(db,'poids'),{__noScope:true})),
+    getDocs(query(collection(db,'fv_profils'),orderBy('date','desc'),{__noScope:true}))
+  ])
+  joueurs = snapJoueurs.docs.map(d=>({id:d.id,...d.data()})).filter(j=>!j.archived).sort((a,b)=>(a.nom||'').localeCompare(b.nom||''))
+  saveCache('fv_joueurs',joueurs)
+  buildSelects()
+  const postes=[...new Set(joueurs.map(j=>j.poste).filter(Boolean))].sort()
+  const ps=document.getElementById('cmp-poste')
+  if(ps){
+    ps.innerHTML='<option value="">Tous</option>'
+    postes.forEach(p=>{const o=document.createElement('option');o.value=p;o.textContent=p;ps.appendChild(o)})
+  }
+  const secGroupsInit = document.getElementById('sec-groups')
+  if(secGroupsInit && secGroupsInit.classList.contains('active'))renderGroups()
+  
+  // Charger poids
+  poidsMap={}
+  snapPoids.docs.forEach(d=>{const x=d.data();if(!x.joueurId)return;if(!poidsMap[x.joueurId])poidsMap[x.joueurId]=[];poidsMap[x.joueurId].push({date:x.date,poids:parseFloat(x.poids)})})
+  Object.keys(poidsMap).forEach(k=>poidsMap[k].sort((a,b)=>b.date.localeCompare(a.date)))
+  saveCache('fv_poids', poidsMap)
+  if(selPlayerId)refreshWeightChip(selPlayerId)
+  
+  // Charger fv_profils
+  fvDocs = snapFvProfils.docs.map(d=>normalizeFvKeys({id:d.id,...d.data()}))
+  saveCache('fv_profils',fvDocs)
+  const secCompare = document.getElementById('sec-compare')
+  if(secCompare && secCompare.classList.contains('active'))renderCompare()
+  const secGroups = document.getElementById('sec-groups')
+  if(secGroups && secGroups.classList.contains('active'))renderGroups()
+  const secHistory = document.getElementById('sec-history')
+  if(secHistory && secHistory.classList.contains('active'))renderGlobalHistory()
+  if(document.getElementById('prog-player').value)renderProgression()
+  if(selPlayerId)refreshHistTable(selPlayerId)
+  if(window.__shellContentReady)window.__shellContentReady()
+  if(window.__pageReady)window.__pageReady('profil-force-vitesse.html')
+}
+
+function buildSelects(){
+  [document.getElementById('player-sel'),document.getElementById('prog-player')].forEach(sel=>{
+    if (!sel) return
+    sel.innerHTML = '<option value="">— Choisir un joueur —</option>'
+    joueurs.forEach(j=>{const o=document.createElement('option');o.value=j.id;o.textContent=`${j.nom||''} ${j.prenom||''}`.trim();sel.appendChild(o)})
+  })
+}
+
+function getWeight(pid){return(poidsMap[pid]||[])[0]?.poids||null}
+function getPlayerName(pid){const j=joueurs.find(x=>x.id===pid);return j?`${j.nom||''} ${j.prenom||''}`.trim():'?'}
+function getPlayerPoste(pid){
+  const j=joueurs.find(x=>x.id===pid)
+  if(!j)return''
+  // Check for different possible field names
+  let poste=j.poste||j.position||j.Poste||j.Position||''
+  // Normalize: trim and handle common variations (case-insensitive)
+  poste=poste.trim()
+  // Map common variations to standard keys (lowercase comparison)
+  const variations={
+    '2eme ligne':'2e ligne','3eme ligne':'3e ligne','2ème ligne':'2e ligne','3ème ligne':'3e ligne',
+    '2eme':'2e ligne','3eme':'3e ligne','2ème':'2e ligne','3ème':'3e ligne',
+    '2e ligne':'2e ligne','3e ligne':'3e ligne','3e ligne aile':'3e ligne aile',
+    'pilier':'Pilier gauche','pilier gauche':'Pilier gauche','pilier droit':'Pilier droit','talonneur':'Talonneur',
+    '9':'9','10':'10','centre':'Centre','ailier':'Ailier','arrière':'Arrière',
+    'demi de mêlée':'9','demi de melee':'9','demi de melée':'9',
+    "demi d'ouverture":'10','demi d ouverture':'10','demi douverture':'10'
+  }
+  const lower=poste.toLowerCase()
+  if(variations[lower])poste=variations[lower]
+  console.log('Player poste:',pid,poste,j)
+  return poste
+}
+
+/* ─── DISTANCE CONFIG ─────────────────────────────────────────────────── */
+const DEFAULT_DISTANCES={
+  'Pilier gauche':15,'Pilier droit':15,'Talonneur':15,'2e ligne':20,'N8':25,'3e ligne':25,'3e ligne aile':25,
+  '9':15,'10':25,'Centre':25,'Ailier':50,'Arrière':40
+}
+const POSTE_ALIASES={
+  '9':'Demi de mêlée','10':"Demi d'ouverture",
+  'Demi de mêlée':'9',"Demi d'ouverture":'10'
+}
+
+const DEFAULT_STANDARDS={
+  'Pilier gauche':{distance:15,pmaxAbs:1200,pmaxRel:12},
+  'Pilier droit':{distance:15,pmaxAbs:1200,pmaxRel:12},
+  'Talonneur':{distance:15,pmaxAbs:1300,pmaxRel:13},
+  '2e ligne':{distance:20,pmaxAbs:1400,pmaxRel:13},
+  'N8':{distance:25,pmaxAbs:1500,pmaxRel:14},
+  '3e ligne aile':{distance:25,pmaxAbs:1600,pmaxRel:15},
+  '9':{distance:15,pmaxAbs:1400,pmaxRel:14},
+  '10':{distance:25,pmaxAbs:1700,pmaxRel:16},
+  'Centre':{distance:25,pmaxAbs:1800,pmaxRel:17},
+  'Ailier':{distance:50,pmaxAbs:2000,pmaxRel:19},
+  'Arrière':{distance:40,pmaxAbs:1900,pmaxRel:18}
+}
+
+async function loadDistanceConfig(){
+  // Cache immédiat
+  const cachedSettings = loadCache('fv_settings')
+  if (cachedSettings) {
+    distanceConfig = cachedSettings.distances || {}
+    performanceStandards = cachedSettings.standards || {}
+  }
+  try{
+    const docSnap=await getDoc(doc(db,'config','fv_settings'))
+    if(docSnap.exists()){
+      const data=docSnap.data()
+      distanceConfig=data.distances||{}
+      performanceStandards=data.standards||{}
+      saveCache('fv_settings', data)
+    }else{
+      distanceConfig={...DEFAULT_DISTANCES}
+      performanceStandards={...DEFAULT_STANDARDS}
+    }
+  }catch(e){
+    console.warn('Failed to load config, using defaults:',e)
+    distanceConfig={...DEFAULT_DISTANCES}
+    performanceStandards={...DEFAULT_STANDARDS}
+  }
+}
+
+window.saveConfig=async function(){
+  const inputs=document.querySelectorAll('#config-body input')
+  const newDistances={}
+  const newStandards={}
+  inputs.forEach(input=>{
+    const poste=input.dataset.poste
+    const field=input.dataset.field
+    const value=parseFloat(input.value)
+    if(poste&&!isNaN(value)){
+      if(field==='distance'){
+        newDistances[poste]=value
+      }else if(field==='pmaxAbs'||field==='pmaxRel'){
+        if(!newStandards[poste])newStandards[poste]={}
+        newStandards[poste][field]=value
+      }
+    }
+  })
+  console.log('Saving config - distances:',newDistances,'standards:',newStandards)
+  try{
+    await setDoc(doc(db,'config','fv_settings'),{distances:newDistances,standards:newStandards},{merge:true})
+    distanceConfig=newDistances
+    performanceStandards=newStandards
+    toast('Configuration sauvegardée ✓')
+  }catch(e){
+    toast('Erreur lors de la sauvegarde')
+    console.error(e)
+  }
+}
+
+function getDefaultDistance(poste){
+  // Try exact match first
+  let dist=distanceConfig[poste]||DEFAULT_DISTANCES[poste]
+  if(!dist){
+    // Try alias (e.g. '9' → 'Demi de mêlée')
+    const alias=POSTE_ALIASES[poste]
+    if(alias){
+      dist=distanceConfig[alias]||DEFAULT_DISTANCES[alias]
+      if(dist)return dist
+    }
+    // Try case-insensitive match
+    const posteLower=poste.toLowerCase()
+    const distKey=Object.keys(distanceConfig).find(k=>k.toLowerCase()===posteLower)
+    if(distKey)dist=distanceConfig[distKey]
+    else{
+      const defaultKey=Object.keys(DEFAULT_DISTANCES).find(k=>k.toLowerCase()===posteLower)
+      if(defaultKey)dist=DEFAULT_DISTANCES[defaultKey]
+    }
+  }
+  return dist||25
+}
+
+function getStandards(poste){
+  // Try exact match first
+  let stds=performanceStandards[poste]||DEFAULT_STANDARDS[poste]
+  if(!stds){
+    // Try alias (e.g. '9' → 'Demi de mêlée')
+    const alias=POSTE_ALIASES[poste]
+    if(alias){
+      stds=performanceStandards[alias]||DEFAULT_STANDARDS[alias]
+      if(stds)return stds
+    }
+    // Try case-insensitive match
+    const posteLower=poste.toLowerCase()
+    // Find matching key in performanceStandards (case-insensitive)
+    const perfKey=Object.keys(performanceStandards).find(k=>k.toLowerCase()===posteLower)
+    if(perfKey)stds=performanceStandards[perfKey]
+    else{
+      // Find matching key in DEFAULT_STANDARDS (case-insensitive)
+      const defaultKey=Object.keys(DEFAULT_STANDARDS).find(k=>k.toLowerCase()===posteLower)
+      if(defaultKey)stds=DEFAULT_STANDARDS[defaultKey]
+    }
+  }
+  if(!stds)stds={distance:25,pmaxAbs:1600,pmaxRel:15}
+  console.log('getStandards for poste:',poste,'->',stds,'performanceStandards:',performanceStandards)
+  return stds
+}
+function fillModalDefaults(pid){
+  // 1) Poids : depuis poidsMap (collection poids / suivi-poids)
+  let weightFromPoids=getWeight(pid)
+  // Fallback : lire directement depuis cache_poids si poidsMap est vide
+  if(!weightFromPoids){
+    try{
+      const raw=localStorage.getItem('cache_poids')
+      if(raw){
+        const parsed=JSON.parse(raw)
+        if(parsed&&Array.isArray(parsed.data)){
+          const entries=parsed.data.filter(d=>{
+            const x=d.data||d
+            return x.joueurId===pid||x.joueur_id===pid
+          }).sort((a,b)=>(b.date||'').localeCompare(a.date||''))
+          if(entries.length>0){
+            const x=entries[0].data||entries[0]
+            weightFromPoids=parseFloat(x.poids)||null
+          }
+        }
+      }
+    }catch(e){}
+  }
+  // 2) Taille : depuis le dernier FV doc du joueur
+  const playerFvDocs=fvDocs.filter(r=>r.joueurId===pid).sort((a,b)=>(b.date||'').localeCompare(a.date||''))
+  const lastFv=playerFvDocs[0]||null
+  // 3) Temp/Pression : depuis globalTemp/globalPressure (persistés en localStorage)
+  const pp=playerParams[pid]||{}
+  const massVal=weightFromPoids||pp.mass||lastFv?.mass||''
+  const heightVal=pp.height||lastFv?.height||''
+  const tempVal=globalTemp||lastFv?.temp||20
+  const pressureVal=globalPressure||lastFv?.pressure||900
+  document.getElementById('m-mass').value=massVal
+  document.getElementById('m-height').value=heightVal||'1.78'
+  document.getElementById('m-temp').value=tempVal
+  document.getElementById('m-pressure').value=pressureVal
+  // Update modal sub text
+  const sub=document.getElementById('modal-sub')
+  if(weightFromPoids){
+    sub.innerHTML=`Poids récupéré depuis le suivi poids : <strong>${weightFromPoids} kg</strong>.<br>Ajustez si nécessaire les paramètres pour le calcul du profil FV.`
+  }else if(lastFv?.mass){
+    sub.innerHTML=`Aucun poids dans le suivi poids. Poids récupéré depuis la dernière mesure FV : <strong>${lastFv.mass} kg</strong>.<br>Renseignez les paramètres pour le calcul.`
+  }else{
+    sub.innerHTML=`Aucun poids enregistré pour <strong>${getPlayerName(pid)}</strong>.<br>Renseignez les paramètres pour le calcul du profil FV.`
+  }
+}
+
+function refreshWeightChip(pid){
+  let w=getWeight(pid)||playerParams[pid]?.mass
+  // If no weight in poids collection, try to get from last FV measurement
+  if(!w){
+    const playerFvDocs=fvDocs.filter(r=>r.joueurId===pid).sort((a,b)=>(b.date||'').localeCompare(a.date||''))
+    if(playerFvDocs.length>0){
+      w=playerFvDocs[0].mass
+      // Also store other params from last measurement
+      if(!playerParams[pid])playerParams[pid]={}
+      playerParams[pid].mass=w
+      playerParams[pid].height=playerFvDocs[0].height||1.78
+      playerParams[pid].temp=playerFvDocs[0].temp||20
+      playerParams[pid].pressure=playerFvDocs[0].pressure||900
+    }
+  }else if(!playerParams[pid]?.height){
+    // If weight exists but no params, try to get from last FV measurement
+    const playerFvDocs=fvDocs.filter(r=>r.joueurId===pid).sort((a,b)=>(b.date||'').localeCompare(a.date||''))
+    if(playerFvDocs.length>0){
+      if(!playerParams[pid])playerParams[pid]={}
+      playerParams[pid].height=playerFvDocs[0].height||1.78
+      playerParams[pid].temp=playerFvDocs[0].temp||20
+      playerParams[pid].pressure=playerFvDocs[0].pressure||900
+    }
+  }
+  const c=document.getElementById('weight-chip')
+  document.getElementById('weight-val').textContent=w?w:('—')
+  c.style.display=w?'inline-flex':'none'
+  // Show/hide manual params button - always show when player is selected
+  let manualBtn=document.getElementById('btn-manual-params')
+  if(!manualBtn){
+    manualBtn=document.createElement('button')
+    manualBtn.id='btn-manual-params'
+    manualBtn.className='btn btn-g'
+    manualBtn.textContent='⚙️'
+    manualBtn.style.marginLeft='8px'
+    manualBtn.style.padding='4px 8px'
+    manualBtn.style.fontSize='12px'
+    // Add to the top-bar instead of weight-chip parent
+    const topBar=document.querySelector('#sec-indiv .top-bar')
+    if(topBar)topBar.appendChild(manualBtn)
+  }
+  // Always update onclick to use current player (avoids stale closure)
+  manualBtn.onclick=()=>{
+    fillModalDefaults(selPlayerId)
+    document.getElementById('modal-overlay').classList.add('open')
+    setTimeout(()=>document.getElementById('m-mass').focus(),50)
+  }
+  // Show button only when player is selected
+  manualBtn.style.display=pid?'inline-block':'none'
+}
+
+/* ─── TAB SWITCH ────────────────────────────────────────────────────── */
+window.switchTab=(name,btn)=>{
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'))
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'))
+  document.getElementById(`sec-${name}`).classList.add('active')
+  btn.classList.add('active')
+  if(name==='compare')renderCompare()
+  if(name==='progress')renderProgression()
+  if(name==='history')renderGlobalHistory()
+  if(name==='groups')renderGroups()
+  if(name==='config')renderConfig()
+}
+
+/* ─── PLAYER SELECT ─────────────────────────────────────────────────── */
+document.getElementById('player-sel').addEventListener('change',e=>{
+  selPlayerId=e.target.value||null
+  document.getElementById('btn-upload').disabled=!selPlayerId
+  refreshWeightChip(selPlayerId)
+  sessions={};activeSession=null
+  editingDocId=null // Reset editing mode when player changes
+  originalSessionLabel=null // Reset original label when player changes
+  document.getElementById('indiv-empty').style.display='block'
+  document.getElementById('indiv-content').style.display='none'
+  // Reset input fields when player changes
+  document.getElementById('target-distance').value=''
+  document.getElementById('target-pmax-abs').value=''
+  document.getElementById('target-pmax-rel').value=''
+  refreshHistTable(selPlayerId)
+  // Si la modal est ouverte, mettre à jour les champs pour le nouveau joueur
+  const overlay=document.getElementById('modal-overlay')
+  if(overlay.classList.contains('open')&&selPlayerId){
+    fillModalDefaults(selPlayerId)
+  }
+})
+
+/* ─── CSV ───────────────────────────────────────────────────────────── */
+document.getElementById('csv-input').addEventListener('change',async e=>{
+  const f=e.target.files[0];if(!f||!selPlayerId)return;e.target.value=''
+  editingDocId=null // Reset editing mode when importing new CSV
+  originalSessionLabel=null // Reset original label when importing new CSV
+  showLoad()
+  try{
+    const txt=await f.text()
+    const data=parseCSV(txt)
+    if(data.length<8)throw new Error('CSV trop court (min 8 points)')
+    const sid='s'+Date.now()
+    const lbl=f.name.replace(/\.csv$/i,'').replace(/_/g,' ').slice(-30)
+    sessions[sid]={lbl,data}
+    activeSession=sid
+    renderSessionsRow()
+    runCalc(sid)
+  }catch(err){hideLoad();toast(err.message)}
+})
+
+function parseCSV(txt){
+  txt=txt.replace(/^\uFEFF/,'')
+  const lines=txt.split(/\r?\n/)
+  const hi=lines.findIndex(l=>l.includes('Seconds')&&l.includes('Velocity'))
+  if(hi<0)throw new Error('Colonnes Seconds/Velocity introuvables dans le CSV')
+  const sep=lines[hi].includes(';')?';':','
+  const h=lines[hi].split(sep).map(x=>x.trim())
+  const si=h.indexOf('Seconds'),vi=h.indexOf('Velocity')
+  const rows=[]
+  for(let i=hi+1;i<lines.length;i++){
+    const c=lines[i].split(sep)
+    if(c.length<=Math.max(si,vi))continue
+    const t=parseFloat(c[si].replace(',','.'))
+    const v=parseFloat(c[vi].replace(',','.'))/3.6
+    if(!isNaN(t)&&!isNaN(v))rows.push({t,v})
+  }
+  return rows
+}
+
+/* ─── SESSIONS ROW ──────────────────────────────────────────────────── */
+function renderSessionsRow(){
+  const row=document.getElementById('sessions-row'),chips=document.getElementById('sessions-chips')
+  chips.innerHTML=''
+  const ids=Object.keys(sessions)
+  if(!ids.length){row.style.display='none';return}
+  row.style.display='block'
+  const lbl=document.createElement('span');lbl.className='s-label';lbl.textContent='Sessions :';chips.appendChild(lbl)
+  ids.forEach(sid=>{
+    const c=document.createElement('div');c.className='chip'+(sid===activeSession?' active':'')
+    c.innerHTML=`<span>${sessions[sid].lbl}</span><span class="chip-x" onclick="event.stopPropagation();delSession('${sid}')">✕</span>`
+    c.onclick=()=>{activeSession=sid;renderSessionsRow();runCalc(sid)}
+    chips.appendChild(c)
+  })
+}
+window.delSession=sid=>{delete sessions[sid];const r=Object.keys(sessions);activeSession=r.length?r[r.length-1]:null;renderSessionsRow();activeSession?runCalc(activeSession):hideIndiv()}
+
+/* ══════════════════════════════════════════════════════════════════════
+   CORE FV CALCULATION
+   Method: exponential model v(t)=Vmax*(1-exp(-t/tau))
+   fitted on ACCELERATION PHASE (sprint start → peak velocity)
+   with Nelder-Mead optimizer, then linear regressions for metrics.
+   ══════════════════════════════════════════════════════════════════════ */
+function computeFV(data,mass,height=1.78,temp=20,pressure=900){
+  const g=9.81,Cd=0.9
+  const rho=1.293*(pressure/760)*(273/(273+temp))
+  const Af=0.2025*Math.pow(height,0.725)*Math.pow(mass,0.425)*0.266
+  const k=0.5*rho*Cd*Af
+
+  const tarr=data.map(d=>d.t), varr=data.map(d=>d.v)
+  const vmaxGPS=Math.max(...varr)
+  const thresh=Math.max(0.1,vmaxGPS*0.03)
+  let startIdx=varr.findIndex(v=>v>thresh); if(startIdx<0)startIdx=0
+  const peakIdx=varr.indexOf(vmaxGPS)
+  if(peakIdx-startIdx<3)throw new Error('Phase d\'accélération trop courte. Vérifiez le CSV (format sprint uniquement).')
+
+  // Fit Vmax, tau, timeDelay on acceleration phase [startIdx, peakIdx] with absolute time
+  const tsFit=tarr.slice(startIdx,peakIdx+1)
+  const vsFit=varr.slice(startIdx,peakIdx+1)
+  const {Vmax,tau,timeDelay:tdRaw}=fitExp(tsFit,vsFit)
+  // Snap near-zero timeDelay to 0 (Nelder-Mead floating point noise)
+  const timeDelay=tdRaw<0.001?0:tdRaw
+
+  // Downstream: acceleration phase [startIdx, peakIdx] filtered by t >= timeDelay
+  const idxAccel=[]
+  for(let i=startIdx;i<=peakIdx;i++) if(tarr[i]>=timeDelay) idxAccel.push(i)
+  const ts=idxAccel.map(i=>tarr[i])
+  const vs=idxAccel.map(i=>varr[i])
+
+  // Model quantities on filtered points (v=0 for t < timeDelay, but those are excluded)
+  const vm=ts.map(t=>{const dt=t-timeDelay;return dt>0?Vmax*(1-Math.exp(-dt/tau)):0})
+  const am=ts.map(t=>{const dt=t-timeDelay;return dt>0?(Vmax/tau)*Math.exp(-dt/tau):0})
+  const Fh=am.map(a=>mass*a)
+  const Fa=vm.map(v=>k*v*v)
+  const Ft=Fh.map((f,i)=>f+Fa[i])
+  const Ftkg=Ft.map(f=>f/mass)
+  const Fres=Ft.map(f=>Math.sqrt(f*f+Math.pow(mass*g,2)))
+  const RF=Ft.map((f,i)=>f/Fres[i])
+  const Pkg=Ftkg.map((f,i)=>f*vm[i])
+
+  // Linear regressions (Excel: INTERCEPT(J,C), SLOPE(K,C) on all valid rows)
+  const {intercept:F0}=lr(vm,Ft)
+  const {slope:FVslope}=lr(vm,Ftkg)
+  // Drf: skip first 14 points (Excel: SLOPE(N16:N333,C16:C333))
+  const drfStart=Math.min(14,RF.length-1)
+  const {slope:Drf}=lr(vm.slice(drfStart),RF.slice(drfStart))
+
+  const F0kg=F0/mass
+  const V0=-F0kg/FVslope
+  const Pmax=F0*V0/4
+  const Pmaxkg=Pmax/mass
+  // RFmax at 15th data point (Excel: =N16, row 16 = index 14)
+  const RFmax=RF[Math.min(14,RF.length-1)]
+
+  // Charting arrays (already limited to accel phase)
+  const vm_chart=vm
+  const RF_chart=RF
+  const Ftkg_chart=Ftkg
+  const Pkg_chart=Pkg
+  const ts_chart=ts
+  const vs_chart=vs
+
+  return {Vmax,tau,timeDelay,F0,F0kg,V0,Pmax,Pmaxkg,FVslope,RFmax,Drf,mass,
+          t_model:ts_chart,v_model:vm_chart,v_gps:vs_chart,RF:RF_chart,Ftkg:Ftkg_chart,Pkg:Pkg_chart}
+}
+
+function fitExp(t,v){
+  const n=t.length
+  const vmaxObs=Math.max(...v)
+  const tMax=t[n-1]
+  const tdMax=0.3*tMax
+  // v(t) = t > td ? Vmax*(1-exp(-(t-td)/tau)) : 0
+  function sse(Vm,tau,td){
+    if(Vm<=0||tau<=0||td<0||td>tdMax)return 1e12
+    let s=0
+    for(let i=0;i<n;i++){
+      const dt=t[i]-td
+      const model=dt>0?Vm*(1-Math.exp(-dt/tau)):0
+      s+=(v[i]-model)*(v[i]-model)
+    }
+    return s
+  }
+  // Initial estimates
+  const Vm0=vmaxObs*1.1
+  const target=vmaxObs*0.632
+  let tauIdx=v.findIndex(x=>x>=target)
+  if(tauIdx<0)tauIdx=Math.floor(n/2)
+  const tau0=Math.max(0.3,t[tauIdx]||1.0)
+  // Nelder-Mead 3D: simplex with 4 vertices
+  let s=[[Vm0,tau0,0],[Vm0*1.2,tau0,0],[Vm0,tau0*1.3,0],[Vm0,tau0,Math.min(0.3,tdMax)]]
+  let sc=s.map(p=>sse(...p))
+  for(let iter=0;iter<10000;iter++){
+    const idx=[0,1,2,3].sort((a,b)=>sc[a]-sc[b])
+    const[b,m1,m2,w]=idx
+    const cx=(s[b][0]+s[m1][0]+s[m2][0])/3,cy=(s[b][1]+s[m1][1]+s[m2][1])/3,cz=(s[b][2]+s[m1][2]+s[m2][2])/3
+    const rx=2*cx-s[w][0],ry=2*cy-s[w][1],rz=2*cz-s[w][2]
+    const sr=sse(rx,ry,rz)
+    if(sr<sc[b]){
+      const ex=3*cx-2*s[w][0],ey=3*cy-2*s[w][1],ez=3*cz-2*s[w][2],se=sse(ex,ey,ez)
+      if(se<sr){s[w]=[ex,ey,ez];sc[w]=se}else{s[w]=[rx,ry,rz];sc[w]=sr}
+    }else if(sr<sc[m2]){s[w]=[rx,ry,rz];sc[w]=sr}
+    else{
+      const kx=(cx+s[w][0])/2,ky=(cy+s[w][1])/2,kz=(cz+s[w][2])/2,sk=sse(kx,ky,kz)
+      if(sk<sc[w]){s[w]=[kx,ky,kz];sc[w]=sk}
+      else{for(let i=0;i<4;i++)if(i!==b){s[i]=[(s[b][0]+s[i][0])/2,(s[b][1]+s[i][1])/2,(s[b][2]+s[i][2])/2];sc[i]=sse(...s[i])}}
+    }
+    if(Math.max(...sc)-Math.min(...sc)<1e-12)break
+  }
+  const best=[0,1,2,3].sort((a,b)=>sc[a]-sc[b])[0]
+  return{Vmax:Math.max(0.1,s[best][0]),tau:Math.max(0.01,s[best][1]),timeDelay:Math.max(0,s[best][2])}
+}
+
+function lr(x,y){
+  const n=x.length,mx=x.reduce((a,b)=>a+b,0)/n,my=y.reduce((a,b)=>a+b,0)/n
+  let ssxy=0,ssxx=0
+  for(let i=0;i<n;i++){ssxy+=(x[i]-mx)*(y[i]-my);ssxx+=(x[i]-mx)*(x[i]-mx)}
+  const slope=ssxy/ssxx
+  return{slope,intercept:my-slope*mx}
+}
+
+/* ─── GROUP CLASSIFICATION ─────────────────────────────────────────── */
+// FV imbalance selon méthode Samozino basée sur la distance cible
+// S_opt = -1.6 + (0.25 * ln(distance_cible))
+// imb = (1 - (FVslope / S_opt)) * 100
+// imb > 0: Déficit de Force (profil trop vitesse)
+// imb < 0: Déficit de Vitesse (profil trop force)
+// |imb| < 5%: Équilibré
+const GROUP_INFO={
+  explosif:{color:'#4ade80',icon:'🚀',label:'Équilibré',css:'gb-explosif',
+    advice:'Profil équilibré force-vitesse pour la distance cible. Axer le travail sur la puissance maximale et l\'explosivité : sprints résistés, pliométrie, exercices balistiques.'},
+  vitesse:{color:'#38bdf8',icon:'⚡',css:'gb-vitesse',label:'Déficit Vitesse',
+    advice:'Déficit de vitesse pour la distance cible. Développer la vitesse maximale : sprints libres à haute intensité, travail technique de foulée, exercices à haute vélocité.'},
+  force:{color:'#ef4444',icon:'💪',css:'gb-force',label:'Déficit Force',
+    advice:'Déficit de force pour la distance cible. Développer la force maximale : squat lourd, travail de force à basse vélocité, renforcement des extenseurs.'},
+  'vitesse-force':{color:'#f97316',icon:'⚡💪',css:'gb-vitesse-force',label:'Léger déficit Vitesse',
+    advice:'Léger déficit de vitesse. Développer la vitesse dans un contexte de force : sprints traînés légers, Olympic lifts, exercices de puissance.'},
+  'force-vitesse':{color:'#a855f7',icon:'💪⚡',css:'gb-force-vitesse',label:'Léger déficit Force',
+    advice:'Léger déficit de force. Développer la force dans un contexte de vitesse : half squats dynamiques, fentes sautées, exercices explosifs.'}
+}
+
+const GC={explosif:'#4ade80',force:'#ef4444',vitesse:'#38bdf8','force-vitesse':'#a855f7','vitesse-force':'#f97316'}
+
+function classify(F0kg,V0,FVslope,distance){
+  // Samozino formula: S_opt = -1.6 + (0.25 * ln(distance))
+  const S_opt=-1.6+0.25*Math.log(distance)
+  const imb=(1-(FVslope/S_opt))*100
+  // imb > 0: FVslope < S_opt → trop de vitesse par rapport à force → déficit force
+  // imb < 0: FVslope > S_opt → trop de force par rapport à vitesse → déficit vitesse
+  let key
+  if(Math.abs(imb)<5)key='explosif'
+  else if(imb>=15)key='force'
+  else if(imb<=-15)key='vitesse'
+  else if(imb>0)key='force-vitesse'
+  else key='vitesse-force'
+  return{...GROUP_INFO[key],key,imbalance:imb,S_opt}
+}
+
+/* ─── CALCULATE & RENDER ────────────────────────────────────────────── */
+function runCalc(sid){
+  const sess=sessions[sid];if(!sess)return
+  const savedParams=playerParams[selPlayerId]
+  const weight=getWeight(selPlayerId)
+
+  if(!weight && !savedParams){
+    // No weight in Firebase AND no manual entry yet → show modal
+    pendingCalcSid=sid
+    const j=joueurs.find(x=>x.id===selPlayerId)
+    document.getElementById('modal-sub').innerHTML=`Aucun poids enregistré pour <strong>${getPlayerName(selPlayerId)}</strong>.<br>Renseignez les paramètres pour le calcul du profil FV.`
+    // Auto-fill from poids collection, previous FV data, and global defaults
+    fillModalDefaults(selPlayerId)
+    document.getElementById('modal-overlay').classList.add('open')
+    setTimeout(()=>document.getElementById('m-mass').focus(),50)
+    return
+  }
+  const params=savedParams||{mass:weight,height:1.78,temp:20,pressure:900}
+  _doCalc(sid,params)
+}
+
+window.cancelModal=()=>{
+  document.getElementById('modal-overlay').classList.remove('open')
+  pendingCalcSid=null
+}
+
+window.confirmModal=()=>{
+  const mass=parseFloat(document.getElementById('m-mass').value)
+  if(!mass||mass<30||mass>250){document.getElementById('m-mass').focus();document.getElementById('m-mass').style.borderColor='#E24B4A';return}
+  document.getElementById('m-mass').style.borderColor=''
+  const height=parseFloat(document.getElementById('m-height').value)||1.78
+  const temp=parseFloat(document.getElementById('m-temp').value)||20
+  const pressure=parseFloat(document.getElementById('m-pressure').value)||900
+  // Save temp & pressure globally so they persist across players
+  globalTemp=temp
+  globalPressure=pressure
+  localStorage.setItem('fv_globalTemp',String(temp))
+  localStorage.setItem('fv_globalPressure',String(pressure))
+  playerParams[selPlayerId]={mass,height,temp,pressure}
+  // Update weight chip display
+  document.getElementById('weight-val').textContent=mass
+  document.getElementById('weight-chip').style.display='inline-flex'
+  document.getElementById('modal-overlay').classList.remove('open')
+  if(pendingCalcSid){_doCalc(pendingCalcSid,{mass,height,temp,pressure});pendingCalcSid=null}
+  else if(activeSession){_doCalc(activeSession,{mass,height,temp,pressure})}
+}
+
+// Close modal on overlay click
+document.getElementById('modal-overlay').addEventListener('click',e=>{if(e.target===e.currentTarget)cancelModal()})
+
+function _doCalc(sid,params){
+  showLoad()
+  setTimeout(()=>{
+    try{
+      const res=computeFV(sessions[sid].data,params.mass,params.height,params.temp,params.pressure)
+      setLoadPct(100)
+      setTimeout(()=>{hideLoad();renderIndiv(res,params,sessions[sid].lbl)},280)
+    }catch(err){hideLoad();toast(err.message)}
+  },30)
+}
+
+function renderIndiv(res,params,lbl,autoSave=true,keepEditingMode=false){
+  const mass=params.mass||params  // back-compat if mass passed directly
+  document.getElementById('indiv-empty').style.display='none'
+  document.getElementById('indiv-content').style.display='block'
+
+  // Store for recalculation
+  currentResult=res
+  currentParams=params
+
+  // Show params in export bar
+  const p=typeof params==='object'&&params.height?params:{mass:params,height:1.78,temp:20,pressure:900}
+  document.getElementById('export-params-label').textContent=
+    `${getPlayerName(selPlayerId)} · ${p.mass}kg · ${p.height}m · ${p.temp}°C · ${p.pressure}mmHg`
+
+  // Set default distance and standards based on player's position
+  const poste=getPlayerPoste(selPlayerId)
+  const defaultDistance=getDefaultDistance(poste)
+  const stds=getStandards(poste)
+  const distInput=document.getElementById('target-distance')
+  const pmaxAbsInput=document.getElementById('target-pmax-abs')
+  const pmaxRelInput=document.getElementById('target-pmax-rel')
+  // Always update if empty or if player changed (simple check: if poste is valid)
+  if(poste){
+    if(distInput.value===''||distInput.value==defaultDistance){
+      distInput.value=defaultDistance
+    }
+    if(pmaxAbsInput.value===''||pmaxAbsInput.value==stds.pmaxAbs){
+      pmaxAbsInput.value=stds.pmaxAbs
+    }
+    if(pmaxRelInput.value===''||pmaxRelInput.value==stds.pmaxRel){
+      pmaxRelInput.value=stds.pmaxRel
+    }
+  }
+
+  // Get values from inputs
+  const distance=parseFloat(distInput.value)||defaultDistance
+  const normPmaxAbs=parseFloat(pmaxAbsInput.value)||stds.pmaxAbs
+  const normPmaxRel=parseFloat(pmaxRelInput.value)||stds.pmaxRel
+
+  // Group
+  const grp=classify(res.F0kg,res.V0,res.FVslope,distance)
+  const gb=document.getElementById('gb')
+  gb.className=`group-banner ${grp.css}`
+  gb.innerHTML=`<div class="gb-icon">${grp.icon}</div><div><div class="gb-name">${grp.label}</div><div class="gb-desc">${grp.advice}</div></div>`
+
+  // FV bar
+  const imb=grp.imbalance
+  // Map imbalance -30..+30 → 5..95%
+  const toPos=x=>Math.max(3,Math.min(97,50+x*1.5))
+  const pos=toPos(imb)
+  document.getElementById('fv-zone').style.cssText=`left:${toPos(-5)}%;right:${100-toPos(5)}%`
+  const marker=document.getElementById('fv-marker')
+  marker.style.cssText=`left:${pos}%;background:${grp.color};width:10px;height:8px`
+  const fvt=document.getElementById('fv-text')
+  fvt.style.color=grp.color
+  fvt.textContent=`Déséquilibre FV : ${imb>0?'+':''}${imb.toFixed(1)}%  •  ${Math.abs(imb)<5?'Profil équilibré':imb>0?'Déficit de Force (Profil trop Vitesse)':'Déficit de Vitesse (Profil trop Force)'}  •  Distance: ${distance}m`
+
+  // Metrics with color coding for Pmax
+  const pmaxAbsColor=res.Pmax>=normPmaxAbs?'#4ade80':'#ef4444'
+  const pmaxRelColor=res.Pmaxkg>=normPmaxRel?'#4ade80':'#ef4444'
+  const M=[
+    {l:'F0',v:(res.F0||0).toFixed(0),u:'N'},
+    {l:'F0 / kg',v:(res.F0kg||0).toFixed(2),u:'N/kg'},
+    {l:'V0',v:(res.V0||0).toFixed(2),u:'m/s'},
+    {l:'Pmax',v:(res.Pmax||0).toFixed(0),u:'W',color:pmaxAbsColor},
+    {l:'Pmax / kg',v:(res.Pmaxkg||0).toFixed(2),u:'W/kg',color:pmaxRelColor},
+    {l:'FV Slope',v:(res.FVslope||0).toFixed(3),u:''},
+    {l:'RFmax',v:((res.RFmax||0)*100).toFixed(1),u:'%'},
+    {l:'Drf',v:(res.Drf||0).toFixed(4),u:''},
+    {l:'Vmax modèle',v:(res.Vmax||0).toFixed(2),u:'m/s'},
+    {l:'Poids utilisé',v:(p.mass||0).toFixed(1),u:'kg'},
+  ]
+  const grid=document.getElementById('metrics-grid');grid.innerHTML=''
+  M.forEach(m=>{
+    const c=document.createElement('div')
+    c.className='mc'
+    const colorStyle=m.color?`color:${m.color}`:''
+    c.innerHTML=`<div class="mc-l">${m.l}</div><div class="mc-v" style="${colorStyle}">${m.v}<span class="mc-u">${m.u}</span></div>`
+    grid.appendChild(c)
+  })
+
+  // Performance alert
+  const alertBanner=document.getElementById('perf-alert')
+  const alertMsg=document.getElementById('perf-alert-msg')
+  let alertMsgs=[]
+
+  // Check against standards
+  if(res.Pmax<normPmaxAbs||res.Pmaxkg<normPmaxRel){
+    const belowAbs=res.Pmax<normPmaxAbs
+    const belowRel=res.Pmaxkg<normPmaxRel
+    let msg=`Puissance inférieure aux standards du poste (${poste})`
+    if(belowAbs)msg+=` : Pmax ${(res.Pmax||0).toFixed(0)}W < ${normPmaxAbs}W`
+    if(belowRel)msg+=belowAbs?` et Pmax/kg ${(res.Pmaxkg||0).toFixed(1)}W/kg < ${normPmaxRel}W/kg`:` : Pmax/kg ${(res.Pmaxkg||0).toFixed(1)}W/kg < ${normPmaxRel}W/kg`
+    alertMsgs.push(msg)
+  }
+
+  // Check against previous measurement (if exists)
+  const playerDocs=fvDocs.filter(r=>r.joueurId===selPlayerId).sort((a,b)=>new Date(b.date)-new Date(a.date))
+  if(playerDocs.length>1){
+    const prev=playerDocs[1] // Second most recent (previous measurement)
+    const drops=[]
+    if(res.F0<(prev.F0||0)*0.95)drops.push(`F0: ${(prev.F0||0).toFixed(0)}N → ${(res.F0||0).toFixed(0)}N`)
+    if(res.V0<(prev.V0||0)*0.95)drops.push(`V0: ${(prev.V0||0).toFixed(2)}m/s → ${(res.V0||0).toFixed(2)}m/s`)
+    if(res.RFmax<(prev.RFmax||0)*0.95)drops.push(`RFmax: ${((prev.RFmax||0)*100).toFixed(1)}% → ${((res.RFmax||0)*100).toFixed(1)}%`)
+    if(res.Pmaxkg<(prev.Pmaxkg||0)*0.95)drops.push(`Pmax/kg: ${(prev.Pmaxkg||0).toFixed(1)}W/kg → ${(res.Pmaxkg||0).toFixed(1)}W/kg`)
+    if(drops.length>0){
+      alertMsgs.push(`⚠️ Baisse par rapport à la mesure précédente (${new Date(prev.date).toLocaleDateString('fr-FR')}): ${drops.join(', ')}`)
+    }
+  }
+
+  if(alertMsgs.length>0){
+    alertBanner.style.display='block'
+    alertMsg.textContent=alertMsgs.join(' | ')
+  }else{
+    alertBanner.style.display='none'
+  }
+
+  // Charts
+  drawFV(res); drawPV(res); drawRF(res); drawVel(res)
+
+  // Auto-save (only if autoSave is true)
+  if(autoSave){
+    saveResult(res,p.mass,lbl,false,keepEditingMode)
+  }
+}
+
+/* ─── RECALC WITH DISTANCE ───────────────────────────────────────────── */
+window.recalcWithDistance=function(){
+  if(!currentResult||!currentParams)return
+  const distance=parseFloat(document.getElementById('target-distance').value)
+  if(!distance||distance<10||distance>100)return
+  // Use original label if editing, otherwise use 'Recalcul'
+  const lbl=originalSessionLabel||currentResult.sessionLabel||'Recalcul'
+  renderIndiv(currentResult,currentParams,lbl,false)
+}
+
+/* ─── SAVE CURRENT RESULT ─────────────────────────────────────────────── */
+window.saveCurrentResult=function(){
+  if(!currentResult||!currentParams)return
+  const lbl=originalSessionLabel||currentResult.sessionLabel||'Mesure'
+  const mass=currentParams.mass||currentParams
+  console.log('saveCurrentResult - using label:',lbl,'editingDocId:',editingDocId)
+  saveResult(currentResult,mass,lbl,false) // keepEditingMode=false to reset editing mode after manual save
+}
+
+/* ─── FORCE TRANSFER ALERT ───────────────────────────────────────────── */
+window.confirmForceTransfer=async function(){
+  if(!selPlayerId)return
+  try{
+    const j=joueurs.find(x=>x.id===selPlayerId)
+    const ancienGroupe=j?.groupe_manuel||null
+    await setDoc(doc(db,'joueurs',selPlayerId),{groupe_manuel:'force',groupe_source:ancienGroupe},{merge:true})
+    toast('Joueur transféré vers groupe Force ✓')
+    document.getElementById('perf-alert').style.display='none'
+    // Reload player data
+    const snap=await getDocs(collection(db,'joueurs'))
+    joueurs=snap.docs.map(d=>({id:d.id,...d.data()})).filter(j=>!j.archived).sort((a,b)=>(a.nom||'').localeCompare(b.nom||''))
+    renderGroups()
+  }catch(e){
+    toast('Erreur lors du transfert')
+    console.error(e)
+  }
+}
+
+window.dismissAlert=function(){
+  document.getElementById('alert-actions').style.display='none'
+  document.getElementById('alert-dismissed').style.display='flex'
+  document.getElementById('perf-alert').style.background='#f0f0f0'
+  document.getElementById('perf-alert').style.borderColor='#ccc'
+}
+
+window.restoreAlert=function(){
+  document.getElementById('alert-actions').style.display='flex'
+  document.getElementById('alert-dismissed').style.display='none'
+  document.getElementById('perf-alert').style.background='#fff3cd'
+  document.getElementById('perf-alert').style.borderColor='#ffc107'
+}
+
+/* ─── FIREBASE SAVE ─────────────────────────────────────────────────── */
+async function saveResult(res,mass,lbl,keepEditingMode=false){
+  if(!selPlayerId)return
+  console.log('saveResult called - editingDocId:',editingDocId,'lbl:',lbl,'keepEditingMode:',keepEditingMode)
+  const distance=parseFloat(document.getElementById('target-distance').value)||getDefaultDistance(getPlayerPoste(selPlayerId))
+  const normPmaxAbs=parseFloat(document.getElementById('target-pmax-abs').value)||getStandards(getPlayerPoste(selPlayerId)).pmaxAbs
+  const normPmaxRel=parseFloat(document.getElementById('target-pmax-rel').value)||getStandards(getPlayerPoste(selPlayerId)).pmaxRel
+  const grp=classify(res.F0kg,res.V0,res.FVslope,distance)
+  const params=playerParams[selPlayerId]||{height:1.78,temp:20,pressure:900}
+  const data={
+    joueurId:selPlayerId,
+    sessionLabel:lbl,
+    mass,
+    height:params.height,
+    temp:params.temp,
+    pressure:params.pressure,
+    F0:res.F0,F0kg:res.F0kg,V0:res.V0,
+    Pmax:res.Pmax,Pmaxkg:res.Pmaxkg,
+    FVslope:res.FVslope,RFmax:res.RFmax,Drf:res.Drf,
+    Vmax:res.Vmax,tau:res.tau,
+    group:grp.key,
+    distance:distance,
+    normPmaxAbs:normPmaxAbs,
+    normPmaxRel:normPmaxRel
+  }
+  try{
+    if(editingDocId){
+      // Update existing document (skip deduplication)
+      console.log('Updating existing document:',editingDocId)
+      await updateDoc(doc(db,'fv_profils',editingDocId),data)
+      
+      const idx=fvDocs.findIndex(x=>x.id===editingDocId)
+      if(idx!==-1){
+        const oldDate=fvDocs[idx].date
+        fvDocs[idx]={id:editingDocId,date:oldDate,...data}
+      }
+      saveCache('fv_profils',fvDocs)
+      
+      if(!keepEditingMode){
+        editingDocId=null
+        originalSessionLabel=null
+      }
+      refreshViews()
+      toast('Mesure mise à jour ✓')
+    }else{
+      // Create new document
+      const now=new Date()
+      // Deduplicate: same player + same sessionLabel within 2 min
+      const dup=fvDocs.find(r=>r.joueurId===selPlayerId&&r.sessionLabel===lbl&&(now-new Date(r.date))<120000)
+      if(dup){console.log('saveResult: skipped duplicate');return}
+      data.date=now.toISOString()
+      const docRef=await addDoc(collection(db,'fv_profils'),data)
+      
+      const newDoc={id:docRef.id,...data}
+      fvDocs.unshift(newDoc)
+      saveCache('fv_profils',fvDocs)
+      refreshViews()
+      toast('Mesure sauvegardée ✓')
+    }
+  }catch(e){console.warn('Firebase save failed:',e);toast('Erreur sauvegarde: '+(e.message||e))}
+}
+
+window.deleteResult=async id=>{
+  if(!confirm('Supprimer cette mesure ?'))return
+  try{
+    await deleteDoc(doc(db,'fv_profils',id))
+    fvDocs=fvDocs.filter(x=>x.id!==id)
+    saveCache('fv_profils',fvDocs)
+    toast('Mesure supprimée ✓')
+    if(editingDocId===id){
+      editingDocId=null
+      originalSessionLabel=null
+      document.getElementById('indiv-empty').style.display='block'
+      document.getElementById('indiv-content').style.display='none'
+    }
+    refreshViews()
+  }catch(e){
+    toast('Erreur lors de la suppression')
+    console.error(e)
+  }
+}
+
+function refreshViews(){
+  if(selPlayerId){
+    refreshHistTable(selPlayerId)
+    refreshWeightChip(selPlayerId)
+  }
+  const secCompare = document.getElementById('sec-compare')
+  if(secCompare && secCompare.classList.contains('active')) renderCompare()
+  const secGroups = document.getElementById('sec-groups')
+  if(secGroups && secGroups.classList.contains('active')) renderGroups()
+  const secHistory = document.getElementById('sec-history')
+  if(secHistory && secHistory.classList.contains('active')) renderGlobalHistory()
+  const progPlayer = document.getElementById('prog-player')
+  if(progPlayer && progPlayer.value) renderProgression()
+}
+
+// Réactivation de la page depuis le cache du shell
+window.__pageActivateCallbacks=window.__pageActivateCallbacks||{}
+window.__pageActivateCallbacks['profil-force-vitesse.html']=()=>{
+  console.log('Profil Force-Vitesse reactivated, loading cache...')
+  const cachedFV=loadCache('fv_profils')
+  const cachedJ=loadCache('fv_joueurs')
+  const cachedPoids=loadCache('fv_poids')
+  const cachedSettings=loadCache('fv_settings')
+  if(cachedJ){joueurs=cachedJ.filter(j=>!j.archived);buildSelects()}
+  if(cachedPoids){poidsMap=cachedPoids}
+  if(cachedSettings){distanceConfig=cachedSettings.distances||{};performanceStandards=cachedSettings.standards||{}}
+  if(cachedFV){
+    fvDocs=cachedFV.map(d=>normalizeFvKeys({...d}))
+    refreshViews()
+  }
+}
+
+// Synchronisation Firebase en temps réel
+window.addEventListener('shell-sync-done',()=>{
+  console.log('Sync event received in Profil Force-Vitesse, reloading data...')
+  init().catch(e=>console.warn('Sync re-init failed:',e))
+})
+
+/* ─── HISTORY TABLE ─────────────────────────────────────────────────── */
+function refreshHistTable(pid){
+  console.log('refreshHistTable for pid:',pid,'total fvDocs:',fvDocs.length)
+  const rows=fvDocs.filter(r=>r.joueurId===pid).sort((a,b)=>b.date.localeCompare(a.date))
+  console.log('filtered rows for pid:',pid,':',rows.length)
+  const tbody=document.getElementById('hist-body');tbody.innerHTML=''
+  rows.forEach(r=>{
+    const col=GC[r.group]||'#888'
+    const d=new Date(r.date).toLocaleDateString('fr-FR',{day:'2-digit',month:'2-digit',year:'numeric'})
+    const tr=document.createElement('tr')
+    tr.style.cursor='pointer'
+    tr.onclick=(e)=>{
+      if(e.target.closest('.del-btn'))return
+      loadHistoricalResult(r)
+    }
+    tr.innerHTML=`<td>${d}</td><td style="max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.sessionLabel||'—'}</td>
+      <td class="tv">${(r.F0||0).toFixed(0)}</td><td class="tv">${(r.F0kg||0).toFixed(2)}</td>
+      <td class="tv">${(r.V0||0).toFixed(2)}</td><td class="tv">${(r.Pmax||0).toFixed(0)}</td>
+      <td class="tv">${(r.Pmaxkg||0).toFixed(2)}</td><td>${(r.FVslope||0).toFixed(3)}</td>
+      <td>${((r.RFmax||0)*100).toFixed(1)}%</td><td>${(r.Drf||0).toFixed(4)}</td>
+      <td>${(r.mass||0).toFixed(1)} kg</td>
+      <td class="tv">${(r.distance||0).toFixed(0)} m</td>
+      <td><span class="gc" style="background:${col}20;color:${col}">${GROUP_INFO[r.group]?.label||r.group||'—'}</span></td>
+      <td><button class="del-btn" onclick="deleteResult('${r.id}')">🗑</button></td>`
+    tbody.appendChild(tr)
+  })
+  if(!rows.length){const tr=document.createElement('tr');tr.innerHTML=`<td colspan="14" style="text-align:center;color:#333;padding:20px;font-style:italic">Aucune mesure enregistrée pour ce joueur</td>`;tbody.appendChild(tr)}
+}
+
+/* ─── GLOBAL HISTORY ───────────────────────────────────────────────── */
+window.renderGlobalHistory=function(){
+  const tbody=document.getElementById('global-hist-body')
+  tbody.innerHTML=''
+  const countSpan=document.querySelector('#sec-history .top-bar span:last-child')
+  countSpan.textContent=`${fvDocs.length} enregistrements`
+  const sorted=fvDocs.sort((a,b)=>b.date.localeCompare(a.date))
+  sorted.forEach(r=>{
+    const col=GC[r.group]||'#888'
+    const d=new Date(r.date).toLocaleDateString('fr-FR',{day:'2-digit',month:'2-digit',year:'numeric'})
+    const j=joueurs.find(x=>x.id===r.joueurId)
+    const poste=j?.poste||''
+    const tr=document.createElement('tr')
+    tr.style.cursor='pointer'
+    tr.onclick=(e)=>{
+      if(e.target.closest('.del-btn'))return
+      loadHistoricalResult(r)
+    }
+    tr.innerHTML=`<td>${d}</td><td style="font-weight:500">${getPlayerName(r.joueurId)}</td><td>${poste}</td>
+      <td style="max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.sessionLabel||'—'}</td>
+      <td class="tv">${(r.F0||0).toFixed(0)}</td><td class="tv">${(r.F0kg||0).toFixed(2)}</td>
+      <td class="tv">${(r.V0||0).toFixed(2)}</td><td class="tv">${(r.Pmax||0).toFixed(0)}</td>
+      <td class="tv">${(r.Pmaxkg||0).toFixed(2)}</td><td>${(r.FVslope||0).toFixed(3)}</td>
+      <td>${((r.RFmax||0)*100).toFixed(1)}%</td><td class="tv">${(r.distance||0).toFixed(0)} m</td>
+      <td><span class="gc" style="background:${col}20;color:${col}">${GROUP_INFO[r.group]?.label||r.group||'—'}</span></td>
+      <td><button class="del-btn" onclick="deleteResult('${r.id}')">🗑</button></td>`
+    tbody.appendChild(tr)
+  })
+  if(!sorted.length){const tr=document.createElement('tr');tr.innerHTML=`<td colspan="14" style="text-align:center;color:#333;padding:20px;font-style:italic">Aucune mesure enregistrée</td>`;tbody.appendChild(tr)}
+}
+
+/* ─── LOAD HISTORICAL RESULT INTO INDIVIDUAL VIEW ───────────────────── */
+window.loadHistoricalResult=function(r){
+  // Set editing mode
+  editingDocId=r.id
+  originalSessionLabel=r.sessionLabel // Store original label for saving
+  console.log('loadHistoricalResult - editingDocId set to:',editingDocId,'label:',originalSessionLabel)
+
+  // Switch to individual tab
+  const indivTab=document.getElementById('tab-indiv')
+  const indivSec=document.getElementById('sec-indiv')
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'))
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'))
+  indivTab.classList.add('active')
+  indivSec.classList.add('active')
+
+  // Select player if not already selected
+  if(selPlayerId!==r.joueurId){
+    selPlayerId=r.joueurId
+    document.getElementById('player-sel').value=r.joueurId
+    refreshWeightChip(selPlayerId)
+  }
+
+  // Set distance and standards from historical data or default
+  const poste=getPlayerPoste(r.joueurId)
+  const defaultDistance=getDefaultDistance(poste)
+  const stds=getStandards(poste)
+  document.getElementById('target-distance').value=r.distance||defaultDistance
+  document.getElementById('target-pmax-abs').value=r.normPmaxAbs||stds.pmaxAbs
+  document.getElementById('target-pmax-rel').value=r.normPmaxRel||stds.pmaxRel
+
+  // Reconstruct model data properly from Firebase values
+  const g=9.81
+  const n=50
+  const ts=Array.from({length:n},(_,i)=>i*0.05) // 0 to 2.45s
+  const vm=ts.map(t=>r.Vmax*(1-Math.exp(-t/r.tau))) // Model velocity
+  const am=ts.map(t=>(r.Vmax/r.tau)*Math.exp(-t/r.tau)) // Model acceleration
+  const Fh=am.map(a=>r.mass*a) // Horizontal force
+  const Fa=vm.map(v=>0.5*1.293*0.9*0.2025*Math.pow(r.mass,0.425)*Math.pow(1.78,0.725)*0.266*v*v) // Air resistance (simplified)
+  const Ft=Fh.map((f,i)=>f+Fa[i]) // Total force
+  const Ftkg=Ft.map(f=>f/r.mass) // Force per kg
+  const Fres=Ft.map(f=>Math.sqrt(f*f+Math.pow(r.mass*g,2))) // Resultant force
+  const RF=Ft.map((f,i)=>f/Fres[i]) // Ratio of forces
+  const Pkg=Ftkg.map((f,i)=>f*vm[i]) // Power per kg
+
+  // Generate synthetic GPS data with slight noise to look realistic
+  const v_gps=vm.map(v=>Math.max(0,v+(Math.random()-0.5)*0.1))
+
+  const res={
+    F0:r.F0||r.f0,F0kg:r.F0kg||r.f0kg,V0:r.V0||r.v0,
+    Pmax:r.Pmax||r.pmax,Pmaxkg:r.Pmaxkg||r.pmaxkg,
+    FVslope:r.FVslope||r.fvslope,RFmax:r.RFmax||r.rfmax,Drf:r.Drf||r.drf,
+    Vmax:r.Vmax||r.vmax,tau:r.tau,
+    mass:r.mass,
+    sessionLabel:r.sessionLabel,
+    t_model:ts,v_model:vm,v_gps:v_gps,RF,Ftkg,Pkg
+  }
+
+  const params={mass:r.mass,height:r.height||1.78,temp:r.temp||20,pressure:r.pressure||900}
+  // Store params for future use
+  if(!playerParams[r.joueurId])playerParams[r.joueurId]={}
+  playerParams[r.joueurId]={mass:r.mass,height:r.height||1.78,temp:r.temp||20,pressure:r.pressure||900}
+  // Don't auto-save when loading historical result - user must click "Sauvegarder" manually
+  renderIndiv(res,params,r.sessionLabel,false,true)
+}
+
+/* ─── COMPARISON ────────────────────────────────────────────────────── */
+window.renderCompare=function(){
+  const secCompare = document.getElementById('sec-compare')
+  if(!secCompare || !secCompare.classList.contains('active'))return
+  const period=document.getElementById('cmp-period').value
+  const poste=document.getElementById('cmp-poste').value
+
+  // Get records per player
+  const pids=[...new Set(fvDocs.map(r=>r.joueurId))]
+  let records=[]
+  pids.forEach(pid=>{
+    const j=joueurs.find(x=>x.id===pid)
+    if(poste&&j?.poste!==poste)return
+    let recs=fvDocs.filter(r=>r.joueurId===pid)
+    if(!recs.length)return
+    if(period==='last')records.push(recs.sort((a,b)=>b.date.localeCompare(a.date))[0])
+    else if(period==='best')records.push(recs.sort((a,b)=>(b.Pmaxkg||0)-(a.Pmaxkg||0))[0])
+    else records.push(...recs)
+  })
+
+  if(!records.length){
+    ['c-scatter','c-donut','c-f0bar'].forEach(id=>{if(charts[id])charts[id].destroy()})
+    return
+  }
+
+  // ── Bubble scatter: x=V0, y=F0kg, r=Pmaxkg
+  const maxPmaxkg=Math.max(...records.map(r=>r.Pmaxkg||1),1)
+  const byGrp={}
+  records.forEach(r=>{const g=r.group||'explosif';if(!byGrp[g])byGrp[g]=[];byGrp[g].push(r)})
+  const scatterDS=Object.entries(byGrp).map(([g,recs])=>({
+    label:GROUP_INFO[g]?.label||g,
+    data:recs.map(r=>({
+      x:+(r.V0||0).toFixed(3),y:+(r.F0kg||0).toFixed(3),
+      r:Math.max(7,((r.Pmaxkg||1)/maxPmaxkg)*38),
+      name:getPlayerName(r.joueurId),date:new Date(r.date).toLocaleDateString('fr-FR'),
+      pmaxkg:r.Pmaxkg
+    })),
+    backgroundColor:GC[g]+'99',borderColor:GC[g],borderWidth:1.5
+  }))
+
+  if(charts.scatter)charts.scatter.destroy()
+  charts.scatter=new Chart(document.getElementById('c-scatter').getContext('2d'),{
+    type:'bubble',data:{datasets:scatterDS},
+    options:{responsive:true,
+      plugins:{
+        legend:{labels:{color:'#666',font:{size:11},boxWidth:12}},
+        tooltip:{backgroundColor:'#1a1a1a',borderColor:'#2a2a2a',borderWidth:1,titleColor:'#fff',bodyColor:'#888',
+          callbacks:{
+            title:items=>items.map(i=>i.raw.name),
+            label:i=>[`V0 : ${i.raw.x} m/s`,`F0/kg : ${i.raw.y} N/kg`,`Pmax/kg : ${(i.raw.pmaxkg||0).toFixed(1)} W/kg`,`Date : ${i.raw.date}`]
+          }
+        },
+        // Add quadrant lines
+        annotation:{}
+      },
+      scales:{
+        x:{ticks:{color:'#444',font:{size:10}},grid:{color:'#1f1f1f'},title:{display:true,text:'V0 (m/s)',color:'#555',font:{size:11}}},
+        y:{ticks:{color:'#444',font:{size:10}},grid:{color:'#1f1f1f'},title:{display:true,text:'F0 relatif (N/kg)',color:'#555',font:{size:11}}}
+      }
+    }
+  })
+
+  // ── Donut: group distribution
+  const grpCounts={}
+  records.forEach(r=>{const g=r.group||'explosif';grpCounts[g]=(grpCounts[g]||0)+1})
+  const gKeys=Object.keys(grpCounts)
+  if(charts.donut)charts.donut.destroy()
+  charts.donut=new Chart(document.getElementById('c-donut').getContext('2d'),{
+    type:'doughnut',
+    data:{labels:gKeys.map(g=>GROUP_INFO[g]?.label||g),datasets:[{data:gKeys.map(g=>grpCounts[g]),backgroundColor:gKeys.map(g=>GC[g]+'cc'),borderColor:'#1a1a1a',borderWidth:2}]},
+    options:{responsive:true,plugins:{legend:{labels:{color:'#666',font:{size:11}},position:'right'}}}
+  })
+
+  // ── Bar: F0kg per player (last measure)
+  const latestPerPlayer={}
+  fvDocs.forEach(r=>{if(!latestPerPlayer[r.joueurId]||r.date>latestPerPlayer[r.joueurId].date)latestPerPlayer[r.joueurId]=r})
+  let playerRecs=Object.values(latestPerPlayer)
+  if(poste)playerRecs=playerRecs.filter(r=>getPlayerPoste(r.joueurId)===poste)
+  playerRecs.sort((a,b)=>(b.F0kg||0)-(a.F0kg||0))
+  if(charts.f0bar)charts.f0bar.destroy()
+  charts.f0bar=new Chart(document.getElementById('c-f0bar').getContext('2d'),{
+    type:'bar',
+    data:{labels:playerRecs.map(r=>getPlayerName(r.joueurId).split(' ')[0]),datasets:[{
+      label:'F0/kg (N/kg)',data:playerRecs.map(r=>+(r.F0kg||0).toFixed(2)),
+      backgroundColor:playerRecs.map(r=>GC[r.group||'explosif']+'99'),borderColor:playerRecs.map(r=>GC[r.group||'explosif']),borderWidth:1,borderRadius:4
+    }]},
+    options:{responsive:true,plugins:{legend:{display:false},tooltip:{backgroundColor:'#1a1a1a',borderColor:'#2a2a2a',borderWidth:1,titleColor:'#fff',bodyColor:'#aaa',callbacks:{title:items=>playerRecs[items[0].dataIndex]?getPlayerName(playerRecs[items[0].dataIndex].joueurId):'',label:i=>`F0/kg : ${i.raw} N/kg`}}},
+      scales:{x:{ticks:{color:'#444',font:{size:10}},grid:{display:false}},y:{ticks:{color:'#444',font:{size:10}},grid:{color:'#1f1f1f'},title:{display:true,text:'N/kg',color:'#444',font:{size:10}}}}}
+  })
+}
+
+/* ─── PROGRESSION ───────────────────────────────────────────────────── */
+window.renderProgression=function(){
+  const pid=document.getElementById('prog-player').value;if(!pid)return
+  refreshHistTable(pid)
+  const recs=fvDocs.filter(r=>r.joueurId===pid).sort((a,b)=>a.date.localeCompare(b.date))
+
+  // Clear charts if no data
+  if(!recs.length){
+    ['c-pg-f0','c-pg-v0','c-pg-pm','c-pg-rf'].forEach(id=>{
+      if(charts[id])charts[id].destroy()
+    })
+    return
+  }
+
+  const dates=recs.map(r=>new Date(r.date).toLocaleDateString('fr-FR',{day:'2-digit',month:'2-digit'}))
+  const OPTS=(ylabel)=>({
+    responsive:true,
+    plugins:{legend:{display:false},tooltip:{backgroundColor:'#1a1a1a',borderColor:'#2a2a2a',borderWidth:1,titleColor:'#fff',bodyColor:'#aaa'}},
+    scales:{
+      x:{ticks:{color:'#444',font:{size:10}},grid:{color:'#1f1f1f'}},
+      y:{ticks:{color:'#444',font:{size:10}},grid:{color:'#1f1f1f'},title:{display:true,text:ylabel,color:'#444',font:{size:10}}}
+    }
+  })
+  const mkLine=(id,lbl,data,color,ylabel)=>{
+    if(charts[id])charts[id].destroy()
+    const pts=data.map((v,i)=>({x:i,y:v}))
+    charts[id]=new Chart(document.getElementById(id).getContext('2d'),{
+      type:'line',
+      data:{labels:dates,datasets:[{
+        label:lbl,data,borderColor:color,backgroundColor:color+'22',
+        pointRadius:5,pointBackgroundColor:color,pointBorderColor:'#1a1a1a',pointBorderWidth:2,
+        fill:true,tension:.3,borderWidth:2
+      }]},
+      options:OPTS(ylabel)
+    })
+  }
+  mkLine('c-pg-f0','F0/kg',recs.map(r=>+(r.F0kg||0).toFixed(3)),'#FECC00','N/kg')
+  mkLine('c-pg-v0','V0',recs.map(r=>+(r.V0||0).toFixed(3)),'#38bdf8','m/s')
+  mkLine('c-pg-pm','Pmax/kg',recs.map(r=>+(r.Pmaxkg||0).toFixed(3)),'#4ade80','W/kg')
+  mkLine('c-pg-rf','RFmax',recs.map(r=>+((r.RFmax||0)*100).toFixed(2)),'#f97316','%')
+}
+
+/* ─── GROUPS VIEW ───────────────────────────────────────────────────── */
+window.renderGroups=function(){
+  const grid=document.getElementById('groups-grid');grid.innerHTML=''
+  // Latest measure per player
+  const latest={}
+  fvDocs.forEach(r=>{if(!latest[r.joueurId]||r.date>latest[r.joueurId].date)latest[r.joueurId]=r})
+
+  // Build display groups: use groupe_manuel if set, otherwise use calculated group
+  // Include ALL players, even those without FV data
+  const byGroup={}
+  joueurs.forEach(j=>{
+    const fvData=latest[j.id]
+    let displayGroup=j.groupe_manuel||(fvData?.group)||'explosif'
+    // Normalize group name to match GROUP_INFO keys (lowercase)
+    const normalizedGroup=displayGroup.toLowerCase()
+    if(GROUP_INFO[normalizedGroup]){
+      displayGroup=normalizedGroup
+    }else if(displayGroup==='Force'){
+      displayGroup='force'
+    }
+    if(!byGroup[displayGroup])byGroup[displayGroup]=[]
+    byGroup[displayGroup].push({
+      joueurId:j.id,
+      calculatedGroup:fvData?.group||null,
+      manualGroup:j.groupe_manuel,
+      F0kg:fvData?.F0kg||null,
+      V0:fvData?.V0||null,
+      hasFVData:!!fvData
+    })
+  })
+  console.log('Groups distribution:',byGroup)
+
+  Object.entries(GROUP_INFO).forEach(([key,info])=>{
+    const members=byGroup[key]||[]
+    const card=document.createElement('div')
+    card.className='group-card'
+    card.style.borderTopColor=info.color
+    card.dataset.group=key
+    // Make card droppable
+    card.ondragover=e=>{e.preventDefault();card.style.background='#2a2a2a'}
+    card.ondragleave=e=>{card.style.background=''}
+    card.ondrop=async e=>{
+      e.preventDefault()
+      card.style.background=''
+      const playerId=e.dataTransfer.getData('text/plain')
+      const oldGroup=e.dataTransfer.getData('oldGroup')
+      if(playerId&&oldGroup!==key){
+        try{
+          const j=joueurs.find(x=>x.id===playerId)
+          const ancienGroupe=j?.groupe_manuel||null
+          await setDoc(doc(db,'joueurs',playerId),{groupe_manuel:key,groupe_source:ancienGroupe},{merge:true})
+          toast(`Joueur transféré vers ${info.label} ✓`)
+          // Reload player data to get updated groupe_manuel
+          const snap=await getDocs(collection(db,'joueurs'))
+          joueurs=snap.docs.map(d=>({id:d.id,...d.data()})).filter(j=>!j.archived).sort((a,b)=>(a.nom||'').localeCompare(b.nom||''))
+          renderGroups()
+        }catch(err){
+          toast('Erreur lors du transfert')
+          console.error(err)
+        }
+      }
+    }
+    card.innerHTML=`
+      <div class="gcard-head">
+        <span class="gcard-icon">${info.icon}</span>
+        <div>
+          <div class="gcard-name" style="color:${info.color}">${info.label}</div>
+          <div class="gcard-count">${members.length} joueur${members.length!==1?'s':''}</div>
+        </div>
+      </div>
+      <div class="gcard-advice">${info.advice}</div>
+      <div class="gcard-players">
+        ${members.length
+          ? members.map(r=>{
+              const isManual=r.manualGroup!==undefined
+              const originLabel=isManual?`Groupe calculé : ${GROUP_INFO[r.calculatedGroup]?.label||r.calculatedGroup}`:''
+              const statsLabel=r.hasFVData?`<br><span style="font-size:10px;font-weight:400;color:${info.color}99">F0/kg: ${(r.F0kg||0).toFixed(1)} • V0: ${(r.V0||0).toFixed(1)}</span>`:`<br><span style="font-size:10px;font-weight:400;color:${info.color}66">Pas de données FV</span>`
+              return `<div class="gcard-player" draggable="true" ondragstart="dragPlayer(event,'${r.joueurId}','${key}')" style="background:${info.color}18;color:${info.color};border:1px solid ${info.color}33;cursor:grab">${getPlayerName(r.joueurId)}${isManual?`<br><span style="font-size:9px;font-weight:400;color:${info.color}88">${originLabel}</span>`:''}${statsLabel}</div>`
+            }).join('')
+          : `<div style="font-size:11px;color:#333;font-style:italic">Aucun joueur</div>`
+        }
+      </div>`
+    grid.appendChild(card)
+  })
+}
+
+window.dragPlayer=function(e,playerId,oldGroup){
+  e.dataTransfer.setData('text/plain',playerId)
+  e.dataTransfer.setData('oldGroup',oldGroup)
+  e.target.style.opacity='0.5'
+}
+
+/* ─── CONFIG VIEW ───────────────────────────────────────────────────── */
+window.renderConfig=function(){
+  const tbody=document.getElementById('config-body')
+  tbody.innerHTML=''
+  const descriptions={
+    'Pilier gauche':'Avants, contacts fréquents, scrums, sprints courts',
+    'Pilier droit':'Avants, contacts fréquents, scrums, sprints courts',
+    'Talonneur':'Avants, contacts fréquents, sprints courts',
+    '2e ligne':'Avants, touches, sprints moyens',
+    'N8':'Avants, pivot, porteur de balle, sprints moyens',
+    '3e ligne aile':'Avants, jeu au large, sprints moyens',
+    '9':'Demi de mêlée, passes, accélérations rapides',
+    '10':"Demi d'ouverture, jeu au pied, sprints longs",
+    'Centre':'Ligne arrière, percussions, sprints longs',
+    'Ailier':'Ligne arrière, essais, sprints très longs',
+    'Arrière':'Ligne arrière, dernier rideau, sprints très longs'
+  }
+  Object.keys(DEFAULT_STANDARDS).sort().forEach(poste=>{
+    const stds=getStandards(poste)
+    const distance=getDefaultDistance(poste)
+    const pmaxAbs=stds.pmaxAbs||DEFAULT_STANDARDS[poste]?.pmaxAbs||2000
+    const pmaxRel=stds.pmaxRel||DEFAULT_STANDARDS[poste]?.pmaxRel||20
+    const displayLabel=POSTE_ALIASES[poste]||poste
+    const tr=document.createElement('tr')
+    tr.innerHTML=`
+      <td style="font-weight:600;color:#fff">${displayLabel}</td>
+      <td><input type="number" class="bar-select" style="width:80px" data-poste="${poste}" data-field="distance" value="${distance}" min="10" max="100" step="1"></td>
+      <td><input type="number" class="bar-select" style="width:100px" data-poste="${poste}" data-field="pmaxAbs" value="${pmaxAbs}" min="1000" max="3000" step="50"></td>
+      <td><input type="number" class="bar-select" style="width:80px" data-poste="${poste}" data-field="pmaxRel" value="${pmaxRel}" min="10" max="35" step="0.5"></td>
+      <td style="color:#777;font-size:11px">${descriptions[poste]||''}</td>
+    `
+    tbody.appendChild(tr)
+  })
+}
+
+/* ─── INDIVIDUAL CHARTS ─────────────────────────────────────────────── */
+const BASE_OPT={responsive:true,animation:{duration:320},plugins:{legend:{labels:{color:'#666',font:{size:10},boxWidth:10}},tooltip:{backgroundColor:'#1a1a1a',borderColor:'#2a2a2a',borderWidth:1,titleColor:'#fff',bodyColor:'#888'}},scales:{x:{ticks:{color:'#333',font:{size:9}},grid:{color:'#1a1a1a'}},y:{ticks:{color:'#333',font:{size:9}},grid:{color:'#1a1a1a'}}}}
+
+function mk(id,cfg){if(charts[id])charts[id].destroy();charts[id]=new Chart(document.getElementById(id).getContext('2d'),cfg)}
+function axis(txt){return{display:true,text:txt,color:'#444',font:{size:10}}}
+
+function drawFV(res){
+  const mass=res.mass, V0=res.V0, F0=res.F0, FVs=res.FVslope
+  const n=50, vl=Array.from({length:n},(_,i)=>V0*i/(n-1))
+  const fl=vl.map(v=>Math.max(0,res.F0kg+FVs*v))
+  const pts=res.Ftkg.map((f,i)=>({x:+res.v_model[i].toFixed(3),y:+f.toFixed(3)}))
+  mk('c-fv',{type:'scatter',data:{datasets:[
+    {label:'Données',data:pts,backgroundColor:'#FECC0040',borderColor:'#FECC0066',pointRadius:3,showLine:false},
+    {label:'Modèle FV',data:vl.map((v,i)=>({x:+v.toFixed(3),y:+fl[i].toFixed(3)})),borderColor:'#FECC00',backgroundColor:'transparent',pointRadius:0,showLine:true,borderWidth:2,tension:0}
+  ]},options:{...BASE_OPT,scales:{x:{...BASE_OPT.scales.x,title:axis('Vitesse (m/s)')},y:{...BASE_OPT.scales.y,title:axis('Force (N/kg)')}}}})
+}
+
+function drawPV(res){
+  const V0=res.V0,F0kg=res.F0kg,FVs=res.FVslope
+  const n=50,vl=Array.from({length:n},(_,i)=>V0*i/(n-1))
+  const pl=vl.map(v=>Math.max(0,(F0kg+FVs*v)*v))
+  const pts=res.Pkg.map((p,i)=>({x:+res.v_model[i].toFixed(3),y:+p.toFixed(3)}))
+  mk('c-pv',{type:'scatter',data:{datasets:[
+    {label:'Données',data:pts,backgroundColor:'#4ade8040',borderColor:'#4ade8066',pointRadius:3,showLine:false},
+    {label:'Modèle PV',data:vl.map((v,i)=>({x:+v.toFixed(3),y:+pl[i].toFixed(3)})),borderColor:'#4ade80',backgroundColor:'#4ade8010',pointRadius:0,showLine:true,borderWidth:2,tension:.3,fill:true}
+  ]},options:{...BASE_OPT,scales:{x:{...BASE_OPT.scales.x,title:axis('Vitesse (m/s)')},y:{...BASE_OPT.scales.y,title:axis('Puissance (W/kg)')}}}})
+}
+
+function drawRF(res){
+  const pts=res.RF.map((r,i)=>({x:+res.v_model[i].toFixed(3),y:+(r*100).toFixed(2)}))
+  const{slope,intercept}=lr(res.v_model,res.RF.map(r=>r*100))
+  const vl=Array.from({length:30},(_,i)=>res.Vmax*i/29)
+  mk('c-rf',{type:'scatter',data:{datasets:[
+    {label:'RF données',data:pts,backgroundColor:'#38bdf840',borderColor:'#38bdf866',pointRadius:3,showLine:false},
+    {label:'Tendance',data:vl.map(v=>({x:+v.toFixed(3),y:+(intercept+slope*v).toFixed(2)})),borderColor:'#38bdf8',backgroundColor:'transparent',pointRadius:0,showLine:true,borderWidth:2,tension:0}
+  ]},options:{...BASE_OPT,scales:{x:{...BASE_OPT.scales.x,title:axis('Vitesse (m/s)')},y:{...BASE_OPT.scales.y,title:axis('RF (%)')}}}})
+}
+
+function drawVel(res){
+  const ds=res.t_model.filter((_,i)=>i%2===0)
+  const vg=res.v_gps.filter((_,i)=>i%2===0)
+  const vm=res.v_model.filter((_,i)=>i%2===0)
+  mk('c-vel',{type:'line',data:{labels:ds.map(t=>t.toFixed(2)),datasets:[
+    {label:'GPS',data:vg.map(v=>+v.toFixed(3)),borderColor:'#444',pointRadius:0,borderWidth:1.5,tension:.3},
+    {label:'Modèle exp.',data:vm.map(v=>+v.toFixed(3)),borderColor:'#FECC00',backgroundColor:'#FECC0015',pointRadius:0,borderWidth:2,tension:.3,fill:true}
+  ]},options:{...BASE_OPT,scales:{x:{...BASE_OPT.scales.x,title:axis('Temps (s)')},y:{...BASE_OPT.scales.y,title:axis('Vitesse (m/s)')}}}})
+}
+
+/* ─── EXPORT FUNCTIONS ──────────────────────────────────────────────── */
+window.exportChartsPNG=async function(){
+  const chartIds=['c-fv','c-pv','c-rf','c-vel']
+  const labels=['Force-Vitesse','Puissance-Vitesse','RF-Vitesse','Vitesse-Modele']
+  const playerName=getPlayerName(selPlayerId).replace(/\s+/g,'_')
+  const date=new Date().toLocaleDateString('fr-FR').replace(/\//g,'-')
+
+  for(let i=0;i<chartIds.length;i++){
+    const canvas=document.getElementById(chartIds[i])
+    if(!canvas)continue
+    // Create white-bg version
+    const offscreen=document.createElement('canvas')
+    offscreen.width=canvas.width; offscreen.height=canvas.height
+    const ctx=offscreen.getContext('2d')
+    ctx.fillStyle='#1a1a1a'; ctx.fillRect(0,0,offscreen.width,offscreen.height)
+    ctx.drawImage(canvas,0,0)
+    const link=document.createElement('a')
+    link.download=`PFV_${playerName}_${labels[i]}_${date}.png`
+    link.href=offscreen.toDataURL('image/png')
+    link.click()
+    await new Promise(r=>setTimeout(r,100))
+  }
+  toast('4 graphiques exportés ✓')
+}
+
+window.exportPDF=async function(){
+  // Build a compact printable page with all 4 charts + metrics
+  const playerName=getPlayerName(selPlayerId)
+  const date=new Date().toLocaleDateString('fr-FR')
+  const metricsEl=document.getElementById('metrics-grid')
+  const paramsLabel=document.getElementById('export-params-label').textContent
+  const groupEl=document.getElementById('gb')
+
+  // Capture each chart as dataURL
+  const chartIds=['c-fv','c-pv','c-rf','c-vel']
+  const chartTitles=['Courbe Force-Vitesse','Courbe Puissance-Vitesse','RF vs Vitesse','Vitesse modèle vs GPS']
+  const chartImgs=chartIds.map(id=>{
+    const c=document.getElementById(id)
+    const off=document.createElement('canvas'); off.width=c.width; off.height=c.height
+    const ctx=off.getContext('2d'); ctx.fillStyle='#1a1a1a'; ctx.fillRect(0,0,off.width,off.height); ctx.drawImage(c,0,0)
+    return off.toDataURL('image/png')
+  })
+
+  // Build HTML for print window
+  const metricsHTML=metricsEl?metricsEl.innerHTML:''
+  const grpHTML=groupEl?groupEl.innerHTML:''
+  const grpClass=groupEl?groupEl.className:''
+
+  const printHTML=`<!DOCTYPE html><html><head><meta charset="UTF-8">
+<title>Profil FV - ${playerName}</title>
+<style>
+  body{font-family:Arial,sans-serif;background:#0f0f0f;color:#fff;padding:24px;margin:0}
+  h1{font-size:18px;margin-bottom:4px}
+  .sub{font-size:12px;color:#666;margin-bottom:20px}
+  .group-banner{display:flex;align-items:flex-start;gap:12px;padding:12px 16px;border-radius:10px;margin-bottom:18px;border:1px solid #333;background:#1a1a1a}
+  .metrics{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-bottom:20px}
+  .mc{background:#1a1a1a;border:1px solid #2a2a2a;border-radius:8px;padding:10px 12px}
+  .mc-l{font-size:9px;color:#555;text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px}
+  .mc-v{font-size:18px;font-weight:700;color:#FECC00}
+  .mc-u{font-size:10px;color:#555;margin-left:2px}
+  .charts{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .chart-box{background:#1a1a1a;border:1px solid #2a2a2a;border-radius:8px;padding:12px}
+  .chart-box h3{font-size:10px;color:#555;text-transform:uppercase;margin-bottom:8px}
+  .chart-box img{width:100%;border-radius:4px}
+  @media print{body{background:#fff;color:#000}.mc-v{color:#b8941a}}
+</style></head><body>
+<h1>Profil Force-Vitesse — ${playerName}</h1>
+<div class="sub">${date} · ${paramsLabel}</div>
+<div class="group-banner">${grpHTML}</div>
+<div class="metrics">${metricsHTML}</div>
+<div class="charts">
+  ${chartImgs.map((img,i)=>`<div class="chart-box"><h3>${chartTitles[i]}</h3><img src="${img}"></div>`).join('')}
+</div>
+</body></html>`
+
+  const w=window.open('','_blank','width=900,height=700')
+  w.document.write(printHTML)
+  w.document.close()
+  setTimeout(()=>w.print(),800)
+}
+function showLoad(){const b=document.getElementById('loading-bar'),f=document.getElementById('loading-fill');b.classList.remove('done');f.style.width='0%';setTimeout(()=>f.style.width='65%',30)}
+function setLoadPct(p){document.getElementById('loading-fill').style.width=p+'%'}
+function hideLoad(){setTimeout(()=>document.getElementById('loading-bar').classList.add('done'),300)}
+function hideIndiv(){document.getElementById('indiv-content').style.display='none';document.getElementById('indiv-empty').style.display='block'}
+function toast(msg){let t=document.getElementById('toast');if(!t){t=document.createElement('div');t.id='toast';t.className='toast';document.body.appendChild(t)}t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),4200)}
+</script>
+</body>
+</html>

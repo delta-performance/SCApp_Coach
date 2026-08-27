@@ -141,6 +141,9 @@
       .stats-row { grid-template-columns: 1fr 1fr; }
     }
   </style>
+  <link rel="manifest" href="../manifest.json">
+  <link rel="stylesheet" href="theme.css">
+  <script src="theme.js"></script>
 </head>
 <body>
   <!-- iPad TopBar -->
@@ -151,6 +154,8 @@
     </a>
     <div class="ipad-topbar-sep"></div>
     <div class="ipad-topbar-title">Suivi Poids</div>
+    <button class="theme-toggle-btn" onclick="toggleTheme()"><span class="theme-icon">☀️</span></button>
+    <button class="btn-ghost" onclick="logout()" style="margin-left:auto;min-height:36px;font-size:12px;">Déconnexion</button>
   </div>
 
   <!-- iPad Bottom Nav -->
@@ -163,7 +168,7 @@
       <span class="ipad-nav-icon">�</span>
       <span>Séances</span>
     </a>
-    <a class="ipad-nav-item" href="equipes.html?mode=entrainement">
+    <a class="ipad-nav-item" href="equipes.html">
       <span class="ipad-nav-icon">👥</span>
       <span>Équipes</span>
     </a>
@@ -242,9 +247,10 @@
   </div>
 
   <script type="module">
-    import { initializeApp } from './firebase-bundle.js'
-    import { getAuth, onAuthStateChanged, signOut } from './firebase-bundle.js'
-    import { getFirestore, collection, doc, getDocs, onSnapshot, setDoc, deleteDoc, serverTimestamp } from './firebase-bundle.js'
+    import { initializeApp } from './supabase-adapter.js'
+    import { getAuth, onAuthStateChanged, signOut, setPersistence, browserLocalPersistence } from './supabase-adapter.js'
+    import { getFirestore, collection, doc, getDocs, onSnapshot, setDoc, deleteDoc, serverTimestamp, query, where } from './supabase-adapter.js'
+    import './update-check.js'
 
     const firebaseConfig = {
       apiKey: "AIzaSyCvMs-5LX9Ivk3OkzUR3iz9Kk1E5b9_7Vk",
@@ -258,6 +264,23 @@
     const fbApp = initializeApp(firebaseConfig)
     const auth = getAuth(fbApp)
     const db = getFirestore(fbApp)
+
+    function getDataScopeStart() {
+      const scope = localStorage.getItem('delta-data-scope') || '30days'
+      if (scope === 'all') return null
+      if (window.__getDataScopeDates) {
+        return window.__getDataScopeDates(scope).start
+      }
+      const d = new Date()
+      d.setDate(d.getDate() - 30)
+      return d.toISOString().split('T')[0]
+    }
+
+    function scopedQuery(name, dateField = 'date') {
+      const start = getDataScopeStart()
+      if (!start) return collection(db, name)
+      return query(collection(db, name), where(dateField, '>=', start))
+    }
 
     const POSTES_ORDER = ['Pilier gauche','Talonneur','Pilier droit','2e Ligne','N8','3e Ligne aile','Demi de melee',"Demi d'ouverture",'Centre','Ailier','Arriere']
     const COULEURS_POSTE = { 'Pilier gauche':'#8B3A3A','Pilier droit':'#7A2A2A','Talonneur':'#6B3A8B','2e Ligne':'#3A6B8B','N8':'#1A6B4A','3e Ligne aile':'#3A8B6B','Demi de melee':'#8B6B3A',"Demi d'ouverture":'#6B8B3A','Centre':'#3A4A8B','Ailier':'#8B3A6B','Arriere':'#2A6B5B' }
@@ -277,7 +300,7 @@
       joueurs = snap.docs.map(d => ({ id: d.id, ...d.data() }))
 
       // Ecoute poids temps reel
-      onSnapshot(collection(db, 'poids'), snap => {
+      onSnapshot(scopedQuery('poids'), snap => {
         poidsAujourdhui = {}
         poidsHistorique = {}
         snap.docs.forEach(d => {
@@ -855,6 +878,12 @@
       renderRoster()
     }
 
-  </script>
+  
+
+    window.logout = async function() {
+      try { await signOut(auth) } catch(e) {}
+      window.location.href = 'login.html'
+    }
+</script>
 </body>
 </html>

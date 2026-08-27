@@ -1,6 +1,9 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <base href="../renderer/">
   <meta charset="UTF-8">
   <title>SCA Albi — Planification Muscu</title>
   <style>
@@ -103,133 +106,10 @@
 
     .empty { color: #444; text-align: center; padding: 60px; font-size: 13px; }
   </style>
-
-  <style>
-  /* ===== iPad-first NAV override ===== */
-  * { -webkit-tap-highlight-color: transparent; }
-  :root {
-    --yellow: #FECC00; --red: #E24B4A; --green: #1D9E75;
-    --bg: #0a0a0a; --bg2: #141414; --bg3: #1c1c1c;
-    --border: #1e1e1e; --border2: #2a2a2a;
-    --text: #fff; --text2: #888; --text3: #555;
-    --safe-bottom: env(safe-area-inset-bottom, 0px);
-    --topbar-h: 60px; --bottom-h: 68px;
-  }
-  /* Kill sidebar */
-  .sidebar { display: none !important; }
-  /* Body layout */
-  body { flex-direction: column !important; overflow: hidden !important; background: var(--bg) !important; }
-  /* Main takes full width */
-  .main { flex: 1 !important; display: flex !important; flex-direction: column !important; overflow: hidden !important;
-          padding-bottom: calc(var(--bottom-h) + var(--safe-bottom)) !important; }
-  /* Existing topbar: keep but restyle */
-  .main > .topbar, #topbar-liste, #topbar-editor {
-    border-bottom: 1px solid var(--border2) !important;
-    display: flex !important; align-items: center !important;
-    padding: 8px 16px !important; gap: 10px !important;
-    flex-shrink: 0 !important; flex-wrap: wrap !important;
-    background: var(--bg) !important; height: auto !important; min-height: 52px !important;
-  }
-  .topbar-title { display: none !important; }
-  /* iPad Topbar */
-  .ipad-topbar {
-    height: var(--topbar-h); background: var(--bg2); border-bottom: 1px solid var(--border);
-    display: flex; align-items: center; padding: 0 16px; gap: 12px; flex-shrink: 0;
-    padding-top: env(safe-area-inset-top, 0);
-  }
-  .ipad-topbar-home { display: flex; align-items: center; gap: 8px; text-decoration: none; }
-  .ipad-topbar-logo {
-    width: 34px; height: 34px; border-radius: 9px; background: var(--yellow);
-    display: flex; align-items: center; justify-content: center;
-    font-size: 13px; font-weight: 900; color: #000; flex-shrink: 0;
-  }
-  .ipad-topbar-sitename { font-size: 13px; font-weight: 700; color: var(--yellow); }
-  .ipad-topbar-sep { width: 1px; height: 22px; background: var(--border2); margin: 0 4px; }
-  .ipad-topbar-title { font-size: 18px; font-weight: 700; color: var(--text); flex: 1; }
-  /* Bottom Nav */
-  .ipad-bottom-nav {
-    position: fixed; bottom: 0; left: 0; right: 0;
-    height: calc(var(--bottom-h) + var(--safe-bottom));
-    padding-bottom: var(--safe-bottom);
-    background: var(--bg2); border-top: 1px solid var(--border);
-    display: flex; align-items: stretch; z-index: 9999;
-  }
-  .ipad-nav-item {
-    flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
-    gap: 3px; cursor: pointer; text-decoration: none; color: var(--text3);
-    font-size: 10px; font-weight: 600; letter-spacing: 0.02em; transition: color 0.12s;
-    padding: 0 2px; border: none; background: none;
-  }
-  .ipad-nav-item:active { background: #ffffff08; }
-  .ipad-nav-item.active { color: var(--yellow); }
-  .ipad-nav-icon { font-size: 22px; line-height: 1; }
-  /* Bigger buttons */
-  .btn-primary { padding: 11px 18px !important; border-radius: 10px !important; font-size: 14px !important; font-weight: 700 !important; min-height: 44px !important; cursor: pointer !important; }
-  .btn-ghost   { padding: 11px 14px !important; border-radius: 10px !important; font-size: 14px !important; min-height: 44px !important; cursor: pointer !important; }
-  .btn-danger  { padding: 11px 14px !important; border-radius: 10px !important; font-size: 14px !important; min-height: 44px !important; cursor: pointer !important; }
-  .btn-nav     { padding: 10px 14px !important; min-height: 44px !important; border-radius: 9px !important; font-size: 16px !important; }
-  /* Mode toggle */
-  .mode-toggle { border-radius: 10px !important; padding: 4px !important; }
-  .mode-btn    { padding: 9px 14px !important; border-radius: 7px !important; font-size: 13px !important; min-height: 38px !important; }
-  /* Prevent iOS input zoom */
-  input, select, textarea { font-size: 16px !important; }
-  /* Content scroll */
-  .content { flex: 1 !important; overflow-y: auto !important; -webkit-overflow-scrolling: touch !important; padding: 16px 18px !important; }
-  /* Touch targets */
-  .seance-card, .cycle-header, .semaine-header { min-height: 54px !important; }
-  /* Modal */
-  .modal { width: min(580px, 94vw) !important; max-width: 94vw !important; }
-  .modal-box { width: min(500px, 94vw) !important; }
-  </style>
-
   <link rel="manifest" href="../manifest.json">
-  <link rel="stylesheet" href="theme.css">
-  <script src="theme.js"></script>
+  <script type="module" src="../auth-guard.js"></script>
 </head>
 <body>
-  <!-- iPad TopBar -->
-  <div class="ipad-topbar">
-    <a class="ipad-topbar-home" href="index.html">
-      <div class="ipad-topbar-logo">SC</div>
-      <span class="ipad-topbar-sitename">SCA Albi</span>
-    </a>
-    <div class="ipad-topbar-sep"></div>
-    <div class="ipad-topbar-title">Planification muscu</div>
-    <button class="theme-toggle-btn" onclick="toggleTheme()"><span class="theme-icon">☀️</span></button>
-    <button class="btn-ghost" onclick="logout()" style="margin-left:auto;min-height:36px;font-size:12px;">Déconnexion</button>
-  </div>
-  <!-- Bottom Nav -->
-  <nav class="ipad-bottom-nav">
-    <a class="ipad-nav-item" href="planning.html">
-      <span class="ipad-nav-icon">📅</span>
-      <span>Planning</span>
-    </a>
-    <a class="ipad-nav-item" href="fiches-seances.html">
-      <span class="ipad-nav-icon">🏉</span>
-      <span>Séances</span>
-    </a>
-    <a class="ipad-nav-item" href="equipes.html">
-      <span class="ipad-nav-icon">👥</span>
-      <span>Équipes</span>
-    </a>
-    <a class="ipad-nav-item" href="gps-planif.html">
-      <span class="ipad-nav-icon">📡</span>
-      <span>Charge GPS</span>
-    </a>
-    <a class="ipad-nav-item active" href="seances.html">
-      <span class="ipad-nav-icon">🏋️</span>
-      <span>Musculation</span>
-    </a>
-    <a class="ipad-nav-item" href="suivi-poids.html">
-      <span class="ipad-nav-icon">⚖️</span>
-      <span>Suivi Poids</span>
-    </a>
-    <a class="ipad-nav-item" href="tv.html">
-      <span class="ipad-nav-icon">📺</span>
-      <span>Vue TV</span>
-    </a>
-  </nav>
-
   <div class="sidebar">
     <div class="sidebar-logo">
       <img src="https://www.sca-albi.fr/wp-content/uploads/2023/10/cropped-SCA-bis.png">
@@ -239,15 +119,25 @@
     <div class="nav-item" onclick="location.href='index.html'"><div class="nav-dot"></div> Roster</div>
     <div class="nav-section">Entraînement</div>
     <div class="nav-item" onclick="location.href='seances.html'"><div class="nav-dot"></div> Séances</div>
+    <div class="nav-item" onclick="location.href='exercices.html'"><div class="nav-dot"></div> Exercices</div>
     <div class="nav-item active" onclick="location.href='planification-muscu.html'"><div class="nav-dot"></div> Planification muscu</div>
     <div class="nav-section">Suivi</div>
+    <div class="nav-item" onclick="location.href='wellness.html'"><div class="nav-dot"></div> Wellness</div>
+    <div class="nav-item" onclick="location.href='performances.html'"><div class="nav-dot"></div> Performances</div>
+    <div class="nav-item" onclick="location.href='medical.html'"><div class="nav-dot"></div> Médical</div>
+    <div class="nav-item" onclick="location.href='absences.html'"><div class="nav-dot"></div> Absences</div>
     <div class="nav-item" onclick="location.href='suivi-poids.html'"><div class="nav-dot"></div> Suivi Poids</div>
     <div class="nav-section">Planning</div>
     <div class="nav-item" onclick="location.href='planning.html'"><div class="nav-dot"></div> Planning club</div>
+    <div class="nav-item" onclick="location.href='planning-blesses.html'"><div class="nav-dot"></div> Blessés</div>
+    <div class="nav-item" onclick="location.href='fiches-seances.html'"><div class="nav-dot"></div> Fiches Séances</div>
     <div class="nav-section">Équipes</div>
     <div class="nav-item" onclick="location.href='equipes.html'"><div class="nav-dot"></div> Composition équipes</div>
     <div class="nav-section">GPS</div>
+    <div class="nav-item" onclick="location.href='gps.html'"><div class="nav-dot"></div> Données GPS</div>
+    <div class="nav-item" onclick="location.href='gps-match.html'"><div class="nav-dot"></div> Rapport de match</div>
     <div class="nav-item" onclick="location.href='gps-planif.html'"><div class="nav-dot"></div> Planification charge</div>
+    <div class="nav-item" onclick="location.href='profil-force-vitesse.html'"><div class="nav-dot"></div> Profil F-V</div>
     <div class="sidebar-bottom">
       <div class="user-info" id="user-email"></div>
       <button class="logout-btn" onclick="handleLogout()">Se déconnecter</button>
@@ -326,10 +216,9 @@
   </div>
 
   <script type="module">
-    import { initializeApp } from './supabase-adapter.js'
-    import { getAuth, onAuthStateChanged, signOut, setPersistence, browserLocalPersistence } from './supabase-adapter.js'
-    import { getFirestore, collection, doc, setDoc, getDoc, getDocs, deleteDoc, onSnapshot, serverTimestamp, query, where } from './supabase-adapter.js'
-    import './update-check.js'
+    import { initializeApp } from '../renderer/supabase-adapter.js'
+    import { getAuth, onAuthStateChanged, signOut } from '../renderer/supabase-adapter.js'
+    import { getFirestore, collection, doc, setDoc, getDoc, getDocs, deleteDoc, serverTimestamp, query, where } from '../renderer/supabase-adapter.js'
 
     const firebaseConfig = {
       apiKey: "AIzaSyCvMs-5LX9Ivk3OkzUR3iz9Kk1E5b9_7Vk",
@@ -364,30 +253,22 @@
     let seances = []
     let editingCycleId = null
     let dupSeanceData = null
-    let cyclesLoaded = false
-    let seancesLoaded = false
 
-    function tryRender() {
-      if (cyclesLoaded && seancesLoaded) render()
-    }
-
-    onAuthStateChanged(auth, user => {
+    onAuthStateChanged(auth, async user => {
       if (!user) { window.location.href = 'login.html'; return }
       document.getElementById('user-email').textContent = user.email
 
-      onSnapshot(collection(db, 'cycles'), snapC => {
-        cycles = snapC.docs.map(d => ({ id: d.id, ...d.data() }))
-        cycles.sort((a, b) => (a.numero || 0) - (b.numero || 0))
-        cyclesLoaded = true
-        tryRender()
-      })
+      const [snapCycles, snapSeances] = await Promise.all([
+        getDocs(collection(db, 'cycles')),
+        getDocs(scopedQuery('seances'))
+      ])
+      cycles = snapCycles.docs.map(d => ({ id: d.id, ...d.data() }))
+      cycles.sort((a, b) => (a.numero || 0) - (b.numero || 0))
 
-      onSnapshot(scopedQuery('seances'), snapS => {
-        seances = snapS.docs.map(d => ({ id: d.id, ...d.data() }))
-        seances.sort((a, b) => (a.date || '').localeCompare(b.date || ''))
-        seancesLoaded = true
-        tryRender()
-      })
+      seances = snapSeances.docs.map(d => ({ id: d.id, ...d.data() }))
+      seances.sort((a, b) => (a.date || '').localeCompare(b.date || ''))
+      render()
+      if (window.__pageReady) window.__pageReady('planification-muscu.html')
     })
 
     // ==================== RENDER CASCADE ====================
@@ -432,7 +313,7 @@
         body.id = `body-cycle-${cycle.id}`
 
         hdr.onclick = () => {
-          const isOpen = body.classList.contains('open')
+          const isOpen = body && body.classList.contains('open')
           body.classList.toggle('open', !isOpen)
           document.getElementById(`chevron-cycle-${cycle.id}`).classList.toggle('open', !isOpen)
           if (!isOpen) renderSemainesCycle(cycle, body, seancesDuCycle, nbSemaines)
@@ -477,7 +358,7 @@
         sBody.id = `body-s-${cycle.id}-${s}`
 
         sHdr.onclick = () => {
-          const isOpen = sBody.classList.contains('open')
+          const isOpen = sBody && sBody.classList.contains('open')
           sBody.classList.toggle('open', !isOpen)
           document.getElementById(`chevron-s-${cycle.id}-${s}`).classList.toggle('open', !isOpen)
           if (!isOpen) renderSeancesSemaine(sBody, seancesSemaine, cycle)
@@ -568,20 +449,33 @@
       const nom = document.getElementById('cy-nom').value.trim()
       if (!nom) { alert('Nom obligatoire.'); return }
       const id = editingCycleId || `cycle_${Date.now()}`
-      await setDoc(doc(db, 'cycles', id), {
+      const cycleData = {
         numero: parseInt(document.getElementById('cy-num').value) || 1,
         nom,
-        dateDebut: document.getElementById('cy-debut').value,
+        dateDebut: document.getElementById('cy-debut').value || null,
         nbSemaines: parseInt(document.getElementById('cy-semaines').value) || 4,
         description: document.getElementById('cy-desc').value,
         updatedAt: serverTimestamp()
-      })
+      }
+      await setDoc(doc(db, 'cycles', id), cycleData)
+      // Mettre à jour le tableau local et re-render
+      const idx = cycles.findIndex(c => c.id === id)
+      if (idx !== -1) {
+        cycles[idx] = { ...cycles[idx], ...cycleData, id }
+      } else {
+        cycles.push({ ...cycleData, id })
+      }
+      cycles.sort((a, b) => (a.numero || 0) - (b.numero || 0))
+      render()
       fermerModalCycle()
     }
 
     window.supprimerCycle = async function() {
       if (!editingCycleId || !confirm('Supprimer ce cycle ? Les séances ne seront pas supprimées.')) return
       await deleteDoc(doc(db, 'cycles', editingCycleId))
+      // Mettre à jour le tableau local et re-render
+      cycles = cycles.filter(c => c.id !== editingCycleId)
+      render()
       fermerModalCycle()
     }
 
@@ -599,14 +493,15 @@
       const debutNouv = new Date(nouvDebut)
       const diffJours = Math.round((debutNouv - debutOrig) / 86400000)
 
-      await setDoc(doc(db, 'cycles', newCycleId), {
+      const newCycle = {
         ...cycle,
-        id: undefined,
+        id: newCycleId,
         numero: (cycle.numero || 1) + 1,
         nom: cycle.nom + ' (copie)',
         dateDebut: nouvDebut,
-        updatedAt: serverTimestamp()
-      })
+        updatedAt: new Date().toISOString()
+      }
+      await setDoc(doc(db, 'cycles', newCycleId), newCycle)
 
       // Dupliquer toutes les séances
       const seancesCycle = seances.filter(s => s.cycleId === cycleId)
@@ -614,13 +509,20 @@
         const newDate = new Date(s.date)
         newDate.setDate(newDate.getDate() + diffJours)
         const { id, ...sData } = s
-        await setDoc(doc(collection(db, 'seances')), {
+        const newSeanceDate = newDate.toISOString().split('T')[0]
+        const newSeanceRef = doc(collection(db, 'seances'))
+        await setDoc(newSeanceRef, {
           ...sData,
           cycleId: newCycleId,
-          date: newDate.toISOString().split('T')[0],
+          date: newSeanceDate,
           updatedAt: serverTimestamp()
         })
+        seances.push({ ...sData, cycleId: newCycleId, date: newSeanceDate, id: newSeanceRef.id })
       }
+      cycles.push(newCycle)
+      cycles.sort((a, b) => (a.numero || 0) - (b.numero || 0))
+      seances.sort((a, b) => (a.date || '').localeCompare(b.date || ''))
+      render()
       alert(`Cycle dupliqué avec ${seancesCycle.length} séance(s) !`)
     }
 
@@ -659,11 +561,15 @@
 
       if (cycleDestId) sData.cycleId = cycleDestId
 
-      await setDoc(doc(collection(db, 'seances')), {
+      const newSeanceRef = doc(collection(db, 'seances'))
+      await setDoc(newSeanceRef, {
         ...sData,
         date: nouvelleDate,
         updatedAt: serverTimestamp()
       })
+      seances.push({ ...sData, date: nouvelleDate, id: newSeanceRef.id })
+      seances.sort((a, b) => (a.date || '').localeCompare(b.date || ''))
+      render()
 
       fermerModalDup()
       alert('Séance dupliquée !')

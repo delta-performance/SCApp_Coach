@@ -3,6 +3,19 @@ export function rpeToPercent(rpe) {
   return rpe / 10
 }
 
+function normalizeStr(s) {
+  return (s || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim()
+}
+
+function exoMatch(a, b) {
+  const na = normalizeStr(a)
+  const nb = normalizeStr(b)
+  if (na === nb) return true
+  if (na.replace(/s$/, '') === nb.replace(/s$/, '')) return true
+  if (na.length >= 4 && nb.length >= 4 && (na.includes(nb) || nb.includes(na))) return true
+  return false
+}
+
 // Calcul 1RM via Epley : charge * (1 + reps/30)
 export function calcOneRM(charge, reps) {
   if (reps === 1) return charge
@@ -18,26 +31,35 @@ export function calcOneRM(charge, reps) {
   maxTestes = { "Squat": 150, "DC": 120, ... }
   ratios = { "Split squat bulgare": { ratio: 0.6, mvtRoi: "Squat" }, ... }
 */
-export function chargePredicte(exercice, rpe, nbReps, maxTestes = {}, ratios = {}, intensityUnit = 'RPE') {
+export function chargePredicte(exercice, rpe, nbReps, maxTestes = {}, ratios = {}, intensityUnit = 'RPE', poids = null) {
   let pct = 0
   const val = parseFloat(rpe)
   if (!val) return null
 
   if (intensityUnit === '%' || intensityUnit === 'PCT') {
     pct = val / 100
-  } else if (intensityUnit === 'VITESSE') {
+  } else if (intensityUnit === 'VITESSE' || intensityUnit === 'Vitesse (m/s)') {
     let pctVal = Math.round(100 - ((val - 0.2) / (1.3 - 0.2)) * 70)
     pctVal = Math.max(10, Math.min(100, pctVal))
     pct = pctVal / 100
+  } else if (intensityUnit === 'PDC') {
+    return null
+  } else if (intensityUnit === '% PDC') {
+    if (poids && poids > 0) {
+      return arrondir(poids * val / 100)
+    }
+    return null
+  } else if (intensityUnit === 'kg' || intensityUnit === 'W') {
+    return null
   } else {
     pct = val / 10
   }
 
-  // Cas 1 : 1RM direct (recherche totalement insensible à la casse et aux espaces)
-  const exoLower = (exercice || '').toLowerCase().trim()
+  // Cas 1 : 1RM direct (recherche insensible à la casse, aux accents et aux espaces)
+  const exoNorm = normalizeStr(exercice)
   let oneRM = null
   for (const [key, val] of Object.entries(maxTestes || {})) {
-    if (key.toLowerCase().trim() === exoLower) {
+    if (normalizeStr(key) === exoNorm) {
       oneRM = parseFloat(val)
       break
     }
@@ -52,10 +74,10 @@ export function chargePredicte(exercice, rpe, nbReps, maxTestes = {}, ratios = {
     const ratioData = ratios[exercice]
     if (ratioData) {
       const { ratio, mvtRoi } = ratioData
-      const mvtRoiLower = (mvtRoi || '').toLowerCase().trim()
+      const mvtRoiNorm = normalizeStr(mvtRoi)
       let oneRMMvtRoi = null
       for (const [key, val] of Object.entries(maxTestes || {})) {
-        if (key.toLowerCase().trim() === mvtRoiLower) {
+        if (normalizeStr(key) === mvtRoiNorm) {
           oneRMMvtRoi = parseFloat(val)
           break
         }
@@ -67,14 +89,14 @@ export function chargePredicte(exercice, rpe, nbReps, maxTestes = {}, ratios = {
     }
 
     // Cas 2b : ratio via format Firestore "cible_vs_tested" (objet ou tableau)
-    const nomLower = (exercice || '').toLowerCase().trim()
+    const nomNorm = normalizeStr(exercice)
     if (Array.isArray(ratios)) {
       for (const r of ratios) {
-        if (r && r.cible && (r.cible.toLowerCase().trim() === nomLower)) {
-          const tested = (r.tested || '').toLowerCase().trim()
+        if (r && r.cible && (normalizeStr(r.cible) === nomNorm)) {
+          const testedNorm = normalizeStr(r.tested)
           let testMax = null
           for (const [key, val] of Object.entries(maxTestes || {})) {
-            if (key.toLowerCase().trim() === tested) {
+            if (normalizeStr(key) === testedNorm) {
               testMax = parseFloat(val)
               break
             }
@@ -89,12 +111,12 @@ export function chargePredicte(exercice, rpe, nbReps, maxTestes = {}, ratios = {
       for (const [key, valRatio] of Object.entries(ratios)) {
         const match = key.match(/^(.+)_vs_(.+)$/)
         if (!match) continue
-        const cible = match[1].toLowerCase().trim()
-        const tested = match[2].toLowerCase().trim()
-        if (cible === nomLower) {
+        const cible = normalizeStr(match[1])
+        const tested = normalizeStr(match[2])
+        if (cible === nomNorm) {
           let testMax = null
           for (const [k, val] of Object.entries(maxTestes || {})) {
-            if (k.toLowerCase().trim() === tested) {
+            if (normalizeStr(k) === tested) {
               testMax = parseFloat(val)
               break
             }
@@ -122,11 +144,11 @@ function arrondir(charge) {
 export function chargePreviewPct(exercice, pct, maxTestes = {}, ratios = {}) {
   if (!pct || pct <= 0) return null
   
-  // Chercher 1RM direct
-  const exoLower = (exercice || '').toLowerCase().trim()
+  // Chercher 1RM direct (insensible aux accents)
+  const exoNorm = normalizeStr(exercice)
   let oneRM = null
   for (const [key, val] of Object.entries(maxTestes || {})) {
-    if (key.toLowerCase().trim() === exoLower) {
+    if (normalizeStr(key) === exoNorm) {
       oneRM = parseFloat(val)
       break
     }
@@ -137,10 +159,10 @@ export function chargePreviewPct(exercice, pct, maxTestes = {}, ratios = {}) {
     const ratioData = ratios[exercice]
     if (ratioData) {
       const { ratio, mvtRoi } = ratioData
-      const mvtRoiLower = (mvtRoi || '').toLowerCase().trim()
+      const mvtRoiNorm = normalizeStr(mvtRoi)
       let oneRMMvtRoi = null
       for (const [key, val] of Object.entries(maxTestes || {})) {
-        if (key.toLowerCase().trim() === mvtRoiLower) {
+        if (normalizeStr(key) === mvtRoiNorm) {
           oneRMMvtRoi = parseFloat(val)
           break
         }
@@ -152,14 +174,14 @@ export function chargePreviewPct(exercice, pct, maxTestes = {}, ratios = {}) {
     
     // Si toujours pas de 1RM, essayer avec le format Firestore "cible_vs_tested" (objet ou tableau)
     if (!oneRM) {
-      const nomLower = (exercice || '').toLowerCase().trim()
+      const nomNorm = normalizeStr(exercice)
       if (Array.isArray(ratios)) {
         for (const r of ratios) {
-          if (r && r.cible && (r.cible.toLowerCase().trim() === nomLower)) {
-            const tested = (r.tested || '').toLowerCase().trim()
+          if (r && r.cible && (normalizeStr(r.cible) === nomNorm)) {
+            const testedNorm = normalizeStr(r.tested)
             let testMax = null
             for (const [key, val] of Object.entries(maxTestes || {})) {
-              if (key.toLowerCase().trim() === tested) {
+              if (normalizeStr(key) === testedNorm) {
                 testMax = parseFloat(val)
                 break
               }
@@ -174,12 +196,12 @@ export function chargePreviewPct(exercice, pct, maxTestes = {}, ratios = {}) {
         for (const [key, val] of Object.entries(ratios)) {
           const match = key.match(/^(.+)_vs_(.+)$/)
           if (!match) continue
-          const cible = match[1].toLowerCase().trim()
-          const tested = match[2].toLowerCase().trim()
-          if (cible === nomLower) {
+          const cible = normalizeStr(match[1])
+          const tested = normalizeStr(match[2])
+          if (cible === nomNorm) {
             let testMax = null
             for (const [k, val] of Object.entries(maxTestes || {})) {
-              if (k.toLowerCase().trim() === tested) {
+              if (normalizeStr(k) === tested) {
                 testMax = parseFloat(val)
                 break
               }
@@ -202,89 +224,215 @@ export function chargePreviewPct(exercice, pct, maxTestes = {}, ratios = {}) {
 }
 
 // Label affiché dans la vue
-export function labelCharge(exercice, rpe, nbReps, maxTestes = {}, ratios = {}, intensityUnit = 'RPE') {
-  const c = chargePredicte(exercice, rpe, nbReps, maxTestes, ratios, intensityUnit)
+export function labelCharge(exercice, rpe, nbReps, maxTestes = {}, ratios = {}, intensityUnit = 'RPE', poids = null) {
+  const c = chargePredicte(exercice, rpe, nbReps, maxTestes, ratios, intensityUnit, poids)
   if (c !== null) return c + ' kg'
   
   if (intensityUnit === 'PCT' || intensityUnit === '%') {
     return rpe + '%'
-  } else if (intensityUnit === 'VITESSE') {
+  } else if (intensityUnit === 'VITESSE' || intensityUnit === 'Vitesse (m/s)') {
     return rpe + ' m/s'
+  } else if (intensityUnit === 'PDC') {
+    return 'PDC'
+  } else if (intensityUnit === '% PDC') {
+    return rpe + '% PDC'
+  } else if (intensityUnit === 'kg') {
+    return rpe + ' kg'
+  } else if (intensityUnit === 'W') {
+    return rpe + ' W'
   }
   return 'RPE ' + rpe
 }
 
 /*
-  Charge preview avancée avec :
-  1. Max sur les 2 derniers mois depuis dataPerf
-  2. Si cycle défini : charge la plus récente dans ce cycle
-  3. Ratio d'évolution : comparaison objectif actuel vs charge précédente
+  Charge preview avancée avec logique de recommandation par bloc :
+  1. Si le joueur a déjà fait cet exercice dans le même bloc (nom du bloc) → recommandation basée sur la dernière charge × progression %
+  2. Sinon, si un 1RM existe pour cet exercice → charge = pct% du 1RM
+  3. Sinon → null (pas de préconisation, juste l'objectif en %)
+
+  Si le joueur n'a JAMAIS fait cet exercice (aucune dataPerf) → null (pas de préconisation)
+
+  Paramètres additionnels :
+  - blocNom : nom du bloc actuel (pour chercher l'historique dans le même bloc)
+  - allSeances : tableau de toutes les séances (pour trouver les séances précédentes avec le même bloc)
+  - currentSeanceId : ID de la séance actuelle (à exclure de la recherche)
 
   Retourne : { chargeCalculee, chargeReference, evolutionPct, source }
-  - chargeCalculee : kg basé sur le % du 1RM (objectif)
-  - chargeReference : dernière charge réalisée (max 2mois ou dans cycle)
-  - evolutionPct : pourcentage d'évolution (+5%, -3%, etc.)
-  - source : '2mois' | 'cycle' | '1rm' | null
+  - chargeCalculee : charge recommandée (kg)
+  - chargeReference : dernière charge réalisée dans le même bloc (kg) ou null
+  - evolutionPct : évolution en points de pourcentage (+2, -3, etc.) ou null
+  - source : 'bloc' | '1rm' | null
 */
-export function chargePreviewAdvanced(exercice, pct, maxTestes = {}, dataPerf = [], cycles = [], cycleId = null, seanceDate = null, ratios = {}) {
+export function chargePreviewAdvanced(exercice, pct, maxTestes = {}, dataPerf = [], cycles = [], cycleId = null, seanceDate = null, ratios = {}, blocNom = null, allSeances = [], currentSeanceId = null, serieIndex = null) {
   if (!pct || pct <= 0) return null
 
-  // 1. Calculer la charge théorique (objectif) basée sur le 1RM
-  let chargeCalculee = chargePreviewPct(exercice, pct, maxTestes, ratios)
-  let chargeReference = null
-  let source = null
+  const exoNorm = normalizeStr(exercice)
 
-  // 2. Chercher le max sur les 2 derniers mois dans dataPerf
-  const deuxMoisAvant = new Date()
-  deuxMoisAvant.setMonth(deuxMoisAvant.getMonth() - 2)
-  const dateLimite = deuxMoisAvant.toISOString().split('T')[0]
-
-  const perfsRecentes = dataPerf.filter(p =>
-    p.exercice?.toLowerCase() === exercice?.toLowerCase() &&
-    p.charge > 0 &&
-    p.date >= dateLimite &&
-    (seanceDate ? p.date < seanceDate : true)
+  // Vérifier si le joueur a au moins une performance enregistrée pour cet exercice
+  // Inclure charge=0 (ex: tractions PDC sans poids renseigné)
+  const perfsForExo = dataPerf.filter(p =>
+    exoMatch(p.exercice, exercice) && (p.charge > 0 || p.charge === 0)
   )
 
-  if (perfsRecentes.length > 0) {
-    // Max sur les 2 derniers mois
-    chargeReference = Math.max(...perfsRecentes.map(p => p.charge))
-    source = '2mois'
+  let chargeCalculee = null
+  let chargeReference = null
+  let evolutionPct = null
+  let source = null
+
+  // Helper: trouve la meilleure perf dans une fenêtre de N mois avant seanceDate (ou aujourd'hui)
+  function bestPerfInWindow(mois) {
+    const refDate = seanceDate || new Date().toISOString().split('T')[0]
+    const cutoff = new Date(refDate)
+    cutoff.setMonth(cutoff.getMonth() - mois)
+    const cutoffStr = cutoff.toISOString().split('T')[0]
+    return [...perfsForExo]
+      .filter(p => p.charge > 0 && p.date && p.date >= cutoffStr && p.date < refDate)
+      .sort((a, b) => (b.date || '').localeCompare(a.date || ''))[0] || null
   }
 
-  // 3. Si on est dans un cycle, chercher la charge la plus récente DANS ce cycle
-  if (cycleId && cycles.length > 0) {
-    const cycle = cycles.find(c => c.id === cycleId)
-    if (cycle && cycle.dateDebut) {
-      const debutCycle = cycle.dateDebut
-      // Calculer la fin du cycle (dateDebut + nbSemaines * 7 jours)
-      const finCycle = cycle.dateFin || (() => {
-        const d = new Date(cycle.dateDebut)
-        d.setDate(d.getDate() + (cycle.nbSemaines || 4) * 7)
-        return d.toISOString().split('T')[0]
-      })()
+  // 1. Vérifier si l'exercice a des perfs avec charge dans les séances du même cycle
+  const seancesDuCycle = cycleId
+    ? allSeances.filter(s => s.id !== currentSeanceId && s.cycleId === cycleId && (!seanceDate || !s.date || s.date < seanceDate))
+    : []
 
-      const perfsDansCycle = dataPerf.filter(p =>
-        p.exercice?.toLowerCase() === exercice?.toLowerCase() &&
-        p.charge > 0 &&
-        p.date >= debutCycle &&
-        p.date <= finCycle &&
-        (seanceDate ? p.date < seanceDate : true)
-      ).sort((a, b) => (b.date || '').localeCompare(a.date || ''))
-
-      if (perfsDansCycle.length > 0) {
-        // La plus récente dans le cycle
-        chargeReference = perfsDansCycle[0].charge
-        source = 'cycle'
+  // Déterminer si la séance courante est dans un groupe de séances liées
+  let linkedSeanceIds = null
+  if (cycleId && currentSeanceId) {
+    const currentCycle = cycles.find(c => c.id === cycleId)
+    if (currentCycle && currentCycle.seanceLinks) {
+      for (const ids of Object.values(currentCycle.seanceLinks)) {
+        if (ids.includes(currentSeanceId)) {
+          linkedSeanceIds = new Set(ids.filter(id => id !== currentSeanceId))
+          break
+        }
       }
     }
   }
 
-  // 4. Calculer le ratio d'évolution
-  let evolutionPct = null
-  if (chargeCalculee !== null && chargeReference !== null && chargeReference > 0) {
-    evolutionPct = Math.round(((chargeCalculee - chargeReference) / chargeReference) * 100)
+  const seanceIdsDuCycle = new Set(seancesDuCycle.map(s => s.id))
+  const perfsDansCycle = perfsForExo.filter(p =>
+    p.charge > 0 &&
+    p.seanceId !== currentSeanceId &&
+    (seanceIdsDuCycle.has(p.seanceId) ||
+      seancesDuCycle.some(s => s.date && p.date && (
+        p.date === s.date ||
+        Math.abs(new Date(p.date + 'T12:00:00') - new Date(s.date + 'T12:00:00')) <= 86400000
+      ))
+    )
+  )
+
+  if (perfsDansCycle.length > 0) {
+    // L'exercice a été fait dans ce cycle : chercher le bestMatch dans le même bloc
+    if (blocNom) {
+      const blocNomLower = normalizeStr(blocNom)
+      let previousSeancesWithBloc = seancesDuCycle.filter(s =>
+        s.blocs?.some(b => normalizeStr(b.nom) === blocNomLower)
+      )
+      // Si la séance courante est liée, ne garder que les séances du groupe lié
+      if (linkedSeanceIds) {
+        const linkedFiltered = previousSeancesWithBloc.filter(s => linkedSeanceIds.has(s.id))
+        if (linkedFiltered.length > 0) previousSeancesWithBloc = linkedFiltered
+      }
+      let bestMatch = null
+
+      for (const s of previousSeancesWithBloc) {
+        const bloc = s.blocs?.find(b => normalizeStr(b.nom) === blocNomLower)
+        if (!bloc) continue
+        let foundExo = null
+        for (const g of (bloc.groupes || [])) {
+          foundExo = g.exercices?.find(e => exoMatch(e.exercice, exercice))
+          if (foundExo) break
+        }
+        if (!foundExo) continue
+        const sDate = s.date || ''
+        const perf = perfsForExo.find(p => {
+          if (p.seanceId === s.id) return true
+          if (p.date && sDate && p.date === sDate) return true
+          if (p.date && sDate) {
+            const pTime = new Date(p.date + 'T12:00:00').getTime()
+            const sTime = new Date(sDate + 'T12:00:00').getTime()
+            if (!isNaN(pTime) && !isNaN(sTime) && Math.abs(pTime - sTime) <= 86400000) return true
+          }
+          return false
+        })
+        if (perf) {
+          let previousPct
+          if (foundExo.variableSeries && foundExo.seriesData) {
+            if (serieIndex !== null && foundExo.seriesData[serieIndex] != null) {
+              previousPct = parseFloat(foundExo.seriesData[serieIndex].intensity)
+            } else {
+              continue
+            }
+          } else {
+            const prevIntensityUnit = foundExo.intensityUnit || foundExo.intensityType || 'RPE'
+            previousPct = (prevIntensityUnit === '%' || prevIntensityUnit === 'PCT')
+              ? parseFloat(foundExo.rpe)
+              : parseFloat(foundExo.rpe) * 10
+          }
+          const perfOneRM = perf.oneRM || perf.charge || 0
+          const bestOneRM = bestMatch ? (bestMatch.perf.oneRM || bestMatch.perf.charge || 0) : 0
+          if (!bestMatch || perfOneRM > bestOneRM) {
+            bestMatch = { perf, previousPct }
+          }
+        }
+      }
+
+      if (bestMatch && bestMatch.previousPct > 0 && bestMatch.perf.charge > 0) {
+        chargeReference = bestMatch.perf.charge
+        evolutionPct = Math.round(pct - bestMatch.previousPct)
+        chargeCalculee = arrondir(chargeReference * (1 + evolutionPct / 100))
+        source = 'bloc'
+      }
+    }
+
+    // Pas de bestMatch valide dans le bloc : fallback 1RM + référence progressive
+    if (chargeCalculee === null) {
+      chargeCalculee = chargePreviewPct(exercice, pct, maxTestes, ratios)
+      if (chargeCalculee !== null) {
+        source = '1rm'
+        const ref = bestPerfInWindow(3) || bestPerfInWindow(6) || bestPerfInWindow(12)
+        if (ref) chargeReference = ref.charge
+      } else {
+        const ref = bestPerfInWindow(3) || bestPerfInWindow(6) || bestPerfInWindow(12)
+        if (ref) {
+          chargeReference = ref.charge
+          chargeCalculee = arrondir(ref.charge)
+          source = 'derniere_perf'
+        }
+      }
+    }
+  } else {
+    // Pas de perf pour cet exercice dans ce cycle : 1RM progressif 3→6→12 mois
+    chargeCalculee = chargePreviewPct(exercice, pct, maxTestes, ratios)
+    if (chargeCalculee !== null) {
+      source = '1rm'
+      const ref = bestPerfInWindow(3) || bestPerfInWindow(6) || bestPerfInWindow(12)
+      if (ref) chargeReference = ref.charge
+    } else {
+      const ref = bestPerfInWindow(3) || bestPerfInWindow(6) || bestPerfInWindow(12)
+      if (ref) {
+        chargeReference = ref.charge
+        chargeCalculee = arrondir(ref.charge)
+        source = 'derniere_perf'
+      }
+    }
   }
+
+  // 2. Si toujours pas de chargeCalculee, fallback sur le 1RM seul (max testé)
+  // Chercher aussi une chargeReference dans les fenêtres progressives pour affichage
+  if (chargeCalculee === null) {
+    chargeCalculee = chargePreviewPct(exercice, pct, maxTestes, ratios)
+    if (chargeCalculee !== null) {
+      source = '1rm'
+      if (chargeReference === null && perfsForExo.some(p => p.charge > 0)) {
+        const ref = bestPerfInWindow(3) || bestPerfInWindow(6) || bestPerfInWindow(12)
+        if (ref) chargeReference = ref.charge
+      }
+    }
+  }
+
+  // 3. Si toujours pas de chargeCalculee (pas de 1RM) → null (pas de préconisation)
+  if (chargeCalculee === null) return null
 
   return {
     chargeCalculee,
