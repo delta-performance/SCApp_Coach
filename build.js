@@ -192,4 +192,12 @@ for (const f of builtFiles) {
   }
 }
 
+// 5. Copier le manifest.json à la racine de l'app iPad (nécessaire pour GitHub Pages)
+const rootManifest = path.join(ROOT, '..', 'manifest.json')
+const ipadManifest = path.join(ROOT, 'manifest.json')
+if (fs.existsSync(rootManifest)) {
+  fs.copyFileSync(rootManifest, ipadManifest)
+  console.log('[build] manifest.json copié')
+}
+
 console.log('[build] terminé')
